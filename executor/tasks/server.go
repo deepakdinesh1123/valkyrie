@@ -9,7 +9,12 @@ import (
 	eagerlock "github.com/RichardKnop/machinery/v2/locks/eager"
 )
 
+var MachineryServer *machinery.Server
+
 func GetMachineryServer() (*machinery.Server, error) {
+	if MachineryServer != nil {
+		return MachineryServer, nil
+	}
 	cnf := &config.Config{
 		DefaultQueue: "machinery_tasks",
 		Redis: &config.RedisConfig{
