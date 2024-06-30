@@ -1,11 +1,10 @@
 CREATE TABLE ExecutionResult (
     id SERIAL PRIMARY KEY,
+    execution_id UUID,
     result TEXT,
-    cmdLineArgs TEXT,
-    environment TEXT,
-    flake TEXT,
-    dependency_file TEXT,
-    executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    sandbox UUID NOT NULL UNIQUE
+    code TEXT,
+    devenv TEXT,
+    execution_status varchar(20),
+    executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

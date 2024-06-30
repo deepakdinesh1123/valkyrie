@@ -3,53 +3,27 @@ services:
     build:
       context: .
       dockerfile: build/package/dockerfiles/odin.dockerfile
-    ports:
-      - "8080:8080"
-    command: "air -c .air.odin.toml"
-    depends_on:
-      redis:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "netstat -ltn | grep -q 8080"]
-      timeout: 5s
-      retries: 3
     env_file:
       - .env
-    volumes:
-      - ./cmd:/valkyrie/odin/cmd
-      - ./internal:/valkyrie/odin/internal
 
-  redis:
-    image: redis
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-  
-  skald:
+  geri:
     build:
       context: .
-      dockerfile: build/package/dockerfiles/skald.dockerfile
-    command: "air -c .air.skald.toml"
-    depends_on:
-      redis:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
-      odin:
-        condition: service_healthy
+      dockerfile: build/package/dockerfiles/geri.dockerfile
     env_file:
       - .env
-    volumes:
-      - ./cmd:/valkyrie/skald/cmd
-      - ./internal:/valkyrie/skald/internal
-      - config:/valkyrie/config/keys
-  
+
+  rabbitmq:
+    image: rabbitmq:management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   postgres:
     image: postgres
     env_file:
@@ -65,28 +39,3 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-  
-  ubuntu_nix_full:
-    build:
-      context: .
-      dockerfile: build/platforms/ubuntu/ubuntu_full.dockerfile
-    env_file:
-      - .env
-    deploy:
-      replicas: ${CONTAINERS}
-    ports:
-      - 22
-    depends_on:
-      redis:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
-      odin:
-        condition: service_healthy
-      skald:
-        condition: service_started
-    volumes:
-      - config:/valkyrie/config/keys
-
-volumes:
-  config:

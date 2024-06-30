@@ -1,5 +1,3 @@
-// Package config provides functionality to manage environment configuration settings.
-// It reads environment variables using viper and populates the Environment struct accordingly.
 package config
 
 import (
@@ -10,13 +8,15 @@ import (
 
 // Environment struct represents the configuration settings for the application.
 type Environment struct {
-	REDIS_HOST            string `mapstructure:"REDIS_HOST"`            // represents the Redis server host.
-	REDIS_PORT            string `mapstructure:"REDIS_PORT"`            // represents the Redis server port.
-	POSTGRES_HOST         string `mapstructure:"POSTGRES_HOST"`         // represents the PostgreSQL server host.
-	POSTGRES_PORT         string `mapstructure:"POSTGRES_PORT"`         // represents the PostgreSQL server port.
-	POSTGRES_USER         string `mapstructure:"POSTGRES_USER"`         // represents the username for connecting to PostgreSQL.
-	POSTGRES_PASSWORD     string `mapstructure:"POSTGRES_PASSWORD"`     // represents the password for connecting to PostgreSQL.
-	POSTGRES_DB           string `mapstructure:"POSTGRES_DB"`           // represents the name of the PostgreSQL database.
+	RABBITMQ_HOST string `mapstructure:"RABBITMQ_HOST"` // represents the RabbitMQ server host.
+	RABBITMQ_PORT string `mapstructure:"RABBITMQ_PORT"` // represents the RabbitMQ server port.
+
+	POSTGRES_HOST     string `mapstructure:"POSTGRES_HOST"`     // represents the PostgreSQL server host.
+	POSTGRES_PORT     string `mapstructure:"POSTGRES_PORT"`     // represents the PostgreSQL server port.
+	POSTGRES_USER     string `mapstructure:"POSTGRES_USER"`     // represents the username for connecting to PostgreSQL.
+	POSTGRES_PASSWORD string `mapstructure:"POSTGRES_PASSWORD"` // represents the password for connecting to PostgreSQL.
+	POSTGRES_DB       string `mapstructure:"POSTGRES_DB"`       // represents the name of the PostgreSQL database.
+
 	EXECUTION_ENVIRONMENT string `mapstructure:"EXECUTION_ENVIRONMENT"` // Indicates whether the execution environment is docker or k8s
 	CONTAINERS            int    `mapstructure:"CONTAINERS"`            // Number of nix containers that will be spun up to execute code when the environment is docker
 }
@@ -34,11 +34,12 @@ func init() {
 	// Read configuration from file
 	err := viper.ReadInConfig()
 	if err != nil {
-		logs.Logger.Err(err)
+		logs.Logger.Err(err).Msg("Failed to read configuration file")
 	}
 
 	// Unmarshal configuration into EnvConfig struct
 	err = viper.Unmarshal(&EnvConfig)
+	logs.Logger.Info().Msg(EnvConfig.POSTGRES_HOST)
 	if err != nil {
 		logs.Logger.Err(err)
 	}
