@@ -1,7 +1,7 @@
--- name: GetResultUsingSandboxID :one
-SELECT result
+-- name: GetResultUsingExecutionID :one
+SELECT *
 FROM ExecutionResult
-WHERE sandbox = $1 LIMIT 1 ;
+WHERE execution_id = $1 LIMIT 1 ;
 
 -- name: GetAllExecutionResults :many
 SELECT * FROM ExecutionResult
@@ -9,12 +9,12 @@ ORDER BY executed_at;
 
 -- name: InsertExecutionResult :one
 INSERT INTO ExecutionResult (
+    execution_id,
     result,
-    cmdLineArgs,
-    environment,
-    flake,
-    dependency_file, 
-    sandbox
+    code,
+    devenv,
+    execution_status,
+    executed_at
 ) VALUES (
     $1, $2, $3, $4, $5, $6
 )

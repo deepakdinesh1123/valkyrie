@@ -1,16 +1,26 @@
-FROM nixos/nix:latest
+FROM nixos/nix:2.23.1 as BUILDER
 
-RUN echo 'experimental-features = nix-command flakes' >> /etc/nix/nix.conf
-RUN nix-channel --add https://nixos.org/channels/nixpkgs-unstable unstable
-RUN nix-channel --update
-RUN nix-env -iA nixpkgs.go nixpkgs.unixtools.netstat nixpkgs.air nixpkgs.sqlc nixpkgs.go-migrate
-WORKDIR /valkyrie/odin
-COPY go.mod /valkyrie/odin
-COPY go.sum /valkyrie/odin
-RUN --mount=type=cache,target=/go/pkg/mod go mod download
-COPY cmd /valkyrie/odin/cmd
-COPY internal /valkyrie/odin/internal
-COPY database /valkyrie/odin/database
-COPY configs/air/.air.odin.toml /valkyrie/odin/
-COPY .env /valkyrie/odin/
-CMD ["bin/bash", "-c", "sleep infinity"]
+COPY cmd /valkyrie/cmd
+COPY build/package/nix/odin.nix /valkyrie/build/package/nix/odin.nix
+COPY internal /valkyrie/internal
+COPY pkg /valkyrie/pkg
+COPY go.mod /valkyrie
+COPY go.sum /valkyrie
+COPY flake.nix /valkyrie
+COPY flake.lock /valkyrie
+
+WORKDIR /valkyrie
+RUN nix \
+    --extra-experimental-features "nix-command flakes" \
+    --option filter-syscalls false \
+    build
+
+RUN mkdir /tmp/nix-store-closure
+RUN cp -R $(nix-store -qR result/) /tmp/nix-store-closure
+
+FROM scratch
+COPY --from=BUILDER /tmp/nix-store-closure /nix/store
+COPY --from=BUILDER /valkyrie/result/bin/odin /bin
+
+ENTRYPOINT ["/bin/odin"]
+CMD ["server"]
