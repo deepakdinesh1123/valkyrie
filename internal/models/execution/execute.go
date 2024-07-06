@@ -24,7 +24,7 @@ type Environment struct {
 
 type ExecutionRequest struct {
 	ExecutionID string `json:"execution_id"`
-	Devenv      string `json:"devenv"`
+	Environment string `json:"environment"`
 	File        File   `json:"file"`
 }
 

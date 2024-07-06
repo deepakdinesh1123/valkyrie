@@ -8,3 +8,11 @@ type ExecuteRes interface {
 type GetExecutionResultRes interface {
 	getExecutionResultRes()
 }
+
+type GetExecutionResultsRes interface {
+	getExecutionResultsRes()
+}
+
+type GetExecutionsRes interface {
+	getExecutionsRes()
+}

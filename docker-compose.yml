@@ -5,6 +5,11 @@ services:
       dockerfile: build/package/dockerfiles/odin.dockerfile
     env_file:
       - .env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
 
   geri:
     build:
@@ -12,6 +17,14 @@ services:
       dockerfile: build/package/dockerfiles/geri.dockerfile
     env_file:
       - .env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      odin:
+        condition: service_started
+    scale: 3
 
   rabbitmq:
     image: rabbitmq:management

@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: geri
+  namespace: valkyrie
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: geri
+  template:
+    metadata:
+      labels:
+        app: geri
+    spec:
+      containers:
+      - name: geri
+        image: deepakdinesh1123/geri:0.1.0
+        envFrom:
+        - configMapRef:
+            name: geri-config

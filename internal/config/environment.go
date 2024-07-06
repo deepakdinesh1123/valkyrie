@@ -22,10 +22,9 @@ type Environment struct {
 }
 
 // EnvConfig holds the configuration settings for the application.
-var EnvConfig Environment
 
-// init initializes the configuration settings by reading environment variables using viper.
-func init() {
+func GetEnvConfig() (*Environment, error) {
+	logger := logs.GetLogger()
 	viper.SetConfigType("env")
 	viper.AddConfigPath(".")
 	viper.SetConfigName(".env")
@@ -34,13 +33,16 @@ func init() {
 	// Read configuration from file
 	err := viper.ReadInConfig()
 	if err != nil {
-		logs.Logger.Err(err).Msg("Failed to read configuration file")
+		logger.Err(err).Msg("Failed to read configuration file")
+		return nil, err
 	}
 
 	// Unmarshal configuration into EnvConfig struct
+	var EnvConfig Environment
 	err = viper.Unmarshal(&EnvConfig)
-	logs.Logger.Info().Msg(EnvConfig.POSTGRES_HOST)
 	if err != nil {
-		logs.Logger.Err(err)
+		logger.Err(err)
+		return nil, err
 	}
+	return &EnvConfig, nil
 }

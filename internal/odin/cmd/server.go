@@ -9,17 +9,19 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/server"
 )
 
-var serverCmd = &cobra.Command{
+var ServerCmd = &cobra.Command{
 	Use:   "server",
 	Short: "Start server",
 	Long:  `Start server`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		server := server.NewServer()
+		logger := logs.GetLogger()
+		ctx := cmd.Context()
+		server := server.NewServer(ctx, logger)
 
-		logs.Logger.Info().Msg("Listening on port 8080")
+		logger.Info().Msg("Listening on port 8080")
 		err := http.ListenAndServe(":8080", server)
 		if err != nil {
-			logs.Logger.Err(err).Msg("Failed to start server")
+			logger.Err(err).Msg("Failed to start server")
 			return err
 		}
 		return nil

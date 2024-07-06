@@ -17,7 +17,7 @@ var _ Handler = UnimplementedHandler{}
 //
 // Execute a script.
 //
-// POST /execute
+// POST /execution/execute/
 func (UnimplementedHandler) Execute(ctx context.Context, req *ExecutionRequest) (r ExecuteRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
@@ -26,7 +26,25 @@ func (UnimplementedHandler) Execute(ctx context.Context, req *ExecutionRequest) 
 //
 // Get execution result.
 //
-// GET /execute/{execution_id}
+// GET /execition/{execution_id}/
 func (UnimplementedHandler) GetExecutionResult(ctx context.Context, params GetExecutionResultParams) (r GetExecutionResultRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetExecutionResults implements getExecutionResults operation.
+//
+// Get all execution results.
+//
+// GET /execution/results/
+func (UnimplementedHandler) GetExecutionResults(ctx context.Context) (r GetExecutionResultsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetExecutions implements getExecutions operation.
+//
+// Get all executions.
+//
+// GET /execution/
+func (UnimplementedHandler) GetExecutions(ctx context.Context) (r GetExecutionsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }

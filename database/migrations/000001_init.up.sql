@@ -1,10 +1,11 @@
-CREATE TABLE ExecutionResult (
+CREATE TABLE Execution(
     id SERIAL PRIMARY KEY,
     execution_id UUID,
-    result TEXT,
     code TEXT,
-    devenv TEXT,
+    environment TEXT,
+    requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    result TEXT,
     execution_status varchar(20),
-    executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    executed_at TIMESTAMP
 );
 

@@ -9,12 +9,13 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type Executionresult struct {
+type Execution struct {
 	ID              int32
 	ExecutionID     uuid.UUID
-	Result          pgtype.Text
 	Code            pgtype.Text
-	Devenv          pgtype.Text
+	Environment     pgtype.Text
+	RequestedAt     pgtype.Timestamp
+	Result          pgtype.Text
 	ExecutionStatus pgtype.Text
 	ExecutedAt      pgtype.Timestamp
 }

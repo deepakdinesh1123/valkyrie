@@ -28,5 +28,8 @@ RUN nix-channel --add https://nixos.org/channels/nixpkgs-unstable unstable
 RUN nix-channel --update
 RUN nix-env -iA devenv -f https://github.com/NixOS/nixpkgs/tarball/nixpkgs-unstable
 
+COPY .env /valkyrie/geri/.env
+
+WORKDIR /valkyrie/geri
 ENTRYPOINT ["/bin/geri"]
 CMD ["start"]

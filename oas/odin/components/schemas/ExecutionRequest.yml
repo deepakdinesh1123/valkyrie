@@ -1,0 +1,9 @@
+type: object
+required:
+  - environment
+  - file
+properties:
+  environment:
+    type: string
+  file:
+    $ref: ./File.yml

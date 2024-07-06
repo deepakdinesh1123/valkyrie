@@ -25,15 +25,112 @@ type ExecuteInternalServerError Error
 
 func (*ExecuteInternalServerError) executeRes() {}
 
-// Ref: #/components/schemas/ExecutionRequest
-type ExecutionRequest struct {
-	Devenv string `json:"devenv"`
-	File   File   `json:"file"`
+type ExecuteOK struct {
+	ExecutionID string `json:"execution_id"`
 }
 
-// GetDevenv returns the value of Devenv.
-func (s *ExecutionRequest) GetDevenv() string {
-	return s.Devenv
+// GetExecutionID returns the value of ExecutionID.
+func (s *ExecuteOK) GetExecutionID() string {
+	return s.ExecutionID
+}
+
+// SetExecutionID sets the value of ExecutionID.
+func (s *ExecuteOK) SetExecutionID(val string) {
+	s.ExecutionID = val
+}
+
+func (*ExecuteOK) executeRes() {}
+
+// Ref: #/components/schemas/Execution
+type Execution struct {
+	ExecutionID     string    `json:"execution_id"`
+	Code            OptString `json:"code"`
+	Environment     string    `json:"environment"`
+	RequestedAt     string    `json:"requested_at"`
+	Result          OptString `json:"result"`
+	ExecutionStatus OptString `json:"execution_status"`
+	ExecutedAt      OptString `json:"executed_at"`
+}
+
+// GetExecutionID returns the value of ExecutionID.
+func (s *Execution) GetExecutionID() string {
+	return s.ExecutionID
+}
+
+// GetCode returns the value of Code.
+func (s *Execution) GetCode() OptString {
+	return s.Code
+}
+
+// GetEnvironment returns the value of Environment.
+func (s *Execution) GetEnvironment() string {
+	return s.Environment
+}
+
+// GetRequestedAt returns the value of RequestedAt.
+func (s *Execution) GetRequestedAt() string {
+	return s.RequestedAt
+}
+
+// GetResult returns the value of Result.
+func (s *Execution) GetResult() OptString {
+	return s.Result
+}
+
+// GetExecutionStatus returns the value of ExecutionStatus.
+func (s *Execution) GetExecutionStatus() OptString {
+	return s.ExecutionStatus
+}
+
+// GetExecutedAt returns the value of ExecutedAt.
+func (s *Execution) GetExecutedAt() OptString {
+	return s.ExecutedAt
+}
+
+// SetExecutionID sets the value of ExecutionID.
+func (s *Execution) SetExecutionID(val string) {
+	s.ExecutionID = val
+}
+
+// SetCode sets the value of Code.
+func (s *Execution) SetCode(val OptString) {
+	s.Code = val
+}
+
+// SetEnvironment sets the value of Environment.
+func (s *Execution) SetEnvironment(val string) {
+	s.Environment = val
+}
+
+// SetRequestedAt sets the value of RequestedAt.
+func (s *Execution) SetRequestedAt(val string) {
+	s.RequestedAt = val
+}
+
+// SetResult sets the value of Result.
+func (s *Execution) SetResult(val OptString) {
+	s.Result = val
+}
+
+// SetExecutionStatus sets the value of ExecutionStatus.
+func (s *Execution) SetExecutionStatus(val OptString) {
+	s.ExecutionStatus = val
+}
+
+// SetExecutedAt sets the value of ExecutedAt.
+func (s *Execution) SetExecutedAt(val OptString) {
+	s.ExecutedAt = val
+}
+
+// Ref: #/components/schemas/ExecutionRequest
+type ExecutionRequest struct {
+	Environment string `json:"environment"`
+	File        File   `json:"file"`
+}
+
+// GetEnvironment returns the value of Environment.
+func (s *ExecutionRequest) GetEnvironment() string {
+	return s.Environment
 }
 
 // GetFile returns the value of File.
@@ -41,9 +138,9 @@ func (s *ExecutionRequest) GetFile() File {
 	return s.File
 }
 
-// SetDevenv sets the value of Devenv.
-func (s *ExecutionRequest) SetDevenv(val string) {
-	s.Devenv = val
+// SetEnvironment sets the value of Environment.
+func (s *ExecutionRequest) SetEnvironment(val string) {
+	s.Environment = val
 }
 
 // SetFile sets the value of File.
@@ -53,9 +150,9 @@ func (s *ExecutionRequest) SetFile(val File) {
 
 // Ref: #/components/schemas/ExecutionResult
 type ExecutionResult struct {
-	ExecutionID string    `json:"execution_id"`
-	Status      OptString `json:"status"`
-	Result      OptString `json:"result"`
+	ExecutionID string `json:"execution_id"`
+	Status      string `json:"status"`
+	Result      string `json:"result"`
 }
 
 // GetExecutionID returns the value of ExecutionID.
@@ -64,12 +161,12 @@ func (s *ExecutionResult) GetExecutionID() string {
 }
 
 // GetStatus returns the value of Status.
-func (s *ExecutionResult) GetStatus() OptString {
+func (s *ExecutionResult) GetStatus() string {
 	return s.Status
 }
 
 // GetResult returns the value of Result.
-func (s *ExecutionResult) GetResult() OptString {
+func (s *ExecutionResult) GetResult() string {
 	return s.Result
 }
 
@@ -79,16 +176,15 @@ func (s *ExecutionResult) SetExecutionID(val string) {
 }
 
 // SetStatus sets the value of Status.
-func (s *ExecutionResult) SetStatus(val OptString) {
+func (s *ExecutionResult) SetStatus(val string) {
 	s.Status = val
 }
 
 // SetResult sets the value of Result.
-func (s *ExecutionResult) SetResult(val OptString) {
+func (s *ExecutionResult) SetResult(val string) {
 	s.Result = val
 }
 
-func (*ExecutionResult) executeRes()            {}
 func (*ExecutionResult) getExecutionResultRes() {}
 
 // Ref: #/components/schemas/File
@@ -128,6 +224,30 @@ func (*GetExecutionResultInternalServerError) getExecutionResultRes() {}
 type GetExecutionResultNotFound Error
 
 func (*GetExecutionResultNotFound) getExecutionResultRes() {}
+
+type GetExecutionResultsBadRequest Error
+
+func (*GetExecutionResultsBadRequest) getExecutionResultsRes() {}
+
+type GetExecutionResultsInternalServerError Error
+
+func (*GetExecutionResultsInternalServerError) getExecutionResultsRes() {}
+
+type GetExecutionResultsOKApplicationJSON []ExecutionResult
+
+func (*GetExecutionResultsOKApplicationJSON) getExecutionResultsRes() {}
+
+type GetExecutionsBadRequest Error
+
+func (*GetExecutionsBadRequest) getExecutionsRes() {}
+
+type GetExecutionsInternalServerError Error
+
+func (*GetExecutionsInternalServerError) getExecutionsRes() {}
+
+type GetExecutionsOKApplicationJSON []Execution
+
+func (*GetExecutionsOKApplicationJSON) getExecutionsRes() {}
 
 // NewOptString returns new OptString with value set to v.
 func NewOptString(v string) OptString {

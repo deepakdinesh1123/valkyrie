@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: odin
+  namespace: valkyrie
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: odin
+  template:
+    metadata:
+      labels:
+        app: odin
+    spec:
+      containers:
+      - name: odin
+        image: deepakdinesh1123/odin:0.1.0
+        ports:
+        - containerPort: 8080
+        envFrom:
+        - configMapRef:
+            name: odin-config

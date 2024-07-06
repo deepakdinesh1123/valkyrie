@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var rootCmd = &cobra.Command{
+var RootCmd = &cobra.Command{
 	Use:   "odin",
 	Short: "ODIN",
 	Long:  `ODIN`,
@@ -17,9 +17,9 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute() {
-	rootCmd.Execute()
+	RootCmd.Execute()
 }
 
 func init() {
-	rootCmd.AddCommand(serverCmd)
+	RootCmd.AddCommand(ServerCmd)
 }

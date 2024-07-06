@@ -12,13 +12,19 @@ import (
 var Connection *amqp.Connection
 
 func GetConnection() (*amqp.Connection, error) {
+	envConfig, err := config.GetEnvConfig()
+	logger := logs.GetLogger()
+	if err != nil {
+		logger.Err(err).Msg("Failed to get env config")
+		return nil, err
+	}
 	if Connection == nil {
-		RABBITMQ_URL := fmt.Sprintf("amqp://guest:guest@%s:%s/", config.EnvConfig.RABBITMQ_HOST, config.EnvConfig.RABBITMQ_PORT)
+		RABBITMQ_URL := fmt.Sprintf("amqp://guest:guest@%s:%s/", envConfig.RABBITMQ_HOST, envConfig.RABBITMQ_PORT)
 		connection, err := amqp.Dial(
 			RABBITMQ_URL,
 		)
 		if err != nil {
-			logs.Logger.Err(err).Msg("Failed to connect to RabbitMQ")
+			logger.Err(err).Msg("Failed to connect to RabbitMQ")
 			return nil, err
 		}
 		Connection = connection
@@ -27,13 +33,11 @@ func GetConnection() (*amqp.Connection, error) {
 }
 
 func GetChannel() (*amqp.Channel, error) {
-	if Connection == nil {
-		connection, err := GetConnection()
-		if err != nil {
-			logs.Logger.Err(err).Msg("Failed to get connection")
-			return nil, err
-		}
-		return connection.Channel()
+	logger := logs.GetLogger()
+	connection, err := GetConnection()
+	if err != nil {
+		logger.Err(err).Msg("Failed to get connection")
+		return nil, err
 	}
-	return Connection.Channel()
+	return connection.Channel()
 }
