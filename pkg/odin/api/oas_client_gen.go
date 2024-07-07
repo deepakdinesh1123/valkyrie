@@ -33,7 +33,7 @@ type Invoker interface {
 	//
 	// Get execution result.
 	//
-	// GET /execition/{execution_id}/
+	// GET /execution/{execution_id}/
 	GetExecutionResult(ctx context.Context, params GetExecutionResultParams) (GetExecutionResultRes, error)
 	// GetExecutionResults invokes getExecutionResults operation.
 	//
@@ -176,7 +176,7 @@ func (c *Client) sendExecute(ctx context.Context, request *ExecutionRequest) (re
 //
 // Get execution result.
 //
-// GET /execition/{execution_id}/
+// GET /execution/{execution_id}/
 func (c *Client) GetExecutionResult(ctx context.Context, params GetExecutionResultParams) (GetExecutionResultRes, error) {
 	res, err := c.sendGetExecutionResult(ctx, params)
 	return res, err
@@ -186,7 +186,7 @@ func (c *Client) sendGetExecutionResult(ctx context.Context, params GetExecution
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getExecutionResult"),
 		semconv.HTTPMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/execition/{execution_id}/"),
+		semconv.HTTPRouteKey.String("/execution/{execution_id}/"),
 	}
 
 	// Run stopwatch.
@@ -219,7 +219,7 @@ func (c *Client) sendGetExecutionResult(ctx context.Context, params GetExecution
 	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [3]string
-	pathParts[0] = "/execition/"
+	pathParts[0] = "/execution/"
 	{
 		// Encode "execution_id" parameter.
 		e := uri.NewPathEncoder(uri.PathEncoderConfig{
