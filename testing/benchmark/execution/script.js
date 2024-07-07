@@ -1,5 +1,9 @@
 import http from 'k6/http';
-import { sleep } from 'k6';
+import { sleep, check } from 'k6';
+
+function getRandomItemFromArray(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
 
 var tasks = [
   {
@@ -26,7 +30,7 @@ var tasks = [
                         name = "something";
                         runtimeInputs = [ pkgs.python3 ];
                         text = ''
-                            python script.py
+                            python main.py
                         '';
                     };
                 };
@@ -42,7 +46,7 @@ var tasks = [
   {
     "file": {
       "name": "main.py",
-      "content": "print('hello world')"
+      "content": "import time\ntime.sleep(10)"
     },
     "environment": `
     {
@@ -61,9 +65,9 @@ var tasks = [
                 packages = {
                     something = pkgs.writeShellApplication {
                         name = "something";
-                        runtimeInputs = [ pkgs.python39 ];
+                        runtimeInputs = [ pkgs.python3 ];
                         text = ''
-                            python script.py
+                            python main.py
                         '';
                     };
                 };
@@ -86,6 +90,11 @@ export const options = {
 };
 
 export default function() {
-  http.get('https://test.k6.io');
+  let res = http.post('http://localhost:8000/execution/execute/', JSON.stringify(getRandomItemFromArray(tasks)));
+  const respData = res.json();
+  check(res, {
+    'status was 200': (r) => r.status == 200,
+    'execution_id_exists': (r) => respData.execution_id != null,
+  });
   sleep(1);
 }

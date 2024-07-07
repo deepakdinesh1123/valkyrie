@@ -40,7 +40,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /execition/{execution_id}/:
+  /execution/{execution_id}/:
     get:
       summary: Get execution result
       description: Get execution result

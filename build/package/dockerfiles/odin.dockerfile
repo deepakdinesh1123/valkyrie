@@ -20,11 +20,11 @@ RUN cp -R $(nix-store -qR result/) /tmp/nix-store-closure
 
 FROM scratch
 COPY --from=BUILDER /tmp/nix-store-closure /nix/store
-COPY --from=BUILDER /valkyrie/result/bin/odin /bin
+COPY --from=BUILDER /valkyrie/result /app
 
 
 COPY .env /valkyrie/odin/.env
 
 WORKDIR /valkyrie/odin
-ENTRYPOINT ["/bin/odin"]
-CMD ["server"]
+# ENTRYPOINT ["/bin/odin"]
+CMD ["/app/bin/odin", "server"]
