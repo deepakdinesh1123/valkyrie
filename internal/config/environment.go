@@ -16,9 +16,8 @@ type Environment struct {
 	POSTGRES_USER     string `mapstructure:"POSTGRES_USER"`     // represents the username for connecting to PostgreSQL.
 	POSTGRES_PASSWORD string `mapstructure:"POSTGRES_PASSWORD"` // represents the password for connecting to PostgreSQL.
 	POSTGRES_DB       string `mapstructure:"POSTGRES_DB"`       // represents the name of the PostgreSQL database.
-
-	EXECUTION_ENVIRONMENT string `mapstructure:"EXECUTION_ENVIRONMENT"` // Indicates whether the execution environment is docker or k8s
-	CONTAINERS            int    `mapstructure:"CONTAINERS"`            // Number of nix containers that will be spun up to execute code when the environment is docker
+	POSTGRES_SSL_MODE string `mapstructure:"POSTGRES_SSL_MODE"` // represents the SSL mode for connecting to PostgreSQL.
+	DB_MIGRATE        bool   `mapstructure:"DB_MIGRATE"`        // Indicates whether the database migrations should be run on startup
 }
 
 // EnvConfig holds the configuration settings for the application.

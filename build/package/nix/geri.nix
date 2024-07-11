@@ -7,7 +7,7 @@ pkgs.buildGoModule rec {
   pname = "geri";
   version = "0.0.1";
 
-  vendorHash = "sha256-ssF8q2gS90lVo3zc42ShKQm0tz5J/nG2bS8ka30F8i8=";
+  vendorHash = "sha256-DYU2DMM5OVUvrWx5AayhhQIqn6Pd/okjspnsiwB1c/w=";
   doCheck = false;
 
   src = ../../..;

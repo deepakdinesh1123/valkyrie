@@ -6,4 +6,8 @@
     "editor.tabSize": 2,
     "editor.detectIndentation": false
   },
+  "[gotmpl]": {
+    "editor.detectIndentation": false,
+    "editor.tabSize": 2
+  }
 }

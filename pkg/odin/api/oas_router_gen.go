@@ -111,7 +111,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 				elem = origElem
 			}
-			// Param: "execution_id"
+			// Param: "executionId"
 			// Match until "/"
 			idx := strings.IndexByte(elem, '/')
 			if idx < 0 {
@@ -304,7 +304,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 
 				elem = origElem
 			}
-			// Param: "execution_id"
+			// Param: "executionId"
 			// Match until "/"
 			idx := strings.IndexByte(elem, '/')
 			if idx < 0 {
@@ -332,7 +332,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						r.name = "GetExecutionResult"
 						r.summary = "Get execution result"
 						r.operationID = "getExecutionResult"
-						r.pathPattern = "/execution/{execution_id}/"
+						r.pathPattern = "/execution/{executionId}/"
 						r.args = args
 						r.count = 1
 						return r, true

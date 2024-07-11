@@ -24,10 +24,11 @@ paths:
               schema:
                 type: object
                 required:
-                  - execution_id
+                  - executionId
                 properties:
-                  execution_id:
+                  executionId:
                     type: string
+                    format: uuid
         '400':
           description: Bad Request
           content:
@@ -40,17 +41,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /execution/{execution_id}/:
+  /execution/{executionId}/:
     get:
       summary: Get execution result
       description: Get execution result
       operationId: getExecutionResult
       parameters:
-        - name: execution_id
+        - name: executionId
           in: path
           required: true
           schema:
             type: string
+            format: uuid
       responses:
         '200':
           description: OK
@@ -65,11 +67,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          description: Execution not found
         '500':
           description: Internal Server Error
           content:
@@ -144,8 +142,10 @@ components:
           type: string
         script:
           type: string
-    Environment:
+    ExecutionEnvironmentSpec:
       type: object
+      required:
+        - language
       properties:
         environment_variables:
           type: array
@@ -155,12 +155,21 @@ components:
           type: array
           items:
             type: string
-        enterShell:
-          type: string
-        scripts:
+        dependencies:
           type: array
           items:
-            $ref: '#/components/schemas/Script'
+            type: string
+        language:
+          $ref: '#/components/schemas/ProgrammingLanguage'
+    ProgrammingLanguage:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        version:
+          type: string
     File:
       type: object
       properties:
@@ -175,18 +184,64 @@ components:
         - file
       properties:
         environment:
-          type: string
+          oneOf:
+            - $ref: '#/components/schemas/Flake'
+            - $ref: '#/components/schemas/ExecutionEnvironmentSpec'
+        config:
+          oneOf:
+            - $ref: '#/components/schemas/DockerExecutionConfig'
+            - $ref: '#/components/schemas/PodmanExecutionConfig'
         file:
           $ref: '#/components/schemas/File'
+    DockerExecutionConfig:
+      type: object
+      properties:
+        containerConfig:
+          type: object
+          properties:
+            image:
+              type: string
+        HostConfig:
+          type: object
+          properties:
+            Resources:
+              type: object
+              properties:
+                Memory:
+                  type: integer
+                NanoCPUs:
+                  type: integer
+            Runtime:
+              type: string
+    PodmanExecutionConfig:
+      type: object
+      properties:
+        ContainerBasicConfig:
+          type: object
+          properties:
+            OCIRuntime:
+              type: string
+        ContainerStorageConfig:
+          type: object
+          properties:
+            Image:
+              type: string
+            ImageOS:
+              type: string
+            ImageArch:
+              type: string
+            ImageVariant:
+              type: string
     ExecutionResult:
       type: object
       required:
-        - execution_id
+        - executionId
         - status
         - result
       properties:
-        execution_id:
+        executionId:
           type: string
+          format: uuid
         status:
           type: string
         result:
@@ -201,25 +256,27 @@ components:
     Execution:
       type: object
       required:
-        - execution_id
+        - executionId
         - environment
-        - requested_at
+        - requestedAt
       properties:
-        execution_id:
+        executionId:
           type: string
+          format: uuid
         code:
           type: string
         environment:
           type: string
-        requested_at:
+        requestedAt:
           type: string
         result:
           type: string
-        execution_status:
+        executionStatus:
           type: string
         executed_at:
           type: string
-        
+    Flake:
+      type: string
         
         
         

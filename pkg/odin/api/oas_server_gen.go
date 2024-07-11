@@ -18,7 +18,7 @@ type Handler interface {
 	//
 	// Get execution result.
 	//
-	// GET /execution/{execution_id}/
+	// GET /execution/{executionId}/
 	GetExecutionResult(ctx context.Context, params GetExecutionResultParams) (GetExecutionResultRes, error)
 	// GetExecutionResults implements getExecutionResults operation.
 	//

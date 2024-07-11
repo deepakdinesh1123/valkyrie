@@ -1,5 +1,7 @@
 package execution
 
+import "github.com/google/uuid"
+
 type File struct {
 	Name    string `json:"name"`
 	Content string `json:"content"`
@@ -15,21 +17,27 @@ type EnvironmentVariable struct {
 	Value string `json:"value"`
 }
 
-type Environment struct {
+type LanguageDependency struct {
+	Name    string `json:"name"`
+	Version string `json:"version"`
+}
+
+type ExecutionEnvSpec struct {
 	EnvironmentVariables []EnvironmentVariable `json:"environment_variables"`
 	Packages             []string              `json:"packages"`
 	EnterShell           string                `json:"enterShell"`
 	Scripts              []Script              `json:"scripts"`
+	Dependencies         []LanguageDependency  `json:"dependencies"`
 }
 
 type ExecutionRequest struct {
-	ExecutionID string `json:"execution_id"`
-	Environment string `json:"environment"`
-	File        File   `json:"file"`
+	ExecutionID uuid.UUID `json:"executionId"`
+	Environment string    `json:"environment"`
+	File        File      `json:"file"`
 }
 
 type ExecutionResult struct {
-	ExecutionID string `json:"execution_id"`
+	ExecutionID string `json:"executionId"`
 	Status      string `json:"status"`
 	Result      string `json:"result"`
 }

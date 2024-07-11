@@ -26,7 +26,7 @@ func (UnimplementedHandler) Execute(ctx context.Context, req *ExecutionRequest) 
 //
 // Get execution result.
 //
-// GET /execution/{execution_id}/
+// GET /execution/{executionId}/
 func (UnimplementedHandler) GetExecutionResult(ctx context.Context, params GetExecutionResultParams) (r GetExecutionResultRes, _ error) {
 	return r, ht.ErrNotImplemented
 }

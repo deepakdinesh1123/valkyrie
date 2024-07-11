@@ -7,6 +7,7 @@ import (
 	"net/url"
 
 	"github.com/go-faster/errors"
+	"github.com/google/uuid"
 
 	"github.com/ogen-go/ogen/conv"
 	"github.com/ogen-go/ogen/middleware"
@@ -17,22 +18,22 @@ import (
 
 // GetExecutionResultParams is parameters of getExecutionResult operation.
 type GetExecutionResultParams struct {
-	ExecutionID string
+	ExecutionId uuid.UUID
 }
 
 func unpackGetExecutionResultParams(packed middleware.Parameters) (params GetExecutionResultParams) {
 	{
 		key := middleware.ParameterKey{
-			Name: "execution_id",
+			Name: "executionId",
 			In:   "path",
 		}
-		params.ExecutionID = packed[key].(string)
+		params.ExecutionId = packed[key].(uuid.UUID)
 	}
 	return params
 }
 
 func decodeGetExecutionResultParams(args [1]string, argsEscaped bool, r *http.Request) (params GetExecutionResultParams, _ error) {
-	// Decode path: execution_id.
+	// Decode path: executionId.
 	if err := func() error {
 		param := args[0]
 		if argsEscaped {
@@ -44,7 +45,7 @@ func decodeGetExecutionResultParams(args [1]string, argsEscaped bool, r *http.Re
 		}
 		if len(param) > 0 {
 			d := uri.NewPathDecoder(uri.PathDecoderConfig{
-				Param:   "execution_id",
+				Param:   "executionId",
 				Value:   param,
 				Style:   uri.PathStyleSimple,
 				Explode: false,
@@ -56,12 +57,12 @@ func decodeGetExecutionResultParams(args [1]string, argsEscaped bool, r *http.Re
 					return err
 				}
 
-				c, err := conv.ToString(val)
+				c, err := conv.ToUUID(val)
 				if err != nil {
 					return err
 				}
 
-				params.ExecutionID = c
+				params.ExecutionId = c
 				return nil
 			}(); err != nil {
 				return err
@@ -72,7 +73,7 @@ func decodeGetExecutionResultParams(args [1]string, argsEscaped bool, r *http.Re
 		return nil
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
-			Name: "execution_id",
+			Name: "executionId",
 			In:   "path",
 			Err:  err,
 		}

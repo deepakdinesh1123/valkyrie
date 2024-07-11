@@ -136,12 +136,12 @@ func (s *Server) handleExecuteRequest(args [0]string, argsEscaped bool, w http.R
 //
 // Get execution result.
 //
-// GET /execution/{execution_id}/
+// GET /execution/{executionId}/
 func (s *Server) handleGetExecutionResultRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getExecutionResult"),
 		semconv.HTTPMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/execution/{execution_id}/"),
+		semconv.HTTPRouteKey.String("/execution/{executionId}/"),
 	}
 
 	// Start a span for this request.
@@ -201,9 +201,9 @@ func (s *Server) handleGetExecutionResultRequest(args [1]string, argsEscaped boo
 			Body:             nil,
 			Params: middleware.Parameters{
 				{
-					Name: "execution_id",
+					Name: "executionId",
 					In:   "path",
-				}: params.ExecutionID,
+				}: params.ExecutionId,
 			},
 			Raw: r,
 		}

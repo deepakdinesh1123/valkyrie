@@ -9,7 +9,6 @@ import (
 
 	"github.com/deepakdinesh1123/valkyrie/internal/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/models/execution"
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/rs/zerolog"
 )
@@ -58,24 +57,29 @@ func (t *ExecTask) Execute(ctx context.Context) error {
 	}
 
 	t.logs.Info().Msg("Running nix")
-	cmd := exec.Command("nix", "run")
+	cmd := exec.Command("nix", "develop")
 	cmd.Dir = executionPath
 	cmd.Stdin = os.Stdin
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		t.logs.Err(err).Msgf("Failed to run nix: %s", string(err.Error()))
+		t.queries.InsertExecutionResult(
+			ctx,
+			db.InsertExecutionResultParams{
+				ExecutionID:     t.executionRequest.ExecutionID,
+				Result:          pgtype.Text{String: string(out), Valid: true},
+				ExecutionStatus: pgtype.Text{String: "Failed", Valid: true},
+				ExecutedAt:      pgtype.Timestamp{Time: time.Now(), Valid: true},
+			},
+		)
 		return err
 	}
 	fmt.Println(string(out))
 
-	execId, err := uuid.Parse(t.executionRequest.ExecutionID)
-	if err != nil {
-		return err
-	}
 	t.queries.InsertExecutionResult(
 		ctx,
 		db.InsertExecutionResultParams{
-			ExecutionID:     execId,
+			ExecutionID:     t.executionRequest.ExecutionID,
 			Result:          pgtype.Text{String: string(out), Valid: true},
 			ExecutionStatus: pgtype.Text{String: "Executed", Valid: true},
 			ExecutedAt:      pgtype.Timestamp{Time: time.Now(), Valid: true},

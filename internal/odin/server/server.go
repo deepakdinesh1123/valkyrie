@@ -7,6 +7,7 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/mq"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/database"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/services/execution"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
 	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog"
@@ -18,7 +19,8 @@ type Server struct {
 
 	Queue *mq.MessageQueue
 
-	ValkyrieConfig *config.ValkyrieConfig
+	ValkyrieConfig   *config.ValkyrieConfig
+	executionService *execution.ExecutionService
 }
 
 func NewServer(ctx context.Context, logger *zerolog.Logger) *api.Server {
@@ -37,10 +39,13 @@ func NewServer(ctx context.Context, logger *zerolog.Logger) *api.Server {
 		logger.Err(err).Msg("Failed to connect to Postgres")
 		panic(err)
 	}
+
+	executionService := execution.NewExecutionService(queries, valkyrieConfig)
 	server := &Server{
-		DB:             DB,
-		Queries:        queries,
-		ValkyrieConfig: valkyrieConfig,
+		DB:               DB,
+		Queries:          queries,
+		ValkyrieConfig:   valkyrieConfig,
+		executionService: executionService,
 	}
 	srv, err := api.NewServer(server)
 	if err != nil {

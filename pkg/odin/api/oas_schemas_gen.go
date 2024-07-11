@@ -2,6 +2,126 @@
 
 package api
 
+import (
+	"github.com/google/uuid"
+)
+
+// Ref: #/components/schemas/DockerExecutionConfig
+type DockerExecutionConfig struct {
+	ContainerConfig OptDockerExecutionConfigContainerConfig `json:"containerConfig"`
+	HostConfig      OptDockerExecutionConfigHostConfig      `json:"HostConfig"`
+}
+
+// GetContainerConfig returns the value of ContainerConfig.
+func (s *DockerExecutionConfig) GetContainerConfig() OptDockerExecutionConfigContainerConfig {
+	return s.ContainerConfig
+}
+
+// GetHostConfig returns the value of HostConfig.
+func (s *DockerExecutionConfig) GetHostConfig() OptDockerExecutionConfigHostConfig {
+	return s.HostConfig
+}
+
+// SetContainerConfig sets the value of ContainerConfig.
+func (s *DockerExecutionConfig) SetContainerConfig(val OptDockerExecutionConfigContainerConfig) {
+	s.ContainerConfig = val
+}
+
+// SetHostConfig sets the value of HostConfig.
+func (s *DockerExecutionConfig) SetHostConfig(val OptDockerExecutionConfigHostConfig) {
+	s.HostConfig = val
+}
+
+type DockerExecutionConfigContainerConfig struct {
+	Image OptString `json:"image"`
+}
+
+// GetImage returns the value of Image.
+func (s *DockerExecutionConfigContainerConfig) GetImage() OptString {
+	return s.Image
+}
+
+// SetImage sets the value of Image.
+func (s *DockerExecutionConfigContainerConfig) SetImage(val OptString) {
+	s.Image = val
+}
+
+type DockerExecutionConfigHostConfig struct {
+	Resources OptDockerExecutionConfigHostConfigResources `json:"Resources"`
+	Runtime   OptString                                   `json:"Runtime"`
+}
+
+// GetResources returns the value of Resources.
+func (s *DockerExecutionConfigHostConfig) GetResources() OptDockerExecutionConfigHostConfigResources {
+	return s.Resources
+}
+
+// GetRuntime returns the value of Runtime.
+func (s *DockerExecutionConfigHostConfig) GetRuntime() OptString {
+	return s.Runtime
+}
+
+// SetResources sets the value of Resources.
+func (s *DockerExecutionConfigHostConfig) SetResources(val OptDockerExecutionConfigHostConfigResources) {
+	s.Resources = val
+}
+
+// SetRuntime sets the value of Runtime.
+func (s *DockerExecutionConfigHostConfig) SetRuntime(val OptString) {
+	s.Runtime = val
+}
+
+type DockerExecutionConfigHostConfigResources struct {
+	Memory   OptInt `json:"Memory"`
+	NanoCPUs OptInt `json:"NanoCPUs"`
+}
+
+// GetMemory returns the value of Memory.
+func (s *DockerExecutionConfigHostConfigResources) GetMemory() OptInt {
+	return s.Memory
+}
+
+// GetNanoCPUs returns the value of NanoCPUs.
+func (s *DockerExecutionConfigHostConfigResources) GetNanoCPUs() OptInt {
+	return s.NanoCPUs
+}
+
+// SetMemory sets the value of Memory.
+func (s *DockerExecutionConfigHostConfigResources) SetMemory(val OptInt) {
+	s.Memory = val
+}
+
+// SetNanoCPUs sets the value of NanoCPUs.
+func (s *DockerExecutionConfigHostConfigResources) SetNanoCPUs(val OptInt) {
+	s.NanoCPUs = val
+}
+
+// Ref: #/components/schemas/EnvironmentVariable
+type EnvironmentVariable struct {
+	Key   OptString `json:"key"`
+	Value OptString `json:"value"`
+}
+
+// GetKey returns the value of Key.
+func (s *EnvironmentVariable) GetKey() OptString {
+	return s.Key
+}
+
+// GetValue returns the value of Value.
+func (s *EnvironmentVariable) GetValue() OptString {
+	return s.Value
+}
+
+// SetKey sets the value of Key.
+func (s *EnvironmentVariable) SetKey(val OptString) {
+	s.Key = val
+}
+
+// SetValue sets the value of Value.
+func (s *EnvironmentVariable) SetValue(val OptString) {
+	s.Value = val
+}
+
 // Ref: #/components/schemas/Error
 type Error struct {
 	Message string `json:"message"`
@@ -26,35 +146,35 @@ type ExecuteInternalServerError Error
 func (*ExecuteInternalServerError) executeRes() {}
 
 type ExecuteOK struct {
-	ExecutionID string `json:"execution_id"`
+	ExecutionId uuid.UUID `json:"executionId"`
 }
 
-// GetExecutionID returns the value of ExecutionID.
-func (s *ExecuteOK) GetExecutionID() string {
-	return s.ExecutionID
+// GetExecutionId returns the value of ExecutionId.
+func (s *ExecuteOK) GetExecutionId() uuid.UUID {
+	return s.ExecutionId
 }
 
-// SetExecutionID sets the value of ExecutionID.
-func (s *ExecuteOK) SetExecutionID(val string) {
-	s.ExecutionID = val
+// SetExecutionId sets the value of ExecutionId.
+func (s *ExecuteOK) SetExecutionId(val uuid.UUID) {
+	s.ExecutionId = val
 }
 
 func (*ExecuteOK) executeRes() {}
 
 // Ref: #/components/schemas/Execution
 type Execution struct {
-	ExecutionID     string    `json:"execution_id"`
+	ExecutionId     uuid.UUID `json:"executionId"`
 	Code            OptString `json:"code"`
 	Environment     string    `json:"environment"`
-	RequestedAt     string    `json:"requested_at"`
+	RequestedAt     string    `json:"requestedAt"`
 	Result          OptString `json:"result"`
-	ExecutionStatus OptString `json:"execution_status"`
+	ExecutionStatus OptString `json:"executionStatus"`
 	ExecutedAt      OptString `json:"executed_at"`
 }
 
-// GetExecutionID returns the value of ExecutionID.
-func (s *Execution) GetExecutionID() string {
-	return s.ExecutionID
+// GetExecutionId returns the value of ExecutionId.
+func (s *Execution) GetExecutionId() uuid.UUID {
+	return s.ExecutionId
 }
 
 // GetCode returns the value of Code.
@@ -87,9 +207,9 @@ func (s *Execution) GetExecutedAt() OptString {
 	return s.ExecutedAt
 }
 
-// SetExecutionID sets the value of ExecutionID.
-func (s *Execution) SetExecutionID(val string) {
-	s.ExecutionID = val
+// SetExecutionId sets the value of ExecutionId.
+func (s *Execution) SetExecutionId(val uuid.UUID) {
+	s.ExecutionId = val
 }
 
 // SetCode sets the value of Code.
@@ -122,15 +242,69 @@ func (s *Execution) SetExecutedAt(val OptString) {
 	s.ExecutedAt = val
 }
 
+// Ref: #/components/schemas/ExecutionEnvironmentSpec
+type ExecutionEnvironmentSpec struct {
+	EnvironmentVariables []EnvironmentVariable `json:"environment_variables"`
+	Packages             []string              `json:"packages"`
+	Dependencies         []string              `json:"dependencies"`
+	Language             ProgrammingLanguage   `json:"language"`
+}
+
+// GetEnvironmentVariables returns the value of EnvironmentVariables.
+func (s *ExecutionEnvironmentSpec) GetEnvironmentVariables() []EnvironmentVariable {
+	return s.EnvironmentVariables
+}
+
+// GetPackages returns the value of Packages.
+func (s *ExecutionEnvironmentSpec) GetPackages() []string {
+	return s.Packages
+}
+
+// GetDependencies returns the value of Dependencies.
+func (s *ExecutionEnvironmentSpec) GetDependencies() []string {
+	return s.Dependencies
+}
+
+// GetLanguage returns the value of Language.
+func (s *ExecutionEnvironmentSpec) GetLanguage() ProgrammingLanguage {
+	return s.Language
+}
+
+// SetEnvironmentVariables sets the value of EnvironmentVariables.
+func (s *ExecutionEnvironmentSpec) SetEnvironmentVariables(val []EnvironmentVariable) {
+	s.EnvironmentVariables = val
+}
+
+// SetPackages sets the value of Packages.
+func (s *ExecutionEnvironmentSpec) SetPackages(val []string) {
+	s.Packages = val
+}
+
+// SetDependencies sets the value of Dependencies.
+func (s *ExecutionEnvironmentSpec) SetDependencies(val []string) {
+	s.Dependencies = val
+}
+
+// SetLanguage sets the value of Language.
+func (s *ExecutionEnvironmentSpec) SetLanguage(val ProgrammingLanguage) {
+	s.Language = val
+}
+
 // Ref: #/components/schemas/ExecutionRequest
 type ExecutionRequest struct {
-	Environment string `json:"environment"`
-	File        File   `json:"file"`
+	Environment ExecutionRequestEnvironment `json:"environment"`
+	Config      OptExecutionRequestConfig   `json:"config"`
+	File        File                        `json:"file"`
 }
 
 // GetEnvironment returns the value of Environment.
-func (s *ExecutionRequest) GetEnvironment() string {
+func (s *ExecutionRequest) GetEnvironment() ExecutionRequestEnvironment {
 	return s.Environment
+}
+
+// GetConfig returns the value of Config.
+func (s *ExecutionRequest) GetConfig() OptExecutionRequestConfig {
+	return s.Config
 }
 
 // GetFile returns the value of File.
@@ -139,8 +313,13 @@ func (s *ExecutionRequest) GetFile() File {
 }
 
 // SetEnvironment sets the value of Environment.
-func (s *ExecutionRequest) SetEnvironment(val string) {
+func (s *ExecutionRequest) SetEnvironment(val ExecutionRequestEnvironment) {
 	s.Environment = val
+}
+
+// SetConfig sets the value of Config.
+func (s *ExecutionRequest) SetConfig(val OptExecutionRequestConfig) {
+	s.Config = val
 }
 
 // SetFile sets the value of File.
@@ -148,16 +327,152 @@ func (s *ExecutionRequest) SetFile(val File) {
 	s.File = val
 }
 
-// Ref: #/components/schemas/ExecutionResult
-type ExecutionResult struct {
-	ExecutionID string `json:"execution_id"`
-	Status      string `json:"status"`
-	Result      string `json:"result"`
+// ExecutionRequestConfig represents sum type.
+type ExecutionRequestConfig struct {
+	Type                  ExecutionRequestConfigType // switch on this field
+	DockerExecutionConfig DockerExecutionConfig
+	PodmanExecutionConfig PodmanExecutionConfig
 }
 
-// GetExecutionID returns the value of ExecutionID.
-func (s *ExecutionResult) GetExecutionID() string {
-	return s.ExecutionID
+// ExecutionRequestConfigType is oneOf type of ExecutionRequestConfig.
+type ExecutionRequestConfigType string
+
+// Possible values for ExecutionRequestConfigType.
+const (
+	DockerExecutionConfigExecutionRequestConfig ExecutionRequestConfigType = "DockerExecutionConfig"
+	PodmanExecutionConfigExecutionRequestConfig ExecutionRequestConfigType = "PodmanExecutionConfig"
+)
+
+// IsDockerExecutionConfig reports whether ExecutionRequestConfig is DockerExecutionConfig.
+func (s ExecutionRequestConfig) IsDockerExecutionConfig() bool {
+	return s.Type == DockerExecutionConfigExecutionRequestConfig
+}
+
+// IsPodmanExecutionConfig reports whether ExecutionRequestConfig is PodmanExecutionConfig.
+func (s ExecutionRequestConfig) IsPodmanExecutionConfig() bool {
+	return s.Type == PodmanExecutionConfigExecutionRequestConfig
+}
+
+// SetDockerExecutionConfig sets ExecutionRequestConfig to DockerExecutionConfig.
+func (s *ExecutionRequestConfig) SetDockerExecutionConfig(v DockerExecutionConfig) {
+	s.Type = DockerExecutionConfigExecutionRequestConfig
+	s.DockerExecutionConfig = v
+}
+
+// GetDockerExecutionConfig returns DockerExecutionConfig and true boolean if ExecutionRequestConfig is DockerExecutionConfig.
+func (s ExecutionRequestConfig) GetDockerExecutionConfig() (v DockerExecutionConfig, ok bool) {
+	if !s.IsDockerExecutionConfig() {
+		return v, false
+	}
+	return s.DockerExecutionConfig, true
+}
+
+// NewDockerExecutionConfigExecutionRequestConfig returns new ExecutionRequestConfig from DockerExecutionConfig.
+func NewDockerExecutionConfigExecutionRequestConfig(v DockerExecutionConfig) ExecutionRequestConfig {
+	var s ExecutionRequestConfig
+	s.SetDockerExecutionConfig(v)
+	return s
+}
+
+// SetPodmanExecutionConfig sets ExecutionRequestConfig to PodmanExecutionConfig.
+func (s *ExecutionRequestConfig) SetPodmanExecutionConfig(v PodmanExecutionConfig) {
+	s.Type = PodmanExecutionConfigExecutionRequestConfig
+	s.PodmanExecutionConfig = v
+}
+
+// GetPodmanExecutionConfig returns PodmanExecutionConfig and true boolean if ExecutionRequestConfig is PodmanExecutionConfig.
+func (s ExecutionRequestConfig) GetPodmanExecutionConfig() (v PodmanExecutionConfig, ok bool) {
+	if !s.IsPodmanExecutionConfig() {
+		return v, false
+	}
+	return s.PodmanExecutionConfig, true
+}
+
+// NewPodmanExecutionConfigExecutionRequestConfig returns new ExecutionRequestConfig from PodmanExecutionConfig.
+func NewPodmanExecutionConfigExecutionRequestConfig(v PodmanExecutionConfig) ExecutionRequestConfig {
+	var s ExecutionRequestConfig
+	s.SetPodmanExecutionConfig(v)
+	return s
+}
+
+// ExecutionRequestEnvironment represents sum type.
+type ExecutionRequestEnvironment struct {
+	Type                     ExecutionRequestEnvironmentType // switch on this field
+	Flake                    Flake
+	ExecutionEnvironmentSpec ExecutionEnvironmentSpec
+}
+
+// ExecutionRequestEnvironmentType is oneOf type of ExecutionRequestEnvironment.
+type ExecutionRequestEnvironmentType string
+
+// Possible values for ExecutionRequestEnvironmentType.
+const (
+	FlakeExecutionRequestEnvironment                    ExecutionRequestEnvironmentType = "Flake"
+	ExecutionEnvironmentSpecExecutionRequestEnvironment ExecutionRequestEnvironmentType = "ExecutionEnvironmentSpec"
+)
+
+// IsFlake reports whether ExecutionRequestEnvironment is Flake.
+func (s ExecutionRequestEnvironment) IsFlake() bool {
+	return s.Type == FlakeExecutionRequestEnvironment
+}
+
+// IsExecutionEnvironmentSpec reports whether ExecutionRequestEnvironment is ExecutionEnvironmentSpec.
+func (s ExecutionRequestEnvironment) IsExecutionEnvironmentSpec() bool {
+	return s.Type == ExecutionEnvironmentSpecExecutionRequestEnvironment
+}
+
+// SetFlake sets ExecutionRequestEnvironment to Flake.
+func (s *ExecutionRequestEnvironment) SetFlake(v Flake) {
+	s.Type = FlakeExecutionRequestEnvironment
+	s.Flake = v
+}
+
+// GetFlake returns Flake and true boolean if ExecutionRequestEnvironment is Flake.
+func (s ExecutionRequestEnvironment) GetFlake() (v Flake, ok bool) {
+	if !s.IsFlake() {
+		return v, false
+	}
+	return s.Flake, true
+}
+
+// NewFlakeExecutionRequestEnvironment returns new ExecutionRequestEnvironment from Flake.
+func NewFlakeExecutionRequestEnvironment(v Flake) ExecutionRequestEnvironment {
+	var s ExecutionRequestEnvironment
+	s.SetFlake(v)
+	return s
+}
+
+// SetExecutionEnvironmentSpec sets ExecutionRequestEnvironment to ExecutionEnvironmentSpec.
+func (s *ExecutionRequestEnvironment) SetExecutionEnvironmentSpec(v ExecutionEnvironmentSpec) {
+	s.Type = ExecutionEnvironmentSpecExecutionRequestEnvironment
+	s.ExecutionEnvironmentSpec = v
+}
+
+// GetExecutionEnvironmentSpec returns ExecutionEnvironmentSpec and true boolean if ExecutionRequestEnvironment is ExecutionEnvironmentSpec.
+func (s ExecutionRequestEnvironment) GetExecutionEnvironmentSpec() (v ExecutionEnvironmentSpec, ok bool) {
+	if !s.IsExecutionEnvironmentSpec() {
+		return v, false
+	}
+	return s.ExecutionEnvironmentSpec, true
+}
+
+// NewExecutionEnvironmentSpecExecutionRequestEnvironment returns new ExecutionRequestEnvironment from ExecutionEnvironmentSpec.
+func NewExecutionEnvironmentSpecExecutionRequestEnvironment(v ExecutionEnvironmentSpec) ExecutionRequestEnvironment {
+	var s ExecutionRequestEnvironment
+	s.SetExecutionEnvironmentSpec(v)
+	return s
+}
+
+// Ref: #/components/schemas/ExecutionResult
+type ExecutionResult struct {
+	ExecutionId uuid.UUID `json:"executionId"`
+	Status      string    `json:"status"`
+	Result      string    `json:"result"`
+}
+
+// GetExecutionId returns the value of ExecutionId.
+func (s *ExecutionResult) GetExecutionId() uuid.UUID {
+	return s.ExecutionId
 }
 
 // GetStatus returns the value of Status.
@@ -170,9 +485,9 @@ func (s *ExecutionResult) GetResult() string {
 	return s.Result
 }
 
-// SetExecutionID sets the value of ExecutionID.
-func (s *ExecutionResult) SetExecutionID(val string) {
-	s.ExecutionID = val
+// SetExecutionId sets the value of ExecutionId.
+func (s *ExecutionResult) SetExecutionId(val uuid.UUID) {
+	s.ExecutionId = val
 }
 
 // SetStatus sets the value of Status.
@@ -213,6 +528,8 @@ func (s *File) SetContent(val OptString) {
 	s.Content = val
 }
 
+type Flake string
+
 type GetExecutionResultBadRequest Error
 
 func (*GetExecutionResultBadRequest) getExecutionResultRes() {}
@@ -221,7 +538,8 @@ type GetExecutionResultInternalServerError Error
 
 func (*GetExecutionResultInternalServerError) getExecutionResultRes() {}
 
-type GetExecutionResultNotFound Error
+// GetExecutionResultNotFound is response for GetExecutionResult operation.
+type GetExecutionResultNotFound struct{}
 
 func (*GetExecutionResultNotFound) getExecutionResultRes() {}
 
@@ -248,6 +566,328 @@ func (*GetExecutionsInternalServerError) getExecutionsRes() {}
 type GetExecutionsOKApplicationJSON []Execution
 
 func (*GetExecutionsOKApplicationJSON) getExecutionsRes() {}
+
+// NewOptDockerExecutionConfigContainerConfig returns new OptDockerExecutionConfigContainerConfig with value set to v.
+func NewOptDockerExecutionConfigContainerConfig(v DockerExecutionConfigContainerConfig) OptDockerExecutionConfigContainerConfig {
+	return OptDockerExecutionConfigContainerConfig{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptDockerExecutionConfigContainerConfig is optional DockerExecutionConfigContainerConfig.
+type OptDockerExecutionConfigContainerConfig struct {
+	Value DockerExecutionConfigContainerConfig
+	Set   bool
+}
+
+// IsSet returns true if OptDockerExecutionConfigContainerConfig was set.
+func (o OptDockerExecutionConfigContainerConfig) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptDockerExecutionConfigContainerConfig) Reset() {
+	var v DockerExecutionConfigContainerConfig
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptDockerExecutionConfigContainerConfig) SetTo(v DockerExecutionConfigContainerConfig) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptDockerExecutionConfigContainerConfig) Get() (v DockerExecutionConfigContainerConfig, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptDockerExecutionConfigContainerConfig) Or(d DockerExecutionConfigContainerConfig) DockerExecutionConfigContainerConfig {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptDockerExecutionConfigHostConfig returns new OptDockerExecutionConfigHostConfig with value set to v.
+func NewOptDockerExecutionConfigHostConfig(v DockerExecutionConfigHostConfig) OptDockerExecutionConfigHostConfig {
+	return OptDockerExecutionConfigHostConfig{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptDockerExecutionConfigHostConfig is optional DockerExecutionConfigHostConfig.
+type OptDockerExecutionConfigHostConfig struct {
+	Value DockerExecutionConfigHostConfig
+	Set   bool
+}
+
+// IsSet returns true if OptDockerExecutionConfigHostConfig was set.
+func (o OptDockerExecutionConfigHostConfig) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptDockerExecutionConfigHostConfig) Reset() {
+	var v DockerExecutionConfigHostConfig
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptDockerExecutionConfigHostConfig) SetTo(v DockerExecutionConfigHostConfig) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptDockerExecutionConfigHostConfig) Get() (v DockerExecutionConfigHostConfig, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptDockerExecutionConfigHostConfig) Or(d DockerExecutionConfigHostConfig) DockerExecutionConfigHostConfig {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptDockerExecutionConfigHostConfigResources returns new OptDockerExecutionConfigHostConfigResources with value set to v.
+func NewOptDockerExecutionConfigHostConfigResources(v DockerExecutionConfigHostConfigResources) OptDockerExecutionConfigHostConfigResources {
+	return OptDockerExecutionConfigHostConfigResources{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptDockerExecutionConfigHostConfigResources is optional DockerExecutionConfigHostConfigResources.
+type OptDockerExecutionConfigHostConfigResources struct {
+	Value DockerExecutionConfigHostConfigResources
+	Set   bool
+}
+
+// IsSet returns true if OptDockerExecutionConfigHostConfigResources was set.
+func (o OptDockerExecutionConfigHostConfigResources) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptDockerExecutionConfigHostConfigResources) Reset() {
+	var v DockerExecutionConfigHostConfigResources
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptDockerExecutionConfigHostConfigResources) SetTo(v DockerExecutionConfigHostConfigResources) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptDockerExecutionConfigHostConfigResources) Get() (v DockerExecutionConfigHostConfigResources, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptDockerExecutionConfigHostConfigResources) Or(d DockerExecutionConfigHostConfigResources) DockerExecutionConfigHostConfigResources {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptExecutionRequestConfig returns new OptExecutionRequestConfig with value set to v.
+func NewOptExecutionRequestConfig(v ExecutionRequestConfig) OptExecutionRequestConfig {
+	return OptExecutionRequestConfig{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptExecutionRequestConfig is optional ExecutionRequestConfig.
+type OptExecutionRequestConfig struct {
+	Value ExecutionRequestConfig
+	Set   bool
+}
+
+// IsSet returns true if OptExecutionRequestConfig was set.
+func (o OptExecutionRequestConfig) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptExecutionRequestConfig) Reset() {
+	var v ExecutionRequestConfig
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptExecutionRequestConfig) SetTo(v ExecutionRequestConfig) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptExecutionRequestConfig) Get() (v ExecutionRequestConfig, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptExecutionRequestConfig) Or(d ExecutionRequestConfig) ExecutionRequestConfig {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptInt returns new OptInt with value set to v.
+func NewOptInt(v int) OptInt {
+	return OptInt{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptInt is optional int.
+type OptInt struct {
+	Value int
+	Set   bool
+}
+
+// IsSet returns true if OptInt was set.
+func (o OptInt) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptInt) Reset() {
+	var v int
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptInt) SetTo(v int) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptInt) Get() (v int, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptInt) Or(d int) int {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptPodmanExecutionConfigContainerBasicConfig returns new OptPodmanExecutionConfigContainerBasicConfig with value set to v.
+func NewOptPodmanExecutionConfigContainerBasicConfig(v PodmanExecutionConfigContainerBasicConfig) OptPodmanExecutionConfigContainerBasicConfig {
+	return OptPodmanExecutionConfigContainerBasicConfig{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptPodmanExecutionConfigContainerBasicConfig is optional PodmanExecutionConfigContainerBasicConfig.
+type OptPodmanExecutionConfigContainerBasicConfig struct {
+	Value PodmanExecutionConfigContainerBasicConfig
+	Set   bool
+}
+
+// IsSet returns true if OptPodmanExecutionConfigContainerBasicConfig was set.
+func (o OptPodmanExecutionConfigContainerBasicConfig) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptPodmanExecutionConfigContainerBasicConfig) Reset() {
+	var v PodmanExecutionConfigContainerBasicConfig
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptPodmanExecutionConfigContainerBasicConfig) SetTo(v PodmanExecutionConfigContainerBasicConfig) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptPodmanExecutionConfigContainerBasicConfig) Get() (v PodmanExecutionConfigContainerBasicConfig, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptPodmanExecutionConfigContainerBasicConfig) Or(d PodmanExecutionConfigContainerBasicConfig) PodmanExecutionConfigContainerBasicConfig {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptPodmanExecutionConfigContainerStorageConfig returns new OptPodmanExecutionConfigContainerStorageConfig with value set to v.
+func NewOptPodmanExecutionConfigContainerStorageConfig(v PodmanExecutionConfigContainerStorageConfig) OptPodmanExecutionConfigContainerStorageConfig {
+	return OptPodmanExecutionConfigContainerStorageConfig{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptPodmanExecutionConfigContainerStorageConfig is optional PodmanExecutionConfigContainerStorageConfig.
+type OptPodmanExecutionConfigContainerStorageConfig struct {
+	Value PodmanExecutionConfigContainerStorageConfig
+	Set   bool
+}
+
+// IsSet returns true if OptPodmanExecutionConfigContainerStorageConfig was set.
+func (o OptPodmanExecutionConfigContainerStorageConfig) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptPodmanExecutionConfigContainerStorageConfig) Reset() {
+	var v PodmanExecutionConfigContainerStorageConfig
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptPodmanExecutionConfigContainerStorageConfig) SetTo(v PodmanExecutionConfigContainerStorageConfig) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptPodmanExecutionConfigContainerStorageConfig) Get() (v PodmanExecutionConfigContainerStorageConfig, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptPodmanExecutionConfigContainerStorageConfig) Or(d PodmanExecutionConfigContainerStorageConfig) PodmanExecutionConfigContainerStorageConfig {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
 
 // NewOptString returns new OptString with value set to v.
 func NewOptString(v string) OptString {
@@ -293,4 +933,117 @@ func (o OptString) Or(d string) string {
 		return v
 	}
 	return d
+}
+
+// Ref: #/components/schemas/PodmanExecutionConfig
+type PodmanExecutionConfig struct {
+	ContainerBasicConfig   OptPodmanExecutionConfigContainerBasicConfig   `json:"ContainerBasicConfig"`
+	ContainerStorageConfig OptPodmanExecutionConfigContainerStorageConfig `json:"ContainerStorageConfig"`
+}
+
+// GetContainerBasicConfig returns the value of ContainerBasicConfig.
+func (s *PodmanExecutionConfig) GetContainerBasicConfig() OptPodmanExecutionConfigContainerBasicConfig {
+	return s.ContainerBasicConfig
+}
+
+// GetContainerStorageConfig returns the value of ContainerStorageConfig.
+func (s *PodmanExecutionConfig) GetContainerStorageConfig() OptPodmanExecutionConfigContainerStorageConfig {
+	return s.ContainerStorageConfig
+}
+
+// SetContainerBasicConfig sets the value of ContainerBasicConfig.
+func (s *PodmanExecutionConfig) SetContainerBasicConfig(val OptPodmanExecutionConfigContainerBasicConfig) {
+	s.ContainerBasicConfig = val
+}
+
+// SetContainerStorageConfig sets the value of ContainerStorageConfig.
+func (s *PodmanExecutionConfig) SetContainerStorageConfig(val OptPodmanExecutionConfigContainerStorageConfig) {
+	s.ContainerStorageConfig = val
+}
+
+type PodmanExecutionConfigContainerBasicConfig struct {
+	OCIRuntime OptString `json:"OCIRuntime"`
+}
+
+// GetOCIRuntime returns the value of OCIRuntime.
+func (s *PodmanExecutionConfigContainerBasicConfig) GetOCIRuntime() OptString {
+	return s.OCIRuntime
+}
+
+// SetOCIRuntime sets the value of OCIRuntime.
+func (s *PodmanExecutionConfigContainerBasicConfig) SetOCIRuntime(val OptString) {
+	s.OCIRuntime = val
+}
+
+type PodmanExecutionConfigContainerStorageConfig struct {
+	Image        OptString `json:"Image"`
+	ImageOS      OptString `json:"ImageOS"`
+	ImageArch    OptString `json:"ImageArch"`
+	ImageVariant OptString `json:"ImageVariant"`
+}
+
+// GetImage returns the value of Image.
+func (s *PodmanExecutionConfigContainerStorageConfig) GetImage() OptString {
+	return s.Image
+}
+
+// GetImageOS returns the value of ImageOS.
+func (s *PodmanExecutionConfigContainerStorageConfig) GetImageOS() OptString {
+	return s.ImageOS
+}
+
+// GetImageArch returns the value of ImageArch.
+func (s *PodmanExecutionConfigContainerStorageConfig) GetImageArch() OptString {
+	return s.ImageArch
+}
+
+// GetImageVariant returns the value of ImageVariant.
+func (s *PodmanExecutionConfigContainerStorageConfig) GetImageVariant() OptString {
+	return s.ImageVariant
+}
+
+// SetImage sets the value of Image.
+func (s *PodmanExecutionConfigContainerStorageConfig) SetImage(val OptString) {
+	s.Image = val
+}
+
+// SetImageOS sets the value of ImageOS.
+func (s *PodmanExecutionConfigContainerStorageConfig) SetImageOS(val OptString) {
+	s.ImageOS = val
+}
+
+// SetImageArch sets the value of ImageArch.
+func (s *PodmanExecutionConfigContainerStorageConfig) SetImageArch(val OptString) {
+	s.ImageArch = val
+}
+
+// SetImageVariant sets the value of ImageVariant.
+func (s *PodmanExecutionConfigContainerStorageConfig) SetImageVariant(val OptString) {
+	s.ImageVariant = val
+}
+
+// Ref: #/components/schemas/ProgrammingLanguage
+type ProgrammingLanguage struct {
+	Name    string    `json:"name"`
+	Version OptString `json:"version"`
+}
+
+// GetName returns the value of Name.
+func (s *ProgrammingLanguage) GetName() string {
+	return s.Name
+}
+
+// GetVersion returns the value of Version.
+func (s *ProgrammingLanguage) GetVersion() OptString {
+	return s.Version
+}
+
+// SetName sets the value of Name.
+func (s *ProgrammingLanguage) SetName(val string) {
+	s.Name = val
+}
+
+// SetVersion sets the value of Version.
+func (s *ProgrammingLanguage) SetVersion(val OptString) {
+	s.Version = val
 }
