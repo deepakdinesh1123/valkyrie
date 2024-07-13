@@ -1,0 +1,9 @@
+apiVersion: v1
+data:
+  .env: "hello=world\r\n\r\n"
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: {{ include "odin.fullname" . }}
+  labels:
+    {{- include "odin.labels" . | nindent 4 }}
