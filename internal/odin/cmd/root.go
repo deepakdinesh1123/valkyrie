@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
@@ -11,7 +9,7 @@ var RootCmd = &cobra.Command{
 	Short: "ODIN",
 	Long:  `ODIN`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("Execute odin --help for more information on using odin.")
+		_ = cmd.Usage()
 		return nil
 	},
 }
@@ -22,4 +20,6 @@ func Execute() {
 
 func init() {
 	RootCmd.AddCommand(ServerCmd)
+	RootCmd.AddCommand(WorkerCmd)
+	RootCmd.AddCommand(StandaloneCmd)
 }

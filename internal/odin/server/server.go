@@ -5,8 +5,6 @@ import (
 
 	"github.com/deepakdinesh1123/valkyrie/internal/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/db"
-	"github.com/deepakdinesh1123/valkyrie/internal/mq"
-	"github.com/deepakdinesh1123/valkyrie/internal/odin/database"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/services/execution"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
 	"github.com/jackc/pgx/v5"
@@ -14,38 +12,19 @@ import (
 )
 
 type Server struct {
-	DB      *pgx.Conn
-	Queries *db.Queries
-
-	Queue *mq.MessageQueue
-
-	ValkyrieConfig   *config.ValkyrieConfig
+	dbConn           *pgx.Conn
+	queries          *db.Queries
+	envConfig        *config.EnvConfig
 	executionService *execution.ExecutionService
 }
 
-func NewServer(ctx context.Context, logger *zerolog.Logger) *api.Server {
-	err := createQueues(logger)
-	if err != nil {
-		logger.Err(err).Msg("Failed to create queues")
-		panic(err)
-	}
-	valkyrieConfig, err := config.GetValkyrieConfig()
-	if err != nil {
-		logger.Err(err).Msg("Failed to get valkyrie config")
-	}
-
-	DB, queries, err := database.GetDBConnection(ctx, logger)
-	if err != nil {
-		logger.Err(err).Msg("Failed to connect to Postgres")
-		panic(err)
-	}
-
-	executionService := execution.NewExecutionService(queries, valkyrieConfig)
+func NewServer(ctx context.Context, envConfig *config.EnvConfig, dbConn *pgx.Conn, queries *db.Queries, logger *zerolog.Logger) *api.Server {
+	executionService := execution.NewExecutionService(queries, envConfig)
 	server := &Server{
-		DB:               DB,
-		Queries:          queries,
-		ValkyrieConfig:   valkyrieConfig,
+		queries:          queries,
 		executionService: executionService,
+		dbConn:           dbConn,
+		envConfig:        envConfig,
 	}
 	srv, err := api.NewServer(server)
 	if err != nil {
@@ -53,13 +32,4 @@ func NewServer(ctx context.Context, logger *zerolog.Logger) *api.Server {
 		panic(err)
 	}
 	return srv
-}
-
-func createQueues(logger *zerolog.Logger) error {
-	_, err := mq.NewQueue("execute", true, false, false, false, nil)
-	if err != nil {
-		logger.Err(err).Msg("Failed to create queue: execute")
-		return err
-	}
-	return nil
 }

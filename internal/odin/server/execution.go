@@ -31,7 +31,7 @@ func (s *Server) Execute(ctx context.Context, req *api.ExecutionRequest) (api.Ex
 }
 
 func (s *Server) GetExecutionResult(ctx context.Context, params api.GetExecutionResultParams) (api.GetExecutionResultRes, error) {
-	execResult, err := s.Queries.GetResultUsingExecutionID(ctx, params.ExecutionId)
+	execResult, err := s.queries.GetResultUsingExecutionID(ctx, params.ExecutionId)
 	if err != nil {
 		return &api.GetExecutionResultNotFound{}, nil
 	}
@@ -44,7 +44,7 @@ func (s *Server) GetExecutionResult(ctx context.Context, params api.GetExecution
 }
 
 func (s *Server) GetExecutions(ctx context.Context) (api.GetExecutionsRes, error) {
-	executionsDB, err := s.Queries.GetAllExecutions(ctx)
+	executionsDB, err := s.queries.GetAllExecutions(ctx)
 	if err != nil {
 		return &api.GetExecutionsInternalServerError{
 			Message: fmt.Sprintf("Failed to get executions: %v", err),
@@ -66,7 +66,7 @@ func (s *Server) GetExecutions(ctx context.Context) (api.GetExecutionsRes, error
 }
 
 func (s *Server) GetExecutionResults(ctx context.Context) (api.GetExecutionResultsRes, error) {
-	execResultsDB, err := s.Queries.GetAllExecutionResults(ctx)
+	execResultsDB, err := s.queries.GetAllExecutionResults(ctx)
 	if err != nil {
 		return &api.GetExecutionResultsInternalServerError{
 			Message: fmt.Sprintf("Failed to get execution results: %v", err),

@@ -3,71 +3,37 @@ package execution
 import (
 	"bytes"
 	"context"
-	"encoding/json"
+	"embed"
 	"fmt"
 	"text/template"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/db"
-	"github.com/deepakdinesh1123/valkyrie/internal/models/execution"
-	"github.com/deepakdinesh1123/valkyrie/internal/mq"
+	"github.com/deepakdinesh1123/valkyrie/internal/models"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
+//go:embed templates
+var flakes embed.FS
+
 type ExecutionService struct {
-	queries *db.Queries
-	// queue          *mq.MessageQueue
-	valkyrieConfig *config.ValkyrieConfig
+	queries   *db.Queries
+	envConfig *config.EnvConfig
 }
 
-func NewExecutionService(queries *db.Queries, valkyrieConfig *config.ValkyrieConfig) *ExecutionService {
+func NewExecutionService(queries *db.Queries, envConfig *config.EnvConfig) *ExecutionService {
 	return &ExecutionService{
-		queries:        queries,
-		valkyrieConfig: valkyrieConfig,
+		queries:   queries,
+		envConfig: envConfig,
 	}
 }
 
 func (s *ExecutionService) Execute(ctx context.Context, req *api.ExecutionRequest) (uuid.UUID, error) {
-	executionId := uuid.New()
-	execRequest, err := PrepareExecutionRequest(req)
-	if err != nil {
-		return uuid.Nil, err
-	}
-	execRequest.ExecutionID = executionId
-	execRequestJSON, err := json.Marshal(execRequest)
-	if err != nil {
-		return uuid.Nil, &ExecutionServiceError{
-			Type:    "json",
-			Message: "failed to marshal execution request",
-		}
-	}
-	err = mq.Publish("execute", execRequestJSON)
-	if err != nil {
-		return uuid.Nil, &ExecutionServiceError{
-			Type:    "mq",
-			Message: "failed to publish execution request",
-		}
-	}
-	_, err = s.queries.InsertExecutionRequest(
-		ctx,
-		db.InsertExecutionRequestParams{
-			ExecutionID: executionId,
-			Environment: pgtype.Text{String: execRequest.Environment, Valid: true},
-			Code:        pgtype.Text{String: req.File.Content.Value, Valid: true},
-		},
-	)
-	if err != nil {
-		return uuid.Nil, &ExecutionServiceError{
-			Type:    "db",
-			Message: "failed to insert execution request",
-		}
-	}
-	return executionId, nil
+	return uuid.Nil, nil
 }
 
-func PrepareExecutionRequest(req *api.ExecutionRequest) (*execution.ExecutionRequest, error) {
+func PrepareExecutionRequest(req *api.ExecutionRequest) (*models.ExecutionRequest, error) {
 	if req.Environment.Type == "ExecutionEnvironmentSpec" {
 		flake, err := ConvertExecSpecToFlake(req.Environment.ExecutionEnvironmentSpec)
 		if err != nil {
@@ -76,17 +42,17 @@ func PrepareExecutionRequest(req *api.ExecutionRequest) (*execution.ExecutionReq
 				Message: "failed to convert execution environment spec to flake",
 			}
 		}
-		return &execution.ExecutionRequest{
+		return &models.ExecutionRequest{
 			Environment: flake,
-			File: execution.File{
+			File: models.File{
 				Name:    req.File.Name.Value,
 				Content: req.File.Content.Value,
 			},
 		}, nil
 	}
-	return &execution.ExecutionRequest{
+	return &models.ExecutionRequest{
 		Environment: string(req.Environment.Flake),
-		File: execution.File{
+		File: models.File{
 			Name:    req.File.Name.Value,
 			Content: req.File.Content.Value,
 		},
@@ -94,8 +60,7 @@ func PrepareExecutionRequest(req *api.ExecutionRequest) (*execution.ExecutionReq
 }
 
 func ConvertExecSpecToFlake(execSpec api.ExecutionEnvironmentSpec) (string, error) {
-	template_path := fmt.Sprintf("internal/odin/services/execution/templates/%s.tmpl", execSpec.Language.Name)
-	flakeTmpl, err := template.ParseFiles(template_path)
+	tmpl, err := flakes.ReadFile(fmt.Sprintf("templates/%s", execSpec.Language.Name))
 	if err != nil {
 		return "", &ExecutionServiceError{
 			Type:    "template",
@@ -103,7 +68,7 @@ func ConvertExecSpecToFlake(execSpec api.ExecutionEnvironmentSpec) (string, erro
 		}
 	}
 	buffer := new(bytes.Buffer)
-	err = flakeTmpl.Execute(buffer, execSpec)
+	err = template.Must(template.New("tmpl").Parse(string(tmpl))).Execute(buffer, execSpec)
 	if err != nil {
 		return "", &ExecutionServiceError{
 			Type:    "template",

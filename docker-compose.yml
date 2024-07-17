@@ -6,8 +6,6 @@ services:
     env_file:
       - .env
     depends_on:
-      rabbitmq:
-        condition: service_healthy
       postgres:
         condition: service_healthy
     ports:
@@ -20,24 +18,11 @@ services:
     env_file:
       - .env
     depends_on:
-      rabbitmq:
-        condition: service_healthy
       postgres:
         condition: service_healthy
       odin:
         condition: service_started
     scale: 3
-
-  rabbitmq:
-    image: rabbitmq:management
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "status"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   postgres:
     image: postgres

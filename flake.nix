@@ -20,29 +20,18 @@
 
         packages = {
           odin = pkgs.callPackage ./build/package/nix/odin.nix { inherit pkgs; };
-          geri = pkgs.callPackage ./build/package/nix/geri.nix { inherit pkgs; };
           nardump = pkgs.callPackage ./build/package/nix/nardump.nix { inherit pkgs; };
         };
 		    defaultPackage = packages.odin;
 
         devShells = {
           default = pkgs.mkShell {
-            buildInputs = [ packages.odin packages.geri ] ++ devDependencies ++ docsDependencies;
-            shellHook = ''
-              docker-compose up rabbitmq postgres -d
-            '';
+            buildInputs = [ packages.odin ] ++ devDependencies ++ docsDependencies;
           };
           odin = pkgs.mkShell {
             buildInputs = [ packages.odin ];
             shellHook = ''
               odin server
-              exit
-            '';
-          };
-          geri = pkgs.mkShell {
-            buildInputs = [ packages.geri ];
-            shellHook = ''
-              geri start
               exit
             '';
           };
