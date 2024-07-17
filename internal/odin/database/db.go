@@ -49,6 +49,9 @@ func GetDBConnection(ctx context.Context, standalone bool, envConfig *config.Env
 	// Ensure the connection is closed when the context is done
 	go func() {
 		<-sigChan
+		logger.Info().Msg("Stopping Postgres connection")
+		DB.Close(ctx)
+		logger.Info().Msg("Postgres connection stopped")
 		if pge != nil {
 			logger.Info().Msg("Stopping Embedded Postgres")
 			err = pge.Stop()
@@ -57,9 +60,6 @@ func GetDBConnection(ctx context.Context, standalone bool, envConfig *config.Env
 			}
 			logger.Info().Msg("Embedded Postgres stopped")
 		}
-		logger.Info().Msg("Stopping Postgres connection")
-		DB.Close(ctx)
-		logger.Info().Msg("Postgres connection stopped")
 		done <- true
 	}()
 
