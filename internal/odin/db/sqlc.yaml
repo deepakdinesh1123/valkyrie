@@ -1,12 +1,18 @@
 version: "2"
+cloud:
+  project: '01J1BQY2CAXNR8DBY51C3KJG0K'
 sql:
   - engine: "postgresql"
-    queries: "internal/odin/database/queries"
-    schema: "internal/odin/database/migrations"
+    queries:
+      - "queries/job.sql"
+    schema:
+      - "queries/job.sql"
+    database:
+      uri: "postgresql://thors:thorkell@localhost:5432/valkyrie?sslmode=disable"
     gen:
       go:
         package: "db"
-        out: "internal/db"
+        out: "."
         sql_package: "pgx/v5"
         overrides:
           - db_type: "uuid"

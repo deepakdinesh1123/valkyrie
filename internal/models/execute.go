@@ -26,6 +26,12 @@ type ExecutionRequest struct {
 	ExecutionID string `json:"execution_id"`
 	Environment string `json:"environment"`
 	File        File   `json:"file"`
+	Priority    int    `json:"priority"`
+
+	dockerConfig *DockerContainerConfig
+	podmanConfig *PodmanContainerConfig
+	systemConfig *SystemConfig
+	nsjailConfig *NsjailConfig
 }
 
 type ExecutionResult struct {

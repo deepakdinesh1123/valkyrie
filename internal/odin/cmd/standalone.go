@@ -12,7 +12,7 @@ import (
 
 	"github.com/deepakdinesh1123/valkyrie/internal/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/logs"
-	"github.com/deepakdinesh1123/valkyrie/internal/odin/database"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/server"
 )
 
@@ -45,7 +45,7 @@ func standaloneExec(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	dbConn, queries, err := database.GetDBConnection(ctx, true, envConfig, applyMigrations, sigChan, done, logger)
+	dbConn, queries, err := db.GetDBConnection(ctx, true, envConfig, applyMigrations, sigChan, done, logger)
 	if err != nil {
 		logger.Err(err).Msg("Failed to get database connection")
 		cancel()

@@ -228,7 +228,7 @@ func (c *Client) sendGetExecutionResult(ctx context.Context, params GetExecution
 			Explode: false,
 		})
 		if err := func() error {
-			return e.EncodeValue(conv.UUIDToString(params.ExecutionId))
+			return e.EncodeValue(conv.Int64ToString(params.ExecutionId))
 		}(); err != nil {
 			return res, errors.Wrap(err, "encode path")
 		}

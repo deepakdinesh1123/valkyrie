@@ -1,4 +1,4 @@
-package database
+package db
 
 import (
 	"context"
@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/config"
-	"github.com/deepakdinesh1123/valkyrie/internal/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/pgembed"
 	embeddedpostgres "github.com/fergusstrange/embedded-postgres"
 	"github.com/jackc/pgx/v5"
@@ -22,7 +21,7 @@ import (
 //go:embed all:migrations/*.sql
 var migrationsFS embed.FS
 
-func GetDBConnection(ctx context.Context, standalone bool, envConfig *config.EnvConfig, applyMigrations bool, sigChan chan os.Signal, done chan bool, logger *zerolog.Logger) (*pgx.Conn, *db.Queries, error) {
+func GetDBConnection(ctx context.Context, standalone bool, envConfig *config.EnvConfig, applyMigrations bool, sigChan chan os.Signal, done chan bool, logger *zerolog.Logger) (*pgx.Conn, *Queries, error) {
 	// Start embedded Postgres if standalone mode is enabled
 	var pge *embeddedpostgres.EmbeddedPostgres
 	if standalone {
@@ -69,9 +68,10 @@ func GetDBConnection(ctx context.Context, standalone bool, envConfig *config.Env
 		if err := applyMigrationsFunc(POSTGRES_URL, logger); err != nil {
 			return nil, nil, err
 		}
+		logger.Info().Msg("Migrations applied")
 	}
 
-	queries := db.New(DB)
+	queries := New(DB)
 	return DB, queries, nil
 }
 

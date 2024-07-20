@@ -18,10 +18,11 @@ type EnvConfig struct {
 	ODIN_SERVER_HOST string `mapstructure:"ODIN_SERVER_HOST"` // represents the host on which the Odin server will listen.
 	ODIN_SERVER_PORT string `mapstructure:"ODIN_SERVER_PORT"` // represents the port on which the Odin server will listen.
 
-	EXEC_ENV     string `mapstructure:"EXEC_ENV"`     // represents the execution environment for the application.
-	CONCURRENCY  int    `mapstructure:"CONCURRENCY"`  // represents the concurrency level for the worker.
-	BUFFER_SIZE  int    `mapstructure:"BUFFER_SIZE"`  // represents the buffer size for the worker.
-	TASK_TIMEOUT int    `mapstructure:"TASK_TIMEOUT"` // represents the task timeout.
+	ODIN_WORKER_PROVIDER     string `mapstructure:"ODIN_WORKER_PROVIDER"`     // represents the worker provider.
+	ODIN_WORKER_CONCURRENCY  int    `mapstructure:"ODIN_WORKER_CONCURRENCY"`  // represents the concurrency level for the worker.
+	ODIN_WORKER_BUFFER_SIZE  int    `mapstructure:"ODIN_WORKER_BUFFER_SIZE"`  // represents the buffer size for the worker.
+	ODIN_WORKER_TASK_TIMEOUT int    `mapstructure:"ODIN_WORKER_TASK_TIMEOUT"` // represents the task timeout.
+	ODIN_WORKER_POLL_FREQ    int    `mapstructure:"ODIN_WORKER_POLL_FREQ"`    // represents the polling frequency for the worker in seconds.
 }
 
 // EnvConfig holds the configuration settings for the application.
@@ -32,6 +33,22 @@ func GetEnvConfig() (*EnvConfig, error) {
 	viper.AddConfigPath(".")
 	viper.SetConfigName(".env")
 	viper.AutomaticEnv()
+
+	viper.SetDefault("POSTGRES_HOST", "localhost")
+	viper.SetDefault("POSTGRES_PORT", 5432)
+	viper.SetDefault("POSTGRES_USER", "thors")
+	viper.SetDefault("POSTGRES_PASSWORD", "thorkell")
+	viper.SetDefault("POSTGRES_DB", "valkyrie")
+	viper.SetDefault("POSTGRES_SSL_MODE", "disable")
+
+	viper.SetDefault("ODIN_SERVER_HOST", "0.0.0.0")
+	viper.SetDefault("ODIN_SERVER_PORT", "8080")
+
+	viper.SetDefault("ODIN_WORKER_PROVIDER", "system")
+	viper.SetDefault("ODIN_WORKER_CONCURRENCY", 10)
+	viper.SetDefault("ODIN_WORKER_BUFFER_SIZE", 100)
+	viper.SetDefault("ODIN_WORKER_TASK_TIMEOUT", 30)
+	viper.SetDefault("ODIN_WORKER_POLL_FREQ", 5)
 
 	// Read configuration from file
 	err := viper.ReadInConfig()

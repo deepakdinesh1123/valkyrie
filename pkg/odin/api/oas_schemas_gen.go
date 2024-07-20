@@ -3,7 +3,7 @@
 package api
 
 import (
-	"github.com/google/uuid"
+	"time"
 )
 
 // Ref: #/components/schemas/DockerExecutionConfig
@@ -146,16 +146,16 @@ type ExecuteInternalServerError Error
 func (*ExecuteInternalServerError) executeRes() {}
 
 type ExecuteOK struct {
-	ExecutionId uuid.UUID `json:"executionId"`
+	ExecutionId int64 `json:"executionId"`
 }
 
 // GetExecutionId returns the value of ExecutionId.
-func (s *ExecuteOK) GetExecutionId() uuid.UUID {
+func (s *ExecuteOK) GetExecutionId() int64 {
 	return s.ExecutionId
 }
 
 // SetExecutionId sets the value of ExecutionId.
-func (s *ExecuteOK) SetExecutionId(val uuid.UUID) {
+func (s *ExecuteOK) SetExecutionId(val int64) {
 	s.ExecutionId = val
 }
 
@@ -163,83 +163,72 @@ func (*ExecuteOK) executeRes() {}
 
 // Ref: #/components/schemas/Execution
 type Execution struct {
-	ExecutionId     uuid.UUID `json:"executionId"`
-	Code            OptString `json:"code"`
-	Environment     string    `json:"environment"`
-	RequestedAt     string    `json:"requestedAt"`
-	Result          OptString `json:"result"`
-	ExecutionStatus OptString `json:"executionStatus"`
-	ExecutedAt      OptString `json:"executed_at"`
+	ExecutionId int64     `json:"executionId"`
+	Script      string    `json:"script"`
+	Flake       string    `json:"flake"`
+	CreatedAt   time.Time `json:"created_at"`
+	Logs        string    `json:"logs"`
+	FinishedAt  time.Time `json:"finished_at"`
 }
 
 // GetExecutionId returns the value of ExecutionId.
-func (s *Execution) GetExecutionId() uuid.UUID {
+func (s *Execution) GetExecutionId() int64 {
 	return s.ExecutionId
 }
 
-// GetCode returns the value of Code.
-func (s *Execution) GetCode() OptString {
-	return s.Code
+// GetScript returns the value of Script.
+func (s *Execution) GetScript() string {
+	return s.Script
 }
 
-// GetEnvironment returns the value of Environment.
-func (s *Execution) GetEnvironment() string {
-	return s.Environment
+// GetFlake returns the value of Flake.
+func (s *Execution) GetFlake() string {
+	return s.Flake
 }
 
-// GetRequestedAt returns the value of RequestedAt.
-func (s *Execution) GetRequestedAt() string {
-	return s.RequestedAt
+// GetCreatedAt returns the value of CreatedAt.
+func (s *Execution) GetCreatedAt() time.Time {
+	return s.CreatedAt
 }
 
-// GetResult returns the value of Result.
-func (s *Execution) GetResult() OptString {
-	return s.Result
+// GetLogs returns the value of Logs.
+func (s *Execution) GetLogs() string {
+	return s.Logs
 }
 
-// GetExecutionStatus returns the value of ExecutionStatus.
-func (s *Execution) GetExecutionStatus() OptString {
-	return s.ExecutionStatus
-}
-
-// GetExecutedAt returns the value of ExecutedAt.
-func (s *Execution) GetExecutedAt() OptString {
-	return s.ExecutedAt
+// GetFinishedAt returns the value of FinishedAt.
+func (s *Execution) GetFinishedAt() time.Time {
+	return s.FinishedAt
 }
 
 // SetExecutionId sets the value of ExecutionId.
-func (s *Execution) SetExecutionId(val uuid.UUID) {
+func (s *Execution) SetExecutionId(val int64) {
 	s.ExecutionId = val
 }
 
-// SetCode sets the value of Code.
-func (s *Execution) SetCode(val OptString) {
-	s.Code = val
+// SetScript sets the value of Script.
+func (s *Execution) SetScript(val string) {
+	s.Script = val
 }
 
-// SetEnvironment sets the value of Environment.
-func (s *Execution) SetEnvironment(val string) {
-	s.Environment = val
+// SetFlake sets the value of Flake.
+func (s *Execution) SetFlake(val string) {
+	s.Flake = val
 }
 
-// SetRequestedAt sets the value of RequestedAt.
-func (s *Execution) SetRequestedAt(val string) {
-	s.RequestedAt = val
+// SetCreatedAt sets the value of CreatedAt.
+func (s *Execution) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
 }
 
-// SetResult sets the value of Result.
-func (s *Execution) SetResult(val OptString) {
-	s.Result = val
+// SetLogs sets the value of Logs.
+func (s *Execution) SetLogs(val string) {
+	s.Logs = val
 }
 
-// SetExecutionStatus sets the value of ExecutionStatus.
-func (s *Execution) SetExecutionStatus(val OptString) {
-	s.ExecutionStatus = val
-}
-
-// SetExecutedAt sets the value of ExecutedAt.
-func (s *Execution) SetExecutedAt(val OptString) {
-	s.ExecutedAt = val
+// SetFinishedAt sets the value of FinishedAt.
+func (s *Execution) SetFinishedAt(val time.Time) {
+	s.FinishedAt = val
 }
 
 // Ref: #/components/schemas/ExecutionEnvironmentSpec
@@ -295,6 +284,7 @@ type ExecutionRequest struct {
 	Environment ExecutionRequestEnvironment `json:"environment"`
 	Config      OptExecutionRequestConfig   `json:"config"`
 	File        File                        `json:"file"`
+	Priority    OptInt                      `json:"priority"`
 }
 
 // GetEnvironment returns the value of Environment.
@@ -312,6 +302,11 @@ func (s *ExecutionRequest) GetFile() File {
 	return s.File
 }
 
+// GetPriority returns the value of Priority.
+func (s *ExecutionRequest) GetPriority() OptInt {
+	return s.Priority
+}
+
 // SetEnvironment sets the value of Environment.
 func (s *ExecutionRequest) SetEnvironment(val ExecutionRequestEnvironment) {
 	s.Environment = val
@@ -325,6 +320,11 @@ func (s *ExecutionRequest) SetConfig(val OptExecutionRequestConfig) {
 // SetFile sets the value of File.
 func (s *ExecutionRequest) SetFile(val File) {
 	s.File = val
+}
+
+// SetPriority sets the value of Priority.
+func (s *ExecutionRequest) SetPriority(val OptInt) {
+	s.Priority = val
 }
 
 // ExecutionRequestConfig represents sum type.
@@ -465,39 +465,28 @@ func NewExecutionEnvironmentSpecExecutionRequestEnvironment(v ExecutionEnvironme
 
 // Ref: #/components/schemas/ExecutionResult
 type ExecutionResult struct {
-	ExecutionId uuid.UUID `json:"executionId"`
-	Status      string    `json:"status"`
-	Result      string    `json:"result"`
+	ExecutionId int64  `json:"executionId"`
+	Logs        string `json:"logs"`
 }
 
 // GetExecutionId returns the value of ExecutionId.
-func (s *ExecutionResult) GetExecutionId() uuid.UUID {
+func (s *ExecutionResult) GetExecutionId() int64 {
 	return s.ExecutionId
 }
 
-// GetStatus returns the value of Status.
-func (s *ExecutionResult) GetStatus() string {
-	return s.Status
-}
-
-// GetResult returns the value of Result.
-func (s *ExecutionResult) GetResult() string {
-	return s.Result
+// GetLogs returns the value of Logs.
+func (s *ExecutionResult) GetLogs() string {
+	return s.Logs
 }
 
 // SetExecutionId sets the value of ExecutionId.
-func (s *ExecutionResult) SetExecutionId(val uuid.UUID) {
+func (s *ExecutionResult) SetExecutionId(val int64) {
 	s.ExecutionId = val
 }
 
-// SetStatus sets the value of Status.
-func (s *ExecutionResult) SetStatus(val string) {
-	s.Status = val
-}
-
-// SetResult sets the value of Result.
-func (s *ExecutionResult) SetResult(val string) {
-	s.Result = val
+// SetLogs sets the value of Logs.
+func (s *ExecutionResult) SetLogs(val string) {
+	s.Logs = val
 }
 
 func (*ExecutionResult) getExecutionResultRes() {}

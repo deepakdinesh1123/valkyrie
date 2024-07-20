@@ -7,7 +7,6 @@ import (
 	"net/url"
 
 	"github.com/go-faster/errors"
-	"github.com/google/uuid"
 
 	"github.com/ogen-go/ogen/conv"
 	"github.com/ogen-go/ogen/middleware"
@@ -18,7 +17,7 @@ import (
 
 // GetExecutionResultParams is parameters of getExecutionResult operation.
 type GetExecutionResultParams struct {
-	ExecutionId uuid.UUID
+	ExecutionId int64
 }
 
 func unpackGetExecutionResultParams(packed middleware.Parameters) (params GetExecutionResultParams) {
@@ -27,7 +26,7 @@ func unpackGetExecutionResultParams(packed middleware.Parameters) (params GetExe
 			Name: "executionId",
 			In:   "path",
 		}
-		params.ExecutionId = packed[key].(uuid.UUID)
+		params.ExecutionId = packed[key].(int64)
 	}
 	return params
 }
@@ -57,7 +56,7 @@ func decodeGetExecutionResultParams(args [1]string, argsEscaped bool, r *http.Re
 					return err
 				}
 
-				c, err := conv.ToUUID(val)
+				c, err := conv.ToInt64(val)
 				if err != nil {
 					return err
 				}

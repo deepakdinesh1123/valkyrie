@@ -579,7 +579,7 @@ func (s *ExecuteOK) Encode(e *jx.Encoder) {
 func (s *ExecuteOK) encodeFields(e *jx.Encoder) {
 	{
 		e.FieldStart("executionId")
-		json.EncodeUUID(e, s.ExecutionId)
+		e.Int64(s.ExecutionId)
 	}
 }
 
@@ -599,8 +599,8 @@ func (s *ExecuteOK) Decode(d *jx.Decoder) error {
 		case "executionId":
 			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
-				v, err := json.DecodeUUID(d)
-				s.ExecutionId = v
+				v, err := d.Int64()
+				s.ExecutionId = int64(v)
 				if err != nil {
 					return err
 				}
@@ -675,50 +675,37 @@ func (s *Execution) Encode(e *jx.Encoder) {
 func (s *Execution) encodeFields(e *jx.Encoder) {
 	{
 		e.FieldStart("executionId")
-		json.EncodeUUID(e, s.ExecutionId)
+		e.Int64(s.ExecutionId)
 	}
 	{
-		if s.Code.Set {
-			e.FieldStart("code")
-			s.Code.Encode(e)
-		}
+		e.FieldStart("script")
+		e.Str(s.Script)
 	}
 	{
-		e.FieldStart("environment")
-		e.Str(s.Environment)
+		e.FieldStart("flake")
+		e.Str(s.Flake)
 	}
 	{
-		e.FieldStart("requestedAt")
-		e.Str(s.RequestedAt)
+		e.FieldStart("created_at")
+		json.EncodeDateTime(e, s.CreatedAt)
 	}
 	{
-		if s.Result.Set {
-			e.FieldStart("result")
-			s.Result.Encode(e)
-		}
+		e.FieldStart("logs")
+		e.Str(s.Logs)
 	}
 	{
-		if s.ExecutionStatus.Set {
-			e.FieldStart("executionStatus")
-			s.ExecutionStatus.Encode(e)
-		}
-	}
-	{
-		if s.ExecutedAt.Set {
-			e.FieldStart("executed_at")
-			s.ExecutedAt.Encode(e)
-		}
+		e.FieldStart("finished_at")
+		json.EncodeDateTime(e, s.FinishedAt)
 	}
 }
 
-var jsonFieldsNameOfExecution = [7]string{
+var jsonFieldsNameOfExecution = [6]string{
 	0: "executionId",
-	1: "code",
-	2: "environment",
-	3: "requestedAt",
-	4: "result",
-	5: "executionStatus",
-	6: "executed_at",
+	1: "script",
+	2: "flake",
+	3: "created_at",
+	4: "logs",
+	5: "finished_at",
 }
 
 // Decode decodes Execution from json.
@@ -733,8 +720,8 @@ func (s *Execution) Decode(d *jx.Decoder) error {
 		case "executionId":
 			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
-				v, err := json.DecodeUUID(d)
-				s.ExecutionId = v
+				v, err := d.Int64()
+				s.ExecutionId = int64(v)
 				if err != nil {
 					return err
 				}
@@ -742,69 +729,65 @@ func (s *Execution) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"executionId\"")
 			}
-		case "code":
+		case "script":
+			requiredBitSet[0] |= 1 << 1
 			if err := func() error {
-				s.Code.Reset()
-				if err := s.Code.Decode(d); err != nil {
+				v, err := d.Str()
+				s.Script = string(v)
+				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"code\"")
+				return errors.Wrap(err, "decode field \"script\"")
 			}
-		case "environment":
+		case "flake":
 			requiredBitSet[0] |= 1 << 2
 			if err := func() error {
 				v, err := d.Str()
-				s.Environment = string(v)
+				s.Flake = string(v)
 				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"environment\"")
+				return errors.Wrap(err, "decode field \"flake\"")
 			}
-		case "requestedAt":
+		case "created_at":
 			requiredBitSet[0] |= 1 << 3
 			if err := func() error {
-				v, err := d.Str()
-				s.RequestedAt = string(v)
+				v, err := json.DecodeDateTime(d)
+				s.CreatedAt = v
 				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"requestedAt\"")
+				return errors.Wrap(err, "decode field \"created_at\"")
 			}
-		case "result":
+		case "logs":
+			requiredBitSet[0] |= 1 << 4
 			if err := func() error {
-				s.Result.Reset()
-				if err := s.Result.Decode(d); err != nil {
+				v, err := d.Str()
+				s.Logs = string(v)
+				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"result\"")
+				return errors.Wrap(err, "decode field \"logs\"")
 			}
-		case "executionStatus":
+		case "finished_at":
+			requiredBitSet[0] |= 1 << 5
 			if err := func() error {
-				s.ExecutionStatus.Reset()
-				if err := s.ExecutionStatus.Decode(d); err != nil {
+				v, err := json.DecodeDateTime(d)
+				s.FinishedAt = v
+				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"executionStatus\"")
-			}
-		case "executed_at":
-			if err := func() error {
-				s.ExecutedAt.Reset()
-				if err := s.ExecutedAt.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"executed_at\"")
+				return errors.Wrap(err, "decode field \"finished_at\"")
 			}
 		default:
 			return d.Skip()
@@ -816,7 +799,7 @@ func (s *Execution) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00001101,
+		0b00111111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -1067,12 +1050,19 @@ func (s *ExecutionRequest) encodeFields(e *jx.Encoder) {
 		e.FieldStart("file")
 		s.File.Encode(e)
 	}
+	{
+		if s.Priority.Set {
+			e.FieldStart("priority")
+			s.Priority.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfExecutionRequest = [3]string{
+var jsonFieldsNameOfExecutionRequest = [4]string{
 	0: "environment",
 	1: "config",
 	2: "file",
+	3: "priority",
 }
 
 // Decode decodes ExecutionRequest from json.
@@ -1113,6 +1103,16 @@ func (s *ExecutionRequest) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"file\"")
+			}
+		case "priority":
+			if err := func() error {
+				s.Priority.Reset()
+				if err := s.Priority.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"priority\"")
 			}
 		default:
 			return d.Skip()
@@ -1329,22 +1329,17 @@ func (s *ExecutionResult) Encode(e *jx.Encoder) {
 func (s *ExecutionResult) encodeFields(e *jx.Encoder) {
 	{
 		e.FieldStart("executionId")
-		json.EncodeUUID(e, s.ExecutionId)
+		e.Int64(s.ExecutionId)
 	}
 	{
-		e.FieldStart("status")
-		e.Str(s.Status)
-	}
-	{
-		e.FieldStart("result")
-		e.Str(s.Result)
+		e.FieldStart("logs")
+		e.Str(s.Logs)
 	}
 }
 
-var jsonFieldsNameOfExecutionResult = [3]string{
+var jsonFieldsNameOfExecutionResult = [2]string{
 	0: "executionId",
-	1: "status",
-	2: "result",
+	1: "logs",
 }
 
 // Decode decodes ExecutionResult from json.
@@ -1359,8 +1354,8 @@ func (s *ExecutionResult) Decode(d *jx.Decoder) error {
 		case "executionId":
 			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
-				v, err := json.DecodeUUID(d)
-				s.ExecutionId = v
+				v, err := d.Int64()
+				s.ExecutionId = int64(v)
 				if err != nil {
 					return err
 				}
@@ -1368,29 +1363,17 @@ func (s *ExecutionResult) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"executionId\"")
 			}
-		case "status":
+		case "logs":
 			requiredBitSet[0] |= 1 << 1
 			if err := func() error {
 				v, err := d.Str()
-				s.Status = string(v)
+				s.Logs = string(v)
 				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"status\"")
-			}
-		case "result":
-			requiredBitSet[0] |= 1 << 2
-			if err := func() error {
-				v, err := d.Str()
-				s.Result = string(v)
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"result\"")
+				return errors.Wrap(err, "decode field \"logs\"")
 			}
 		default:
 			return d.Skip()
@@ -1402,7 +1385,7 @@ func (s *ExecutionResult) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00000111,
+		0b00000011,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.

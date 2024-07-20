@@ -8,10 +8,10 @@ import (
 	"text/template"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/config"
-	"github.com/deepakdinesh1123/valkyrie/internal/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/models"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
-	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 //go:embed templates
@@ -27,10 +27,6 @@ func NewExecutionService(queries *db.Queries, envConfig *config.EnvConfig) *Exec
 		queries:   queries,
 		envConfig: envConfig,
 	}
-}
-
-func (s *ExecutionService) Execute(ctx context.Context, req *api.ExecutionRequest) (uuid.UUID, error) {
-	return uuid.Nil, nil
 }
 
 func PrepareExecutionRequest(req *api.ExecutionRequest) (*models.ExecutionRequest, error) {
@@ -56,6 +52,7 @@ func PrepareExecutionRequest(req *api.ExecutionRequest) (*models.ExecutionReques
 			Name:    req.File.Name.Value,
 			Content: req.File.Content.Value,
 		},
+		Priority: req.Priority.Value,
 	}, nil
 }
 
@@ -76,4 +73,25 @@ func ConvertExecSpecToFlake(execSpec api.ExecutionEnvironmentSpec) (string, erro
 		}
 	}
 	return buffer.String(), nil
+}
+
+func (s *ExecutionService) Execute(ctx context.Context, req *api.ExecutionRequest) (int64, error) {
+	execReq, err := PrepareExecutionRequest(req)
+	if err != nil {
+		return 0, err
+	}
+	job, err := s.queries.InsertJob(ctx, db.InsertJobParams{
+		Script: pgtype.Text{
+			String: execReq.File.Content,
+			Valid:  true},
+		Flake: pgtype.Text{String: execReq.Environment, Valid: true},
+		Priority: pgtype.Int4{
+			Int32: int32(execReq.Priority),
+			Valid: true,
+		},
+	})
+	if err != nil {
+		return 0, err
+	}
+	return job.ID, nil
 }

@@ -11,19 +11,6 @@ services:
     ports:
       - "8080:8080"
 
-  geri:
-    build:
-      context: .
-      dockerfile: build/package/dockerfiles/geri.dockerfile
-    env_file:
-      - .env
-    depends_on:
-      postgres:
-        condition: service_healthy
-      odin:
-        condition: service_started
-    scale: 3
-
   postgres:
     image: postgres
     env_file:

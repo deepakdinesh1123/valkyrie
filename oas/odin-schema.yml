@@ -27,8 +27,8 @@ paths:
                   - executionId
                 properties:
                   executionId:
-                    type: string
-                    format: uuid
+                    type: integer
+                    format: int64
         '400':
           description: Bad Request
           content:
@@ -51,8 +51,8 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            format: uuid
+            type: integer
+            format: int64
       responses:
         '200':
           description: OK
@@ -193,6 +193,9 @@ components:
             - $ref: '#/components/schemas/PodmanExecutionConfig'
         file:
           $ref: '#/components/schemas/File'
+        priority:
+          type: integer
+          format: int4
     DockerExecutionConfig:
       type: object
       properties:
@@ -236,15 +239,12 @@ components:
       type: object
       required:
         - executionId
-        - status
-        - result
+        - logs
       properties:
         executionId:
-          type: string
-          format: uuid
-        status:
-          type: string
-        result:
+          type: integer
+          format: int64
+        logs:
           type: string
     Error:
       type: object
@@ -257,24 +257,27 @@ components:
       type: object
       required:
         - executionId
-        - environment
-        - requestedAt
+        - script
+        - flake
+        - created_at
+        - logs
+        - finished_at
       properties:
         executionId:
+          type: integer
+          format: int64
+        script:
           type: string
-          format: uuid
-        code:
+        flake:
           type: string
-        environment:
+        created_at:
           type: string
-        requestedAt:
+          format: date-time
+        logs:
           type: string
-        result:
+        finished_at:
           type: string
-        executionStatus:
-          type: string
-        executed_at:
-          type: string
+          format: date-time
     Flake:
       type: string
         
