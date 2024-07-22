@@ -23,6 +23,9 @@ type EnvConfig struct {
 	ODIN_WORKER_BUFFER_SIZE  int    `mapstructure:"ODIN_WORKER_BUFFER_SIZE"`  // represents the buffer size for the worker.
 	ODIN_WORKER_TASK_TIMEOUT int    `mapstructure:"ODIN_WORKER_TASK_TIMEOUT"` // represents the task timeout.
 	ODIN_WORKER_POLL_FREQ    int    `mapstructure:"ODIN_WORKER_POLL_FREQ"`    // represents the polling frequency for the worker in seconds.
+
+	ODIN_SYSTEM_PROVIDER_BASE_DIR string `mapstructure:"ODIN_SYSTEM_PROVIDER_BASE_DIR"` // represents the base directory for the system provider.
+	ODIN_SYSTEM_PROVIDER_CLEAN_UP bool   `mapstructure:"ODIN_SYSTEM_PROVIDER_CLEAN_UP"` // represents whether to clean up direcories created by the system provider.
 }
 
 // EnvConfig holds the configuration settings for the application.
@@ -49,6 +52,9 @@ func GetEnvConfig() (*EnvConfig, error) {
 	viper.SetDefault("ODIN_WORKER_BUFFER_SIZE", 100)
 	viper.SetDefault("ODIN_WORKER_TASK_TIMEOUT", 30)
 	viper.SetDefault("ODIN_WORKER_POLL_FREQ", 5)
+
+	viper.SetDefault("ODIN_SYSTEM_PROVIDER_BASE_DIR", "/tmp/valkyrie")
+	viper.SetDefault("ODIN_SYSTEM_PROVIDER_CLEAN_UP", true)
 
 	// Read configuration from file
 	err := viper.ReadInConfig()

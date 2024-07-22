@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"os"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/logs"
@@ -42,7 +43,14 @@ var WorkerCmd = &cobra.Command{
 				return err
 			}
 		case "system":
-			provider, err = system.NewSystemProvider()
+			if _, err := os.Stat(envConfig.ODIN_SYSTEM_PROVIDER_BASE_DIR); os.IsNotExist(err) {
+				err = os.Mkdir(envConfig.ODIN_SYSTEM_PROVIDER_BASE_DIR, os.ModePerm)
+				if err != nil {
+					logger.Err(err).Msg("Failed to create system provider base directory")
+					return err
+				}
+			}
+			provider, err = system.NewSystemProvider(envConfig.ODIN_SYSTEM_PROVIDER_BASE_DIR, envConfig.ODIN_SYSTEM_PROVIDER_CLEAN_UP)
 			if err != nil {
 				logger.Err(err).Msg("Failed to create system provider")
 				return err

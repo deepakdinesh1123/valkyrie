@@ -12,13 +12,14 @@ import (
 )
 
 type Worker struct {
+	ID       int
 	queries  *db.Queries
 	env      *config.EnvConfig
 	provider provider.Provider
 	logger   *zerolog.Logger
 }
 
-func NewWorker(ctx context.Context, queries *db.Queries, env *config.EnvConfig, prvdr provider.Provider, logger *zerolog.Logger) *Worker {
+func NewWorker(ctx context.Context, id int, queries *db.Queries, env *config.EnvConfig, prvdr provider.Provider, logger *zerolog.Logger) *Worker {
 	return &Worker{
 		queries:  queries,
 		env:      env,

@@ -1,8 +1,13 @@
 package system
 
 type SystemProvider struct {
+	baseDir string
+	cleanUp bool
 }
 
-func NewSystemProvider() (*SystemProvider, error) {
-	return &SystemProvider{}, nil
+func NewSystemProvider(baseDir string, cleanUp bool) (*SystemProvider, error) {
+	return &SystemProvider{
+		baseDir: baseDir,
+		cleanUp: cleanUp,
+	}, nil
 }
