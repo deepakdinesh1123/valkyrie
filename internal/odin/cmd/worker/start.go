@@ -15,8 +15,6 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/models"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/provider"
-	"github.com/deepakdinesh1123/valkyrie/internal/odin/provider/docker"
-	"github.com/deepakdinesh1123/valkyrie/internal/odin/provider/system"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/worker"
 	"github.com/deepakdinesh1123/valkyrie/pkg/namesgenerator"
 	"github.com/spf13/cobra"
@@ -58,29 +56,9 @@ var WorkerStartCmd = &cobra.Command{
 			logger.Err(err).Msg("Failed to get database connection")
 			return err
 		}
-		var provider provider.Provider
-		switch envConfig.ODIN_WORKER_PROVIDER {
-		case "docker":
-			provider, err = docker.NewDockerProvider()
-			if err != nil {
-				logger.Err(err).Msg("Failed to create docker provider")
-				return err
-			}
-		case "system":
-			if _, err := os.Stat(envConfig.ODIN_SYSTEM_PROVIDER_BASE_DIR); os.IsNotExist(err) {
-				err = os.Mkdir(envConfig.ODIN_SYSTEM_PROVIDER_BASE_DIR, os.ModePerm)
-				if err != nil {
-					logger.Err(err).Msg("Failed to create system provider base directory")
-					return err
-				}
-			}
-			provider, err = system.NewSystemProvider(envConfig.ODIN_SYSTEM_PROVIDER_BASE_DIR, envConfig.ODIN_SYSTEM_PROVIDER_CLEAN_UP, queries, logger)
-			if err != nil {
-				logger.Err(err).Msg("Failed to create system provider")
-				return err
-			}
-		default:
-			logger.Err(err).Msg("Invalid provider")
+		prvdr, err := provider.GetProvider(ctx, queries, envConfig, logger)
+		if err != nil {
+			logger.Err(err).Msg("Failed to get provider")
 			return err
 		}
 
@@ -98,7 +76,7 @@ var WorkerStartCmd = &cobra.Command{
 				if name == "" {
 					name = namesgenerator.GetRandomName(0)
 				}
-				wrkr, err = worker.GetWorker(ctx, name, queries, envConfig, provider, logger)
+				wrkr, err = worker.GetWorker(ctx, name, queries, envConfig, prvdr, logger)
 				if err != nil {
 					logger.Err(err).Msg("Failed to create worker")
 					return err
@@ -110,7 +88,7 @@ var WorkerStartCmd = &cobra.Command{
 		}
 		if wrkr == nil && workerInfo != nil {
 			logger.Info().Msgf("Found worker info")
-			wrkr, err = worker.GetWorker(ctx, workerInfo.Name, queries, envConfig, provider, logger)
+			wrkr, err = worker.GetWorker(ctx, workerInfo.Name, queries, envConfig, prvdr, logger)
 			if err != nil {
 				logger.Err(err).Msg("Failed to get worker")
 				return err
