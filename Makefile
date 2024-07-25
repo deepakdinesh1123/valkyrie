@@ -8,7 +8,9 @@ migrate:
 
 .PHONY: gq
 gq:
-	@cd internal/odin/db && sqlc generate
+	cd internal/odin/db && \
+	sqlc verify && \
+	sqlc generate
 
 .PHONY: start-server
 start-server:

@@ -9,7 +9,7 @@ import (
 )
 
 func (s *Server) Execute(ctx context.Context, req *api.ExecutionRequest) (api.ExecuteRes, error) {
-	execId, err := s.executionService.Execute(ctx, req)
+	execId, err := s.executionService.AddJob(ctx, req)
 	if err != nil {
 		switch err.(type) {
 		case *execution.ExecutionServiceError:

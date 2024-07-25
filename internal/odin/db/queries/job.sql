@@ -14,11 +14,12 @@ CREATE TABLE IF NOT EXISTS JobQueue(
     priority INT,
     lease_timeout FLOAT,
     queue VARCHAR(50) NOT NULL DEFAULT 'default',
-    job_type VARCHAR(50) NOT NULL DEFAULT 'execution'
+    job_type VARCHAR(50) NOT NULL DEFAULT 'execution',
+    worker_id INT REFERENCES Worker(id)
 );
 
 -- name: FetchJob :one
-UPDATE JobQueue SET started_at = current_timestamp
+UPDATE JobQueue SET started_at = current_timestamp, worker_id = $1
 WHERE id = (
     SELECT id FROM JobQueue
     WHERE (completed_at IS NULL and started_at IS NULL)
@@ -41,6 +42,7 @@ RETURNING *;
 UPDATE JobQueue
 SET
     completed_at = current_timestamp
+    , logs = $2
 WHERE id = $1 AND completed_at IS NULL
 RETURNING *;
 

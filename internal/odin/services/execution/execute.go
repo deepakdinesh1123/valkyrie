@@ -75,7 +75,7 @@ func ConvertExecSpecToFlake(execSpec api.ExecutionEnvironmentSpec) (string, erro
 	return buffer.String(), nil
 }
 
-func (s *ExecutionService) Execute(ctx context.Context, req *api.ExecutionRequest) (int64, error) {
+func (s *ExecutionService) AddJob(ctx context.Context, req *api.ExecutionRequest) (int64, error) {
 	execReq, err := PrepareExecutionRequest(req)
 	if err != nil {
 		return 0, err

@@ -61,7 +61,7 @@ func (w *Worker) Run(ctx context.Context) error {
 				return err
 			}
 		case <-ticker.C:
-			job, err := w.queries.FetchJob(ctx)
+			job, err := w.queries.FetchJob(ctx, pgtype.Int4{Int32: int32(w.ID), Valid: true})
 			if err != nil {
 				switch err {
 				case pgx.ErrNoRows:
@@ -75,9 +75,9 @@ func (w *Worker) Run(ctx context.Context) error {
 				}
 			}
 			w.logger.Info().Msgf("Worker: fetched job %d", job.ID)
-			_, err = w.provider.Execute(ctx, job)
+			err = w.provider.Execute(ctx, job)
 			if err != nil {
-				return err
+				w.logger.Err(err).Msgf("Worker: failed to execute job %d", job.ID)
 			}
 		}
 	}

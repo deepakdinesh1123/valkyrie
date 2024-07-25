@@ -61,7 +61,7 @@ func GetEnvConfig() (*EnvConfig, error) {
 	viper.SetDefault("ODIN_WORKER_TASK_TIMEOUT", 30)
 	viper.SetDefault("ODIN_WORKER_POLL_FREQ", 5)
 
-	viper.SetDefault("ODIN_SYSTEM_PROVIDER_BASE_DIR", "/tmp/valkyrie")
+	viper.SetDefault("ODIN_SYSTEM_PROVIDER_BASE_DIR", fmt.Sprintf("%s/%s", os.TempDir(), "odin"))
 	viper.SetDefault("ODIN_SYSTEM_PROVIDER_CLEAN_UP", true)
 
 	viper.SetDefault("ODIN_LOG_LEVEL", "info")

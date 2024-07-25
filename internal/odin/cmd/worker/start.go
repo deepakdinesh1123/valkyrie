@@ -118,6 +118,8 @@ var WorkerStartCmd = &cobra.Command{
 				}
 				return err
 			}
+		} else {
+			logger.Info().Msg("Could not lock worker info file, worker is already running")
 		}
 		return nil
 	},

@@ -6,14 +6,13 @@ import (
 
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
-	"github.com/deepakdinesh1123/valkyrie/internal/odin/models"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/provider/docker"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/provider/system"
 	"github.com/rs/zerolog"
 )
 
 type Provider interface {
-	Execute(ctx context.Context, execReq db.Jobqueue) (models.ExecutionResult, error)
+	Execute(ctx context.Context, execReq db.Jobqueue) error
 }
 
 func GetProvider(ctx context.Context, queries *db.Queries, envConfig *config.EnvConfig, logger *zerolog.Logger) (Provider, error) {
@@ -34,7 +33,7 @@ func GetProvider(ctx context.Context, queries *db.Queries, envConfig *config.Env
 				return nil, err
 			}
 		}
-		provider, err = system.NewSystemProvider(envConfig.ODIN_SYSTEM_PROVIDER_BASE_DIR, envConfig.ODIN_SYSTEM_PROVIDER_CLEAN_UP, queries, logger)
+		provider, err = system.NewSystemProvider(envConfig, queries, logger)
 		if err != nil {
 			logger.Err(err).Msg("Failed to create system provider")
 			return nil, err
