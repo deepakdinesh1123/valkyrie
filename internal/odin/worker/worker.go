@@ -30,8 +30,10 @@ func GetWorker(ctx context.Context, name string, queries *db.Queries, env *confi
 				logger.Err(err).Msg("Worker: failed to insert worker")
 				return nil, err
 			}
+		} else {
+			logger.Err(err).Msg("Worker: failed to get worker")
+			return nil, err
 		}
-		return nil, err
 	}
 	return &Worker{
 		queries:  queries,
@@ -44,19 +46,33 @@ func GetWorker(ctx context.Context, name string, queries *db.Queries, env *confi
 }
 
 func (w *Worker) Run(ctx context.Context) error {
+	ticker := time.NewTicker(time.Duration(w.env.ODIN_WORKER_POLL_FREQ) * time.Second)
 	for {
 		select {
 		case <-ctx.Done():
-			return nil
-		default:
-			time.Sleep(time.Duration(w.env.ODIN_WORKER_POLL_FREQ) * time.Second)
+			err := ctx.Err()
+			ticker.Stop()
+			switch err {
+			case context.Canceled:
+				w.logger.Info().Msg("Worker: context canceled")
+				return nil
+			default:
+				w.logger.Err(err).Msg("Worker: context error")
+				return err
+			}
+		case <-ticker.C:
 			job, err := w.queries.FetchJob(ctx)
 			if err != nil {
-				if err == pgx.ErrNoRows {
+				switch err {
+				case pgx.ErrNoRows:
 					continue
+				case context.Canceled:
+					w.logger.Info().Msg("Worker: context canceled")
+					return nil
+				default:
+					w.logger.Err(err).Msgf("Worker: failed to fetch job")
+					return err
 				}
-				w.logger.Err(err).Msgf("Worker: failed to fetch job")
-				return err
 			}
 			w.logger.Info().Msgf("Worker: fetched job %d", job.ID)
 			_, err = w.provider.Execute(ctx, job)
