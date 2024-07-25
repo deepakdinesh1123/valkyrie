@@ -2,6 +2,9 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
+
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/cmd/server"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/cmd/worker"
 )
 
 var RootCmd = &cobra.Command{
@@ -19,7 +22,7 @@ func Execute() {
 }
 
 func init() {
-	RootCmd.AddCommand(ServerCmd)
-	RootCmd.AddCommand(WorkerCmd)
+	RootCmd.AddCommand(server.ServerCmd)
+	RootCmd.AddCommand(worker.WorkerCmd)
 	RootCmd.AddCommand(StandaloneCmd)
 }

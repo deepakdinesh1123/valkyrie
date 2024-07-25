@@ -3,8 +3,8 @@ package provider
 import (
 	"context"
 
-	"github.com/deepakdinesh1123/valkyrie/internal/models"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/models"
 )
 
 type Provider interface {

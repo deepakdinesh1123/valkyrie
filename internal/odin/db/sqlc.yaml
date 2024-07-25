@@ -4,9 +4,9 @@ cloud:
 sql:
   - engine: "postgresql"
     queries:
-      - "queries/job.sql"
+      - "queries"
     schema:
-      - "queries/job.sql"
+      - "migrations"
     database:
       uri: "postgresql://thors:thorkell@localhost:5432/valkyrie?sslmode=disable"
     gen:

@@ -25,4 +25,14 @@ type Jobqueue struct {
 	LeaseTimeout pgtype.Float8
 	Queue        string
 	JobType      string
+	WorkerID     pgtype.Int4
+}
+
+type Worker struct {
+	ID         int32
+	Name       pgtype.Text
+	CreatedAt  pgtype.Timestamp
+	CreatedBy  pgtype.Text
+	ModifiedAt pgtype.Timestamp
+	ModifiedBy pgtype.Text
 }

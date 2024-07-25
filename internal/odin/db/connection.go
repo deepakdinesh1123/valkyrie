@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/deepakdinesh1123/valkyrie/internal/config"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/pgembed"
 	embeddedpostgres "github.com/fergusstrange/embedded-postgres"
 	"github.com/jackc/pgx/v5"
@@ -25,8 +25,11 @@ func GetDBConnection(ctx context.Context, standalone bool, envConfig *config.Env
 	// Start embedded Postgres if standalone mode is enabled
 	var pge *embeddedpostgres.EmbeddedPostgres
 	if standalone {
+		pgDataPath := fmt.Sprintf("%s/data", envConfig.USER_HOME_DIR)
 		var err error
-		pge, err = pgembed.Start(envConfig, logger)
+		pge, err = pgembed.Start(
+			envConfig.POSTGRES_USER, envConfig.POSTGRES_PASSWORD, envConfig.POSTGRES_PORT,
+			envConfig.POSTGRES_DB, pgDataPath, logger)
 		if err != nil {
 			logger.Err(err).Msg("Failed to start Postgres")
 			return nil, nil, err

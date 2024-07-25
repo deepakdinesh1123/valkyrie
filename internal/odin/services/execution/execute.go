@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"text/template"
 
-	"github.com/deepakdinesh1123/valkyrie/internal/config"
-	"github.com/deepakdinesh1123/valkyrie/internal/models"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/models"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
 	"github.com/jackc/pgx/v5/pgtype"
 )

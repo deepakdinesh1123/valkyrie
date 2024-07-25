@@ -10,8 +10,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/deepakdinesh1123/valkyrie/internal/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/logs"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/server"
 )

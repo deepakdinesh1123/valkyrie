@@ -15,14 +15,14 @@ const fetchJob = `-- name: FetchJob :one
 UPDATE JobQueue SET started_at = current_timestamp
 WHERE id = (
     SELECT id FROM JobQueue
-    WHERE (completed_at IS NULL and started_at IS NULL and scheduled_at IS NULL)
+    WHERE (completed_at IS NULL and started_at IS NULL)
     ORDER BY
         priority ASC,
         id ASC
     FOR UPDATE SKIP LOCKED
     LIMIT 1
     )
-RETURNING id, created_by, created_at, started_at, completed_at, script, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type
+RETURNING id, created_by, created_at, started_at, completed_at, script, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type, worker_id
 `
 
 func (q *Queries) FetchJob(ctx context.Context) (Jobqueue, error) {
@@ -45,6 +45,7 @@ func (q *Queries) FetchJob(ctx context.Context) (Jobqueue, error) {
 		&i.LeaseTimeout,
 		&i.Queue,
 		&i.JobType,
+		&i.WorkerID,
 	)
 	return i, err
 }
@@ -88,7 +89,7 @@ func (q *Queries) GetAllExecutionResults(ctx context.Context) ([]GetAllExecution
 }
 
 const getAllExecutions = `-- name: GetAllExecutions :many
-SELECT id, created_by, created_at, started_at, completed_at, script, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type FROM JobQueue
+SELECT id, created_by, created_at, started_at, completed_at, script, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type, worker_id FROM JobQueue
 WHERE job_type = 'execution'
 ORDER BY started_at
 `
@@ -119,6 +120,7 @@ func (q *Queries) GetAllExecutions(ctx context.Context) ([]Jobqueue, error) {
 			&i.LeaseTimeout,
 			&i.Queue,
 			&i.JobType,
+			&i.WorkerID,
 		); err != nil {
 			return nil, err
 		}
@@ -131,7 +133,7 @@ func (q *Queries) GetAllExecutions(ctx context.Context) ([]Jobqueue, error) {
 }
 
 const getAllJobs = `-- name: GetAllJobs :many
-SELECT id, created_by, created_at, started_at, completed_at, script, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type FROM JobQueue
+SELECT id, created_by, created_at, started_at, completed_at, script, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type, worker_id FROM JobQueue
 ORDER BY started_at
 `
 
@@ -161,6 +163,7 @@ func (q *Queries) GetAllJobs(ctx context.Context) ([]Jobqueue, error) {
 			&i.LeaseTimeout,
 			&i.Queue,
 			&i.JobType,
+			&i.WorkerID,
 		); err != nil {
 			return nil, err
 		}
@@ -173,7 +176,7 @@ func (q *Queries) GetAllJobs(ctx context.Context) ([]Jobqueue, error) {
 }
 
 const getJob = `-- name: GetJob :one
-SELECT id, created_by, created_at, started_at, completed_at, script, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type FROM JobQueue
+SELECT id, created_by, created_at, started_at, completed_at, script, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type, worker_id FROM JobQueue
 WHERE id = $1
 LIMIT 1
 `
@@ -198,12 +201,13 @@ func (q *Queries) GetJob(ctx context.Context, id int64) (Jobqueue, error) {
 		&i.LeaseTimeout,
 		&i.Queue,
 		&i.JobType,
+		&i.WorkerID,
 	)
 	return i, err
 }
 
 const getResultUsingExecutionID = `-- name: GetResultUsingExecutionID :one
-SELECT id, created_by, created_at, started_at, completed_at, script, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type
+SELECT id, created_by, created_at, started_at, completed_at, script, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type, worker_id
 FROM JobQueue
 WHERE id = $1 AND job_type = 'execution' LIMIT 1
 `
@@ -228,6 +232,7 @@ func (q *Queries) GetResultUsingExecutionID(ctx context.Context, id int64) (Jobq
 		&i.LeaseTimeout,
 		&i.Queue,
 		&i.JobType,
+		&i.WorkerID,
 	)
 	return i, err
 }
@@ -237,7 +242,7 @@ INSERT INTO JobQueue
     (script, flake, priority)
 VALUES
     ($1, $2, $3)
-RETURNING id, created_by, created_at, started_at, completed_at, script, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type
+RETURNING id, created_by, created_at, started_at, completed_at, script, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type, worker_id
 `
 
 type InsertJobParams struct {
@@ -266,6 +271,7 @@ func (q *Queries) InsertJob(ctx context.Context, arg InsertJobParams) (Jobqueue,
 		&i.LeaseTimeout,
 		&i.Queue,
 		&i.JobType,
+		&i.WorkerID,
 	)
 	return i, err
 }
@@ -287,7 +293,7 @@ UPDATE JobQueue
 SET
     completed_at = current_timestamp
 WHERE id = $1 AND completed_at IS NULL
-RETURNING id, created_by, created_at, started_at, completed_at, script, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type
+RETURNING id, created_by, created_at, started_at, completed_at, script, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type, worker_id
 `
 
 func (q *Queries) UpdateJob(ctx context.Context, id int64) (Jobqueue, error) {
@@ -310,6 +316,7 @@ func (q *Queries) UpdateJob(ctx context.Context, id int64) (Jobqueue, error) {
 		&i.LeaseTimeout,
 		&i.Queue,
 		&i.JobType,
+		&i.WorkerID,
 	)
 	return i, err
 }

@@ -1,4 +1,4 @@
-package cmd
+package server
 
 import (
 	"fmt"
@@ -8,13 +8,13 @@ import (
 
 	"github.com/deepakdinesh1123/valkyrie/internal/logs"
 
-	"github.com/deepakdinesh1123/valkyrie/internal/config"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/server"
 )
 
-var ServerCmd = &cobra.Command{
-	Use:   "server",
+var ServerStartCmd = &cobra.Command{
+	Use:   "start",
 	Short: "Start Odin server",
 	Long:  `Start Odin server`,
 	RunE:  serverExec,
@@ -55,5 +55,5 @@ func serverExec(cmd *cobra.Command, args []string) error {
 }
 
 func init() {
-	ServerCmd.Flags().Bool("migrate", true, "Migrate database")
+	ServerStartCmd.Flags().Bool("migrate", true, "Migrate database")
 }

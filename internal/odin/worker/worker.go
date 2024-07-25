@@ -4,28 +4,43 @@ import (
 	"context"
 	"time"
 
-	"github.com/deepakdinesh1123/valkyrie/internal/config"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/provider"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/rs/zerolog"
 )
 
 type Worker struct {
 	ID       int
+	Name     string
 	queries  *db.Queries
 	env      *config.EnvConfig
 	provider provider.Provider
 	logger   *zerolog.Logger
 }
 
-func NewWorker(ctx context.Context, id int, queries *db.Queries, env *config.EnvConfig, prvdr provider.Provider, logger *zerolog.Logger) *Worker {
+func GetWorker(ctx context.Context, name string, queries *db.Queries, env *config.EnvConfig, prvdr provider.Provider, logger *zerolog.Logger) (*Worker, error) {
+	wrkr, err := queries.GetWorker(ctx, pgtype.Text{String: name, Valid: true})
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			wrkr, err = queries.InsertWorker(ctx, pgtype.Text{String: name, Valid: true})
+			if err != nil {
+				logger.Err(err).Msg("Worker: failed to insert worker")
+				return nil, err
+			}
+		}
+		return nil, err
+	}
 	return &Worker{
 		queries:  queries,
 		env:      env,
 		provider: prvdr,
 		logger:   logger,
-	}
+		Name:     name,
+		ID:       int(wrkr.ID),
+	}, nil
 }
 
 func (w *Worker) Run(ctx context.Context) error {
@@ -45,7 +60,6 @@ func (w *Worker) Run(ctx context.Context) error {
 			}
 			w.logger.Info().Msgf("Worker: fetched job %d", job.ID)
 			_, err = w.provider.Execute(ctx, job)
-			w.logger.Info().Msgf("Worker: executed job %d", job.ID)
 			if err != nil {
 				return err
 			}

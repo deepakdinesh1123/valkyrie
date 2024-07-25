@@ -1,6 +1,8 @@
 package config
 
 import (
+	"os"
+
 	"github.com/spf13/viper"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/logs"
@@ -26,6 +28,8 @@ type EnvConfig struct {
 
 	ODIN_SYSTEM_PROVIDER_BASE_DIR string `mapstructure:"ODIN_SYSTEM_PROVIDER_BASE_DIR"` // represents the base directory for the system provider.
 	ODIN_SYSTEM_PROVIDER_CLEAN_UP bool   `mapstructure:"ODIN_SYSTEM_PROVIDER_CLEAN_UP"` // represents whether to clean up direcories created by the system provider.
+
+	USER_HOME_DIR string
 }
 
 // EnvConfig holds the configuration settings for the application.
@@ -70,5 +74,12 @@ func GetEnvConfig() (*EnvConfig, error) {
 		logger.Err(err)
 		return nil, err
 	}
+
+	EnvConfig.USER_HOME_DIR, err = os.UserHomeDir()
+	if err != nil {
+		logger.Err(err).Msg("Failed to get user home directory")
+		return nil, err
+	}
+
 	return &EnvConfig, nil
 }

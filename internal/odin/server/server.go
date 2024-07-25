@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 
-	"github.com/deepakdinesh1123/valkyrie/internal/config"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/services/execution"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
