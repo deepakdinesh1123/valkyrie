@@ -22,6 +22,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	newWorker bool
+)
+
 var WorkerStartCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start worker",
@@ -46,6 +50,9 @@ var WorkerStartCmd = &cobra.Command{
 			fileLock.Unlock()
 			cancel()
 		}()
+		if newWorker {
+			deleteWorkerInfo(envConfig.ODIN_WORKER_INFO_FILE)
+		}
 		_, queries, err := db.GetDBConnection(ctx, false, envConfig, false, nil, nil, logger)
 		if err != nil {
 			logger.Err(err).Msg("Failed to get database connection")
@@ -138,11 +145,6 @@ var WorkerStartCmd = &cobra.Command{
 	},
 }
 
-func init() {
-	WorkerStartCmd.Flags().String("name", "", "Name of the worker")
-	WorkerStartCmd.Flags().Bool("new", false, "Create new worker(Deletes info of any existing worker)")
-}
-
 func writeWorkerInfo(infoFile string, worker *worker.Worker) error {
 	wrkrInfo := models.WorkerInfo{
 		ID:   worker.ID,
@@ -193,4 +195,9 @@ func readWorkerInfo(infoFile string, logger *zerolog.Logger) (*models.WorkerInfo
 		return nil, err
 	}
 	return &wrkrInfo, nil
+}
+
+func init() {
+	WorkerStartCmd.Flags().String("name", "", "Name of the worker")
+	WorkerStartCmd.Flags().BoolVarP(&newWorker, "new", "n", false, "Create new worker(Deletes existing worker info)")
 }

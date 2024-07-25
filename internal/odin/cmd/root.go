@@ -31,6 +31,8 @@ func init() {
 		panic(err)
 	}
 
+	RootCmd.PersistentFlags().String("log-level", envConfig.ODIN_LOG_LEVEL, "Log level")
+
 	RootCmd.AddCommand(server.ServerCmd)
 	RootCmd.AddCommand(worker.WorkerCmd)
 	RootCmd.AddCommand(StandaloneCmd)

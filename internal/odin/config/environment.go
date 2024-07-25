@@ -5,8 +5,6 @@ import (
 	"os"
 
 	"github.com/spf13/viper"
-
-	"github.com/deepakdinesh1123/valkyrie/internal/logs"
 )
 
 // Environment struct represents the configuration settings for the application.
@@ -27,6 +25,8 @@ type EnvConfig struct {
 	ODIN_WORKER_TASK_TIMEOUT int    `mapstructure:"ODIN_WORKER_TASK_TIMEOUT"` // represents the task timeout.
 	ODIN_WORKER_POLL_FREQ    int    `mapstructure:"ODIN_WORKER_POLL_FREQ"`    // represents the polling frequency for the worker in seconds.
 
+	ODIN_LOG_LEVEL string `mapstructure:"ODIN_LOG_LEVEL"`
+
 	ODIN_INFO_DIR         string
 	ODIN_WORKER_DIR       string
 	ODIN_WORKER_INFO_FILE string
@@ -40,7 +40,6 @@ type EnvConfig struct {
 // EnvConfig holds the configuration settings for the application.
 
 func GetEnvConfig() (*EnvConfig, error) {
-	logger := logs.GetLogger()
 	viper.SetConfigType("env")
 	viper.AddConfigPath(".")
 	viper.SetConfigName(".env")
@@ -65,10 +64,11 @@ func GetEnvConfig() (*EnvConfig, error) {
 	viper.SetDefault("ODIN_SYSTEM_PROVIDER_BASE_DIR", "/tmp/valkyrie")
 	viper.SetDefault("ODIN_SYSTEM_PROVIDER_CLEAN_UP", true)
 
+	viper.SetDefault("ODIN_LOG_LEVEL", "info")
+
 	// Read configuration from file
 	err := viper.ReadInConfig()
 	if err != nil {
-		logger.Err(err).Msg("Failed to read configuration file")
 		return nil, err
 	}
 
@@ -76,13 +76,11 @@ func GetEnvConfig() (*EnvConfig, error) {
 	var EnvConfig EnvConfig
 	err = viper.Unmarshal(&EnvConfig)
 	if err != nil {
-		logger.Err(err)
 		return nil, err
 	}
 
 	EnvConfig.USER_HOME_DIR, err = os.UserHomeDir()
 	if err != nil {
-		logger.Err(err).Msg("Failed to get user home directory")
 		return nil, err
 	}
 
