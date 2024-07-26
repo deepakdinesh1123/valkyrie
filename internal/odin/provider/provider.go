@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"os"
+	"sync"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
@@ -12,7 +13,7 @@ import (
 )
 
 type Provider interface {
-	Execute(ctx context.Context, execReq db.Jobqueue) error
+	Execute(ctx context.Context, wg *sync.WaitGroup, execReq db.Jobqueue) error
 }
 
 func GetProvider(ctx context.Context, queries *db.Queries, envConfig *config.EnvConfig, logger *zerolog.Logger) (Provider, error) {

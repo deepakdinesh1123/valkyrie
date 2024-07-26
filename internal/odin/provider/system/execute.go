@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"sync"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func (s *SystemProvider) Execute(ctx context.Context, execReq db.Jobqueue) error {
+func (s *SystemProvider) Execute(ctx context.Context, wg *sync.WaitGroup, execReq db.Jobqueue) error {
 	dir := fmt.Sprintf("%s/%s", s.envConfig.ODIN_SYSTEM_PROVIDER_BASE_DIR, execReq.CreatedAt.Time.Format("20060102150405"))
 
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
@@ -39,5 +40,6 @@ func (s *SystemProvider) Execute(ctx context.Context, execReq db.Jobqueue) error
 	if err != nil {
 		return err
 	}
+	defer wg.Done()
 	return nil
 }

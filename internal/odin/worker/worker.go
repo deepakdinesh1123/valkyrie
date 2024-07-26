@@ -2,6 +2,7 @@ package worker
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
@@ -46,10 +47,12 @@ func GetWorker(ctx context.Context, name string, queries *db.Queries, env *confi
 }
 
 func (w *Worker) Run(ctx context.Context) error {
+	var wg sync.WaitGroup
 	ticker := time.NewTicker(time.Duration(w.env.ODIN_WORKER_POLL_FREQ) * time.Second)
 	for {
 		select {
 		case <-ctx.Done():
+			wg.Wait()
 			err := ctx.Err()
 			ticker.Stop()
 			switch err {
@@ -75,10 +78,8 @@ func (w *Worker) Run(ctx context.Context) error {
 				}
 			}
 			w.logger.Info().Msgf("Worker: fetched job %d", job.ID)
-			err = w.provider.Execute(ctx, job)
-			if err != nil {
-				w.logger.Err(err).Msgf("Worker: failed to execute job %d", job.ID)
-			}
+			wg.Add(1)
+			go w.provider.Execute(ctx, &wg, job)
 		}
 	}
 }
