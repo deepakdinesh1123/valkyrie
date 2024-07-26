@@ -26,5 +26,4 @@ COPY --from=BUILDER /valkyrie/result /app
 COPY .env /valkyrie/odin/.env
 
 WORKDIR /valkyrie/odin
-# ENTRYPOINT ["/bin/odin"]
-CMD ["/app/bin/odin", "server"]
+ENTRYPOINT ["/app/bin/odin"]

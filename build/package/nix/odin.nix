@@ -7,7 +7,7 @@ pkgs.buildGoModule rec {
   pname = "odin";
   version = "0.0.1";
 
-  vendorHash = "sha256-pu9Pz7wmmCzxryg2bXl9qSeH22gLBrKR1v0W9V85naY=";
+  vendorHash = "sha256-tCmvn1eyblZSFoDBJ0xTSyBaZEbe7FtsXjtTNlZkKoc=";
   doCheck = false;
 
   src = ../../..;
