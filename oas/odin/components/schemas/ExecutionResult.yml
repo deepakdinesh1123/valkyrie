@@ -1,0 +1,12 @@
+type: object
+required:
+  - execution_id
+  - status
+  - result
+properties:
+  execution_id:
+    type: string
+  status:
+    type: string
+  result:
+    type: string

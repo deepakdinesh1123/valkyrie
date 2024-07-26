@@ -1,0 +1,13 @@
+{
+  "yaml.schemas": {
+    "https://raw.githubusercontent.com/GoogleContainerTools/skaffold/main/docs-v2/content/en/schemas/v3.json": "file:///Users/zelthy/Deepak/github/valkyrie/skaffold.yaml"
+  },
+  "[nix]": {
+    "editor.tabSize": 2,
+    "editor.detectIndentation": false
+  },
+  "[gotmpl]": {
+    "editor.detectIndentation": false,
+    "editor.tabSize": 2
+  }
+}

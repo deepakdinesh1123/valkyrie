@@ -1,0 +1,286 @@
+openapi: '3.0.2'
+info:
+  title: API Title
+  version: '0.0.1'
+servers:
+  - url: http://localhost:8080/api/v1
+paths:
+  /execution/execute/:
+    post:
+      summary: Execute a script
+      description: Execute a script
+      operationId: execute
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExecutionRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - executionId
+                properties:
+                  executionId:
+                    type: integer
+                    format: int64
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /execution/{executionId}/:
+    get:
+      summary: Get execution result
+      description: Get execution result
+      operationId: getExecutionResult
+      parameters:
+        - name: executionId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecutionResult'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Execution not found
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /execution/:
+    get:
+      summary: Get all executions
+      description: Get all executions
+      operationId: getExecutions
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Execution'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /execution/results/:
+    get:
+      summary: Get all execution results
+      description: Get all execution results
+      operationId: getExecutionResults
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExecutionResult'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    EnvironmentVariable:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+    Script:
+      type: object
+      properties:
+        name:
+          type: string
+        script:
+          type: string
+    ExecutionEnvironmentSpec:
+      type: object
+      required:
+        - language
+      properties:
+        environment_variables:
+          type: array
+          items:
+            $ref: '#/components/schemas/EnvironmentVariable'
+        packages:
+          type: array
+          items:
+            type: string
+        dependencies:
+          type: array
+          items:
+            type: string
+        language:
+          $ref: '#/components/schemas/ProgrammingLanguage'
+    ProgrammingLanguage:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+    File:
+      type: object
+      properties:
+        name:
+          type: string
+        content:
+          type: string
+    ExecutionRequest:
+      type: object
+      required:
+        - environment
+        - file
+      properties:
+        environment:
+          oneOf:
+            - $ref: '#/components/schemas/Flake'
+            - $ref: '#/components/schemas/ExecutionEnvironmentSpec'
+        config:
+          oneOf:
+            - $ref: '#/components/schemas/DockerExecutionConfig'
+            - $ref: '#/components/schemas/PodmanExecutionConfig'
+        file:
+          $ref: '#/components/schemas/File'
+        priority:
+          type: integer
+          format: int4
+    DockerExecutionConfig:
+      type: object
+      properties:
+        containerConfig:
+          type: object
+          properties:
+            image:
+              type: string
+        HostConfig:
+          type: object
+          properties:
+            Resources:
+              type: object
+              properties:
+                Memory:
+                  type: integer
+                NanoCPUs:
+                  type: integer
+            Runtime:
+              type: string
+    PodmanExecutionConfig:
+      type: object
+      properties:
+        ContainerBasicConfig:
+          type: object
+          properties:
+            OCIRuntime:
+              type: string
+        ContainerStorageConfig:
+          type: object
+          properties:
+            Image:
+              type: string
+            ImageOS:
+              type: string
+            ImageArch:
+              type: string
+            ImageVariant:
+              type: string
+    ExecutionResult:
+      type: object
+      required:
+        - executionId
+        - logs
+      properties:
+        executionId:
+          type: integer
+          format: int64
+        logs:
+          type: string
+    Error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+    Execution:
+      type: object
+      required:
+        - executionId
+        - script
+        - flake
+        - created_at
+        - logs
+        - finished_at
+      properties:
+        executionId:
+          type: integer
+          format: int64
+        script:
+          type: string
+        flake:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        logs:
+          type: string
+        finished_at:
+          type: string
+          format: date-time
+    Flake:
+      type: string
+        
+        
+        
+        

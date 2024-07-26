@@ -1,26 +1,35 @@
 package server
 
 import (
-	"github.com/deepakdinesh1123/valkyrie/internal/mq"
+	"context"
+
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/services/execution"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
+	"github.com/jackc/pgx/v5"
+	"github.com/rs/zerolog"
 )
 
-type Server struct{}
+type Server struct {
+	dbConn           *pgx.Conn
+	queries          *db.Queries
+	envConfig        *config.EnvConfig
+	executionService *execution.ExecutionService
+}
 
-func NewServer() *api.Server {
-	createQueues()
-	server := &Server{}
+func NewServer(ctx context.Context, envConfig *config.EnvConfig, dbConn *pgx.Conn, queries *db.Queries, logger *zerolog.Logger) *api.Server {
+	executionService := execution.NewExecutionService(queries, envConfig)
+	server := &Server{
+		queries:          queries,
+		executionService: executionService,
+		dbConn:           dbConn,
+		envConfig:        envConfig,
+	}
 	srv, err := api.NewServer(server)
 	if err != nil {
+		logger.Err(err).Msg("Failed to create server")
 		panic(err)
 	}
 	return srv
-}
-
-func createQueues() error {
-	_, err := mq.NewQueue("execute", true, true, false, false, nil)
-	if err != nil {
-		return err
-	}
-	return nil
 }

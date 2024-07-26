@@ -13,14 +13,18 @@ WORKDIR /valkyrie
 RUN nix \
     --extra-experimental-features "nix-command flakes" \
     --option filter-syscalls false \
-    build
+    build .#odin
 
 RUN mkdir /tmp/nix-store-closure
 RUN cp -R $(nix-store -qR result/) /tmp/nix-store-closure
 
 FROM scratch
 COPY --from=BUILDER /tmp/nix-store-closure /nix/store
-COPY --from=BUILDER /valkyrie/result/bin/odin /bin
+COPY --from=BUILDER /valkyrie/result /app
 
-ENTRYPOINT ["/bin/odin"]
-CMD ["server"]
+
+COPY .env /valkyrie/odin/.env
+
+WORKDIR /valkyrie/odin
+# ENTRYPOINT ["/bin/odin"]
+CMD ["/app/bin/odin", "server"]

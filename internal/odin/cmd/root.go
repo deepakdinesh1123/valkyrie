@@ -1,25 +1,54 @@
 package cmd
 
 import (
-	"fmt"
+	"log"
+	"os"
 
 	"github.com/spf13/cobra"
+
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/cmd/server"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/cmd/worker"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 )
 
-var rootCmd = &cobra.Command{
+var RootCmd = &cobra.Command{
 	Use:   "odin",
 	Short: "ODIN",
 	Long:  `ODIN`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("Execute odin --help for more information on using odin.")
+		_ = cmd.Usage()
 		return nil
 	},
 }
 
 func Execute() {
-	rootCmd.Execute()
+	RootCmd.Execute()
 }
 
 func init() {
-	rootCmd.AddCommand(serverCmd)
+	envConfig, err := config.GetEnvConfig()
+	if err != nil {
+		panic(err)
+	}
+
+	RootCmd.PersistentFlags().String("log-level", envConfig.ODIN_LOG_LEVEL, "Log level")
+
+	RootCmd.AddCommand(server.ServerCmd)
+	RootCmd.AddCommand(worker.WorkerCmd)
+	RootCmd.AddCommand(StandaloneCmd)
+
+	createDirs(envConfig)
+}
+
+func createDirs(envConfig *config.EnvConfig) error {
+	dirs := []string{envConfig.ODIN_INFO_DIR, envConfig.ODIN_WORKER_DIR}
+	for _, dir := range dirs {
+		if _, err := os.Stat(dir); os.IsNotExist(err) {
+			if err := os.MkdirAll(dir, 0755); err != nil {
+				log.Printf("Failed to create directory %s: %v", dir, err)
+				return err
+			}
+		}
+	}
+	return nil
 }

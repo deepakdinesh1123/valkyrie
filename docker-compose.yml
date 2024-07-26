@@ -5,24 +5,11 @@ services:
       dockerfile: build/package/dockerfiles/odin.dockerfile
     env_file:
       - .env
-
-  geri:
-    build:
-      context: .
-      dockerfile: build/package/dockerfiles/geri.dockerfile
-    env_file:
-      - .env
-
-  rabbitmq:
-    image: rabbitmq:management
+    depends_on:
+      postgres:
+        condition: service_healthy
     ports:
-      - "5672:5672"
-      - "15672:15672"
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "status"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - "8080:8080"
 
   postgres:
     image: postgres

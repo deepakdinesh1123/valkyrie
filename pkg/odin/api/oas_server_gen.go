@@ -12,14 +12,26 @@ type Handler interface {
 	//
 	// Execute a script.
 	//
-	// POST /execute
+	// POST /execution/execute/
 	Execute(ctx context.Context, req *ExecutionRequest) (ExecuteRes, error)
 	// GetExecutionResult implements getExecutionResult operation.
 	//
 	// Get execution result.
 	//
-	// GET /execute/{execution_id}
+	// GET /execution/{executionId}/
 	GetExecutionResult(ctx context.Context, params GetExecutionResultParams) (GetExecutionResultRes, error)
+	// GetExecutionResults implements getExecutionResults operation.
+	//
+	// Get all execution results.
+	//
+	// GET /execution/results/
+	GetExecutionResults(ctx context.Context) (GetExecutionResultsRes, error)
+	// GetExecutions implements getExecutions operation.
+	//
+	// Get all executions.
+	//
+	// GET /execution/
+	GetExecutions(ctx context.Context) (GetExecutionsRes, error)
 }
 
 // Server implements http server based on OpenAPI v3 specification and

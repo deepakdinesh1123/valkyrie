@@ -1,0 +1,20 @@
+type: object
+required:
+  - execution_id
+  - environment
+  - requested_at
+properties:
+  execution_id:
+    type: string
+  code:
+    type: string
+  environment:
+    type: string
+  requested_at:
+    type: string
+  result:
+    type: string
+  execution_status:
+    type: string
+  executed_at:
+    type: string
