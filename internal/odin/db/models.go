@@ -15,6 +15,7 @@ type Jobqueue struct {
 	StartedAt    pgtype.Timestamp `db:"started_at" json:"started_at"`
 	CompletedAt  pgtype.Timestamp `db:"completed_at" json:"completed_at"`
 	Script       pgtype.Text      `db:"script" json:"script"`
+	ScriptPath   pgtype.Text      `db:"script_path" json:"script_path"`
 	Args         []byte           `db:"args" json:"args"`
 	Logs         pgtype.Text      `db:"logs" json:"logs"`
 	Flake        pgtype.Text      `db:"flake" json:"flake"`

@@ -30,6 +30,7 @@ RUN curl -L https://nixos.org/nix/install -o install_nix.sh
 RUN chmod +x install_nix.sh
 RUN mkdir /nix
 RUN chown -R valnix /nix
+RUN mkdir /etc/nix && echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
 
 USER valnix
 RUN sh install_nix.sh --no-daemon
