@@ -79,7 +79,8 @@ func (w *Worker) Run(ctx context.Context) error {
 			}
 			w.logger.Info().Msgf("Worker: fetched job %d", job.ID)
 			wg.Add(1)
-			go w.provider.Execute(ctx, &wg, job)
+			tctx, cancel := context.WithTimeout(ctx, time.Duration(w.env.ODIN_WORKER_TASK_TIMEOUT)*time.Second)
+			go w.provider.Execute(tctx, &wg, job, cancel)
 		}
 	}
 }

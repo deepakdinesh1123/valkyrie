@@ -304,18 +304,18 @@ const updateJob = `-- name: UpdateJob :one
 UPDATE JobQueue
 SET
     completed_at = current_timestamp
-    , logs = $2
+    , logs = CONCAT(logs, $2)
 WHERE id = $1 AND completed_at IS NULL
 RETURNING id, created_by, created_at, started_at, completed_at, script, script_path, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type, worker_id
 `
 
 type UpdateJobParams struct {
-	ID   int64       `db:"id" json:"id"`
-	Logs pgtype.Text `db:"logs" json:"logs"`
+	ID     int64       `db:"id" json:"id"`
+	Concat interface{} `db:"concat" json:"concat"`
 }
 
 func (q *Queries) UpdateJob(ctx context.Context, arg UpdateJobParams) (Jobqueue, error) {
-	row := q.db.QueryRow(ctx, updateJob, arg.ID, arg.Logs)
+	row := q.db.QueryRow(ctx, updateJob, arg.ID, arg.Concat)
 	var i Jobqueue
 	err := row.Scan(
 		&i.ID,

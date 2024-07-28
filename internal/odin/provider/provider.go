@@ -13,7 +13,7 @@ import (
 )
 
 type Provider interface {
-	Execute(ctx context.Context, wg *sync.WaitGroup, execReq db.Jobqueue) error
+	Execute(ctx context.Context, wg *sync.WaitGroup, execReq db.Jobqueue, cancel context.CancelFunc)
 }
 
 func GetProvider(ctx context.Context, queries *db.Queries, envConfig *config.EnvConfig, logger *zerolog.Logger) (Provider, error) {
