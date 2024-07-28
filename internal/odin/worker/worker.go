@@ -20,6 +20,14 @@ type Worker struct {
 	env      *config.EnvConfig
 	provider provider.Provider
 	logger   *zerolog.Logger
+
+	WorkerStats struct {
+		CPUUsage  float64
+		MemAvail  uint64
+		MemTotal  uint64
+		MemUsed   uint64
+		Timestamp time.Time
+	}
 }
 
 func GetWorker(ctx context.Context, name string, queries *db.Queries, env *config.EnvConfig, prvdr provider.Provider, logger *zerolog.Logger) (*Worker, error) {
@@ -65,6 +73,11 @@ func (w *Worker) Run(ctx context.Context) error {
 				return err
 			}
 		case <-ticker.C:
+			w.updateStats()
+			if w.WorkerStats.CPUUsage > 75 || w.WorkerStats.MemUsed > 75 {
+				w.logger.Info().Float64("CPU Usage", w.WorkerStats.CPUUsage).Msg("Worker: CPU Usage is high")
+				continue
+			}
 			job, err := w.queries.FetchJob(ctx, pgtype.Int4{Int32: int32(w.ID), Valid: true})
 			if err != nil {
 				switch err {
