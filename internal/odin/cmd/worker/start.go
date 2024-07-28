@@ -110,16 +110,21 @@ var WorkerStartCmd = &cobra.Command{
 		if locked {
 			err = wrkr.Run(ctx)
 			if err != nil {
-				logger.Err(err).Msg("Failed to start worker")
-				err := deleteWorkerInfo(envConfig.ODIN_WORKER_INFO_FILE)
-				if err != nil {
-					logger.Err(err).Msg("Failed to delete worker info")
+				switch err.(type) {
+				case *worker.WorkerError:
+					logger.Err(err)
+				default:
+					logger.Err(err).Msg("Failed to start worker")
+					err := deleteWorkerInfo(envConfig.ODIN_WORKER_INFO_FILE)
+					if err != nil {
+						logger.Err(err).Msg("Failed to delete worker info")
+						return err
+					}
 					return err
 				}
-				return err
 			}
 		} else {
-			logger.Info().Msg("Could not lock worker info file, worker is already running")
+			logger.Info().Msg("Could not lock worker info file, another worker is already running on this machine")
 		}
 		return nil
 	},

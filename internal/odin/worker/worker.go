@@ -70,7 +70,7 @@ func (w *Worker) Run(ctx context.Context) error {
 				return nil
 			default:
 				w.logger.Err(err).Msg("Worker: context error")
-				return err
+				return &WorkerError{Type: "Context", Message: err.Error()}
 			}
 		case <-ticker.C:
 			w.updateStats()
@@ -88,7 +88,7 @@ func (w *Worker) Run(ctx context.Context) error {
 					return nil
 				default:
 					w.logger.Err(err).Msgf("Worker: failed to fetch job")
-					return err
+					return &WorkerError{Type: "FetchJob", Message: err.Error()}
 				}
 			}
 			w.logger.Info().Msgf("Worker: fetched job %d", job.ID)
