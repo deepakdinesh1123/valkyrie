@@ -43,7 +43,7 @@ RETURNING *;
 UPDATE JobQueue
 SET
     completed_at = current_timestamp
-    , logs = CONCAT(logs, $2)
+    , logs = $2
 WHERE id = $1 AND completed_at IS NULL
 RETURNING *;
 

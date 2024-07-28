@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/viper"
 )
@@ -61,7 +62,7 @@ func GetEnvConfig() (*EnvConfig, error) {
 	viper.SetDefault("ODIN_WORKER_TASK_TIMEOUT", 30)
 	viper.SetDefault("ODIN_WORKER_POLL_FREQ", 5)
 
-	viper.SetDefault("ODIN_SYSTEM_PROVIDER_BASE_DIR", fmt.Sprintf("%s/%s", os.TempDir(), "odin"))
+	viper.SetDefault("ODIN_SYSTEM_PROVIDER_BASE_DIR", filepath.Join(os.TempDir(), "valkyrie"))
 	viper.SetDefault("ODIN_SYSTEM_PROVIDER_CLEAN_UP", true)
 
 	viper.SetDefault("ODIN_LOG_LEVEL", "info")

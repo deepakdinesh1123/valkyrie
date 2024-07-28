@@ -45,13 +45,13 @@ func standaloneExec(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	dbConn, queries, err := db.GetDBConnection(ctx, true, envConfig, applyMigrations, sigChan, done, logger)
+	queries, err := db.GetDBConnection(ctx, true, envConfig, applyMigrations, sigChan, done, logger)
 	if err != nil {
 		logger.Err(err).Msg("Failed to get database connection")
 		cancel()
 		return err
 	}
-	srv := server.NewServer(ctx, envConfig, dbConn, queries, logger)
+	srv := server.NewServer(ctx, envConfig, queries, logger)
 
 	logger.Info().Msg("Starting Odin server")
 	addr := fmt.Sprintf("%s:%s", envConfig.ODIN_SERVER_HOST, envConfig.ODIN_SERVER_PORT)

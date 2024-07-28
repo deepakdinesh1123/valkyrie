@@ -51,7 +51,7 @@ var WorkerStartCmd = &cobra.Command{
 		if newWorker {
 			deleteWorkerInfo(envConfig.ODIN_WORKER_INFO_FILE)
 		}
-		_, queries, err := db.GetDBConnection(ctx, false, envConfig, false, nil, nil, logger)
+		queries, err := db.GetDBConnection(ctx, false, envConfig, false, nil, nil, logger)
 		if err != nil {
 			logger.Err(err).Msg("Failed to get database connection")
 			return err
@@ -157,7 +157,6 @@ func deleteWorkerInfo(infoFile string) error {
 func readWorkerInfo(infoFile string, logger *zerolog.Logger) (*models.WorkerInfo, error) {
 	if _, err := os.Stat(infoFile); err != nil {
 		if os.IsNotExist(err) {
-			logger.Info().Msgf("Worker info not found at %s", infoFile)
 			return nil, &WorkerInfoNotFoundError{}
 		}
 		if os.IsPermission(err) {

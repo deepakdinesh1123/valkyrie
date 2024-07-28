@@ -2,9 +2,9 @@ package worker
 
 import (
 	"context"
-	"sync"
 	"time"
 
+	"github.com/deepakdinesh1123/valkyrie/internal/concurrency"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/provider"
@@ -47,11 +47,12 @@ func GetWorker(ctx context.Context, name string, queries *db.Queries, env *confi
 }
 
 func (w *Worker) Run(ctx context.Context) error {
-	var wg sync.WaitGroup
+	var wg concurrency.SafeWaitGroup
 	ticker := time.NewTicker(time.Duration(w.env.ODIN_WORKER_POLL_FREQ) * time.Second)
 	for {
 		select {
 		case <-ctx.Done():
+			w.logger.Info().Int64("Tasks in progress", wg.Count()).Msg("Worker: context done")
 			wg.Wait()
 			err := ctx.Err()
 			ticker.Stop()
@@ -79,8 +80,7 @@ func (w *Worker) Run(ctx context.Context) error {
 			}
 			w.logger.Info().Msgf("Worker: fetched job %d", job.ID)
 			wg.Add(1)
-			tctx, cancel := context.WithTimeout(ctx, time.Duration(w.env.ODIN_WORKER_TASK_TIMEOUT)*time.Second)
-			go w.provider.Execute(tctx, &wg, job, cancel)
+			go w.provider.Execute(ctx, &wg, job)
 		}
 	}
 }

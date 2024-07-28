@@ -3,8 +3,8 @@ package provider
 import (
 	"context"
 	"os"
-	"sync"
 
+	"github.com/deepakdinesh1123/valkyrie/internal/concurrency"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/provider/docker"
@@ -13,7 +13,7 @@ import (
 )
 
 type Provider interface {
-	Execute(ctx context.Context, wg *sync.WaitGroup, execReq db.Jobqueue, cancel context.CancelFunc)
+	Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, execReq db.Jobqueue)
 }
 
 func GetProvider(ctx context.Context, queries *db.Queries, envConfig *config.EnvConfig, logger *zerolog.Logger) (Provider, error) {

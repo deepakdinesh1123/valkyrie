@@ -9,19 +9,19 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/pgembed"
 	embeddedpostgres "github.com/fergusstrange/embedded-postgres"
-	"github.com/jackc/pgx/v5"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/rs/zerolog"
 
 	migrate "github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 //go:embed all:migrations/*.sql
 var migrationsFS embed.FS
 
-func GetDBConnection(ctx context.Context, standalone bool, envConfig *config.EnvConfig, applyMigrations bool, sigChan chan os.Signal, done chan bool, logger *zerolog.Logger) (*pgx.Conn, *Queries, error) {
+func GetDBConnection(ctx context.Context, standalone bool, envConfig *config.EnvConfig, applyMigrations bool, sigChan chan os.Signal, done chan bool, logger *zerolog.Logger) (*Queries, error) {
 	// Start embedded Postgres if standalone mode is enabled
 	var pge *embeddedpostgres.EmbeddedPostgres
 	if standalone {
@@ -32,7 +32,7 @@ func GetDBConnection(ctx context.Context, standalone bool, envConfig *config.Env
 			envConfig.POSTGRES_DB, pgDataPath, logger)
 		if err != nil {
 			logger.Err(err).Msg("Failed to start Postgres")
-			return nil, nil, err
+			return nil, err
 		}
 	}
 
@@ -41,18 +41,17 @@ func GetDBConnection(ctx context.Context, standalone bool, envConfig *config.Env
 		envConfig.POSTGRES_USER, envConfig.POSTGRES_PASSWORD, envConfig.POSTGRES_HOST,
 		envConfig.POSTGRES_PORT, envConfig.POSTGRES_DB, envConfig.POSTGRES_SSL_MODE)
 
-	// Connect to Postgres
-	DB, err := pgx.Connect(ctx, POSTGRES_URL)
+	connPool, err := pgxpool.NewWithConfig(ctx, config.Config(POSTGRES_URL, logger))
 	if err != nil {
-		logger.Err(err).Msg("Failed to connect to Postgres")
-		return nil, nil, err
+		logger.Err(err).Msg("Failed to create connection pool")
+		return nil, err
 	}
 
 	// Ensure the connection is closed when the context is done
 	go func() {
 		<-sigChan
 		logger.Info().Msg("Stopping Postgres connection")
-		DB.Close(ctx)
+		connPool.Close()
 		logger.Info().Msg("Postgres connection stopped")
 		if pge != nil {
 			logger.Info().Msg("Stopping Embedded Postgres")
@@ -69,13 +68,13 @@ func GetDBConnection(ctx context.Context, standalone bool, envConfig *config.Env
 	if applyMigrations {
 		logger.Info().Msg("Applying migrations")
 		if err := applyMigrationsFunc(POSTGRES_URL, logger); err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		logger.Info().Msg("Migrations applied")
 	}
 
-	queries := New(DB)
-	return DB, queries, nil
+	queries := New(connPool)
+	return queries, nil
 }
 
 // Helper function to apply migrations
