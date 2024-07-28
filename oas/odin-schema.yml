@@ -159,8 +159,6 @@ components:
           type: array
           items:
             type: string
-        language:
-          $ref: '#/components/schemas/ProgrammingLanguage'
     ProgrammingLanguage:
       type: object
       required:
@@ -172,6 +170,8 @@ components:
           type: string
     File:
       type: object
+      required:
+        - content
       properties:
         name:
           type: string
@@ -182,7 +182,12 @@ components:
       required:
         - environment
         - file
+        - language
       properties:
+        language:
+          oneOf:
+            - type: string
+            - $ref: '#/components/schemas/ProgrammingLanguage'
         environment:
           oneOf:
             - $ref: '#/components/schemas/Flake'

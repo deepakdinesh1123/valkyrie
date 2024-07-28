@@ -236,7 +236,6 @@ type ExecutionEnvironmentSpec struct {
 	EnvironmentVariables []EnvironmentVariable `json:"environment_variables"`
 	Packages             []string              `json:"packages"`
 	Dependencies         []string              `json:"dependencies"`
-	Language             ProgrammingLanguage   `json:"language"`
 }
 
 // GetEnvironmentVariables returns the value of EnvironmentVariables.
@@ -254,11 +253,6 @@ func (s *ExecutionEnvironmentSpec) GetDependencies() []string {
 	return s.Dependencies
 }
 
-// GetLanguage returns the value of Language.
-func (s *ExecutionEnvironmentSpec) GetLanguage() ProgrammingLanguage {
-	return s.Language
-}
-
 // SetEnvironmentVariables sets the value of EnvironmentVariables.
 func (s *ExecutionEnvironmentSpec) SetEnvironmentVariables(val []EnvironmentVariable) {
 	s.EnvironmentVariables = val
@@ -274,17 +268,18 @@ func (s *ExecutionEnvironmentSpec) SetDependencies(val []string) {
 	s.Dependencies = val
 }
 
-// SetLanguage sets the value of Language.
-func (s *ExecutionEnvironmentSpec) SetLanguage(val ProgrammingLanguage) {
-	s.Language = val
-}
-
 // Ref: #/components/schemas/ExecutionRequest
 type ExecutionRequest struct {
+	Language    ExecutionRequestLanguage    `json:"language"`
 	Environment ExecutionRequestEnvironment `json:"environment"`
 	Config      OptExecutionRequestConfig   `json:"config"`
 	File        File                        `json:"file"`
 	Priority    OptInt                      `json:"priority"`
+}
+
+// GetLanguage returns the value of Language.
+func (s *ExecutionRequest) GetLanguage() ExecutionRequestLanguage {
+	return s.Language
 }
 
 // GetEnvironment returns the value of Environment.
@@ -305,6 +300,11 @@ func (s *ExecutionRequest) GetFile() File {
 // GetPriority returns the value of Priority.
 func (s *ExecutionRequest) GetPriority() OptInt {
 	return s.Priority
+}
+
+// SetLanguage sets the value of Language.
+func (s *ExecutionRequest) SetLanguage(val ExecutionRequestLanguage) {
+	s.Language = val
 }
 
 // SetEnvironment sets the value of Environment.
@@ -463,6 +463,72 @@ func NewExecutionEnvironmentSpecExecutionRequestEnvironment(v ExecutionEnvironme
 	return s
 }
 
+// ExecutionRequestLanguage represents sum type.
+type ExecutionRequestLanguage struct {
+	Type                ExecutionRequestLanguageType // switch on this field
+	String              string
+	ProgrammingLanguage ProgrammingLanguage
+}
+
+// ExecutionRequestLanguageType is oneOf type of ExecutionRequestLanguage.
+type ExecutionRequestLanguageType string
+
+// Possible values for ExecutionRequestLanguageType.
+const (
+	StringExecutionRequestLanguage              ExecutionRequestLanguageType = "string"
+	ProgrammingLanguageExecutionRequestLanguage ExecutionRequestLanguageType = "ProgrammingLanguage"
+)
+
+// IsString reports whether ExecutionRequestLanguage is string.
+func (s ExecutionRequestLanguage) IsString() bool { return s.Type == StringExecutionRequestLanguage }
+
+// IsProgrammingLanguage reports whether ExecutionRequestLanguage is ProgrammingLanguage.
+func (s ExecutionRequestLanguage) IsProgrammingLanguage() bool {
+	return s.Type == ProgrammingLanguageExecutionRequestLanguage
+}
+
+// SetString sets ExecutionRequestLanguage to string.
+func (s *ExecutionRequestLanguage) SetString(v string) {
+	s.Type = StringExecutionRequestLanguage
+	s.String = v
+}
+
+// GetString returns string and true boolean if ExecutionRequestLanguage is string.
+func (s ExecutionRequestLanguage) GetString() (v string, ok bool) {
+	if !s.IsString() {
+		return v, false
+	}
+	return s.String, true
+}
+
+// NewStringExecutionRequestLanguage returns new ExecutionRequestLanguage from string.
+func NewStringExecutionRequestLanguage(v string) ExecutionRequestLanguage {
+	var s ExecutionRequestLanguage
+	s.SetString(v)
+	return s
+}
+
+// SetProgrammingLanguage sets ExecutionRequestLanguage to ProgrammingLanguage.
+func (s *ExecutionRequestLanguage) SetProgrammingLanguage(v ProgrammingLanguage) {
+	s.Type = ProgrammingLanguageExecutionRequestLanguage
+	s.ProgrammingLanguage = v
+}
+
+// GetProgrammingLanguage returns ProgrammingLanguage and true boolean if ExecutionRequestLanguage is ProgrammingLanguage.
+func (s ExecutionRequestLanguage) GetProgrammingLanguage() (v ProgrammingLanguage, ok bool) {
+	if !s.IsProgrammingLanguage() {
+		return v, false
+	}
+	return s.ProgrammingLanguage, true
+}
+
+// NewProgrammingLanguageExecutionRequestLanguage returns new ExecutionRequestLanguage from ProgrammingLanguage.
+func NewProgrammingLanguageExecutionRequestLanguage(v ProgrammingLanguage) ExecutionRequestLanguage {
+	var s ExecutionRequestLanguage
+	s.SetProgrammingLanguage(v)
+	return s
+}
+
 // Ref: #/components/schemas/ExecutionResult
 type ExecutionResult struct {
 	ExecutionId int64  `json:"executionId"`
@@ -494,7 +560,7 @@ func (*ExecutionResult) getExecutionResultRes() {}
 // Ref: #/components/schemas/File
 type File struct {
 	Name    OptString `json:"name"`
-	Content OptString `json:"content"`
+	Content string    `json:"content"`
 }
 
 // GetName returns the value of Name.
@@ -503,7 +569,7 @@ func (s *File) GetName() OptString {
 }
 
 // GetContent returns the value of Content.
-func (s *File) GetContent() OptString {
+func (s *File) GetContent() string {
 	return s.Content
 }
 
@@ -513,7 +579,7 @@ func (s *File) SetName(val OptString) {
 }
 
 // SetContent sets the value of Content.
-func (s *File) SetContent(val OptString) {
+func (s *File) SetContent(val string) {
 	s.Content = val
 }
 

@@ -22,7 +22,7 @@ WHERE id = (
     FOR UPDATE SKIP LOCKED
     LIMIT 1
     )
-RETURNING id, created_by, created_at, started_at, completed_at, script, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type, worker_id
+RETURNING id, created_by, created_at, started_at, completed_at, script, script_path, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type, worker_id
 `
 
 func (q *Queries) FetchJob(ctx context.Context, workerID pgtype.Int4) (Jobqueue, error) {
@@ -35,6 +35,7 @@ func (q *Queries) FetchJob(ctx context.Context, workerID pgtype.Int4) (Jobqueue,
 		&i.StartedAt,
 		&i.CompletedAt,
 		&i.Script,
+		&i.ScriptPath,
 		&i.Args,
 		&i.Logs,
 		&i.Flake,
@@ -89,7 +90,7 @@ func (q *Queries) GetAllExecutionResults(ctx context.Context) ([]GetAllExecution
 }
 
 const getAllExecutions = `-- name: GetAllExecutions :many
-SELECT id, created_by, created_at, started_at, completed_at, script, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type, worker_id FROM JobQueue
+SELECT id, created_by, created_at, started_at, completed_at, script, script_path, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type, worker_id FROM JobQueue
 WHERE job_type = 'execution'
 ORDER BY started_at
 `
@@ -110,6 +111,7 @@ func (q *Queries) GetAllExecutions(ctx context.Context) ([]Jobqueue, error) {
 			&i.StartedAt,
 			&i.CompletedAt,
 			&i.Script,
+			&i.ScriptPath,
 			&i.Args,
 			&i.Logs,
 			&i.Flake,
@@ -133,7 +135,7 @@ func (q *Queries) GetAllExecutions(ctx context.Context) ([]Jobqueue, error) {
 }
 
 const getAllJobs = `-- name: GetAllJobs :many
-SELECT id, created_by, created_at, started_at, completed_at, script, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type, worker_id FROM JobQueue
+SELECT id, created_by, created_at, started_at, completed_at, script, script_path, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type, worker_id FROM JobQueue
 ORDER BY started_at
 `
 
@@ -153,6 +155,7 @@ func (q *Queries) GetAllJobs(ctx context.Context) ([]Jobqueue, error) {
 			&i.StartedAt,
 			&i.CompletedAt,
 			&i.Script,
+			&i.ScriptPath,
 			&i.Args,
 			&i.Logs,
 			&i.Flake,
@@ -176,7 +179,7 @@ func (q *Queries) GetAllJobs(ctx context.Context) ([]Jobqueue, error) {
 }
 
 const getJob = `-- name: GetJob :one
-SELECT id, created_by, created_at, started_at, completed_at, script, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type, worker_id FROM JobQueue
+SELECT id, created_by, created_at, started_at, completed_at, script, script_path, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type, worker_id FROM JobQueue
 WHERE id = $1
 LIMIT 1
 `
@@ -191,6 +194,7 @@ func (q *Queries) GetJob(ctx context.Context, id int64) (Jobqueue, error) {
 		&i.StartedAt,
 		&i.CompletedAt,
 		&i.Script,
+		&i.ScriptPath,
 		&i.Args,
 		&i.Logs,
 		&i.Flake,
@@ -207,7 +211,7 @@ func (q *Queries) GetJob(ctx context.Context, id int64) (Jobqueue, error) {
 }
 
 const getResultUsingExecutionID = `-- name: GetResultUsingExecutionID :one
-SELECT id, created_by, created_at, started_at, completed_at, script, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type, worker_id
+SELECT id, created_by, created_at, started_at, completed_at, script, script_path, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type, worker_id
 FROM JobQueue
 WHERE id = $1 AND job_type = 'execution' LIMIT 1
 `
@@ -222,6 +226,7 @@ func (q *Queries) GetResultUsingExecutionID(ctx context.Context, id int64) (Jobq
 		&i.StartedAt,
 		&i.CompletedAt,
 		&i.Script,
+		&i.ScriptPath,
 		&i.Args,
 		&i.Logs,
 		&i.Flake,
@@ -239,20 +244,26 @@ func (q *Queries) GetResultUsingExecutionID(ctx context.Context, id int64) (Jobq
 
 const insertJob = `-- name: InsertJob :one
 INSERT INTO JobQueue
-    (script, flake, priority)
+    (script, flake, language, script_path)
 VALUES
-    ($1, $2, $3)
-RETURNING id, created_by, created_at, started_at, completed_at, script, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type, worker_id
+    ($1, $2, $3, $4)
+RETURNING id, created_by, created_at, started_at, completed_at, script, script_path, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type, worker_id
 `
 
 type InsertJobParams struct {
-	Script   pgtype.Text `db:"script" json:"script"`
-	Flake    pgtype.Text `db:"flake" json:"flake"`
-	Priority pgtype.Int4 `db:"priority" json:"priority"`
+	Script     pgtype.Text `db:"script" json:"script"`
+	Flake      pgtype.Text `db:"flake" json:"flake"`
+	Language   pgtype.Text `db:"language" json:"language"`
+	ScriptPath pgtype.Text `db:"script_path" json:"script_path"`
 }
 
 func (q *Queries) InsertJob(ctx context.Context, arg InsertJobParams) (Jobqueue, error) {
-	row := q.db.QueryRow(ctx, insertJob, arg.Script, arg.Flake, arg.Priority)
+	row := q.db.QueryRow(ctx, insertJob,
+		arg.Script,
+		arg.Flake,
+		arg.Language,
+		arg.ScriptPath,
+	)
 	var i Jobqueue
 	err := row.Scan(
 		&i.ID,
@@ -261,6 +272,7 @@ func (q *Queries) InsertJob(ctx context.Context, arg InsertJobParams) (Jobqueue,
 		&i.StartedAt,
 		&i.CompletedAt,
 		&i.Script,
+		&i.ScriptPath,
 		&i.Args,
 		&i.Logs,
 		&i.Flake,
@@ -294,7 +306,7 @@ SET
     completed_at = current_timestamp
     , logs = $2
 WHERE id = $1 AND completed_at IS NULL
-RETURNING id, created_by, created_at, started_at, completed_at, script, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type, worker_id
+RETURNING id, created_by, created_at, started_at, completed_at, script, script_path, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type, worker_id
 `
 
 type UpdateJobParams struct {
@@ -312,6 +324,7 @@ func (q *Queries) UpdateJob(ctx context.Context, arg UpdateJobParams) (Jobqueue,
 		&i.StartedAt,
 		&i.CompletedAt,
 		&i.Script,
+		&i.ScriptPath,
 		&i.Args,
 		&i.Logs,
 		&i.Flake,

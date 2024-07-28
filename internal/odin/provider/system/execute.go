@@ -12,6 +12,7 @@ import (
 )
 
 func (s *SystemProvider) Execute(ctx context.Context, wg *sync.WaitGroup, execReq db.Jobqueue) error {
+	defer wg.Done()
 	dir := fmt.Sprintf("%s/%s", s.envConfig.ODIN_SYSTEM_PROVIDER_BASE_DIR, execReq.CreatedAt.Time.Format("20060102150405"))
 
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
@@ -25,7 +26,7 @@ func (s *SystemProvider) Execute(ctx context.Context, wg *sync.WaitGroup, execRe
 		return err
 	}
 
-	err = os.WriteFile(fmt.Sprintf("%s/%s", dir, "main.py"), []byte(execReq.Script.String), os.ModePerm)
+	err = os.WriteFile(fmt.Sprintf("%s/%s", dir, execReq.ScriptPath.String), []byte(execReq.Script.String), os.ModePerm)
 	if err != nil {
 		return err
 	}
@@ -40,6 +41,5 @@ func (s *SystemProvider) Execute(ctx context.Context, wg *sync.WaitGroup, execRe
 	if err != nil {
 		return err
 	}
-	defer wg.Done()
 	return nil
 }

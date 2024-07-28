@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS JobQueue(
     started_at TIMESTAMP,
     completed_at TIMESTAMP,
     script TEXT,
+    script_path VARCHAR(50),
     args jsonb,
     logs TEXT,
     flake TEXT,
@@ -33,9 +34,9 @@ RETURNING *;
 
 -- name: InsertJob :one
 INSERT INTO JobQueue
-    (script, flake, priority)
+    (script, flake, language, script_path)
 VALUES
-    ($1, $2, $3)
+    ($1, $2, $3, $4)
 RETURNING *;
 
 -- name: UpdateJob :one

@@ -30,8 +30,14 @@ func NewExecutionService(queries *db.Queries, envConfig *config.EnvConfig) *Exec
 }
 
 func PrepareExecutionRequest(req *api.ExecutionRequest) (*models.ExecutionRequest, error) {
+	var scriptName string
+	if !req.File.Name.Set {
+		scriptName = fmt.Sprintf("main.%s", config.LANGUAGE_EXTENSION[req.Language.String])
+	} else {
+		scriptName = req.File.Name.Value
+	}
 	if req.Environment.Type == "ExecutionEnvironmentSpec" {
-		flake, err := ConvertExecSpecToFlake(req.Environment.ExecutionEnvironmentSpec)
+		flake, err := ConvertExecSpecToFlake(req.Environment.ExecutionEnvironmentSpec, req.Language.String)
 		if err != nil {
 			return nil, &ExecutionServiceError{
 				Type:    "flake",
@@ -41,23 +47,24 @@ func PrepareExecutionRequest(req *api.ExecutionRequest) (*models.ExecutionReques
 		return &models.ExecutionRequest{
 			Environment: flake,
 			File: models.File{
-				Name:    req.File.Name.Value,
-				Content: req.File.Content.Value,
+				Name:    scriptName,
+				Content: req.File.Content,
 			},
 		}, nil
 	}
 	return &models.ExecutionRequest{
 		Environment: string(req.Environment.Flake),
 		File: models.File{
-			Name:    req.File.Name.Value,
-			Content: req.File.Content.Value,
+			Name:    scriptName,
+			Content: req.File.Content,
 		},
-		Priority: req.Priority.Value,
+		Language:   req.Language.String,
+		ScriptName: scriptName,
 	}, nil
 }
 
-func ConvertExecSpecToFlake(execSpec api.ExecutionEnvironmentSpec) (string, error) {
-	tmpl, err := flakes.ReadFile(fmt.Sprintf("templates/%s", execSpec.Language.Name))
+func ConvertExecSpecToFlake(execSpec api.ExecutionEnvironmentSpec, language string) (string, error) {
+	tmpl, err := flakes.ReadFile(fmt.Sprintf("templates/%s", language))
 	if err != nil {
 		return "", &ExecutionServiceError{
 			Type:    "template",
@@ -84,11 +91,9 @@ func (s *ExecutionService) AddJob(ctx context.Context, req *api.ExecutionRequest
 		Script: pgtype.Text{
 			String: execReq.File.Content,
 			Valid:  true},
-		Flake: pgtype.Text{String: execReq.Environment, Valid: true},
-		Priority: pgtype.Int4{
-			Int32: int32(execReq.Priority),
-			Valid: true,
-		},
+		Flake:      pgtype.Text{String: execReq.Environment, Valid: true},
+		Language:   pgtype.Text{String: execReq.Language, Valid: true},
+		ScriptPath: pgtype.Text{String: execReq.ScriptName, Valid: true},
 	})
 	if err != nil {
 		return 0, err

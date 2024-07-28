@@ -27,6 +27,8 @@ type ExecutionRequest struct {
 	Environment string `json:"environment"`
 	File        File   `json:"file"`
 	Priority    int    `json:"priority"`
+	Language    string `json:"language"`
+	ScriptName  string `json:"script_name"`
 
 	dockerConfig *DockerContainerConfig
 	podmanConfig *PodmanContainerConfig

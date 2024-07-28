@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS JobQueue(
     started_at TIMESTAMP,
     completed_at TIMESTAMP,
     script TEXT,
+    script_path VARCHAR(50),
     args jsonb,
     logs TEXT,
     flake TEXT,

@@ -7,10 +7,9 @@ migrate:
 	@migrate -path internal/odin/db/migrations -database ${POSTGRES_URL} up
 
 .PHONY: gq
-gq:
-	cd internal/odin/db && \
-	sqlc verify && \
-	sqlc generate
+gq: start-db
+	# cd internal/odin/db && sqlc verify
+	cd internal/odin/db && sqlc generate
 
 .PHONY: start-server
 start-server:
@@ -28,4 +27,8 @@ start-db:
 .PHONY: odin
 odin:
 	@go build -o odin cmd/odin/main.go
+
+.PHONY: oapi-gen
+oapi-gen:
+	@go generate
 

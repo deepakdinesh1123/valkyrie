@@ -2,14 +2,30 @@ services:
   odin:
     build:
       context: .
-      dockerfile: build/package/dockerfiles/odin.dockerfile
+      dockerfile: build/package/dockerfiles/odin.server.dockerfile
     env_file:
       - .env
     depends_on:
       postgres:
         condition: service_healthy
+    command: ["server", "start"]
     ports:
       - "8080:8080"
+  
+  odin-worker:
+    build:
+      context: .
+      dockerfile: build/package/dockerfiles/odin.worker.dockerfile
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      odin:
+        condition: service_started
+    deploy:
+      replicas: 3
+    command: ["worker", "start"]
 
   postgres:
     image: postgres
