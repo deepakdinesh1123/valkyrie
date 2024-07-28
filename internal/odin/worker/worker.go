@@ -75,7 +75,7 @@ func (w *Worker) Run(ctx context.Context) error {
 		case <-ticker.C:
 			w.updateStats()
 			if w.WorkerStats.CPUUsage > 75 || w.WorkerStats.MemUsed > 75 {
-				w.logger.Info().Float64("CPU Usage", w.WorkerStats.CPUUsage).Msg("Worker: CPU Usage is high")
+				w.logger.Info().Float64("CPU Usage", w.WorkerStats.CPUUsage).Uint64("Memory Used", w.WorkerStats.MemUsed).Msg("Worker: high usage")
 				continue
 			}
 			job, err := w.queries.FetchJob(ctx, pgtype.Int4{Int32: int32(w.ID), Valid: true})
