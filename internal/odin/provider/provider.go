@@ -21,7 +21,7 @@ func GetProvider(ctx context.Context, queries *db.Queries, envConfig *config.Env
 	var err error
 	switch envConfig.ODIN_WORKER_PROVIDER {
 	case "docker":
-		provider, err = docker.NewDockerProvider()
+		provider, err = docker.NewDockerProvider(envConfig, queries, logger)
 		if err != nil {
 			logger.Err(err).Msg("Failed to create docker provider")
 			return nil, err

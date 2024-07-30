@@ -35,6 +35,8 @@ type EnvConfig struct {
 	ODIN_SYSTEM_PROVIDER_BASE_DIR string `mapstructure:"ODIN_SYSTEM_PROVIDER_BASE_DIR"` // represents the base directory for the system provider.
 	ODIN_SYSTEM_PROVIDER_CLEAN_UP bool   `mapstructure:"ODIN_SYSTEM_PROVIDER_CLEAN_UP"` // represents whether to clean up direcories created by the system provider.
 
+	ODIN_DOCKER_PROVIDER_BASE_DIR string `mapstructure:"ODIN_DOCKER_PROVIDER_BASE_DIR"` // represents the base directory for the docker provider.
+
 	USER_HOME_DIR string
 }
 
@@ -64,6 +66,8 @@ func GetEnvConfig() (*EnvConfig, error) {
 
 	viper.SetDefault("ODIN_SYSTEM_PROVIDER_BASE_DIR", filepath.Join(os.TempDir(), "valkyrie"))
 	viper.SetDefault("ODIN_SYSTEM_PROVIDER_CLEAN_UP", true)
+
+	viper.SetDefault("ODIN_DOCKER_PROVIDER_BASE_DIR", "/odin")
 
 	viper.SetDefault("ODIN_LOG_LEVEL", "info")
 

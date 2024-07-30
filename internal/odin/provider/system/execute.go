@@ -58,23 +58,23 @@ func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 		Setpgid: true,
 	}
 
-	done := make(chan struct{})
+	done := make(chan bool, 1)
 
 	go func() {
 		if err := execCmd.Run(); err != nil {
 			if tctx.Err() != nil {
 				switch tctx.Err() {
 				case context.DeadlineExceeded:
-					close(done)
+					done <- true
 					return
 				}
 			}
 			s.logger.Err(err).Msg("Failed to execute command")
 			s.updateJob(ctx, execReq.ID, err.Error())
-			close(done)
+			done <- true
 			return
 		}
-		close(done)
+		done <- true
 	}()
 	for {
 		select {
