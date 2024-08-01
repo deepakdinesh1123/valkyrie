@@ -16,4 +16,6 @@ USER valnix
 RUN sh install_nix.sh --no-daemon
 ENV PATH="{$PATH}:/home/valnix/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/bin"
 
+RUN mkdir ~/odin
+
 CMD [ "/bin/sh", "-c", "sleep infinity" ]

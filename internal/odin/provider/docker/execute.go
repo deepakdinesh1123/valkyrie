@@ -4,15 +4,17 @@ import (
 	"archive/tar"
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/concurrency"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/pkg/namesgenerator"
 	"github.com/docker/docker/api/types/container"
 	"github.com/jackc/pgx/v5/pgtype"
-	"golang.org/x/text/encoding/charmap"
 )
 
 func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, execReq db.Jobqueue) {
@@ -22,7 +24,6 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 		ctx,
 		&container.Config{
 			Image:       "alpinix",
-			WorkingDir:  d.envConfig.ODIN_DOCKER_PROVIDER_BASE_DIR,
 			StopTimeout: &d.envConfig.ODIN_WORKER_TASK_TIMEOUT,
 			StopSignal:  "SIGINT",
 		},
@@ -51,7 +52,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 		return
 	}
 
-	err = d.writeFiles(ctx, containerName, d.envConfig.ODIN_DOCKER_PROVIDER_BASE_DIR, execReq)
+	err = d.writeFiles(ctx, containerName, execReq)
 	if err != nil {
 		d.logger.Err(err).Msg("Failed to write files")
 		d.client.ContainerKill(ctx, containerName, "SIGKILL")
@@ -68,7 +69,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			container.ExecOptions{
 				AttachStderr: true,
 				AttachStdout: true,
-				WorkingDir:   d.envConfig.ODIN_DOCKER_PROVIDER_BASE_DIR,
+				WorkingDir:   "/home/valnix/odin",
 				Cmd:          []string{"nix", "run"},
 			},
 		)
@@ -85,24 +86,14 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			done <- true
 			return
 		}
-		var out []byte
-		for {
-			out = make([]byte, 1024)
-			_, err := hijResp.Reader.Read(out)
-			if err != nil {
-				d.logger.Err(err).Msg("Failed to read output")
-				break
-			}
-		}
-		decodedOut, err := charmap.ISO8859_1.NewDecoder().Bytes(out)
+		out, err := io.ReadAll(hijResp.Reader)
 		if err != nil {
-			d.logger.Err(err).Msg("Failed to decode output")
+			d.logger.Err(err).Msg("Failed to read output")
 			d.updateJob(ctx, execReq.ID, err.Error())
-			<-done
+			done <- true
 			return
 		}
-		d.logger.Info().Bytes("Output", decodedOut).Msg("Writing output to stdout")
-		err = d.updateJob(ctx, execReq.ID, string(decodedOut))
+		err = d.updateJob(ctx, execReq.ID, stripCtlAndExtFromUTF8(string(out)))
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to update job")
 		}
@@ -132,29 +123,47 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			}
 		case <-done:
 			d.logger.Info().Msg("Process exited")
-			// err := d.client.ContainerKill(ctx, containerName, "SIGKILL")
-			// if err != nil {
-			// 	d.logger.Err(err).Msg("Failed to send sigint signal to container")
-			// }
+			err := d.client.ContainerKill(ctx, containerName, "SIGKILL")
+			if err != nil {
+				d.logger.Err(err).Msg("Failed to send sigint signal to container")
+			}
 			return
 		}
 	}
 }
 
-func (d *DockerProvider) writeFiles(ctx context.Context, containerName string, dir string, execReq db.Jobqueue) error {
+func (d *DockerProvider) writeFiles(ctx context.Context, containerName string, execReq db.Jobqueue) error {
 	files := map[string]string{
 		"flake.nix":               execReq.Flake.String,
 		execReq.ScriptPath.String: execReq.Script.String,
 	}
 
-	tarFilePath := filepath.Join(os.TempDir(), fmt.Sprintf("%d.tar", execReq.ID))
-	d.logger.Info().Str("Path", tarFilePath).Msg("Writing files to tar")
+	tarFilePath, err := createTarArchive(files)
+	if err != nil {
+		return err
+	}
 	defer os.Remove(tarFilePath)
 
+	tarFile, err := os.Open(tarFilePath)
+	if err != nil {
+		d.logger.Err(err).Msg("Failed to open tar file")
+		return err
+	}
+	defer tarFile.Close()
+
+	err = d.client.CopyToContainer(ctx, containerName, "/home/valnix/odin/", tarFile, container.CopyToContainerOptions{})
+	if err != nil {
+		d.logger.Err(err).Msg("Failed to copy files to container")
+		return err
+	}
+	return nil
+}
+
+func createTarArchive(files map[string]string) (string, error) {
+	tarFilePath := filepath.Join(os.TempDir(), fmt.Sprintf("%d.tar", time.Now().UnixNano()))
 	tarFile, err := os.Create(tarFilePath)
 	if err != nil {
-		d.logger.Err(err).Msg("Failed to create tar file")
-		return err
+		return "", err
 	}
 	defer tarFile.Close()
 
@@ -165,25 +174,15 @@ func (d *DockerProvider) writeFiles(ctx context.Context, containerName string, d
 		if err := tw.WriteHeader(&tar.Header{
 			Name: name,
 			Size: int64(len(content)),
-			Mode: 0644,
+			Mode: 0744,
 		}); err != nil {
-			d.logger.Err(err).Msg("Failed to write header")
-			return err
+			return "", err
 		}
 		if _, err := tw.Write([]byte(content)); err != nil {
-			d.logger.Err(err).Msg("Failed to write content")
-			return err
+			return "", err
 		}
 	}
-
-	err = d.client.CopyToContainer(ctx, containerName, dir, tarFile, container.CopyToContainerOptions{
-		AllowOverwriteDirWithFile: true,
-	})
-	if err != nil {
-		d.logger.Err(err).Msg("Failed to copy files to container")
-		return err
-	}
-	return nil
+	return tarFilePath, nil
 }
 
 func (d *DockerProvider) updateJob(ctx context.Context, jobID int64, message string) error {
@@ -195,4 +194,13 @@ func (d *DockerProvider) updateJob(ctx context.Context, jobID int64, message str
 	}
 
 	return nil
+}
+
+func stripCtlAndExtFromUTF8(str string) string {
+	return strings.Map(func(r rune) rune {
+		if r >= 32 && r < 127 || r == 10 {
+			return r
+		}
+		return -1
+	}, str)
 }
