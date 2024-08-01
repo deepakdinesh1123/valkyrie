@@ -18,6 +18,8 @@ import (
 )
 
 func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, execReq db.Jobqueue) {
+	tctx, cancel := context.WithTimeout(ctx, time.Duration(d.envConfig.ODIN_WORKER_TASK_TIMEOUT)*time.Second)
+	defer cancel()
 	defer wg.Done()
 	containerName := namesgenerator.GetRandomName(0)
 	resp, err := d.client.ContainerCreate(
@@ -103,6 +105,16 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 
 	for {
 		select {
+		case <-tctx.Done():
+			switch tctx.Err() {
+			case context.DeadlineExceeded:
+				d.logger.Info().Msg("Context deadline exceeded wating for process to exit")
+				err := d.client.ContainerKill(context.TODO(), containerName, "SIGKILL")
+				if err != nil {
+					d.logger.Err(err).Msg("Failed to send sigint signal")
+				}
+				return
+			}
 		case <-ctx.Done():
 			switch ctx.Err() {
 			case context.Canceled:
