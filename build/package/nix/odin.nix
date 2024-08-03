@@ -1,5 +1,6 @@
 { lib,
-  pkgs
+  pkgs,
+  stdenv
 }:
 
 
@@ -7,8 +8,11 @@ pkgs.buildGoModule rec {
   pname = "odin";
   version = "0.0.1";
 
-  vendorHash = "sha256-tCmvn1eyblZSFoDBJ0xTSyBaZEbe7FtsXjtTNlZkKoc=";
+  vendorHash = "sha256-g+YA2d4tuAtGazjtNiIyyaWbJfnZXMeHk7e8EDr+uUw=";
   doCheck = false;
+
+  buildInputs = lib.optionals stdenv.isLinux [ pkgs.gpgme ];
+  nativebuildInputs = [ pkgs.pkg-config ];
 
   src = ../../..;
 

@@ -118,7 +118,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 		case <-ctx.Done():
 			switch ctx.Err() {
 			case context.Canceled:
-				d.logger.Info().Msg("Time out killing process")
+				d.logger.Info().Msg("Context canceled, waiting for processes to finish")
 				<-done
 				err := d.client.ContainerKill(context.TODO(), containerName, "SIGKILL")
 				if err != nil {

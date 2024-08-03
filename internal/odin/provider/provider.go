@@ -8,6 +8,7 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/provider/docker"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/provider/podman"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/provider/system"
 	"github.com/rs/zerolog"
 )
@@ -37,6 +38,12 @@ func GetProvider(ctx context.Context, queries *db.Queries, envConfig *config.Env
 		provider, err = system.NewSystemProvider(envConfig, queries, logger)
 		if err != nil {
 			logger.Err(err).Msg("Failed to create system provider")
+			return nil, err
+		}
+	case "podman":
+		provider, err = podman.NewPodmanProvider(envConfig, queries, logger)
+		if err != nil {
+			logger.Err(err).Msg("Failed to create podman provider")
 			return nil, err
 		}
 	default:
