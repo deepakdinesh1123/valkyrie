@@ -25,6 +25,7 @@ type EnvConfig struct {
 	ODIN_WORKER_BUFFER_SIZE  int    `mapstructure:"ODIN_WORKER_BUFFER_SIZE"`  // represents the buffer size for the worker.
 	ODIN_WORKER_TASK_TIMEOUT int    `mapstructure:"ODIN_WORKER_TASK_TIMEOUT"` // represents the task timeout.
 	ODIN_WORKER_POLL_FREQ    int    `mapstructure:"ODIN_WORKER_POLL_FREQ"`    // represents the polling frequency for the worker in seconds.
+	ODIN_WORKER_RUNTIME      string `mapstructure:"ODIN_WORKER_RUNTIME"`      // represents the runtime for the worker in seconds.
 
 	ODIN_LOG_LEVEL string `mapstructure:"ODIN_LOG_LEVEL"`
 
@@ -61,6 +62,7 @@ func GetEnvConfig() (*EnvConfig, error) {
 	viper.SetDefault("ODIN_WORKER_BUFFER_SIZE", 100)
 	viper.SetDefault("ODIN_WORKER_TASK_TIMEOUT", 30)
 	viper.SetDefault("ODIN_WORKER_POLL_FREQ", 5)
+	viper.SetDefault("ODIN_WORKER_RUNTIME", "runc")
 
 	viper.SetDefault("ODIN_SYSTEM_PROVIDER_BASE_DIR", filepath.Join(os.TempDir(), "valkyrie"))
 	viper.SetDefault("ODIN_SYSTEM_PROVIDER_CLEAN_UP", true)

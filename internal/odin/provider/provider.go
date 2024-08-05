@@ -2,7 +2,9 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"runtime"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/concurrency"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
@@ -41,6 +43,10 @@ func GetProvider(ctx context.Context, queries *db.Queries, envConfig *config.Env
 			return nil, err
 		}
 	case "podman":
+		if runtime.GOOS != "linux" {
+			err = fmt.Errorf("podman provider is only supported on linux")
+			return nil, err
+		}
 		provider, err = podman.NewPodmanProvider(envConfig, queries, logger)
 		if err != nil {
 			logger.Err(err).Msg("Failed to create podman provider")

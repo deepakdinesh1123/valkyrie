@@ -38,7 +38,7 @@ func (p *PodmanProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	stopSignal := syscall.SIGINT
 	s.StopSignal = &stopSignal
 
-	s.OCIRuntime = "crun"
+	s.OCIRuntime = p.envConfig.ODIN_WORKER_RUNTIME
 
 	containerRemove := false
 	s.Remove = &containerRemove

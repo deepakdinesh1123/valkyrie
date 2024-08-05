@@ -17,7 +17,8 @@ type PodmanProvider struct {
 }
 
 func NewPodmanProvider(env *config.EnvConfig, queries *db.Queries, logger *zerolog.Logger) (*PodmanProvider, error) {
-	conn, err := bindings.NewConnection(context.Background(), "unix:///run/podman/podman.sock")
+	socketPath := "unix:///run/podman/podman.sock"
+	conn, err := bindings.NewConnection(context.Background(), socketPath)
 	if err != nil {
 		return nil, err
 	}
