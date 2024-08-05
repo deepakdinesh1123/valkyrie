@@ -15,7 +15,7 @@
 
         docsDependencies = with pkgs; [ python312Packages.mkdocs-material redocly ];
         k8sDependencies = with pkgs; [ skaffold k3d skaffold kubectl kubectx kubens helm ];
-        devDependencies = with pkgs; [ sqlc go-migrate go_1_22 gpgme ] ++ docsDependencies ;
+        devDependencies = with pkgs; [ sqlc go-migrate go_1_22 gpgme libgpg-error libassuan btrfs-progs ] ++ docsDependencies ;
 
         packages = {
           odin = pkgs.callPackage ./build/package/nix/odin.nix { inherit pkgs; };
