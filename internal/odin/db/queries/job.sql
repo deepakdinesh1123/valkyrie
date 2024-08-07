@@ -75,3 +75,7 @@ WHERE id = $1 AND job_type = 'execution' LIMIT 1 ;
 SELECT id, logs, script, args FROM JobQueue
 WHERE job_type = 'execution'
 ORDER BY started_at;
+
+-- name: DeleteJob :exec
+DELETE FROM JobQueue
+WHERE id = $1 and completed_at IS NULL;

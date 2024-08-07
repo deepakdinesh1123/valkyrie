@@ -15,6 +15,71 @@ import (
 	"github.com/ogen-go/ogen/validate"
 )
 
+// DeleteExecutionParams is parameters of deleteExecution operation.
+type DeleteExecutionParams struct {
+	ExecutionId int64
+}
+
+func unpackDeleteExecutionParams(packed middleware.Parameters) (params DeleteExecutionParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "executionId",
+			In:   "path",
+		}
+		params.ExecutionId = packed[key].(int64)
+	}
+	return params
+}
+
+func decodeDeleteExecutionParams(args [1]string, argsEscaped bool, r *http.Request) (params DeleteExecutionParams, _ error) {
+	// Decode path: executionId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "executionId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToInt64(val)
+				if err != nil {
+					return err
+				}
+
+				params.ExecutionId = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "executionId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // GetExecutionResultParams is parameters of getExecutionResult operation.
 type GetExecutionResultParams struct {
 	ExecutionId int64

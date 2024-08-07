@@ -6,8 +6,8 @@ import (
 	"github.com/go-faster/errors"
 )
 
-func (s GetExecutionResultsOKApplicationJSON) Validate() error {
-	alias := ([]ExecutionResult)(s)
+func (s GetExecutionWorkersOKApplicationJSON) Validate() error {
+	alias := ([]ExecutionWorker)(s)
 	if alias == nil {
 		return errors.New("nil is invalid value")
 	}

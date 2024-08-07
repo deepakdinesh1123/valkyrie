@@ -11,6 +11,7 @@ import (
 )
 
 type Querier interface {
+	DeleteJob(ctx context.Context, id int64) error
 	FetchJob(ctx context.Context, workerID pgtype.Int4) (Jobqueue, error)
 	GetAllExecutionResults(ctx context.Context) ([]GetAllExecutionResultsRow, error)
 	GetAllExecutions(ctx context.Context) ([]Jobqueue, error)

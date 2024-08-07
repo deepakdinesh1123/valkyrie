@@ -17,7 +17,7 @@ type Server struct {
 }
 
 func NewServer(ctx context.Context, envConfig *config.EnvConfig, queries *db.Queries, logger *zerolog.Logger) *api.Server {
-	executionService := execution.NewExecutionService(queries, envConfig)
+	executionService := execution.NewExecutionService(queries, envConfig, logger)
 	server := &Server{
 		queries:          queries,
 		executionService: executionService,

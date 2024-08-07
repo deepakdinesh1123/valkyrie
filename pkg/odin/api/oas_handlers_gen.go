@@ -20,16 +20,128 @@ import (
 	"github.com/ogen-go/ogen/otelogen"
 )
 
+// handleDeleteExecutionRequest handles deleteExecution operation.
+//
+// Delete execution.
+//
+// DELETE /executions/{executionId}/
+func (s *Server) handleDeleteExecutionRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("deleteExecution"),
+		semconv.HTTPMethodKey.String("DELETE"),
+		semconv.HTTPRouteKey.String("/executions/{executionId}/"),
+	}
+
+	// Start a span for this request.
+	ctx, span := s.cfg.Tracer.Start(r.Context(), "DeleteExecution",
+		trace.WithAttributes(otelAttrs...),
+		serverSpanKind,
+	)
+	defer span.End()
+
+	// Add Labeler to context.
+	labeler := &Labeler{attrs: otelAttrs}
+	ctx = contextWithLabeler(ctx, labeler)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		elapsedDuration := time.Since(startTime)
+		attrOpt := metric.WithAttributeSet(labeler.AttributeSet())
+
+		// Increment request counter.
+		s.requests.Add(ctx, 1, attrOpt)
+
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		s.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), attrOpt)
+	}()
+
+	var (
+		recordError = func(stage string, err error) {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			s.errors.Add(ctx, 1, metric.WithAttributeSet(labeler.AttributeSet()))
+		}
+		err          error
+		opErrContext = ogenerrors.OperationContext{
+			Name: "DeleteExecution",
+			ID:   "deleteExecution",
+		}
+	)
+	params, err := decodeDeleteExecutionParams(args, argsEscaped, r)
+	if err != nil {
+		err = &ogenerrors.DecodeParamsError{
+			OperationContext: opErrContext,
+			Err:              err,
+		}
+		defer recordError("DecodeParams", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+
+	var response DeleteExecutionRes
+	if m := s.cfg.Middleware; m != nil {
+		mreq := middleware.Request{
+			Context:          ctx,
+			OperationName:    "DeleteExecution",
+			OperationSummary: "Delete execution",
+			OperationID:      "deleteExecution",
+			Body:             nil,
+			Params: middleware.Parameters{
+				{
+					Name: "executionId",
+					In:   "path",
+				}: params.ExecutionId,
+			},
+			Raw: r,
+		}
+
+		type (
+			Request  = struct{}
+			Params   = DeleteExecutionParams
+			Response = DeleteExecutionRes
+		)
+		response, err = middleware.HookMiddleware[
+			Request,
+			Params,
+			Response,
+		](
+			m,
+			mreq,
+			unpackDeleteExecutionParams,
+			func(ctx context.Context, request Request, params Params) (response Response, err error) {
+				response, err = s.h.DeleteExecution(ctx, params)
+				return response, err
+			},
+		)
+	} else {
+		response, err = s.h.DeleteExecution(ctx, params)
+	}
+	if err != nil {
+		defer recordError("Internal", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+
+	if err := encodeDeleteExecutionResponse(response, w, span); err != nil {
+		defer recordError("EncodeResponse", err)
+		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
+			s.cfg.ErrorHandler(ctx, w, r, err)
+		}
+		return
+	}
+}
+
 // handleExecuteRequest handles execute operation.
 //
 // Execute a script.
 //
-// POST /execution/execute/
+// POST /executions/execute/
 func (s *Server) handleExecuteRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("execute"),
 		semconv.HTTPMethodKey.String("POST"),
-		semconv.HTTPRouteKey.String("/execution/execute/"),
+		semconv.HTTPRouteKey.String("/executions/execute/"),
 	}
 
 	// Start a span for this request.
@@ -132,16 +244,109 @@ func (s *Server) handleExecuteRequest(args [0]string, argsEscaped bool, w http.R
 	}
 }
 
+// handleGetExecutionConfigRequest handles getExecutionConfig operation.
+//
+// Get execution config.
+//
+// GET /execution/config/
+func (s *Server) handleGetExecutionConfigRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getExecutionConfig"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/execution/config/"),
+	}
+
+	// Start a span for this request.
+	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetExecutionConfig",
+		trace.WithAttributes(otelAttrs...),
+		serverSpanKind,
+	)
+	defer span.End()
+
+	// Add Labeler to context.
+	labeler := &Labeler{attrs: otelAttrs}
+	ctx = contextWithLabeler(ctx, labeler)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		elapsedDuration := time.Since(startTime)
+		attrOpt := metric.WithAttributeSet(labeler.AttributeSet())
+
+		// Increment request counter.
+		s.requests.Add(ctx, 1, attrOpt)
+
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		s.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), attrOpt)
+	}()
+
+	var (
+		recordError = func(stage string, err error) {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			s.errors.Add(ctx, 1, metric.WithAttributeSet(labeler.AttributeSet()))
+		}
+		err error
+	)
+
+	var response GetExecutionConfigRes
+	if m := s.cfg.Middleware; m != nil {
+		mreq := middleware.Request{
+			Context:          ctx,
+			OperationName:    "GetExecutionConfig",
+			OperationSummary: "Get execution config",
+			OperationID:      "getExecutionConfig",
+			Body:             nil,
+			Params:           middleware.Parameters{},
+			Raw:              r,
+		}
+
+		type (
+			Request  = struct{}
+			Params   = struct{}
+			Response = GetExecutionConfigRes
+		)
+		response, err = middleware.HookMiddleware[
+			Request,
+			Params,
+			Response,
+		](
+			m,
+			mreq,
+			nil,
+			func(ctx context.Context, request Request, params Params) (response Response, err error) {
+				response, err = s.h.GetExecutionConfig(ctx)
+				return response, err
+			},
+		)
+	} else {
+		response, err = s.h.GetExecutionConfig(ctx)
+	}
+	if err != nil {
+		defer recordError("Internal", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+
+	if err := encodeGetExecutionConfigResponse(response, w, span); err != nil {
+		defer recordError("EncodeResponse", err)
+		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
+			s.cfg.ErrorHandler(ctx, w, r, err)
+		}
+		return
+	}
+}
+
 // handleGetExecutionResultRequest handles getExecutionResult operation.
 //
 // Get execution result.
 //
-// GET /execution/{executionId}/
+// GET /executions/{executionId}/
 func (s *Server) handleGetExecutionResultRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getExecutionResult"),
 		semconv.HTTPMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/execution/{executionId}/"),
+		semconv.HTTPRouteKey.String("/executions/{executionId}/"),
 	}
 
 	// Start a span for this request.
@@ -244,20 +449,20 @@ func (s *Server) handleGetExecutionResultRequest(args [1]string, argsEscaped boo
 	}
 }
 
-// handleGetExecutionResultsRequest handles getExecutionResults operation.
+// handleGetExecutionWorkersRequest handles getExecutionWorkers operation.
 //
-// Get all execution results.
+// Get all execution workers.
 //
-// GET /execution/results/
-func (s *Server) handleGetExecutionResultsRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+// GET /executions/workers
+func (s *Server) handleGetExecutionWorkersRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("getExecutionResults"),
+		otelogen.OperationID("getExecutionWorkers"),
 		semconv.HTTPMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/execution/results/"),
+		semconv.HTTPRouteKey.String("/executions/workers"),
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetExecutionResults",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetExecutionWorkers",
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -289,13 +494,13 @@ func (s *Server) handleGetExecutionResultsRequest(args [0]string, argsEscaped bo
 		err error
 	)
 
-	var response GetExecutionResultsRes
+	var response GetExecutionWorkersRes
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "GetExecutionResults",
-			OperationSummary: "Get all execution results",
-			OperationID:      "getExecutionResults",
+			OperationName:    "GetExecutionWorkers",
+			OperationSummary: "Get all execution workers",
+			OperationID:      "getExecutionWorkers",
 			Body:             nil,
 			Params:           middleware.Parameters{},
 			Raw:              r,
@@ -304,7 +509,7 @@ func (s *Server) handleGetExecutionResultsRequest(args [0]string, argsEscaped bo
 		type (
 			Request  = struct{}
 			Params   = struct{}
-			Response = GetExecutionResultsRes
+			Response = GetExecutionWorkersRes
 		)
 		response, err = middleware.HookMiddleware[
 			Request,
@@ -315,12 +520,12 @@ func (s *Server) handleGetExecutionResultsRequest(args [0]string, argsEscaped bo
 			mreq,
 			nil,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.GetExecutionResults(ctx)
+				response, err = s.h.GetExecutionWorkers(ctx)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.GetExecutionResults(ctx)
+		response, err = s.h.GetExecutionWorkers(ctx)
 	}
 	if err != nil {
 		defer recordError("Internal", err)
@@ -328,7 +533,7 @@ func (s *Server) handleGetExecutionResultsRequest(args [0]string, argsEscaped bo
 		return
 	}
 
-	if err := encodeGetExecutionResultsResponse(response, w, span); err != nil {
+	if err := encodeGetExecutionWorkersResponse(response, w, span); err != nil {
 		defer recordError("EncodeResponse", err)
 		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
 			s.cfg.ErrorHandler(ctx, w, r, err)
@@ -341,12 +546,12 @@ func (s *Server) handleGetExecutionResultsRequest(args [0]string, argsEscaped bo
 //
 // Get all executions.
 //
-// GET /execution/
+// GET /executions/
 func (s *Server) handleGetExecutionsRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getExecutions"),
 		semconv.HTTPMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/execution/"),
+		semconv.HTTPRouteKey.String("/executions/"),
 	}
 
 	// Start a span for this request.
@@ -422,6 +627,99 @@ func (s *Server) handleGetExecutionsRequest(args [0]string, argsEscaped bool, w 
 	}
 
 	if err := encodeGetExecutionsResponse(response, w, span); err != nil {
+		defer recordError("EncodeResponse", err)
+		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
+			s.cfg.ErrorHandler(ctx, w, r, err)
+		}
+		return
+	}
+}
+
+// handleGetVersionRequest handles getVersion operation.
+//
+// Get version.
+//
+// GET /version/
+func (s *Server) handleGetVersionRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getVersion"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/version/"),
+	}
+
+	// Start a span for this request.
+	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetVersion",
+		trace.WithAttributes(otelAttrs...),
+		serverSpanKind,
+	)
+	defer span.End()
+
+	// Add Labeler to context.
+	labeler := &Labeler{attrs: otelAttrs}
+	ctx = contextWithLabeler(ctx, labeler)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		elapsedDuration := time.Since(startTime)
+		attrOpt := metric.WithAttributeSet(labeler.AttributeSet())
+
+		// Increment request counter.
+		s.requests.Add(ctx, 1, attrOpt)
+
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		s.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), attrOpt)
+	}()
+
+	var (
+		recordError = func(stage string, err error) {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			s.errors.Add(ctx, 1, metric.WithAttributeSet(labeler.AttributeSet()))
+		}
+		err error
+	)
+
+	var response GetVersionRes
+	if m := s.cfg.Middleware; m != nil {
+		mreq := middleware.Request{
+			Context:          ctx,
+			OperationName:    "GetVersion",
+			OperationSummary: "Get version",
+			OperationID:      "getVersion",
+			Body:             nil,
+			Params:           middleware.Parameters{},
+			Raw:              r,
+		}
+
+		type (
+			Request  = struct{}
+			Params   = struct{}
+			Response = GetVersionRes
+		)
+		response, err = middleware.HookMiddleware[
+			Request,
+			Params,
+			Response,
+		](
+			m,
+			mreq,
+			nil,
+			func(ctx context.Context, request Request, params Params) (response Response, err error) {
+				response, err = s.h.GetVersion(ctx)
+				return response, err
+			},
+		)
+	} else {
+		response, err = s.h.GetVersion(ctx)
+	}
+	if err != nil {
+		defer recordError("Internal", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+
+	if err := encodeGetVersionResponse(response, w, span); err != nil {
 		defer recordError("EncodeResponse", err)
 		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
 			s.cfg.ErrorHandler(ctx, w, r, err)

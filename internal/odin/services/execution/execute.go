@@ -12,6 +12,7 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/models"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/rs/zerolog"
 )
 
 //go:embed templates
@@ -20,70 +21,93 @@ var flakes embed.FS
 type ExecutionService struct {
 	queries   *db.Queries
 	envConfig *config.EnvConfig
+	logger    *zerolog.Logger
 }
 
-func NewExecutionService(queries *db.Queries, envConfig *config.EnvConfig) *ExecutionService {
+func NewExecutionService(queries *db.Queries, envConfig *config.EnvConfig, logger *zerolog.Logger) *ExecutionService {
 	return &ExecutionService{
 		queries:   queries,
 		envConfig: envConfig,
+		logger:    logger,
 	}
 }
 
-func PrepareExecutionRequest(req *api.ExecutionRequest) (*models.ExecutionRequest, error) {
+func (s *ExecutionService) prepareExecutionRequest(req *api.ExecutionRequest) (*models.ExecutionRequest, error) {
 	var scriptName string
-	if !req.File.Name.Set {
-		scriptName = fmt.Sprintf("main.%s", config.LANGUAGE_EXTENSION[req.Language.String])
-	} else {
-		scriptName = req.File.Name.Value
-	}
-	if req.Environment.Type == "ExecutionEnvironmentSpec" {
-		flake, err := ConvertExecSpecToFlake(req.Environment.ExecutionEnvironmentSpec, req.Language.String)
+	if !req.Environment.Set {
+		flake, err := s.convertExecSpecToFlake(nil)
 		if err != nil {
 			return nil, &ExecutionServiceError{
 				Type:    "flake",
-				Message: "failed to convert execution environment spec to flake",
+				Message: err.Error(),
 			}
 		}
 		return &models.ExecutionRequest{
 			Environment: flake,
 			File: models.File{
 				Name:    scriptName,
-				Content: req.File.Content,
+				Content: req.Code,
+			},
+		}, nil
+	}
+	if req.Environment.Value.Type == "ExecutionEnvironmentSpec" {
+		flake, err := s.convertExecSpecToFlake(req)
+		if err != nil {
+			return nil, &ExecutionServiceError{
+				Type:    "flake",
+				Message: err.Error(),
+			}
+		}
+		return &models.ExecutionRequest{
+			Environment: flake,
+			File: models.File{
+				Name:    scriptName,
+				Content: req.Code,
 			},
 		}, nil
 	}
 	return &models.ExecutionRequest{
-		Environment: string(req.Environment.Flake),
+		Environment: string(req.Environment.Value.Flake),
 		File: models.File{
 			Name:    scriptName,
-			Content: req.File.Content,
+			Content: req.Code,
 		},
-		Language:   req.Language.String,
+		Language:   req.Environment.Value.ExecutionEnvironmentSpec.Language,
 		ScriptName: scriptName,
 	}, nil
 }
 
-func ConvertExecSpecToFlake(execSpec api.ExecutionEnvironmentSpec, language string) (string, error) {
-	tmpl, err := flakes.ReadFile(fmt.Sprintf("templates/%s", language))
+func (s *ExecutionService) convertExecSpecToFlake(execSpec *api.ExecutionRequest) (string, error) {
+	tmplF, err := flakes.ReadFile(fmt.Sprintf("templates/%s.tmpl", execSpec.Environment.Value.ExecutionEnvironmentSpec.Language))
 	if err != nil {
+		return "", &ExecutionServiceError{
+			Type:    "template",
+			Message: "failed to get template",
+		}
+	}
+	var res bytes.Buffer
+	tmpl, err := template.New(string("flake")).Parse(string(tmplF))
+	if err != nil {
+		s.logger.Err(err).Msg("failed to parse template")
 		return "", &ExecutionServiceError{
 			Type:    "template",
 			Message: "failed to parse template",
 		}
 	}
-	buffer := new(bytes.Buffer)
-	err = template.Must(template.New("tmpl").Parse(string(tmpl))).Execute(buffer, execSpec)
+
+	err = tmpl.Execute(&res, execSpec.Environment.Value.ExecutionEnvironmentSpec)
 	if err != nil {
+		s.logger.Err(err).Msg("failed to execute template")
 		return "", &ExecutionServiceError{
 			Type:    "template",
 			Message: "failed to execute template",
 		}
 	}
-	return buffer.String(), nil
+	return res.String(), nil
 }
 
 func (s *ExecutionService) AddJob(ctx context.Context, req *api.ExecutionRequest) (int64, error) {
-	execReq, err := PrepareExecutionRequest(req)
+	execReq, err := s.prepareExecutionRequest(req)
 	if err != nil {
 		return 0, err
 	}

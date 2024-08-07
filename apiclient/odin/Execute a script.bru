@@ -1,0 +1,21 @@
+meta {
+  name: Execute a script
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8080/executions/execute/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "environment": {
+      "languageDependencies": ["requests", "pandas"],
+      "language": "python"
+    },
+    "code": "print('hello')"
+  }
+}

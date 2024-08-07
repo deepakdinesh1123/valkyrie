@@ -6,6 +6,24 @@ import (
 	"time"
 )
 
+type DeleteExecutionBadRequest Error
+
+func (*DeleteExecutionBadRequest) deleteExecutionRes() {}
+
+type DeleteExecutionInternalServerError Error
+
+func (*DeleteExecutionInternalServerError) deleteExecutionRes() {}
+
+// DeleteExecutionNotFound is response for DeleteExecution operation.
+type DeleteExecutionNotFound struct{}
+
+func (*DeleteExecutionNotFound) deleteExecutionRes() {}
+
+// DeleteExecutionOK is response for DeleteExecution operation.
+type DeleteExecutionOK struct{}
+
+func (*DeleteExecutionOK) deleteExecutionRes() {}
+
 // Ref: #/components/schemas/DockerExecutionConfig
 type DockerExecutionConfig struct {
 	ContainerConfig OptDockerExecutionConfigContainerConfig `json:"containerConfig"`
@@ -137,6 +155,9 @@ func (s *Error) SetMessage(val string) {
 	s.Message = val
 }
 
+func (*Error) getExecutionConfigRes() {}
+func (*Error) getVersionRes()         {}
+
 type ExecuteBadRequest Error
 
 func (*ExecuteBadRequest) executeRes() {}
@@ -231,11 +252,127 @@ func (s *Execution) SetFinishedAt(val time.Time) {
 	s.FinishedAt = val
 }
 
+// Ref: #/components/schemas/ExecutionConfig
+type ExecutionConfig struct {
+	// Represents the worker provider.
+	ODINWORKERPROVIDER string `json:"ODIN_WORKER_PROVIDER"`
+	// Represents the concurrency level for the worker.
+	ODINWORKERCONCURRENCY int32 `json:"ODIN_WORKER_CONCURRENCY"`
+	// Represents the buffer size for the worker.
+	ODINWORKERBUFFERSIZE int32 `json:"ODIN_WORKER_BUFFER_SIZE"`
+	// Represents the task timeout.
+	ODINWORKERTASKTIMEOUT int `json:"ODIN_WORKER_TASK_TIMEOUT"`
+	// Represents the polling frequency for the worker in seconds.
+	ODINWORKERPOLLFREQ int `json:"ODIN_WORKER_POLL_FREQ"`
+	// Represents the runtime for the worker in seconds.
+	ODINWORKERRUNTIME string `json:"ODIN_WORKER_RUNTIME"`
+	// Represents the log level.
+	ODINLOGLEVEL string `json:"ODIN_LOG_LEVEL"`
+	// Represents the base directory for the system provider.
+	ODINSYSTEMPROVIDERBASEDIR OptString `json:"ODIN_SYSTEM_PROVIDER_BASE_DIR"`
+	// Represents whether to clean up directories created by the system provider.
+	ODINSYSTEMPROVIDERCLEANUP OptBool `json:"ODIN_SYSTEM_PROVIDER_CLEAN_UP"`
+}
+
+// GetODINWORKERPROVIDER returns the value of ODINWORKERPROVIDER.
+func (s *ExecutionConfig) GetODINWORKERPROVIDER() string {
+	return s.ODINWORKERPROVIDER
+}
+
+// GetODINWORKERCONCURRENCY returns the value of ODINWORKERCONCURRENCY.
+func (s *ExecutionConfig) GetODINWORKERCONCURRENCY() int32 {
+	return s.ODINWORKERCONCURRENCY
+}
+
+// GetODINWORKERBUFFERSIZE returns the value of ODINWORKERBUFFERSIZE.
+func (s *ExecutionConfig) GetODINWORKERBUFFERSIZE() int32 {
+	return s.ODINWORKERBUFFERSIZE
+}
+
+// GetODINWORKERTASKTIMEOUT returns the value of ODINWORKERTASKTIMEOUT.
+func (s *ExecutionConfig) GetODINWORKERTASKTIMEOUT() int {
+	return s.ODINWORKERTASKTIMEOUT
+}
+
+// GetODINWORKERPOLLFREQ returns the value of ODINWORKERPOLLFREQ.
+func (s *ExecutionConfig) GetODINWORKERPOLLFREQ() int {
+	return s.ODINWORKERPOLLFREQ
+}
+
+// GetODINWORKERRUNTIME returns the value of ODINWORKERRUNTIME.
+func (s *ExecutionConfig) GetODINWORKERRUNTIME() string {
+	return s.ODINWORKERRUNTIME
+}
+
+// GetODINLOGLEVEL returns the value of ODINLOGLEVEL.
+func (s *ExecutionConfig) GetODINLOGLEVEL() string {
+	return s.ODINLOGLEVEL
+}
+
+// GetODINSYSTEMPROVIDERBASEDIR returns the value of ODINSYSTEMPROVIDERBASEDIR.
+func (s *ExecutionConfig) GetODINSYSTEMPROVIDERBASEDIR() OptString {
+	return s.ODINSYSTEMPROVIDERBASEDIR
+}
+
+// GetODINSYSTEMPROVIDERCLEANUP returns the value of ODINSYSTEMPROVIDERCLEANUP.
+func (s *ExecutionConfig) GetODINSYSTEMPROVIDERCLEANUP() OptBool {
+	return s.ODINSYSTEMPROVIDERCLEANUP
+}
+
+// SetODINWORKERPROVIDER sets the value of ODINWORKERPROVIDER.
+func (s *ExecutionConfig) SetODINWORKERPROVIDER(val string) {
+	s.ODINWORKERPROVIDER = val
+}
+
+// SetODINWORKERCONCURRENCY sets the value of ODINWORKERCONCURRENCY.
+func (s *ExecutionConfig) SetODINWORKERCONCURRENCY(val int32) {
+	s.ODINWORKERCONCURRENCY = val
+}
+
+// SetODINWORKERBUFFERSIZE sets the value of ODINWORKERBUFFERSIZE.
+func (s *ExecutionConfig) SetODINWORKERBUFFERSIZE(val int32) {
+	s.ODINWORKERBUFFERSIZE = val
+}
+
+// SetODINWORKERTASKTIMEOUT sets the value of ODINWORKERTASKTIMEOUT.
+func (s *ExecutionConfig) SetODINWORKERTASKTIMEOUT(val int) {
+	s.ODINWORKERTASKTIMEOUT = val
+}
+
+// SetODINWORKERPOLLFREQ sets the value of ODINWORKERPOLLFREQ.
+func (s *ExecutionConfig) SetODINWORKERPOLLFREQ(val int) {
+	s.ODINWORKERPOLLFREQ = val
+}
+
+// SetODINWORKERRUNTIME sets the value of ODINWORKERRUNTIME.
+func (s *ExecutionConfig) SetODINWORKERRUNTIME(val string) {
+	s.ODINWORKERRUNTIME = val
+}
+
+// SetODINLOGLEVEL sets the value of ODINLOGLEVEL.
+func (s *ExecutionConfig) SetODINLOGLEVEL(val string) {
+	s.ODINLOGLEVEL = val
+}
+
+// SetODINSYSTEMPROVIDERBASEDIR sets the value of ODINSYSTEMPROVIDERBASEDIR.
+func (s *ExecutionConfig) SetODINSYSTEMPROVIDERBASEDIR(val OptString) {
+	s.ODINSYSTEMPROVIDERBASEDIR = val
+}
+
+// SetODINSYSTEMPROVIDERCLEANUP sets the value of ODINSYSTEMPROVIDERCLEANUP.
+func (s *ExecutionConfig) SetODINSYSTEMPROVIDERCLEANUP(val OptBool) {
+	s.ODINSYSTEMPROVIDERCLEANUP = val
+}
+
+func (*ExecutionConfig) getExecutionConfigRes() {}
+
 // Ref: #/components/schemas/ExecutionEnvironmentSpec
 type ExecutionEnvironmentSpec struct {
 	EnvironmentVariables []EnvironmentVariable `json:"environment_variables"`
-	Packages             []string              `json:"packages"`
-	Dependencies         []string              `json:"dependencies"`
+	LanguageDependencies []string              `json:"languageDependencies"`
+	SystemDependencies   []string              `json:"systemDependencies"`
+	Language             string                `json:"language"`
+	Args                 OptString             `json:"args"`
 }
 
 // GetEnvironmentVariables returns the value of EnvironmentVariables.
@@ -243,14 +380,24 @@ func (s *ExecutionEnvironmentSpec) GetEnvironmentVariables() []EnvironmentVariab
 	return s.EnvironmentVariables
 }
 
-// GetPackages returns the value of Packages.
-func (s *ExecutionEnvironmentSpec) GetPackages() []string {
-	return s.Packages
+// GetLanguageDependencies returns the value of LanguageDependencies.
+func (s *ExecutionEnvironmentSpec) GetLanguageDependencies() []string {
+	return s.LanguageDependencies
 }
 
-// GetDependencies returns the value of Dependencies.
-func (s *ExecutionEnvironmentSpec) GetDependencies() []string {
-	return s.Dependencies
+// GetSystemDependencies returns the value of SystemDependencies.
+func (s *ExecutionEnvironmentSpec) GetSystemDependencies() []string {
+	return s.SystemDependencies
+}
+
+// GetLanguage returns the value of Language.
+func (s *ExecutionEnvironmentSpec) GetLanguage() string {
+	return s.Language
+}
+
+// GetArgs returns the value of Args.
+func (s *ExecutionEnvironmentSpec) GetArgs() OptString {
+	return s.Args
 }
 
 // SetEnvironmentVariables sets the value of EnvironmentVariables.
@@ -258,32 +405,36 @@ func (s *ExecutionEnvironmentSpec) SetEnvironmentVariables(val []EnvironmentVari
 	s.EnvironmentVariables = val
 }
 
-// SetPackages sets the value of Packages.
-func (s *ExecutionEnvironmentSpec) SetPackages(val []string) {
-	s.Packages = val
+// SetLanguageDependencies sets the value of LanguageDependencies.
+func (s *ExecutionEnvironmentSpec) SetLanguageDependencies(val []string) {
+	s.LanguageDependencies = val
 }
 
-// SetDependencies sets the value of Dependencies.
-func (s *ExecutionEnvironmentSpec) SetDependencies(val []string) {
-	s.Dependencies = val
+// SetSystemDependencies sets the value of SystemDependencies.
+func (s *ExecutionEnvironmentSpec) SetSystemDependencies(val []string) {
+	s.SystemDependencies = val
+}
+
+// SetLanguage sets the value of Language.
+func (s *ExecutionEnvironmentSpec) SetLanguage(val string) {
+	s.Language = val
+}
+
+// SetArgs sets the value of Args.
+func (s *ExecutionEnvironmentSpec) SetArgs(val OptString) {
+	s.Args = val
 }
 
 // Ref: #/components/schemas/ExecutionRequest
 type ExecutionRequest struct {
-	Language    ExecutionRequestLanguage    `json:"language"`
-	Environment ExecutionRequestEnvironment `json:"environment"`
-	Config      OptExecutionRequestConfig   `json:"config"`
-	File        File                        `json:"file"`
-	Priority    OptInt                      `json:"priority"`
-}
-
-// GetLanguage returns the value of Language.
-func (s *ExecutionRequest) GetLanguage() ExecutionRequestLanguage {
-	return s.Language
+	Environment OptExecutionRequestEnvironment `json:"environment"`
+	Config      OptExecutionRequestConfig      `json:"config"`
+	Code        string                         `json:"code"`
+	Priority    OptInt                         `json:"priority"`
 }
 
 // GetEnvironment returns the value of Environment.
-func (s *ExecutionRequest) GetEnvironment() ExecutionRequestEnvironment {
+func (s *ExecutionRequest) GetEnvironment() OptExecutionRequestEnvironment {
 	return s.Environment
 }
 
@@ -292,9 +443,9 @@ func (s *ExecutionRequest) GetConfig() OptExecutionRequestConfig {
 	return s.Config
 }
 
-// GetFile returns the value of File.
-func (s *ExecutionRequest) GetFile() File {
-	return s.File
+// GetCode returns the value of Code.
+func (s *ExecutionRequest) GetCode() string {
+	return s.Code
 }
 
 // GetPriority returns the value of Priority.
@@ -302,13 +453,8 @@ func (s *ExecutionRequest) GetPriority() OptInt {
 	return s.Priority
 }
 
-// SetLanguage sets the value of Language.
-func (s *ExecutionRequest) SetLanguage(val ExecutionRequestLanguage) {
-	s.Language = val
-}
-
 // SetEnvironment sets the value of Environment.
-func (s *ExecutionRequest) SetEnvironment(val ExecutionRequestEnvironment) {
+func (s *ExecutionRequest) SetEnvironment(val OptExecutionRequestEnvironment) {
 	s.Environment = val
 }
 
@@ -317,9 +463,9 @@ func (s *ExecutionRequest) SetConfig(val OptExecutionRequestConfig) {
 	s.Config = val
 }
 
-// SetFile sets the value of File.
-func (s *ExecutionRequest) SetFile(val File) {
-	s.File = val
+// SetCode sets the value of Code.
+func (s *ExecutionRequest) SetCode(val string) {
+	s.Code = val
 }
 
 // SetPriority sets the value of Priority.
@@ -463,72 +609,6 @@ func NewExecutionEnvironmentSpecExecutionRequestEnvironment(v ExecutionEnvironme
 	return s
 }
 
-// ExecutionRequestLanguage represents sum type.
-type ExecutionRequestLanguage struct {
-	Type                ExecutionRequestLanguageType // switch on this field
-	String              string
-	ProgrammingLanguage ProgrammingLanguage
-}
-
-// ExecutionRequestLanguageType is oneOf type of ExecutionRequestLanguage.
-type ExecutionRequestLanguageType string
-
-// Possible values for ExecutionRequestLanguageType.
-const (
-	StringExecutionRequestLanguage              ExecutionRequestLanguageType = "string"
-	ProgrammingLanguageExecutionRequestLanguage ExecutionRequestLanguageType = "ProgrammingLanguage"
-)
-
-// IsString reports whether ExecutionRequestLanguage is string.
-func (s ExecutionRequestLanguage) IsString() bool { return s.Type == StringExecutionRequestLanguage }
-
-// IsProgrammingLanguage reports whether ExecutionRequestLanguage is ProgrammingLanguage.
-func (s ExecutionRequestLanguage) IsProgrammingLanguage() bool {
-	return s.Type == ProgrammingLanguageExecutionRequestLanguage
-}
-
-// SetString sets ExecutionRequestLanguage to string.
-func (s *ExecutionRequestLanguage) SetString(v string) {
-	s.Type = StringExecutionRequestLanguage
-	s.String = v
-}
-
-// GetString returns string and true boolean if ExecutionRequestLanguage is string.
-func (s ExecutionRequestLanguage) GetString() (v string, ok bool) {
-	if !s.IsString() {
-		return v, false
-	}
-	return s.String, true
-}
-
-// NewStringExecutionRequestLanguage returns new ExecutionRequestLanguage from string.
-func NewStringExecutionRequestLanguage(v string) ExecutionRequestLanguage {
-	var s ExecutionRequestLanguage
-	s.SetString(v)
-	return s
-}
-
-// SetProgrammingLanguage sets ExecutionRequestLanguage to ProgrammingLanguage.
-func (s *ExecutionRequestLanguage) SetProgrammingLanguage(v ProgrammingLanguage) {
-	s.Type = ProgrammingLanguageExecutionRequestLanguage
-	s.ProgrammingLanguage = v
-}
-
-// GetProgrammingLanguage returns ProgrammingLanguage and true boolean if ExecutionRequestLanguage is ProgrammingLanguage.
-func (s ExecutionRequestLanguage) GetProgrammingLanguage() (v ProgrammingLanguage, ok bool) {
-	if !s.IsProgrammingLanguage() {
-		return v, false
-	}
-	return s.ProgrammingLanguage, true
-}
-
-// NewProgrammingLanguageExecutionRequestLanguage returns new ExecutionRequestLanguage from ProgrammingLanguage.
-func NewProgrammingLanguageExecutionRequestLanguage(v ProgrammingLanguage) ExecutionRequestLanguage {
-	var s ExecutionRequestLanguage
-	s.SetProgrammingLanguage(v)
-	return s
-}
-
 // Ref: #/components/schemas/ExecutionResult
 type ExecutionResult struct {
 	ExecutionId int64  `json:"executionId"`
@@ -557,30 +637,52 @@ func (s *ExecutionResult) SetLogs(val string) {
 
 func (*ExecutionResult) getExecutionResultRes() {}
 
-// Ref: #/components/schemas/File
-type File struct {
-	Name    OptString `json:"name"`
-	Content string    `json:"content"`
+// Ref: #/components/schemas/ExecutionWorker
+type ExecutionWorker struct {
+	ID        int64     `json:"id"`
+	Name      string    `json:"name"`
+	CreatedAt time.Time `json:"created_at"`
+	Status    string    `json:"status"`
+}
+
+// GetID returns the value of ID.
+func (s *ExecutionWorker) GetID() int64 {
+	return s.ID
 }
 
 // GetName returns the value of Name.
-func (s *File) GetName() OptString {
+func (s *ExecutionWorker) GetName() string {
 	return s.Name
 }
 
-// GetContent returns the value of Content.
-func (s *File) GetContent() string {
-	return s.Content
+// GetCreatedAt returns the value of CreatedAt.
+func (s *ExecutionWorker) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetStatus returns the value of Status.
+func (s *ExecutionWorker) GetStatus() string {
+	return s.Status
+}
+
+// SetID sets the value of ID.
+func (s *ExecutionWorker) SetID(val int64) {
+	s.ID = val
 }
 
 // SetName sets the value of Name.
-func (s *File) SetName(val OptString) {
+func (s *ExecutionWorker) SetName(val string) {
 	s.Name = val
 }
 
-// SetContent sets the value of Content.
-func (s *File) SetContent(val string) {
-	s.Content = val
+// SetCreatedAt sets the value of CreatedAt.
+func (s *ExecutionWorker) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetStatus sets the value of Status.
+func (s *ExecutionWorker) SetStatus(val string) {
+	s.Status = val
 }
 
 type Flake string
@@ -598,17 +700,17 @@ type GetExecutionResultNotFound struct{}
 
 func (*GetExecutionResultNotFound) getExecutionResultRes() {}
 
-type GetExecutionResultsBadRequest Error
+type GetExecutionWorkersBadRequest Error
 
-func (*GetExecutionResultsBadRequest) getExecutionResultsRes() {}
+func (*GetExecutionWorkersBadRequest) getExecutionWorkersRes() {}
 
-type GetExecutionResultsInternalServerError Error
+type GetExecutionWorkersInternalServerError Error
 
-func (*GetExecutionResultsInternalServerError) getExecutionResultsRes() {}
+func (*GetExecutionWorkersInternalServerError) getExecutionWorkersRes() {}
 
-type GetExecutionResultsOKApplicationJSON []ExecutionResult
+type GetExecutionWorkersOKApplicationJSON []ExecutionWorker
 
-func (*GetExecutionResultsOKApplicationJSON) getExecutionResultsRes() {}
+func (*GetExecutionWorkersOKApplicationJSON) getExecutionWorkersRes() {}
 
 type GetExecutionsBadRequest Error
 
@@ -621,6 +723,68 @@ func (*GetExecutionsInternalServerError) getExecutionsRes() {}
 type GetExecutionsOKApplicationJSON []Execution
 
 func (*GetExecutionsOKApplicationJSON) getExecutionsRes() {}
+
+type GetVersionOK struct {
+	Version string `json:"version"`
+}
+
+// GetVersion returns the value of Version.
+func (s *GetVersionOK) GetVersion() string {
+	return s.Version
+}
+
+// SetVersion sets the value of Version.
+func (s *GetVersionOK) SetVersion(val string) {
+	s.Version = val
+}
+
+func (*GetVersionOK) getVersionRes() {}
+
+// NewOptBool returns new OptBool with value set to v.
+func NewOptBool(v bool) OptBool {
+	return OptBool{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptBool is optional bool.
+type OptBool struct {
+	Value bool
+	Set   bool
+}
+
+// IsSet returns true if OptBool was set.
+func (o OptBool) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptBool) Reset() {
+	var v bool
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptBool) SetTo(v bool) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptBool) Get() (v bool, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptBool) Or(d bool) bool {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
 
 // NewOptDockerExecutionConfigContainerConfig returns new OptDockerExecutionConfigContainerConfig with value set to v.
 func NewOptDockerExecutionConfigContainerConfig(v DockerExecutionConfigContainerConfig) OptDockerExecutionConfigContainerConfig {
@@ -800,6 +964,52 @@ func (o OptExecutionRequestConfig) Get() (v ExecutionRequestConfig, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptExecutionRequestConfig) Or(d ExecutionRequestConfig) ExecutionRequestConfig {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptExecutionRequestEnvironment returns new OptExecutionRequestEnvironment with value set to v.
+func NewOptExecutionRequestEnvironment(v ExecutionRequestEnvironment) OptExecutionRequestEnvironment {
+	return OptExecutionRequestEnvironment{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptExecutionRequestEnvironment is optional ExecutionRequestEnvironment.
+type OptExecutionRequestEnvironment struct {
+	Value ExecutionRequestEnvironment
+	Set   bool
+}
+
+// IsSet returns true if OptExecutionRequestEnvironment was set.
+func (o OptExecutionRequestEnvironment) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptExecutionRequestEnvironment) Reset() {
+	var v ExecutionRequestEnvironment
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptExecutionRequestEnvironment) SetTo(v ExecutionRequestEnvironment) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptExecutionRequestEnvironment) Get() (v ExecutionRequestEnvironment, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptExecutionRequestEnvironment) Or(d ExecutionRequestEnvironment) ExecutionRequestEnvironment {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -1075,30 +1285,4 @@ func (s *PodmanExecutionConfigContainerStorageConfig) SetImageArch(val OptString
 // SetImageVariant sets the value of ImageVariant.
 func (s *PodmanExecutionConfigContainerStorageConfig) SetImageVariant(val OptString) {
 	s.ImageVariant = val
-}
-
-// Ref: #/components/schemas/ProgrammingLanguage
-type ProgrammingLanguage struct {
-	Name    string    `json:"name"`
-	Version OptString `json:"version"`
-}
-
-// GetName returns the value of Name.
-func (s *ProgrammingLanguage) GetName() string {
-	return s.Name
-}
-
-// GetVersion returns the value of Version.
-func (s *ProgrammingLanguage) GetVersion() OptString {
-	return s.Version
-}
-
-// SetName sets the value of Name.
-func (s *ProgrammingLanguage) SetName(val string) {
-	s.Name = val
-}
-
-// SetVersion sets the value of Version.
-func (s *ProgrammingLanguage) SetVersion(val OptString) {
-	s.Version = val
 }

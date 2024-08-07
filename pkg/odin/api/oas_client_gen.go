@@ -23,30 +23,48 @@ import (
 
 // Invoker invokes operations described by OpenAPI v3 specification.
 type Invoker interface {
+	// DeleteExecution invokes deleteExecution operation.
+	//
+	// Delete execution.
+	//
+	// DELETE /executions/{executionId}/
+	DeleteExecution(ctx context.Context, params DeleteExecutionParams) (DeleteExecutionRes, error)
 	// Execute invokes execute operation.
 	//
 	// Execute a script.
 	//
-	// POST /execution/execute/
+	// POST /executions/execute/
 	Execute(ctx context.Context, request *ExecutionRequest) (ExecuteRes, error)
+	// GetExecutionConfig invokes getExecutionConfig operation.
+	//
+	// Get execution config.
+	//
+	// GET /execution/config/
+	GetExecutionConfig(ctx context.Context) (GetExecutionConfigRes, error)
 	// GetExecutionResult invokes getExecutionResult operation.
 	//
 	// Get execution result.
 	//
-	// GET /execution/{executionId}/
+	// GET /executions/{executionId}/
 	GetExecutionResult(ctx context.Context, params GetExecutionResultParams) (GetExecutionResultRes, error)
-	// GetExecutionResults invokes getExecutionResults operation.
+	// GetExecutionWorkers invokes getExecutionWorkers operation.
 	//
-	// Get all execution results.
+	// Get all execution workers.
 	//
-	// GET /execution/results/
-	GetExecutionResults(ctx context.Context) (GetExecutionResultsRes, error)
+	// GET /executions/workers
+	GetExecutionWorkers(ctx context.Context) (GetExecutionWorkersRes, error)
 	// GetExecutions invokes getExecutions operation.
 	//
 	// Get all executions.
 	//
-	// GET /execution/
+	// GET /executions/
 	GetExecutions(ctx context.Context) (GetExecutionsRes, error)
+	// GetVersion invokes getVersion operation.
+	//
+	// Get version.
+	//
+	// GET /version/
+	GetVersion(ctx context.Context) (GetVersionRes, error)
 }
 
 // Client implements OAS client.
@@ -97,11 +115,102 @@ func (c *Client) requestURL(ctx context.Context) *url.URL {
 	return u
 }
 
+// DeleteExecution invokes deleteExecution operation.
+//
+// Delete execution.
+//
+// DELETE /executions/{executionId}/
+func (c *Client) DeleteExecution(ctx context.Context, params DeleteExecutionParams) (DeleteExecutionRes, error) {
+	res, err := c.sendDeleteExecution(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendDeleteExecution(ctx context.Context, params DeleteExecutionParams) (res DeleteExecutionRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("deleteExecution"),
+		semconv.HTTPMethodKey.String("DELETE"),
+		semconv.HTTPRouteKey.String("/executions/{executionId}/"),
+	}
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "DeleteExecution",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [3]string
+	pathParts[0] = "/executions/"
+	{
+		// Encode "executionId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "executionId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			return e.EncodeValue(conv.Int64ToString(params.ExecutionId))
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "DELETE", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodeDeleteExecutionResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // Execute invokes execute operation.
 //
 // Execute a script.
 //
-// POST /execution/execute/
+// POST /executions/execute/
 func (c *Client) Execute(ctx context.Context, request *ExecutionRequest) (ExecuteRes, error) {
 	res, err := c.sendExecute(ctx, request)
 	return res, err
@@ -111,7 +220,7 @@ func (c *Client) sendExecute(ctx context.Context, request *ExecutionRequest) (re
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("execute"),
 		semconv.HTTPMethodKey.String("POST"),
-		semconv.HTTPRouteKey.String("/execution/execute/"),
+		semconv.HTTPRouteKey.String("/executions/execute/"),
 	}
 
 	// Run stopwatch.
@@ -144,7 +253,7 @@ func (c *Client) sendExecute(ctx context.Context, request *ExecutionRequest) (re
 	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
-	pathParts[0] = "/execution/execute/"
+	pathParts[0] = "/executions/execute/"
 	uri.AddPathParts(u, pathParts[:]...)
 
 	stage = "EncodeRequest"
@@ -172,11 +281,83 @@ func (c *Client) sendExecute(ctx context.Context, request *ExecutionRequest) (re
 	return result, nil
 }
 
+// GetExecutionConfig invokes getExecutionConfig operation.
+//
+// Get execution config.
+//
+// GET /execution/config/
+func (c *Client) GetExecutionConfig(ctx context.Context) (GetExecutionConfigRes, error) {
+	res, err := c.sendGetExecutionConfig(ctx)
+	return res, err
+}
+
+func (c *Client) sendGetExecutionConfig(ctx context.Context) (res GetExecutionConfigRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getExecutionConfig"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/execution/config/"),
+	}
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "GetExecutionConfig",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/execution/config/"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodeGetExecutionConfigResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // GetExecutionResult invokes getExecutionResult operation.
 //
 // Get execution result.
 //
-// GET /execution/{executionId}/
+// GET /executions/{executionId}/
 func (c *Client) GetExecutionResult(ctx context.Context, params GetExecutionResultParams) (GetExecutionResultRes, error) {
 	res, err := c.sendGetExecutionResult(ctx, params)
 	return res, err
@@ -186,7 +367,7 @@ func (c *Client) sendGetExecutionResult(ctx context.Context, params GetExecution
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getExecutionResult"),
 		semconv.HTTPMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/execution/{executionId}/"),
+		semconv.HTTPRouteKey.String("/executions/{executionId}/"),
 	}
 
 	// Run stopwatch.
@@ -219,7 +400,7 @@ func (c *Client) sendGetExecutionResult(ctx context.Context, params GetExecution
 	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [3]string
-	pathParts[0] = "/execution/"
+	pathParts[0] = "/executions/"
 	{
 		// Encode "executionId" parameter.
 		e := uri.NewPathEncoder(uri.PathEncoderConfig{
@@ -263,21 +444,21 @@ func (c *Client) sendGetExecutionResult(ctx context.Context, params GetExecution
 	return result, nil
 }
 
-// GetExecutionResults invokes getExecutionResults operation.
+// GetExecutionWorkers invokes getExecutionWorkers operation.
 //
-// Get all execution results.
+// Get all execution workers.
 //
-// GET /execution/results/
-func (c *Client) GetExecutionResults(ctx context.Context) (GetExecutionResultsRes, error) {
-	res, err := c.sendGetExecutionResults(ctx)
+// GET /executions/workers
+func (c *Client) GetExecutionWorkers(ctx context.Context) (GetExecutionWorkersRes, error) {
+	res, err := c.sendGetExecutionWorkers(ctx)
 	return res, err
 }
 
-func (c *Client) sendGetExecutionResults(ctx context.Context) (res GetExecutionResultsRes, err error) {
+func (c *Client) sendGetExecutionWorkers(ctx context.Context) (res GetExecutionWorkersRes, err error) {
 	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("getExecutionResults"),
+		otelogen.OperationID("getExecutionWorkers"),
 		semconv.HTTPMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/execution/results/"),
+		semconv.HTTPRouteKey.String("/executions/workers"),
 	}
 
 	// Run stopwatch.
@@ -292,7 +473,7 @@ func (c *Client) sendGetExecutionResults(ctx context.Context) (res GetExecutionR
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "GetExecutionResults",
+	ctx, span := c.cfg.Tracer.Start(ctx, "GetExecutionWorkers",
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -310,7 +491,7 @@ func (c *Client) sendGetExecutionResults(ctx context.Context) (res GetExecutionR
 	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
-	pathParts[0] = "/execution/results/"
+	pathParts[0] = "/executions/workers"
 	uri.AddPathParts(u, pathParts[:]...)
 
 	stage = "EncodeRequest"
@@ -327,7 +508,7 @@ func (c *Client) sendGetExecutionResults(ctx context.Context) (res GetExecutionR
 	defer resp.Body.Close()
 
 	stage = "DecodeResponse"
-	result, err := decodeGetExecutionResultsResponse(resp)
+	result, err := decodeGetExecutionWorkersResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -339,7 +520,7 @@ func (c *Client) sendGetExecutionResults(ctx context.Context) (res GetExecutionR
 //
 // Get all executions.
 //
-// GET /execution/
+// GET /executions/
 func (c *Client) GetExecutions(ctx context.Context) (GetExecutionsRes, error) {
 	res, err := c.sendGetExecutions(ctx)
 	return res, err
@@ -349,7 +530,7 @@ func (c *Client) sendGetExecutions(ctx context.Context) (res GetExecutionsRes, e
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getExecutions"),
 		semconv.HTTPMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/execution/"),
+		semconv.HTTPRouteKey.String("/executions/"),
 	}
 
 	// Run stopwatch.
@@ -382,7 +563,7 @@ func (c *Client) sendGetExecutions(ctx context.Context) (res GetExecutionsRes, e
 	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
-	pathParts[0] = "/execution/"
+	pathParts[0] = "/executions/"
 	uri.AddPathParts(u, pathParts[:]...)
 
 	stage = "EncodeRequest"
@@ -400,6 +581,78 @@ func (c *Client) sendGetExecutions(ctx context.Context) (res GetExecutionsRes, e
 
 	stage = "DecodeResponse"
 	result, err := decodeGetExecutionsResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// GetVersion invokes getVersion operation.
+//
+// Get version.
+//
+// GET /version/
+func (c *Client) GetVersion(ctx context.Context) (GetVersionRes, error) {
+	res, err := c.sendGetVersion(ctx)
+	return res, err
+}
+
+func (c *Client) sendGetVersion(ctx context.Context) (res GetVersionRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getVersion"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/version/"),
+	}
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "GetVersion",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/version/"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodeGetVersionResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

@@ -11,6 +11,16 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const deleteJob = `-- name: DeleteJob :exec
+DELETE FROM JobQueue
+WHERE id = $1 and completed_at IS NULL
+`
+
+func (q *Queries) DeleteJob(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteJob, id)
+	return err
+}
+
 const fetchJob = `-- name: FetchJob :one
 UPDATE JobQueue SET started_at = current_timestamp, worker_id = $1
 WHERE id = (

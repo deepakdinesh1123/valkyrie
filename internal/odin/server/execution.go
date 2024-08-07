@@ -57,19 +57,43 @@ func (s *Server) GetExecutions(ctx context.Context) (api.GetExecutionsRes, error
 	return &executions, nil
 }
 
-func (s *Server) GetExecutionResults(ctx context.Context) (api.GetExecutionResultsRes, error) {
-	execResultsDB, err := s.queries.GetAllExecutionResults(ctx)
+func (s *Server) GetExecutionConfig(ctx context.Context) (api.GetExecutionConfigRes, error) {
+	return &api.ExecutionConfig{
+		ODINWORKERPROVIDER:    s.envConfig.ODIN_WORKER_PROVIDER,
+		ODINWORKERCONCURRENCY: int32(s.envConfig.ODIN_WORKER_CONCURRENCY),
+		ODINWORKERBUFFERSIZE:  int32(s.envConfig.ODIN_WORKER_BUFFER_SIZE),
+		ODINWORKERTASKTIMEOUT: s.envConfig.ODIN_WORKER_TASK_TIMEOUT,
+		ODINWORKERPOLLFREQ:    s.envConfig.ODIN_WORKER_POLL_FREQ,
+		ODINWORKERRUNTIME:     s.envConfig.ODIN_WORKER_RUNTIME,
+		ODINLOGLEVEL:          s.envConfig.ODIN_LOG_LEVEL,
+	}, nil
+}
+
+func (s *Server) GetExecutionWorkers(ctx context.Context) (api.GetExecutionWorkersRes, error) {
+	workersDB, err := s.queries.GetAllWorkers(ctx)
 	if err != nil {
-		return &api.GetExecutionResultsInternalServerError{
-			Message: fmt.Sprintf("Failed to get execution results: %v", err),
+		return &api.GetExecutionWorkersInternalServerError{
+			Message: fmt.Sprintf("Failed to get workers: %v", err),
 		}, nil
 	}
-	var execResults api.GetExecutionResultsOKApplicationJSON
-	for _, execResult := range execResultsDB {
-		execResults = append(execResults, api.ExecutionResult{
-			ExecutionId: execResult.ID,
-			Logs:        execResult.Logs.String,
+	var workers api.GetExecutionWorkersOKApplicationJSON
+	for _, worker := range workersDB {
+		workers = append(workers, api.ExecutionWorker{
+			ID:        int64(worker.ID),
+			Name:      worker.Name.String,
+			CreatedAt: worker.CreatedAt.Time,
+			Status:    "status",
 		})
 	}
-	return &execResults, nil
+	return &workers, nil
+}
+
+func (s *Server) DeleteExecution(ctx context.Context, params api.DeleteExecutionParams) (api.DeleteExecutionRes, error) {
+	err := s.queries.DeleteJob(ctx, params.ExecutionId)
+	if err != nil {
+		return &api.DeleteExecutionBadRequest{
+			Message: fmt.Sprintf("Failed to delete execution: %v", err),
+		}, nil
+	}
+	return &api.DeleteExecutionOK{}, nil
 }
