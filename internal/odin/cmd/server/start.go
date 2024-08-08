@@ -1,15 +1,13 @@
 package server
 
 import (
-	"fmt"
-	"net/http"
+	"sync"
 
 	"github.com/spf13/cobra"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/logs"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
-	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/server"
 )
 
@@ -37,20 +35,16 @@ func serverExec(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	queries, err := db.GetDBConnection(ctx, false, envConfig, applyMigrations, logger)
+	srv, err := server.NewServer(ctx, envConfig, false, applyMigrations, logger)
 	if err != nil {
-		logger.Err(err).Msg("Failed to get database connection")
+		logger.Err(err).Msg("Failed to create server")
 		return err
 	}
-	srv := server.NewServer(ctx, envConfig, queries, logger)
-
-	logger.Info().Msg("Starting Odin server")
-	addr := fmt.Sprintf("%s:%s", envConfig.ODIN_SERVER_HOST, envConfig.ODIN_SERVER_PORT)
-	err = http.ListenAndServe(addr, srv)
-	if err != nil {
-		logger.Err(err).Msg("Failed to start server")
-		return err
-	}
+	var wg sync.WaitGroup
+	wg.Add(1)
+	logger.Info().Msg("Starting server")
+	go srv.Start(ctx, &wg)
+	wg.Wait()
 	return nil
 }
 

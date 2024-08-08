@@ -8,13 +8,13 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
 )
 
-func (s *Server) Execute(ctx context.Context, req *api.ExecutionRequest) (api.ExecuteRes, error) {
+func (s *OdinServer) Execute(ctx context.Context, req *api.ExecutionRequest) (api.ExecuteRes, error) {
 	execId, err := s.executionService.AddJob(ctx, req)
 	if err != nil {
 		switch err.(type) {
 		case *execution.ExecutionServiceError:
 			return &api.ExecuteInternalServerError{
-				Message: fmt.Sprintf("Failed to execute: %v", err),
+				Message: fmt.Sprintf("Execution Service: %v", err),
 			}, nil
 		case *execution.TemplateError:
 			return &api.ExecuteBadRequest{
@@ -29,7 +29,7 @@ func (s *Server) Execute(ctx context.Context, req *api.ExecutionRequest) (api.Ex
 	return &api.ExecuteOK{ExecutionId: execId}, nil
 }
 
-func (s *Server) GetExecutionResult(ctx context.Context, params api.GetExecutionResultParams) (api.GetExecutionResultRes, error) {
+func (s *OdinServer) GetExecutionResult(ctx context.Context, params api.GetExecutionResultParams) (api.GetExecutionResultRes, error) {
 	execResult, err := s.queries.GetResultUsingExecutionID(ctx, params.ExecutionId)
 	if err != nil {
 		return &api.GetExecutionResultNotFound{}, nil
@@ -41,7 +41,7 @@ func (s *Server) GetExecutionResult(ctx context.Context, params api.GetExecution
 	}, nil
 }
 
-func (s *Server) GetExecutions(ctx context.Context) (api.GetExecutionsRes, error) {
+func (s *OdinServer) GetExecutions(ctx context.Context) (api.GetExecutionsRes, error) {
 	executionsDB, err := s.queries.GetAllExecutions(ctx)
 	if err != nil {
 		return &api.GetExecutionsInternalServerError{
@@ -52,12 +52,17 @@ func (s *Server) GetExecutions(ctx context.Context) (api.GetExecutionsRes, error
 	for _, exec := range executionsDB {
 		executions = append(executions, api.Execution{
 			ExecutionId: exec.ID,
+			Script:      exec.Script.String,
+			Flake:       exec.Flake.String,
+			CreatedAt:   exec.CreatedAt.Time,
+			FinishedAt:  exec.CompletedAt.Time,
+			Logs:        exec.Logs.String,
 		})
 	}
 	return &executions, nil
 }
 
-func (s *Server) GetExecutionConfig(ctx context.Context) (api.GetExecutionConfigRes, error) {
+func (s *OdinServer) GetExecutionConfig(ctx context.Context) (api.GetExecutionConfigRes, error) {
 	return &api.ExecutionConfig{
 		ODINWORKERPROVIDER:    s.envConfig.ODIN_WORKER_PROVIDER,
 		ODINWORKERCONCURRENCY: int32(s.envConfig.ODIN_WORKER_CONCURRENCY),
@@ -69,7 +74,7 @@ func (s *Server) GetExecutionConfig(ctx context.Context) (api.GetExecutionConfig
 	}, nil
 }
 
-func (s *Server) GetExecutionWorkers(ctx context.Context) (api.GetExecutionWorkersRes, error) {
+func (s *OdinServer) GetExecutionWorkers(ctx context.Context) (api.GetExecutionWorkersRes, error) {
 	workersDB, err := s.queries.GetAllWorkers(ctx)
 	if err != nil {
 		return &api.GetExecutionWorkersInternalServerError{
@@ -88,7 +93,7 @@ func (s *Server) GetExecutionWorkers(ctx context.Context) (api.GetExecutionWorke
 	return &workers, nil
 }
 
-func (s *Server) DeleteExecution(ctx context.Context, params api.DeleteExecutionParams) (api.DeleteExecutionRes, error) {
+func (s *OdinServer) DeleteExecution(ctx context.Context, params api.DeleteExecutionParams) (api.DeleteExecutionRes, error) {
 	err := s.queries.DeleteJob(ctx, params.ExecutionId)
 	if err != nil {
 		return &api.DeleteExecutionBadRequest{

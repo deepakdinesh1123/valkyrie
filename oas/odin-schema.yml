@@ -213,8 +213,6 @@ components:
           type: string
     ExecutionEnvironmentSpec:
       type: object
-      required:
-        - language
       properties:
         environment_variables:
           type: array
@@ -227,8 +225,6 @@ components:
         systemDependencies:
           type: array
           items:
-            type: string
-        language:
             type: string
         args:
           type: string
@@ -254,6 +250,8 @@ components:
       type: object
       required:
         - code
+        - language
+        - environment
       properties:
         environment:
           oneOf:
@@ -264,6 +262,8 @@ components:
             - $ref: '#/components/schemas/DockerExecutionConfig'
             - $ref: '#/components/schemas/PodmanExecutionConfig'
         code:
+          type: string
+        language:
           type: string
         priority:
           type: integer

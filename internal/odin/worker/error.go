@@ -10,3 +10,14 @@ type WorkerError struct {
 func (e *WorkerError) Error() string {
 	return fmt.Sprintf("%s: %s", e.Type, e.Message)
 }
+
+func (e *WorkerError) Unwrap() error {
+	return e
+}
+
+type WorkerInfoNotFoundError struct {
+}
+
+func (e *WorkerInfoNotFoundError) Error() string {
+	return "worker info not found"
+}

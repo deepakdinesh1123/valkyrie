@@ -71,7 +71,7 @@ type GetAllExecutionResultsRow struct {
 	ID     int64       `db:"id" json:"id"`
 	Logs   pgtype.Text `db:"logs" json:"logs"`
 	Script pgtype.Text `db:"script" json:"script"`
-	Args   []byte      `db:"args" json:"args"`
+	Args   pgtype.Text `db:"args" json:"args"`
 }
 
 func (q *Queries) GetAllExecutionResults(ctx context.Context) ([]GetAllExecutionResultsRow, error) {
@@ -254,9 +254,9 @@ func (q *Queries) GetResultUsingExecutionID(ctx context.Context, id int64) (Jobq
 
 const insertJob = `-- name: InsertJob :one
 INSERT INTO JobQueue
-    (script, flake, language, script_path)
+    (script, flake, language, script_path, args)
 VALUES
-    ($1, $2, $3, $4)
+    ($1, $2, $3, $4, $5)
 RETURNING id, created_by, created_at, started_at, completed_at, script, script_path, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type, worker_id
 `
 
@@ -265,6 +265,7 @@ type InsertJobParams struct {
 	Flake      pgtype.Text `db:"flake" json:"flake"`
 	Language   pgtype.Text `db:"language" json:"language"`
 	ScriptPath pgtype.Text `db:"script_path" json:"script_path"`
+	Args       pgtype.Text `db:"args" json:"args"`
 }
 
 func (q *Queries) InsertJob(ctx context.Context, arg InsertJobParams) (Jobqueue, error) {
@@ -273,6 +274,7 @@ func (q *Queries) InsertJob(ctx context.Context, arg InsertJobParams) (Jobqueue,
 		arg.Flake,
 		arg.Language,
 		arg.ScriptPath,
+		arg.Args,
 	)
 	var i Jobqueue
 	err := row.Scan(

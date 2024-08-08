@@ -20,11 +20,11 @@ import (
 //go:embed all:migrations/*.sql
 var migrationsFS embed.FS
 
-func GetDBConnection(ctx context.Context, standalone bool, envConfig *config.EnvConfig, applyMigrations bool, logger *zerolog.Logger) (*Queries, error) {
+func GetDBConnection(ctx context.Context, standalone bool, envConfig *config.EnvConfig, applyMigrations bool, worker bool, logger *zerolog.Logger) (*Queries, error) {
 	// Start embedded Postgres if standalone mode is enabled
 	var pge *embeddedpostgres.EmbeddedPostgres
-	if standalone {
-		pgDataPath := fmt.Sprintf("%s/data", envConfig.USER_HOME_DIR)
+	if standalone && !worker {
+		pgDataPath := fmt.Sprintf("%s/.zango/stdb", envConfig.USER_HOME_DIR)
 		var err error
 		pge, err = pgembed.Start(
 			envConfig.POSTGRES_USER, envConfig.POSTGRES_PASSWORD, envConfig.POSTGRES_PORT,
@@ -52,7 +52,7 @@ func GetDBConnection(ctx context.Context, standalone bool, envConfig *config.Env
 		logger.Info().Msg("Stopping Postgres connection")
 		connPool.Close()
 		logger.Info().Msg("Postgres connection stopped")
-		if pge != nil {
+		if pge != nil && !worker {
 			logger.Info().Msg("Stopping Embedded Postgres")
 			err = pge.Stop()
 			if err != nil {

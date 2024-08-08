@@ -371,7 +371,6 @@ type ExecutionEnvironmentSpec struct {
 	EnvironmentVariables []EnvironmentVariable `json:"environment_variables"`
 	LanguageDependencies []string              `json:"languageDependencies"`
 	SystemDependencies   []string              `json:"systemDependencies"`
-	Language             string                `json:"language"`
 	Args                 OptString             `json:"args"`
 }
 
@@ -388,11 +387,6 @@ func (s *ExecutionEnvironmentSpec) GetLanguageDependencies() []string {
 // GetSystemDependencies returns the value of SystemDependencies.
 func (s *ExecutionEnvironmentSpec) GetSystemDependencies() []string {
 	return s.SystemDependencies
-}
-
-// GetLanguage returns the value of Language.
-func (s *ExecutionEnvironmentSpec) GetLanguage() string {
-	return s.Language
 }
 
 // GetArgs returns the value of Args.
@@ -415,11 +409,6 @@ func (s *ExecutionEnvironmentSpec) SetSystemDependencies(val []string) {
 	s.SystemDependencies = val
 }
 
-// SetLanguage sets the value of Language.
-func (s *ExecutionEnvironmentSpec) SetLanguage(val string) {
-	s.Language = val
-}
-
 // SetArgs sets the value of Args.
 func (s *ExecutionEnvironmentSpec) SetArgs(val OptString) {
 	s.Args = val
@@ -427,14 +416,15 @@ func (s *ExecutionEnvironmentSpec) SetArgs(val OptString) {
 
 // Ref: #/components/schemas/ExecutionRequest
 type ExecutionRequest struct {
-	Environment OptExecutionRequestEnvironment `json:"environment"`
-	Config      OptExecutionRequestConfig      `json:"config"`
-	Code        string                         `json:"code"`
-	Priority    OptInt                         `json:"priority"`
+	Environment ExecutionRequestEnvironment `json:"environment"`
+	Config      OptExecutionRequestConfig   `json:"config"`
+	Code        string                      `json:"code"`
+	Language    string                      `json:"language"`
+	Priority    OptInt                      `json:"priority"`
 }
 
 // GetEnvironment returns the value of Environment.
-func (s *ExecutionRequest) GetEnvironment() OptExecutionRequestEnvironment {
+func (s *ExecutionRequest) GetEnvironment() ExecutionRequestEnvironment {
 	return s.Environment
 }
 
@@ -448,13 +438,18 @@ func (s *ExecutionRequest) GetCode() string {
 	return s.Code
 }
 
+// GetLanguage returns the value of Language.
+func (s *ExecutionRequest) GetLanguage() string {
+	return s.Language
+}
+
 // GetPriority returns the value of Priority.
 func (s *ExecutionRequest) GetPriority() OptInt {
 	return s.Priority
 }
 
 // SetEnvironment sets the value of Environment.
-func (s *ExecutionRequest) SetEnvironment(val OptExecutionRequestEnvironment) {
+func (s *ExecutionRequest) SetEnvironment(val ExecutionRequestEnvironment) {
 	s.Environment = val
 }
 
@@ -466,6 +461,11 @@ func (s *ExecutionRequest) SetConfig(val OptExecutionRequestConfig) {
 // SetCode sets the value of Code.
 func (s *ExecutionRequest) SetCode(val string) {
 	s.Code = val
+}
+
+// SetLanguage sets the value of Language.
+func (s *ExecutionRequest) SetLanguage(val string) {
+	s.Language = val
 }
 
 // SetPriority sets the value of Priority.
@@ -964,52 +964,6 @@ func (o OptExecutionRequestConfig) Get() (v ExecutionRequestConfig, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptExecutionRequestConfig) Or(d ExecutionRequestConfig) ExecutionRequestConfig {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
-// NewOptExecutionRequestEnvironment returns new OptExecutionRequestEnvironment with value set to v.
-func NewOptExecutionRequestEnvironment(v ExecutionRequestEnvironment) OptExecutionRequestEnvironment {
-	return OptExecutionRequestEnvironment{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptExecutionRequestEnvironment is optional ExecutionRequestEnvironment.
-type OptExecutionRequestEnvironment struct {
-	Value ExecutionRequestEnvironment
-	Set   bool
-}
-
-// IsSet returns true if OptExecutionRequestEnvironment was set.
-func (o OptExecutionRequestEnvironment) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptExecutionRequestEnvironment) Reset() {
-	var v ExecutionRequestEnvironment
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptExecutionRequestEnvironment) SetTo(v ExecutionRequestEnvironment) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptExecutionRequestEnvironment) Get() (v ExecutionRequestEnvironment, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptExecutionRequestEnvironment) Or(d ExecutionRequestEnvironment) ExecutionRequestEnvironment {
 	if v, ok := o.Get(); ok {
 		return v
 	}

@@ -7,7 +7,7 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
 )
 
-func (s *Server) GetVersion(ctx context.Context) (api.GetVersionRes, error) {
+func (s *OdinServer) GetVersion(ctx context.Context) (api.GetVersionRes, error) {
 	return &api.GetVersionOK{
 		Version: config.ODIN_VERSION,
 	}, nil

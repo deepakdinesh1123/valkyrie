@@ -1194,10 +1194,6 @@ func (s *ExecutionEnvironmentSpec) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
-		e.FieldStart("language")
-		e.Str(s.Language)
-	}
-	{
 		if s.Args.Set {
 			e.FieldStart("args")
 			s.Args.Encode(e)
@@ -1205,12 +1201,11 @@ func (s *ExecutionEnvironmentSpec) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfExecutionEnvironmentSpec = [5]string{
+var jsonFieldsNameOfExecutionEnvironmentSpec = [4]string{
 	0: "environment_variables",
 	1: "languageDependencies",
 	2: "systemDependencies",
-	3: "language",
-	4: "args",
+	3: "args",
 }
 
 // Decode decodes ExecutionEnvironmentSpec from json.
@@ -1218,7 +1213,6 @@ func (s *ExecutionEnvironmentSpec) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode ExecutionEnvironmentSpec to nil")
 	}
-	var requiredBitSet [1]uint8
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
@@ -1277,18 +1271,6 @@ func (s *ExecutionEnvironmentSpec) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"systemDependencies\"")
 			}
-		case "language":
-			requiredBitSet[0] |= 1 << 3
-			if err := func() error {
-				v, err := d.Str()
-				s.Language = string(v)
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"language\"")
-			}
 		case "args":
 			if err := func() error {
 				s.Args.Reset()
@@ -1305,38 +1287,6 @@ func (s *ExecutionEnvironmentSpec) Decode(d *jx.Decoder) error {
 		return nil
 	}); err != nil {
 		return errors.Wrap(err, "decode ExecutionEnvironmentSpec")
-	}
-	// Validate required fields.
-	var failures []validate.FieldError
-	for i, mask := range [1]uint8{
-		0b00001000,
-	} {
-		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
-			// Mask only required fields and check equality to mask using XOR.
-			//
-			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
-			// Bits of fields which would be set are actually bits of missed fields.
-			missed := bits.OnesCount8(result)
-			for bitN := 0; bitN < missed; bitN++ {
-				bitIdx := bits.TrailingZeros8(result)
-				fieldIdx := i*8 + bitIdx
-				var name string
-				if fieldIdx < len(jsonFieldsNameOfExecutionEnvironmentSpec) {
-					name = jsonFieldsNameOfExecutionEnvironmentSpec[fieldIdx]
-				} else {
-					name = strconv.Itoa(fieldIdx)
-				}
-				failures = append(failures, validate.FieldError{
-					Name:  name,
-					Error: validate.ErrFieldRequired,
-				})
-				// Reset bit.
-				result &^= 1 << bitIdx
-			}
-		}
-	}
-	if len(failures) > 0 {
-		return &validate.Error{Fields: failures}
 	}
 
 	return nil
@@ -1365,10 +1315,8 @@ func (s *ExecutionRequest) Encode(e *jx.Encoder) {
 // encodeFields encodes fields.
 func (s *ExecutionRequest) encodeFields(e *jx.Encoder) {
 	{
-		if s.Environment.Set {
-			e.FieldStart("environment")
-			s.Environment.Encode(e)
-		}
+		e.FieldStart("environment")
+		s.Environment.Encode(e)
 	}
 	{
 		if s.Config.Set {
@@ -1381,6 +1329,10 @@ func (s *ExecutionRequest) encodeFields(e *jx.Encoder) {
 		e.Str(s.Code)
 	}
 	{
+		e.FieldStart("language")
+		e.Str(s.Language)
+	}
+	{
 		if s.Priority.Set {
 			e.FieldStart("priority")
 			s.Priority.Encode(e)
@@ -1388,11 +1340,12 @@ func (s *ExecutionRequest) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfExecutionRequest = [4]string{
+var jsonFieldsNameOfExecutionRequest = [5]string{
 	0: "environment",
 	1: "config",
 	2: "code",
-	3: "priority",
+	3: "language",
+	4: "priority",
 }
 
 // Decode decodes ExecutionRequest from json.
@@ -1405,8 +1358,8 @@ func (s *ExecutionRequest) Decode(d *jx.Decoder) error {
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
 		case "environment":
+			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
-				s.Environment.Reset()
 				if err := s.Environment.Decode(d); err != nil {
 					return err
 				}
@@ -1436,6 +1389,18 @@ func (s *ExecutionRequest) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"code\"")
 			}
+		case "language":
+			requiredBitSet[0] |= 1 << 3
+			if err := func() error {
+				v, err := d.Str()
+				s.Language = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"language\"")
+			}
 		case "priority":
 			if err := func() error {
 				s.Priority.Reset()
@@ -1456,7 +1421,7 @@ func (s *ExecutionRequest) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00000100,
+		0b00001101,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -2537,39 +2502,6 @@ func (s OptExecutionRequestConfig) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *OptExecutionRequestConfig) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode encodes ExecutionRequestEnvironment as json.
-func (o OptExecutionRequestEnvironment) Encode(e *jx.Encoder) {
-	if !o.Set {
-		return
-	}
-	o.Value.Encode(e)
-}
-
-// Decode decodes ExecutionRequestEnvironment from json.
-func (o *OptExecutionRequestEnvironment) Decode(d *jx.Decoder) error {
-	if o == nil {
-		return errors.New("invalid: unable to decode OptExecutionRequestEnvironment to nil")
-	}
-	o.Set = true
-	if err := o.Value.Decode(d); err != nil {
-		return err
-	}
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s OptExecutionRequestEnvironment) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *OptExecutionRequestEnvironment) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }

@@ -12,10 +12,13 @@ post {
 
 body:json {
   {
-    "environment": {
-      "languageDependencies": ["requests", "pandas"],
+      "environment": {
+          "languageDependencies": [
+              "requests",
+              "pandas"
+          ]
+      },
+      "code": "print('hello')",
       "language": "python"
-    },
-    "code": "print('hello')"
   }
 }
