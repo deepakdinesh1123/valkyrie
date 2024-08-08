@@ -4,7 +4,6 @@ import (
 	"context"
 	"embed"
 	"fmt"
-	"os"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/pgembed"
@@ -21,7 +20,7 @@ import (
 //go:embed all:migrations/*.sql
 var migrationsFS embed.FS
 
-func GetDBConnection(ctx context.Context, standalone bool, envConfig *config.EnvConfig, applyMigrations bool, sigChan chan os.Signal, done chan bool, logger *zerolog.Logger) (*Queries, error) {
+func GetDBConnection(ctx context.Context, standalone bool, envConfig *config.EnvConfig, applyMigrations bool, logger *zerolog.Logger) (*Queries, error) {
 	// Start embedded Postgres if standalone mode is enabled
 	var pge *embeddedpostgres.EmbeddedPostgres
 	if standalone {
@@ -49,7 +48,7 @@ func GetDBConnection(ctx context.Context, standalone bool, envConfig *config.Env
 
 	// Ensure the connection is closed when the context is done
 	go func() {
-		<-sigChan
+		<-ctx.Done()
 		logger.Info().Msg("Stopping Postgres connection")
 		connPool.Close()
 		logger.Info().Msg("Postgres connection stopped")
@@ -61,7 +60,6 @@ func GetDBConnection(ctx context.Context, standalone bool, envConfig *config.Env
 			}
 			logger.Info().Msg("Embedded Postgres stopped")
 		}
-		done <- true
 	}()
 
 	// Apply migrations if requested

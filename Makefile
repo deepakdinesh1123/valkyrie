@@ -19,6 +19,10 @@ start-server:
 start-worker:
 	@go run cmd/odin/main.go worker start
 
+.PHONY: standalone
+standalone:
+	@go run cmd/odin/main.go standalone
+
 .PHONY: start-db
 start-db:
 	@docker compose up postgres -d

@@ -51,7 +51,7 @@ var WorkerStartCmd = &cobra.Command{
 		if newWorker {
 			deleteWorkerInfo(envConfig.ODIN_WORKER_INFO_FILE)
 		}
-		queries, err := db.GetDBConnection(ctx, false, envConfig, false, nil, nil, logger)
+		queries, err := db.GetDBConnection(ctx, false, envConfig, false, logger)
 		if err != nil {
 			logger.Err(err).Msg("Failed to get database connection")
 			return err
@@ -126,6 +126,7 @@ var WorkerStartCmd = &cobra.Command{
 		} else {
 			logger.Info().Msg("Could not lock worker info file, another worker is already running on this machine")
 		}
+		logger.Info().Msg("Worker stopped")
 		return nil
 	},
 }

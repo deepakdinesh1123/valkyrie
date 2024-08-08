@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -31,7 +32,6 @@ func standaloneExec(cmd *cobra.Command, args []string) error {
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
-	done := make(chan bool, 1)
 
 	envConfig, err := config.GetEnvConfig()
 	if err != nil {
@@ -45,7 +45,7 @@ func standaloneExec(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	queries, err := db.GetDBConnection(ctx, true, envConfig, applyMigrations, sigChan, done, logger)
+	queries, err := db.GetDBConnection(ctx, true, envConfig, applyMigrations, logger)
 	if err != nil {
 		logger.Err(err).Msg("Failed to get database connection")
 		cancel()
@@ -61,17 +61,34 @@ func standaloneExec(cmd *cobra.Command, args []string) error {
 		Handler: srv,
 	}
 
-	err = httpServer.ListenAndServe()
-	if err != nil {
-		logger.Err(err).Msg("Failed to start server")
-	}
-
+	go func() {
+		err = httpServer.ListenAndServe()
+		if err != nil {
+			if err == http.ErrServerClosed {
+				return
+			}
+			logger.Err(err).Msg("Failed to start server")
+		}
+	}()
+	done := make(chan bool, 1)
+	go func() {
+		<-sigChan
+		logger.Info().Msg("Shutting down worker")
+		logger.Info().Msg("Removing lock")
+		cancel()
+		shutdownCtx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
+		defer cancel()
+		if err := httpServer.Shutdown(shutdownCtx); err != nil {
+			logger.Err(err).Msg("Failed to shutdown server")
+		}
+		done <- true
+	}()
 	<-done
-	httpServer.Shutdown(ctx)
 	logger.Info().Msg("Odin server stopped")
 	return nil
 }
 
 func init() {
 	StandaloneCmd.Flags().Bool("migrate", true, "Migrate database")
+	StandaloneCmd.Flags().Bool("clean-db", false, "Clean database")
 }

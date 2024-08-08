@@ -37,7 +37,7 @@ func serverExec(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	queries, err := db.GetDBConnection(ctx, false, envConfig, applyMigrations, nil, nil, logger)
+	queries, err := db.GetDBConnection(ctx, false, envConfig, applyMigrations, logger)
 	if err != nil {
 		logger.Err(err).Msg("Failed to get database connection")
 		return err
