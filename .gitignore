@@ -19,6 +19,7 @@ Cargo.lock
 oci-bundles/
 temp/
 result/
+result
 .devenv*
 devenv.local.nix
 
