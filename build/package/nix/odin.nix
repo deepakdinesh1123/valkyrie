@@ -18,11 +18,10 @@ buildGoModule rec {
   
   doCheck = false;
   
-  buildInputs = [
+  buildInputs =  lib.optionals stdenv.isLinux [
     gpgme
     libgpg-error
     libassuan
-  ] ++ lib.optionals stdenv.isLinux [
     btrfs-progs
   ];
   
