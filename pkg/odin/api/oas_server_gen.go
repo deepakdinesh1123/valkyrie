@@ -37,13 +37,13 @@ type Handler interface {
 	// Get all execution workers.
 	//
 	// GET /executions/workers
-	GetExecutionWorkers(ctx context.Context) (GetExecutionWorkersRes, error)
+	GetExecutionWorkers(ctx context.Context, params GetExecutionWorkersParams) (GetExecutionWorkersRes, error)
 	// GetExecutions implements getExecutions operation.
 	//
 	// Get all executions.
 	//
 	// GET /executions/
-	GetExecutions(ctx context.Context) (GetExecutionsRes, error)
+	GetExecutions(ctx context.Context, params GetExecutionsParams) (GetExecutionsRes, error)
 	// GetVersion implements getVersion operation.
 	//
 	// Get version.

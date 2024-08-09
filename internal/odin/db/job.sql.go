@@ -61,103 +61,48 @@ func (q *Queries) FetchJob(ctx context.Context, workerID pgtype.Int4) (Jobqueue,
 	return i, err
 }
 
-const getAllExecutionResults = `-- name: GetAllExecutionResults :many
-SELECT id, logs, script, args FROM JobQueue
-WHERE job_type = 'execution'
-ORDER BY started_at
-`
-
-type GetAllExecutionResultsRow struct {
-	ID     int64       `db:"id" json:"id"`
-	Logs   pgtype.Text `db:"logs" json:"logs"`
-	Script pgtype.Text `db:"script" json:"script"`
-	Args   pgtype.Text `db:"args" json:"args"`
-}
-
-func (q *Queries) GetAllExecutionResults(ctx context.Context) ([]GetAllExecutionResultsRow, error) {
-	rows, err := q.db.Query(ctx, getAllExecutionResults)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetAllExecutionResultsRow
-	for rows.Next() {
-		var i GetAllExecutionResultsRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.Logs,
-			&i.Script,
-			&i.Args,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getAllExecutions = `-- name: GetAllExecutions :many
-SELECT id, created_by, created_at, started_at, completed_at, script, script_path, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type, worker_id FROM JobQueue
-WHERE job_type = 'execution'
-ORDER BY started_at
-`
-
-func (q *Queries) GetAllExecutions(ctx context.Context) ([]Jobqueue, error) {
-	rows, err := q.db.Query(ctx, getAllExecutions)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Jobqueue
-	for rows.Next() {
-		var i Jobqueue
-		if err := rows.Scan(
-			&i.ID,
-			&i.CreatedBy,
-			&i.CreatedAt,
-			&i.StartedAt,
-			&i.CompletedAt,
-			&i.Script,
-			&i.ScriptPath,
-			&i.Args,
-			&i.Logs,
-			&i.Flake,
-			&i.Language,
-			&i.MemPeak,
-			&i.Timeout,
-			&i.Priority,
-			&i.LeaseTimeout,
-			&i.Queue,
-			&i.JobType,
-			&i.WorkerID,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const getAllJobs = `-- name: GetAllJobs :many
-SELECT id, created_by, created_at, started_at, completed_at, script, script_path, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type, worker_id FROM JobQueue
-ORDER BY started_at
+SELECT id, created_by, created_at, started_at, completed_at, script, script_path, args, logs, flake, language, mem_peak, timeout, priority, lease_timeout, queue, job_type, worker_id, count(*) OVER() AS total FROM JobQueue
+ORDER BY created_at DESC
+LIMIT $1 OFFSET $2
 `
 
-func (q *Queries) GetAllJobs(ctx context.Context) ([]Jobqueue, error) {
-	rows, err := q.db.Query(ctx, getAllJobs)
+type GetAllJobsParams struct {
+	Limit  int32 `db:"limit" json:"limit"`
+	Offset int32 `db:"offset" json:"offset"`
+}
+
+type GetAllJobsRow struct {
+	ID           int64            `db:"id" json:"id"`
+	CreatedBy    pgtype.Text      `db:"created_by" json:"created_by"`
+	CreatedAt    pgtype.Timestamp `db:"created_at" json:"created_at"`
+	StartedAt    pgtype.Timestamp `db:"started_at" json:"started_at"`
+	CompletedAt  pgtype.Timestamp `db:"completed_at" json:"completed_at"`
+	Script       pgtype.Text      `db:"script" json:"script"`
+	ScriptPath   pgtype.Text      `db:"script_path" json:"script_path"`
+	Args         pgtype.Text      `db:"args" json:"args"`
+	Logs         pgtype.Text      `db:"logs" json:"logs"`
+	Flake        pgtype.Text      `db:"flake" json:"flake"`
+	Language     pgtype.Text      `db:"language" json:"language"`
+	MemPeak      pgtype.Int4      `db:"mem_peak" json:"mem_peak"`
+	Timeout      pgtype.Int4      `db:"timeout" json:"timeout"`
+	Priority     pgtype.Int4      `db:"priority" json:"priority"`
+	LeaseTimeout pgtype.Float8    `db:"lease_timeout" json:"lease_timeout"`
+	Queue        string           `db:"queue" json:"queue"`
+	JobType      string           `db:"job_type" json:"job_type"`
+	WorkerID     pgtype.Int4      `db:"worker_id" json:"worker_id"`
+	Total        int64            `db:"total" json:"total"`
+}
+
+func (q *Queries) GetAllJobs(ctx context.Context, arg GetAllJobsParams) ([]GetAllJobsRow, error) {
+	rows, err := q.db.Query(ctx, getAllJobs, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Jobqueue
+	var items []GetAllJobsRow
 	for rows.Next() {
-		var i Jobqueue
+		var i GetAllJobsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.CreatedBy,
@@ -177,6 +122,7 @@ func (q *Queries) GetAllJobs(ctx context.Context) ([]Jobqueue, error) {
 			&i.Queue,
 			&i.JobType,
 			&i.WorkerID,
+			&i.Total,
 		); err != nil {
 			return nil, err
 		}
@@ -252,6 +198,17 @@ func (q *Queries) GetResultUsingExecutionID(ctx context.Context, id int64) (Jobq
 	return i, err
 }
 
+const getTotalJobs = `-- name: GetTotalJobs :one
+SELECT count(*) FROM JobQueue
+`
+
+func (q *Queries) GetTotalJobs(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, getTotalJobs)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const insertJob = `-- name: InsertJob :one
 INSERT INTO JobQueue
     (script, flake, language, script_path, args)
@@ -298,18 +255,6 @@ func (q *Queries) InsertJob(ctx context.Context, arg InsertJobParams) (Jobqueue,
 		&i.WorkerID,
 	)
 	return i, err
-}
-
-const remainingJobs = `-- name: RemainingJobs :one
-SELECT count(*) FROM JobQueue
-WHERE queue=$1 AND completed_at IS NULL
-`
-
-func (q *Queries) RemainingJobs(ctx context.Context, queue string) (int64, error) {
-	row := q.db.QueryRow(ctx, remainingJobs, queue)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
 }
 
 const updateJob = `-- name: UpdateJob :one

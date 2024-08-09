@@ -189,7 +189,7 @@ func encodeGetExecutionResultResponse(response GetExecutionResultRes, w http.Res
 
 func encodeGetExecutionWorkersResponse(response GetExecutionWorkersRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
-	case *GetExecutionWorkersOKApplicationJSON:
+	case *GetExecutionWorkersOK:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(200)
 		span.SetStatus(codes.Ok, http.StatusText(200))
@@ -235,7 +235,7 @@ func encodeGetExecutionWorkersResponse(response GetExecutionWorkersRes, w http.R
 
 func encodeGetExecutionsResponse(response GetExecutionsRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
-	case *GetExecutionsOKApplicationJSON:
+	case *GetExecutionsOK:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(200)
 		span.SetStatus(codes.Ok, http.StatusText(200))

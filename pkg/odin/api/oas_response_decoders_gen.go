@@ -413,7 +413,7 @@ func decodeGetExecutionWorkersResponse(resp *http.Response) (res GetExecutionWor
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response GetExecutionWorkersOKApplicationJSON
+			var response GetExecutionWorkersOK
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -533,7 +533,7 @@ func decodeGetExecutionsResponse(resp *http.Response) (res GetExecutionsRes, _ e
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response GetExecutionsOKApplicationJSON
+			var response GetExecutionsOK
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err

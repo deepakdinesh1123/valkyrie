@@ -4,20 +4,52 @@ package api
 
 import (
 	"github.com/go-faster/errors"
+
+	"github.com/ogen-go/ogen/validate"
 )
 
-func (s GetExecutionWorkersOKApplicationJSON) Validate() error {
-	alias := ([]ExecutionWorker)(s)
-	if alias == nil {
-		return errors.New("nil is invalid value")
+func (s *GetExecutionWorkersOK) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
+	var failures []validate.FieldError
+	if err := func() error {
+		if s.Workers == nil {
+			return errors.New("nil is invalid value")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "workers",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
 	}
 	return nil
 }
 
-func (s GetExecutionsOKApplicationJSON) Validate() error {
-	alias := ([]Execution)(s)
-	if alias == nil {
-		return errors.New("nil is invalid value")
+func (s *GetExecutionsOK) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
+	var failures []validate.FieldError
+	if err := func() error {
+		if s.Executions == nil {
+			return errors.New("nil is invalid value")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "executions",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
 	}
 	return nil
 }

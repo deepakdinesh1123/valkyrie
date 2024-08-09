@@ -491,8 +491,22 @@ func (s *Server) handleGetExecutionWorkersRequest(args [0]string, argsEscaped bo
 			span.SetStatus(codes.Error, stage)
 			s.errors.Add(ctx, 1, metric.WithAttributeSet(labeler.AttributeSet()))
 		}
-		err error
+		err          error
+		opErrContext = ogenerrors.OperationContext{
+			Name: "GetExecutionWorkers",
+			ID:   "getExecutionWorkers",
+		}
 	)
+	params, err := decodeGetExecutionWorkersParams(args, argsEscaped, r)
+	if err != nil {
+		err = &ogenerrors.DecodeParamsError{
+			OperationContext: opErrContext,
+			Err:              err,
+		}
+		defer recordError("DecodeParams", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
 
 	var response GetExecutionWorkersRes
 	if m := s.cfg.Middleware; m != nil {
@@ -502,13 +516,22 @@ func (s *Server) handleGetExecutionWorkersRequest(args [0]string, argsEscaped bo
 			OperationSummary: "Get all execution workers",
 			OperationID:      "getExecutionWorkers",
 			Body:             nil,
-			Params:           middleware.Parameters{},
-			Raw:              r,
+			Params: middleware.Parameters{
+				{
+					Name: "page",
+					In:   "query",
+				}: params.Page,
+				{
+					Name: "pageSize",
+					In:   "query",
+				}: params.PageSize,
+			},
+			Raw: r,
 		}
 
 		type (
 			Request  = struct{}
-			Params   = struct{}
+			Params   = GetExecutionWorkersParams
 			Response = GetExecutionWorkersRes
 		)
 		response, err = middleware.HookMiddleware[
@@ -518,14 +541,14 @@ func (s *Server) handleGetExecutionWorkersRequest(args [0]string, argsEscaped bo
 		](
 			m,
 			mreq,
-			nil,
+			unpackGetExecutionWorkersParams,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.GetExecutionWorkers(ctx)
+				response, err = s.h.GetExecutionWorkers(ctx, params)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.GetExecutionWorkers(ctx)
+		response, err = s.h.GetExecutionWorkers(ctx, params)
 	}
 	if err != nil {
 		defer recordError("Internal", err)
@@ -584,8 +607,22 @@ func (s *Server) handleGetExecutionsRequest(args [0]string, argsEscaped bool, w 
 			span.SetStatus(codes.Error, stage)
 			s.errors.Add(ctx, 1, metric.WithAttributeSet(labeler.AttributeSet()))
 		}
-		err error
+		err          error
+		opErrContext = ogenerrors.OperationContext{
+			Name: "GetExecutions",
+			ID:   "getExecutions",
+		}
 	)
+	params, err := decodeGetExecutionsParams(args, argsEscaped, r)
+	if err != nil {
+		err = &ogenerrors.DecodeParamsError{
+			OperationContext: opErrContext,
+			Err:              err,
+		}
+		defer recordError("DecodeParams", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
 
 	var response GetExecutionsRes
 	if m := s.cfg.Middleware; m != nil {
@@ -595,13 +632,22 @@ func (s *Server) handleGetExecutionsRequest(args [0]string, argsEscaped bool, w 
 			OperationSummary: "Get all executions",
 			OperationID:      "getExecutions",
 			Body:             nil,
-			Params:           middleware.Parameters{},
-			Raw:              r,
+			Params: middleware.Parameters{
+				{
+					Name: "page",
+					In:   "query",
+				}: params.Page,
+				{
+					Name: "pageSize",
+					In:   "query",
+				}: params.PageSize,
+			},
+			Raw: r,
 		}
 
 		type (
 			Request  = struct{}
-			Params   = struct{}
+			Params   = GetExecutionsParams
 			Response = GetExecutionsRes
 		)
 		response, err = middleware.HookMiddleware[
@@ -611,14 +657,14 @@ func (s *Server) handleGetExecutionsRequest(args [0]string, argsEscaped bool, w 
 		](
 			m,
 			mreq,
-			nil,
+			unpackGetExecutionsParams,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.GetExecutions(ctx)
+				response, err = s.h.GetExecutions(ctx, params)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.GetExecutions(ctx)
+		response, err = s.h.GetExecutions(ctx, params)
 	}
 	if err != nil {
 		defer recordError("Internal", err)

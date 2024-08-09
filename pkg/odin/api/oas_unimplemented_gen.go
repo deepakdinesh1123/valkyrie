@@ -54,7 +54,7 @@ func (UnimplementedHandler) GetExecutionResult(ctx context.Context, params GetEx
 // Get all execution workers.
 //
 // GET /executions/workers
-func (UnimplementedHandler) GetExecutionWorkers(ctx context.Context) (r GetExecutionWorkersRes, _ error) {
+func (UnimplementedHandler) GetExecutionWorkers(ctx context.Context, params GetExecutionWorkersParams) (r GetExecutionWorkersRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -63,7 +63,7 @@ func (UnimplementedHandler) GetExecutionWorkers(ctx context.Context) (r GetExecu
 // Get all executions.
 //
 // GET /executions/
-func (UnimplementedHandler) GetExecutions(ctx context.Context) (r GetExecutionsRes, _ error) {
+func (UnimplementedHandler) GetExecutions(ctx context.Context, params GetExecutionsParams) (r GetExecutionsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

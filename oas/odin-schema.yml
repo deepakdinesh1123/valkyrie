@@ -46,15 +46,26 @@ paths:
       summary: Get all executions
       description: Get all executions
       operationId: getExecutions
+      parameters:
+        - $ref: '#/components/parameters/PageNumber'
+        - $ref: '#/components/parameters/PageSize'
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Execution'
+                type: object
+                required:
+                  - executions
+                  - pagination
+                properties:
+                  executions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Execution'
+                  pagination:
+                    $ref: '#/components/schemas/PaginationResponse'
         '400':
           description: Bad Request
           content:
@@ -133,15 +144,26 @@ paths:
       summary: Get all execution workers
       description: Get all execution workers
       operationId: getExecutionWorkers
+      parameters:
+        - $ref: '#/components/parameters/PageNumber'
+        - $ref: '#/components/parameters/PageSize'
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ExecutionWorker'
+                type: object
+                required:
+                  - workers
+                  - pagination
+                properties:
+                  workers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ExecutionWorker'
+                  pagination:
+                    $ref: '#/components/schemas/PaginationResponse'
         '400':
           description: Bad Request
           content:
@@ -196,6 +218,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 components:
+  parameters:
+    PageNumber:
+      name: page
+      in: query
+      description: The page number to retrieve.
+      required: false
+      schema:
+        type: integer
+        format: int32
+        default: 0
+    PageSize:
+      name: pageSize
+      in: query
+      description: The number of items per page.
+      required: false
+      schema:
+        type: integer
+        format: int32
+        default: 20
   schemas:
     EnvironmentVariable:
       type: object
@@ -421,7 +462,31 @@ components:
         ODIN_SYSTEM_PROVIDER_CLEAN_UP:
           type: boolean
           description: Represents whether to clean up directories created by the system provider.
-        
+    PaginationResponse:
+      type: object
+      required:
+        - total
+        - limit
+        - offset
+      properties:
+        total:
+          type: integer
+          format: int64
+          description: Represents the total number of items.
+        pages:
+          type: integer
+          format: int32
+          description: Represents the total number of pages.
+        page:
+          type: integer
+          format: int32
+          description: Represents the current page.
+        limit:
+          type: integer
+          format: int32
+          description: Represents the number of items per page.
+        next:
+          type: string
         
         
         

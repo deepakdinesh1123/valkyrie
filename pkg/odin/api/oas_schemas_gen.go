@@ -708,9 +708,32 @@ type GetExecutionWorkersInternalServerError Error
 
 func (*GetExecutionWorkersInternalServerError) getExecutionWorkersRes() {}
 
-type GetExecutionWorkersOKApplicationJSON []ExecutionWorker
+type GetExecutionWorkersOK struct {
+	Workers    []ExecutionWorker  `json:"workers"`
+	Pagination PaginationResponse `json:"pagination"`
+}
 
-func (*GetExecutionWorkersOKApplicationJSON) getExecutionWorkersRes() {}
+// GetWorkers returns the value of Workers.
+func (s *GetExecutionWorkersOK) GetWorkers() []ExecutionWorker {
+	return s.Workers
+}
+
+// GetPagination returns the value of Pagination.
+func (s *GetExecutionWorkersOK) GetPagination() PaginationResponse {
+	return s.Pagination
+}
+
+// SetWorkers sets the value of Workers.
+func (s *GetExecutionWorkersOK) SetWorkers(val []ExecutionWorker) {
+	s.Workers = val
+}
+
+// SetPagination sets the value of Pagination.
+func (s *GetExecutionWorkersOK) SetPagination(val PaginationResponse) {
+	s.Pagination = val
+}
+
+func (*GetExecutionWorkersOK) getExecutionWorkersRes() {}
 
 type GetExecutionsBadRequest Error
 
@@ -720,9 +743,32 @@ type GetExecutionsInternalServerError Error
 
 func (*GetExecutionsInternalServerError) getExecutionsRes() {}
 
-type GetExecutionsOKApplicationJSON []Execution
+type GetExecutionsOK struct {
+	Executions []Execution        `json:"executions"`
+	Pagination PaginationResponse `json:"pagination"`
+}
 
-func (*GetExecutionsOKApplicationJSON) getExecutionsRes() {}
+// GetExecutions returns the value of Executions.
+func (s *GetExecutionsOK) GetExecutions() []Execution {
+	return s.Executions
+}
+
+// GetPagination returns the value of Pagination.
+func (s *GetExecutionsOK) GetPagination() PaginationResponse {
+	return s.Pagination
+}
+
+// SetExecutions sets the value of Executions.
+func (s *GetExecutionsOK) SetExecutions(val []Execution) {
+	s.Executions = val
+}
+
+// SetPagination sets the value of Pagination.
+func (s *GetExecutionsOK) SetPagination(val PaginationResponse) {
+	s.Pagination = val
+}
+
+func (*GetExecutionsOK) getExecutionsRes() {}
 
 type GetVersionOK struct {
 	Version string `json:"version"`
@@ -1016,6 +1062,52 @@ func (o OptInt) Or(d int) int {
 	return d
 }
 
+// NewOptInt32 returns new OptInt32 with value set to v.
+func NewOptInt32(v int32) OptInt32 {
+	return OptInt32{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptInt32 is optional int32.
+type OptInt32 struct {
+	Value int32
+	Set   bool
+}
+
+// IsSet returns true if OptInt32 was set.
+func (o OptInt32) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptInt32) Reset() {
+	var v int32
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptInt32) SetTo(v int32) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptInt32) Get() (v int32, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptInt32) Or(d int32) int32 {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptPodmanExecutionConfigContainerBasicConfig returns new OptPodmanExecutionConfigContainerBasicConfig with value set to v.
 func NewOptPodmanExecutionConfigContainerBasicConfig(v PodmanExecutionConfigContainerBasicConfig) OptPodmanExecutionConfigContainerBasicConfig {
 	return OptPodmanExecutionConfigContainerBasicConfig{
@@ -1152,6 +1244,69 @@ func (o OptString) Or(d string) string {
 		return v
 	}
 	return d
+}
+
+// Ref: #/components/schemas/PaginationResponse
+type PaginationResponse struct {
+	// Represents the total number of items.
+	Total int64 `json:"total"`
+	// Represents the total number of pages.
+	Pages OptInt32 `json:"pages"`
+	// Represents the current page.
+	Page OptInt32 `json:"page"`
+	// Represents the number of items per page.
+	Limit int32     `json:"limit"`
+	Next  OptString `json:"next"`
+}
+
+// GetTotal returns the value of Total.
+func (s *PaginationResponse) GetTotal() int64 {
+	return s.Total
+}
+
+// GetPages returns the value of Pages.
+func (s *PaginationResponse) GetPages() OptInt32 {
+	return s.Pages
+}
+
+// GetPage returns the value of Page.
+func (s *PaginationResponse) GetPage() OptInt32 {
+	return s.Page
+}
+
+// GetLimit returns the value of Limit.
+func (s *PaginationResponse) GetLimit() int32 {
+	return s.Limit
+}
+
+// GetNext returns the value of Next.
+func (s *PaginationResponse) GetNext() OptString {
+	return s.Next
+}
+
+// SetTotal sets the value of Total.
+func (s *PaginationResponse) SetTotal(val int64) {
+	s.Total = val
+}
+
+// SetPages sets the value of Pages.
+func (s *PaginationResponse) SetPages(val OptInt32) {
+	s.Pages = val
+}
+
+// SetPage sets the value of Page.
+func (s *PaginationResponse) SetPage(val OptInt32) {
+	s.Page = val
+}
+
+// SetLimit sets the value of Limit.
+func (s *PaginationResponse) SetLimit(val int32) {
+	s.Limit = val
+}
+
+// SetNext sets the value of Next.
+func (s *PaginationResponse) SetNext(val OptString) {
+	s.Next = val
 }
 
 // Ref: #/components/schemas/PodmanExecutionConfig

@@ -52,13 +52,13 @@ type Invoker interface {
 	// Get all execution workers.
 	//
 	// GET /executions/workers
-	GetExecutionWorkers(ctx context.Context) (GetExecutionWorkersRes, error)
+	GetExecutionWorkers(ctx context.Context, params GetExecutionWorkersParams) (GetExecutionWorkersRes, error)
 	// GetExecutions invokes getExecutions operation.
 	//
 	// Get all executions.
 	//
 	// GET /executions/
-	GetExecutions(ctx context.Context) (GetExecutionsRes, error)
+	GetExecutions(ctx context.Context, params GetExecutionsParams) (GetExecutionsRes, error)
 	// GetVersion invokes getVersion operation.
 	//
 	// Get version.
@@ -449,12 +449,12 @@ func (c *Client) sendGetExecutionResult(ctx context.Context, params GetExecution
 // Get all execution workers.
 //
 // GET /executions/workers
-func (c *Client) GetExecutionWorkers(ctx context.Context) (GetExecutionWorkersRes, error) {
-	res, err := c.sendGetExecutionWorkers(ctx)
+func (c *Client) GetExecutionWorkers(ctx context.Context, params GetExecutionWorkersParams) (GetExecutionWorkersRes, error) {
+	res, err := c.sendGetExecutionWorkers(ctx, params)
 	return res, err
 }
 
-func (c *Client) sendGetExecutionWorkers(ctx context.Context) (res GetExecutionWorkersRes, err error) {
+func (c *Client) sendGetExecutionWorkers(ctx context.Context, params GetExecutionWorkersParams) (res GetExecutionWorkersRes, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getExecutionWorkers"),
 		semconv.HTTPMethodKey.String("GET"),
@@ -494,6 +494,44 @@ func (c *Client) sendGetExecutionWorkers(ctx context.Context) (res GetExecutionW
 	pathParts[0] = "/executions/workers"
 	uri.AddPathParts(u, pathParts[:]...)
 
+	stage = "EncodeQueryParams"
+	q := uri.NewQueryEncoder()
+	{
+		// Encode "page" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "page",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.Page.Get(); ok {
+				return e.EncodeValue(conv.Int32ToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	{
+		// Encode "pageSize" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "pageSize",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.PageSize.Get(); ok {
+				return e.EncodeValue(conv.Int32ToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	u.RawQuery = q.Values().Encode()
+
 	stage = "EncodeRequest"
 	r, err := ht.NewRequest(ctx, "GET", u)
 	if err != nil {
@@ -521,12 +559,12 @@ func (c *Client) sendGetExecutionWorkers(ctx context.Context) (res GetExecutionW
 // Get all executions.
 //
 // GET /executions/
-func (c *Client) GetExecutions(ctx context.Context) (GetExecutionsRes, error) {
-	res, err := c.sendGetExecutions(ctx)
+func (c *Client) GetExecutions(ctx context.Context, params GetExecutionsParams) (GetExecutionsRes, error) {
+	res, err := c.sendGetExecutions(ctx, params)
 	return res, err
 }
 
-func (c *Client) sendGetExecutions(ctx context.Context) (res GetExecutionsRes, err error) {
+func (c *Client) sendGetExecutions(ctx context.Context, params GetExecutionsParams) (res GetExecutionsRes, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getExecutions"),
 		semconv.HTTPMethodKey.String("GET"),
@@ -565,6 +603,44 @@ func (c *Client) sendGetExecutions(ctx context.Context) (res GetExecutionsRes, e
 	var pathParts [1]string
 	pathParts[0] = "/executions/"
 	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeQueryParams"
+	q := uri.NewQueryEncoder()
+	{
+		// Encode "page" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "page",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.Page.Get(); ok {
+				return e.EncodeValue(conv.Int32ToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	{
+		// Encode "pageSize" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "pageSize",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.PageSize.Get(); ok {
+				return e.EncodeValue(conv.Int32ToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	u.RawQuery = q.Values().Encode()
 
 	stage = "EncodeRequest"
 	r, err := ht.NewRequest(ctx, "GET", u)

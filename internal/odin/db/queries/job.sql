@@ -47,35 +47,24 @@ SET
 WHERE id = $1 AND completed_at IS NULL
 RETURNING *;
 
--- name: RemainingJobs :one
-SELECT count(*) FROM JobQueue
-WHERE queue=$1 AND completed_at IS NULL;
-
-
 -- name: GetAllJobs :many
-SELECT * FROM JobQueue
-ORDER BY started_at;
+SELECT *, count(*) OVER() AS total FROM JobQueue
+ORDER BY created_at DESC
+LIMIT $1 OFFSET $2;
 
 -- name: GetJob :one
 SELECT * FROM JobQueue
 WHERE id = $1
 LIMIT 1;
 
--- name: GetAllExecutions :many
-SELECT * FROM JobQueue
-WHERE job_type = 'execution'
-ORDER BY started_at;
-
 -- name: GetResultUsingExecutionID :one
 SELECT *
 FROM JobQueue
 WHERE id = $1 AND job_type = 'execution' LIMIT 1 ;
 
--- name: GetAllExecutionResults :many
-SELECT id, logs, script, args FROM JobQueue
-WHERE job_type = 'execution'
-ORDER BY started_at;
-
 -- name: DeleteJob :exec
 DELETE FROM JobQueue
 WHERE id = $1 and completed_at IS NULL;
+
+-- name: GetTotalJobs :one
+SELECT count(*) FROM JobQueue;

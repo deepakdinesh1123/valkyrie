@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/services/execution"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
 )
@@ -41,14 +42,24 @@ func (s *OdinServer) GetExecutionResult(ctx context.Context, params api.GetExecu
 	}, nil
 }
 
-func (s *OdinServer) GetExecutions(ctx context.Context) (api.GetExecutionsRes, error) {
-	executionsDB, err := s.queries.GetAllExecutions(ctx)
+func (s *OdinServer) GetExecutions(ctx context.Context, params api.GetExecutionsParams) (api.GetExecutionsRes, error) {
+	s.logger.Debug().Int32("page", params.Page.Value).Int32("pageSize", params.PageSize.Value).Msg("GetExecutions")
+	executionsDB, err := s.queries.GetAllJobs(ctx, db.GetAllJobsParams{
+		Limit:  params.PageSize.Value,
+		Offset: params.Page.Value * params.PageSize.Value,
+	})
 	if err != nil {
 		return &api.GetExecutionsInternalServerError{
 			Message: fmt.Sprintf("Failed to get executions: %v", err),
 		}, nil
 	}
-	var executions api.GetExecutionsOKApplicationJSON
+	total, err := s.queries.GetTotalJobs(ctx)
+	if err != nil {
+		return &api.GetExecutionsInternalServerError{
+			Message: fmt.Sprintf("Failed to get total executions: %v", err),
+		}, nil
+	}
+	var executions []api.Execution
 	for _, exec := range executionsDB {
 		executions = append(executions, api.Execution{
 			ExecutionId: exec.ID,
@@ -59,7 +70,13 @@ func (s *OdinServer) GetExecutions(ctx context.Context) (api.GetExecutionsRes, e
 			Logs:        exec.Logs.String,
 		})
 	}
-	return &executions, nil
+	resp := api.GetExecutionsOK{
+		Executions: executions,
+		Pagination: api.PaginationResponse{
+			Total: total,
+		},
+	}
+	return &resp, nil
 }
 
 func (s *OdinServer) GetExecutionConfig(ctx context.Context) (api.GetExecutionConfigRes, error) {
@@ -74,14 +91,23 @@ func (s *OdinServer) GetExecutionConfig(ctx context.Context) (api.GetExecutionCo
 	}, nil
 }
 
-func (s *OdinServer) GetExecutionWorkers(ctx context.Context) (api.GetExecutionWorkersRes, error) {
-	workersDB, err := s.queries.GetAllWorkers(ctx)
+func (s *OdinServer) GetExecutionWorkers(ctx context.Context, params api.GetExecutionWorkersParams) (api.GetExecutionWorkersRes, error) {
+	workersDB, err := s.queries.GetAllWorkers(ctx, db.GetAllWorkersParams{
+		Limit:  params.PageSize.Value,
+		Offset: params.PageSize.Value * params.Page.Value,
+	})
 	if err != nil {
 		return &api.GetExecutionWorkersInternalServerError{
 			Message: fmt.Sprintf("Failed to get workers: %v", err),
 		}, nil
 	}
-	var workers api.GetExecutionWorkersOKApplicationJSON
+	total, err := s.queries.GetTotalWorkers(ctx)
+	if err != nil {
+		return &api.GetExecutionWorkersInternalServerError{
+			Message: fmt.Sprintf("Failed to get total workers: %v", err),
+		}, nil
+	}
+	var workers []api.ExecutionWorker
 	for _, worker := range workersDB {
 		workers = append(workers, api.ExecutionWorker{
 			ID:        int64(worker.ID),
@@ -90,7 +116,13 @@ func (s *OdinServer) GetExecutionWorkers(ctx context.Context) (api.GetExecutionW
 			Status:    "status",
 		})
 	}
-	return &workers, nil
+	resp := api.GetExecutionWorkersOK{
+		Workers: workers,
+		Pagination: api.PaginationResponse{
+			Total: total,
+		},
+	}
+	return &resp, nil
 }
 
 func (s *OdinServer) DeleteExecution(ctx context.Context, params api.DeleteExecutionParams) (api.DeleteExecutionRes, error) {
