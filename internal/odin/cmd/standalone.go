@@ -27,11 +27,12 @@ var StandaloneCmd = &cobra.Command{
 }
 
 func standaloneExec(cmd *cobra.Command, args []string) error {
-	ctx, cancel := context.WithCancel(cmd.Context())
-	defer cancel()
-	logger := logs.GetLogger()
+	logLevel := cmd.Flag("log-level").Value.String()
+	logger := logs.GetLogger(logLevel)
 	logger.Info().Msg("Starting Odin in standalone mode")
 
+	ctx, cancel := context.WithCancel(cmd.Context())
+	defer cancel()
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 

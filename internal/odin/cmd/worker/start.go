@@ -22,7 +22,8 @@ var WorkerStartCmd = &cobra.Command{
 	Short: "Start worker",
 	Long:  `Start worker`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		logger := logs.GetLogger()
+		logLevel := cmd.Flag("log-level").Value.String()
+		logger := logs.GetLogger(logLevel)
 		logger.Info().Msg("Starting worker")
 		envConfig, err := config.GetEnvConfig()
 		if err != nil {

@@ -20,7 +20,8 @@ var ServerStartCmd = &cobra.Command{
 
 func serverExec(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
-	logger := logs.GetLogger()
+	logLevel := cmd.Flag("log-level").Value.String()
+	logger := logs.GetLogger(logLevel)
 	logger.Info().Msg("Starting Odin in standalone mode")
 
 	envConfig, err := config.GetEnvConfig()
