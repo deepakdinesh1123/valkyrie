@@ -16,6 +16,7 @@ import (
 	"github.com/gofrs/flock"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 )
 
@@ -23,6 +24,7 @@ type Worker struct {
 	ID        int
 	Name      string
 	queries   *db.Queries
+	connPool  *pgxpool.Pool
 	envConfig *config.EnvConfig
 	provider  provider.Provider
 	logger    *zerolog.Logger
@@ -40,12 +42,12 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 	if newWorker {
 		deleteWorkerInfo(envConfig.ODIN_WORKER_INFO_FILE)
 	}
-	queries, err := db.GetDBConnection(ctx, standalone, envConfig, false, true, logger)
+	connPool, queries, err := db.GetDBConnection(ctx, standalone, envConfig, false, true, logger)
 	if err != nil {
 		logger.Err(err).Msg("Failed to get database connection")
 		return nil, err
 	}
-	prvdr, err := provider.GetProvider(ctx, queries, envConfig, logger)
+	prvdr, err := provider.GetProvider(ctx, connPool, queries, envConfig, logger)
 	if err != nil {
 		logger.Err(err).Msg("Failed to get provider")
 	}
@@ -55,6 +57,7 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 		envConfig: envConfig,
 		provider:  prvdr,
 		logger:    logger,
+		connPool:  connPool,
 	}
 	workerInfo, err := readWorkerInfo(envConfig.ODIN_WORKER_INFO_FILE, logger)
 	if err != nil {
@@ -137,7 +140,12 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 				w.logger.Info().Int("Tasks in progress", int(swg.Count())).Int32("Concurrency limit", w.envConfig.ODIN_WORKER_CONCURRENCY).Msg("Worker: concurrency limit reached")
 				continue
 			}
-			job, err := w.queries.FetchJob(ctx, pgtype.Int4{Int32: int32(w.ID), Valid: true})
+			tx, err := w.connPool.Begin(ctx)
+			if err != nil {
+				tx.Rollback(ctx)
+				return err
+			}
+			job, err := w.queries.WithTx(tx).FetchJob(ctx, pgtype.Int4{Int32: int32(w.ID), Valid: true})
 			if err != nil {
 				switch err {
 				case pgx.ErrNoRows:
@@ -149,6 +157,10 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 					w.logger.Err(err).Msgf("Worker: failed to fetch job")
 					return &WorkerError{Type: "FetchJob", Message: err.Error()}
 				}
+			}
+			err = tx.Commit(ctx)
+			if err != nil {
+				return err
 			}
 			w.logger.Info().Msgf("Worker: fetched job %d", job.ID)
 			swg.Add(1)

@@ -20,7 +20,7 @@ import (
 //go:embed all:migrations/*.sql
 var migrationsFS embed.FS
 
-func GetDBConnection(ctx context.Context, standalone bool, envConfig *config.EnvConfig, applyMigrations bool, worker bool, logger *zerolog.Logger) (*Queries, error) {
+func GetDBConnection(ctx context.Context, standalone bool, envConfig *config.EnvConfig, applyMigrations bool, worker bool, logger *zerolog.Logger) (*pgxpool.Pool, *Queries, error) {
 	// Start embedded Postgres if standalone mode is enabled
 	var pge *embeddedpostgres.EmbeddedPostgres
 	if standalone && !worker {
@@ -31,7 +31,7 @@ func GetDBConnection(ctx context.Context, standalone bool, envConfig *config.Env
 			envConfig.POSTGRES_DB, pgDataPath, logger)
 		if err != nil {
 			logger.Err(err).Msg("Failed to start Postgres")
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
@@ -43,7 +43,7 @@ func GetDBConnection(ctx context.Context, standalone bool, envConfig *config.Env
 	connPool, err := pgxpool.NewWithConfig(ctx, config.Config(POSTGRES_URL, logger))
 	if err != nil {
 		logger.Err(err).Msg("Failed to create connection pool")
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Ensure the connection is closed when the context is done
@@ -66,13 +66,13 @@ func GetDBConnection(ctx context.Context, standalone bool, envConfig *config.Env
 	if applyMigrations {
 		logger.Info().Msg("Applying migrations")
 		if err := applyMigrationsFunc(POSTGRES_URL, logger); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		logger.Info().Msg("Migrations applied")
 	}
 
 	queries := New(connPool)
-	return queries, nil
+	return connPool, queries, nil
 }
 
 // Helper function to apply migrations

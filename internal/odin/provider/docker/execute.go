@@ -18,6 +18,7 @@ import (
 )
 
 func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, execReq db.Job) {
+	start := time.Now()
 	tctx, cancel := context.WithTimeout(ctx, time.Duration(d.envConfig.ODIN_WORKER_TASK_TIMEOUT)*time.Second)
 	defer cancel()
 	defer wg.Done()
@@ -38,7 +39,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	)
 	if err != nil {
 		d.logger.Err(err).Msg("Failed to create container")
-		err := d.updateJob(ctx, &execReq, err.Error())
+		err := d.updateJob(ctx, &execReq, start, err.Error())
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to update job")
 		}
@@ -47,7 +48,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	err = d.client.ContainerStart(ctx, resp.ID, container.StartOptions{})
 	if err != nil {
 		d.logger.Err(err).Msg("Failed to start container")
-		err := d.updateJob(ctx, &execReq, err.Error())
+		err := d.updateJob(ctx, &execReq, start, err.Error())
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to update job")
 		}
@@ -56,7 +57,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 
 	if _, err := d.client.ContainerInspect(ctx, resp.ID); err != nil {
 		d.logger.Err(err).Msg("Failed to inspect container")
-		err := d.updateJob(ctx, &execReq, err.Error())
+		err := d.updateJob(ctx, &execReq, start, err.Error())
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to update job")
 		}
@@ -67,7 +68,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	if err != nil {
 		d.logger.Err(err).Msg("Failed to write files")
 		d.client.ContainerKill(ctx, containerName, "SIGKILL")
-		err := d.updateJob(ctx, &execReq, err.Error())
+		err := d.updateJob(ctx, &execReq, start, err.Error())
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to update job")
 		}
@@ -89,7 +90,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 		)
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to create exec")
-			err := d.updateJob(ctx, &execReq, err.Error())
+			err := d.updateJob(ctx, &execReq, start, err.Error())
 			if err != nil {
 				d.logger.Err(err).Msg("Failed to update job")
 			}
@@ -99,7 +100,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 		hijResp, err := d.client.ContainerExecAttach(ctx, resp.ID, container.ExecAttachOptions{})
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to attach exec")
-			err := d.updateJob(ctx, &execReq, err.Error())
+			err := d.updateJob(ctx, &execReq, start, err.Error())
 			if err != nil {
 				d.logger.Err(err).Msg("Failed to update job")
 			}
@@ -109,14 +110,14 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 		out, err := io.ReadAll(hijResp.Reader)
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to read output")
-			err := d.updateJob(ctx, &execReq, err.Error())
+			err := d.updateJob(ctx, &execReq, start, err.Error())
 			if err != nil {
 				d.logger.Err(err).Msg("Failed to update job")
 			}
 			done <- true
 			return
 		}
-		err = d.updateJob(ctx, &execReq, stripCtlAndExtFromUTF8(string(out)))
+		err = d.updateJob(ctx, &execReq, start, stripCtlAndExtFromUTF8(string(out)))
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to update job")
 		}
@@ -218,20 +219,28 @@ func createTarArchive(files map[string]string) (string, error) {
 	return tarFilePath, nil
 }
 
-func (d *DockerProvider) updateJob(ctx context.Context, execReq *db.Job, message string) error {
-	if err := d.queries.UpdateJob(ctx, execReq.ID); err != nil {
+func (d *DockerProvider) updateJob(ctx context.Context, execReq *db.Job, startTime time.Time, message string) error {
+	tx, err := d.connPool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+	if err := d.queries.WithTx(tx).UpdateJob(ctx, execReq.ID); err != nil {
 		return err
 	}
 	if _, err := d.queries.InsertJobRun(ctx, db.InsertJobRunParams{
 		JobID:      execReq.ID,
 		WorkerID:   execReq.WorkerID.Int32,
-		StartedAt:  pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		StartedAt:  pgtype.Timestamptz{Time: startTime, Valid: true},
 		FinishedAt: pgtype.Timestamptz{Time: time.Now(), Valid: true},
-		Script:     message,
+		Script:     execReq.Script,
 		Flake:      execReq.Flake,
 		Args:       execReq.Args,
-		Logs:       pgtype.Text{String: message, Valid: true},
+		Logs:       message,
 	}); err != nil {
+		return err
+	}
+	if err := tx.Commit(ctx); err != nil {
 		return err
 	}
 	return nil

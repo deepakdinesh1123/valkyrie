@@ -25,7 +25,7 @@ create table job_runs (
     script text not null,
     flake text not null,
     args varchar(1024),
-    logs text
+    logs text not null
 );
 
 -- name: FetchJob :one
