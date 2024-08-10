@@ -20,4 +20,8 @@ WHERE name = $1
 LIMIT 1;
 
 -- name: GetAllWorkers :many
-SELECT * FROM Worker;
+SELECT * FROM Worker
+LIMIT $1 OFFSET $2;
+
+-- name: GetTotalWorkers :one
+SELECT count(*) FROM Worker;

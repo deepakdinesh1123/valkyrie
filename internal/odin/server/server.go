@@ -7,29 +7,34 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/services/execution"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
-	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog"
 )
 
-type Server struct {
-	dbConn           *pgx.Conn
+type OdinServer struct {
 	queries          *db.Queries
 	envConfig        *config.EnvConfig
 	executionService *execution.ExecutionService
+	logger           *zerolog.Logger
+	server           *api.Server
 }
 
-func NewServer(ctx context.Context, envConfig *config.EnvConfig, dbConn *pgx.Conn, queries *db.Queries, logger *zerolog.Logger) *api.Server {
-	executionService := execution.NewExecutionService(queries, envConfig)
-	server := &Server{
+func NewServer(ctx context.Context, envConfig *config.EnvConfig, standalone bool, applyMigrations bool, logger *zerolog.Logger) (*OdinServer, error) {
+	queries, err := db.GetDBConnection(ctx, standalone, envConfig, applyMigrations, false, logger)
+	if err != nil {
+		return nil, err
+	}
+	executionService := execution.NewExecutionService(queries, envConfig, logger)
+	odinServer := &OdinServer{
 		queries:          queries,
 		executionService: executionService,
-		dbConn:           dbConn,
 		envConfig:        envConfig,
+		logger:           logger,
 	}
-	srv, err := api.NewServer(server)
+	srv, err := api.NewServer(odinServer)
 	if err != nil {
-		logger.Err(err).Msg("Failed to create server")
-		panic(err)
+		return nil, err
 	}
-	return srv
+
+	odinServer.server = srv
+	return odinServer, nil
 }

@@ -14,8 +14,23 @@
       rec {
 
         docsDependencies = with pkgs; [ python312Packages.mkdocs-material redocly ];
-        k8sDependencies = with pkgs; [ skaffold k3d skaffold kubectl kubectx kubens helm ];
-        devDependencies = with pkgs; [ sqlc go-migrate go_1_22 ] ++ docsDependencies ;
+        k8sDependencies = with pkgs; [ 
+          skaffold 
+          k3d 
+          skaffold 
+          kubectl 
+          kubectx 
+          kubens 
+          helm ];
+        devDependencies = with pkgs; [ 
+          sqlc 
+          go-migrate 
+          go_1_22  
+          pkg-config ] ++ docsDependencies ++ lib.optionals stdenv.isLinux [ 
+            gpgme 
+            libgpg-error 
+            libassuanbtrfs-progs 
+          ] ;
 
         packages = {
           odin = pkgs.callPackage ./build/package/nix/odin.nix { inherit pkgs; };

@@ -2,18 +2,21 @@ package cmd
 
 import (
 	"context"
-	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	"github.com/spf13/cobra"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/logs"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
-	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/server"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/worker"
+)
+
+var (
+	newWorker bool
 )
 
 var StandaloneCmd = &cobra.Command{
@@ -24,14 +27,14 @@ var StandaloneCmd = &cobra.Command{
 }
 
 func standaloneExec(cmd *cobra.Command, args []string) error {
-	ctx, cancel := context.WithCancel(cmd.Context())
-	defer cancel()
-	logger := logs.GetLogger()
+	logLevel := cmd.Flag("log-level").Value.String()
+	logger := logs.GetLogger(logLevel)
 	logger.Info().Msg("Starting Odin in standalone mode")
 
+	ctx, cancel := context.WithCancel(cmd.Context())
+	defer cancel()
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
-	done := make(chan bool, 1)
 
 	envConfig, err := config.GetEnvConfig()
 	if err != nil {
@@ -45,33 +48,46 @@ func standaloneExec(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	dbConn, queries, err := db.GetDBConnection(ctx, true, envConfig, applyMigrations, sigChan, done, logger)
+	srv, err := server.NewServer(ctx, envConfig, true, applyMigrations, logger)
 	if err != nil {
-		logger.Err(err).Msg("Failed to get database connection")
-		cancel()
+		logger.Err(err).Msg("Failed to create server")
 		return err
 	}
-	srv := server.NewServer(ctx, envConfig, dbConn, queries, logger)
-
-	logger.Info().Msg("Starting Odin server")
-	addr := fmt.Sprintf("%s:%s", envConfig.ODIN_SERVER_HOST, envConfig.ODIN_SERVER_PORT)
-
-	httpServer := &http.Server{
-		Addr:    addr,
-		Handler: srv,
-	}
-
-	err = httpServer.ListenAndServe()
+	name, err := cmd.Flags().GetString("worker-name")
 	if err != nil {
-		logger.Err(err).Msg("Failed to start server")
+		logger.Err(err).Msg("Failed to get worker-name flag")
+		name = ""
 	}
 
-	<-done
-	httpServer.Shutdown(ctx)
-	logger.Info().Msg("Odin server stopped")
+	worker, err := worker.GetWorker(ctx, name, envConfig, newWorker, true, logger)
+	if err != nil {
+		logger.Err(err).Msg("Failed to create worker")
+		return err
+	}
+	go func() {
+		<-sigChan
+		logger.Info().Msg("Shutting down worker")
+		logger.Info().Msg("Removing lock")
+		cancel()
+	}()
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	logger.Info().Msg("Starting worker")
+	go worker.Run(ctx, &wg)
+
+	wg.Add(1)
+	logger.Info().Msg("Starting server")
+	go srv.Start(ctx, &wg)
+
+	wg.Wait()
+	logger.Info().Msg("Odin server and worker stopped")
 	return nil
 }
 
 func init() {
 	StandaloneCmd.Flags().Bool("migrate", true, "Migrate database")
+	StandaloneCmd.Flags().Bool("clean-db", false, "Clean database")
+	StandaloneCmd.Flags().String("worker-name", "", "Name of the worker")
+	StandaloneCmd.Flags().BoolVarP(&newWorker, "new", "n", false, "Create new worker(Deletes existing worker info)")
 }

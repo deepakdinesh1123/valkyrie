@@ -4,17 +4,18 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/services/execution"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
 )
 
-func (s *Server) Execute(ctx context.Context, req *api.ExecutionRequest) (api.ExecuteRes, error) {
+func (s *OdinServer) Execute(ctx context.Context, req *api.ExecutionRequest) (api.ExecuteRes, error) {
 	execId, err := s.executionService.AddJob(ctx, req)
 	if err != nil {
 		switch err.(type) {
 		case *execution.ExecutionServiceError:
 			return &api.ExecuteInternalServerError{
-				Message: fmt.Sprintf("Failed to execute: %v", err),
+				Message: fmt.Sprintf("Execution Service: %v", err),
 			}, nil
 		case *execution.TemplateError:
 			return &api.ExecuteBadRequest{
@@ -29,7 +30,7 @@ func (s *Server) Execute(ctx context.Context, req *api.ExecutionRequest) (api.Ex
 	return &api.ExecuteOK{ExecutionId: execId}, nil
 }
 
-func (s *Server) GetExecutionResult(ctx context.Context, params api.GetExecutionResultParams) (api.GetExecutionResultRes, error) {
+func (s *OdinServer) GetExecutionResult(ctx context.Context, params api.GetExecutionResultParams) (api.GetExecutionResultRes, error) {
 	execResult, err := s.queries.GetResultUsingExecutionID(ctx, params.ExecutionId)
 	if err != nil {
 		return &api.GetExecutionResultNotFound{}, nil
@@ -41,35 +42,95 @@ func (s *Server) GetExecutionResult(ctx context.Context, params api.GetExecution
 	}, nil
 }
 
-func (s *Server) GetExecutions(ctx context.Context) (api.GetExecutionsRes, error) {
-	executionsDB, err := s.queries.GetAllExecutions(ctx)
+func (s *OdinServer) GetExecutions(ctx context.Context, params api.GetExecutionsParams) (api.GetExecutionsRes, error) {
+	s.logger.Debug().Int32("page", params.Page.Value).Int32("pageSize", params.PageSize.Value).Msg("GetExecutions")
+	executionsDB, err := s.queries.GetAllJobs(ctx, db.GetAllJobsParams{
+		Limit:  params.PageSize.Value,
+		Offset: params.Page.Value * params.PageSize.Value,
+	})
 	if err != nil {
 		return &api.GetExecutionsInternalServerError{
 			Message: fmt.Sprintf("Failed to get executions: %v", err),
 		}, nil
 	}
-	var executions api.GetExecutionsOKApplicationJSON
+	total, err := s.queries.GetTotalJobs(ctx)
+	if err != nil {
+		return &api.GetExecutionsInternalServerError{
+			Message: fmt.Sprintf("Failed to get total executions: %v", err),
+		}, nil
+	}
+	var executions []api.Execution
 	for _, exec := range executionsDB {
 		executions = append(executions, api.Execution{
 			ExecutionId: exec.ID,
+			Script:      exec.Script.String,
+			Flake:       exec.Flake.String,
+			CreatedAt:   exec.CreatedAt.Time,
+			FinishedAt:  exec.CompletedAt.Time,
+			Logs:        exec.Logs.String,
 		})
 	}
-	return &executions, nil
+	resp := api.GetExecutionsOK{
+		Executions: executions,
+		Pagination: api.PaginationResponse{
+			Total: total,
+		},
+	}
+	return &resp, nil
 }
 
-func (s *Server) GetExecutionResults(ctx context.Context) (api.GetExecutionResultsRes, error) {
-	execResultsDB, err := s.queries.GetAllExecutionResults(ctx)
+func (s *OdinServer) GetExecutionConfig(ctx context.Context) (api.GetExecutionConfigRes, error) {
+	return &api.ExecutionConfig{
+		ODINWORKERPROVIDER:    s.envConfig.ODIN_WORKER_PROVIDER,
+		ODINWORKERCONCURRENCY: int32(s.envConfig.ODIN_WORKER_CONCURRENCY),
+		ODINWORKERBUFFERSIZE:  int32(s.envConfig.ODIN_WORKER_BUFFER_SIZE),
+		ODINWORKERTASKTIMEOUT: s.envConfig.ODIN_WORKER_TASK_TIMEOUT,
+		ODINWORKERPOLLFREQ:    s.envConfig.ODIN_WORKER_POLL_FREQ,
+		ODINWORKERRUNTIME:     s.envConfig.ODIN_WORKER_RUNTIME,
+		ODINLOGLEVEL:          s.envConfig.ODIN_LOG_LEVEL,
+	}, nil
+}
+
+func (s *OdinServer) GetExecutionWorkers(ctx context.Context, params api.GetExecutionWorkersParams) (api.GetExecutionWorkersRes, error) {
+	workersDB, err := s.queries.GetAllWorkers(ctx, db.GetAllWorkersParams{
+		Limit:  params.PageSize.Value,
+		Offset: params.PageSize.Value * params.Page.Value,
+	})
 	if err != nil {
-		return &api.GetExecutionResultsInternalServerError{
-			Message: fmt.Sprintf("Failed to get execution results: %v", err),
+		return &api.GetExecutionWorkersInternalServerError{
+			Message: fmt.Sprintf("Failed to get workers: %v", err),
 		}, nil
 	}
-	var execResults api.GetExecutionResultsOKApplicationJSON
-	for _, execResult := range execResultsDB {
-		execResults = append(execResults, api.ExecutionResult{
-			ExecutionId: execResult.ID,
-			Logs:        execResult.Logs.String,
+	total, err := s.queries.GetTotalWorkers(ctx)
+	if err != nil {
+		return &api.GetExecutionWorkersInternalServerError{
+			Message: fmt.Sprintf("Failed to get total workers: %v", err),
+		}, nil
+	}
+	var workers []api.ExecutionWorker
+	for _, worker := range workersDB {
+		workers = append(workers, api.ExecutionWorker{
+			ID:        int64(worker.ID),
+			Name:      worker.Name.String,
+			CreatedAt: worker.CreatedAt.Time,
+			Status:    "status",
 		})
 	}
-	return &execResults, nil
+	resp := api.GetExecutionWorkersOK{
+		Workers: workers,
+		Pagination: api.PaginationResponse{
+			Total: total,
+		},
+	}
+	return &resp, nil
+}
+
+func (s *OdinServer) DeleteExecution(ctx context.Context, params api.DeleteExecutionParams) (api.DeleteExecutionRes, error) {
+	err := s.queries.DeleteJob(ctx, params.ExecutionId)
+	if err != nil {
+		return &api.DeleteExecutionBadRequest{
+			Message: fmt.Sprintf("Failed to delete execution: %v", err),
+		}, nil
+	}
+	return &api.DeleteExecutionOK{}, nil
 }

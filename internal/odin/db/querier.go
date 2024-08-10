@@ -11,17 +11,17 @@ import (
 )
 
 type Querier interface {
+	DeleteJob(ctx context.Context, id int64) error
 	FetchJob(ctx context.Context, workerID pgtype.Int4) (Jobqueue, error)
-	GetAllExecutionResults(ctx context.Context) ([]GetAllExecutionResultsRow, error)
-	GetAllExecutions(ctx context.Context) ([]Jobqueue, error)
-	GetAllJobs(ctx context.Context) ([]Jobqueue, error)
-	GetAllWorkers(ctx context.Context) ([]Worker, error)
+	GetAllJobs(ctx context.Context, arg GetAllJobsParams) ([]GetAllJobsRow, error)
+	GetAllWorkers(ctx context.Context, arg GetAllWorkersParams) ([]Worker, error)
 	GetJob(ctx context.Context, id int64) (Jobqueue, error)
 	GetResultUsingExecutionID(ctx context.Context, id int64) (Jobqueue, error)
+	GetTotalJobs(ctx context.Context) (int64, error)
+	GetTotalWorkers(ctx context.Context) (int64, error)
 	GetWorker(ctx context.Context, name pgtype.Text) (Worker, error)
 	InsertJob(ctx context.Context, arg InsertJobParams) (Jobqueue, error)
 	InsertWorker(ctx context.Context, name pgtype.Text) (Worker, error)
-	RemainingJobs(ctx context.Context, queue string) (int64, error)
 	UpdateJob(ctx context.Context, arg UpdateJobParams) (Jobqueue, error)
 }
 

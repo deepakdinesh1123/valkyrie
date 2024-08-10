@@ -8,30 +8,48 @@ import (
 
 // Handler handles operations described by OpenAPI v3 specification.
 type Handler interface {
+	// DeleteExecution implements deleteExecution operation.
+	//
+	// Delete execution.
+	//
+	// DELETE /executions/{executionId}/
+	DeleteExecution(ctx context.Context, params DeleteExecutionParams) (DeleteExecutionRes, error)
 	// Execute implements execute operation.
 	//
 	// Execute a script.
 	//
-	// POST /execution/execute/
+	// POST /executions/execute/
 	Execute(ctx context.Context, req *ExecutionRequest) (ExecuteRes, error)
+	// GetExecutionConfig implements getExecutionConfig operation.
+	//
+	// Get execution config.
+	//
+	// GET /execution/config/
+	GetExecutionConfig(ctx context.Context) (GetExecutionConfigRes, error)
 	// GetExecutionResult implements getExecutionResult operation.
 	//
 	// Get execution result.
 	//
-	// GET /execution/{executionId}/
+	// GET /executions/{executionId}/
 	GetExecutionResult(ctx context.Context, params GetExecutionResultParams) (GetExecutionResultRes, error)
-	// GetExecutionResults implements getExecutionResults operation.
+	// GetExecutionWorkers implements getExecutionWorkers operation.
 	//
-	// Get all execution results.
+	// Get all execution workers.
 	//
-	// GET /execution/results/
-	GetExecutionResults(ctx context.Context) (GetExecutionResultsRes, error)
+	// GET /executions/workers
+	GetExecutionWorkers(ctx context.Context, params GetExecutionWorkersParams) (GetExecutionWorkersRes, error)
 	// GetExecutions implements getExecutions operation.
 	//
 	// Get all executions.
 	//
-	// GET /execution/
-	GetExecutions(ctx context.Context) (GetExecutionsRes, error)
+	// GET /executions/
+	GetExecutions(ctx context.Context, params GetExecutionsParams) (GetExecutionsRes, error)
+	// GetVersion implements getVersion operation.
+	//
+	// Get version.
+	//
+	// GET /version/
+	GetVersion(ctx context.Context) (GetVersionRes, error)
 }
 
 // Server implements http server based on OpenAPI v3 specification and

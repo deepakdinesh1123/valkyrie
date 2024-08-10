@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/viper"
 )
@@ -20,10 +21,11 @@ type EnvConfig struct {
 	ODIN_SERVER_PORT string `mapstructure:"ODIN_SERVER_PORT"` // represents the port on which the Odin server will listen.
 
 	ODIN_WORKER_PROVIDER     string `mapstructure:"ODIN_WORKER_PROVIDER"`     // represents the worker provider.
-	ODIN_WORKER_CONCURRENCY  int    `mapstructure:"ODIN_WORKER_CONCURRENCY"`  // represents the concurrency level for the worker.
+	ODIN_WORKER_CONCURRENCY  int32  `mapstructure:"ODIN_WORKER_CONCURRENCY"`  // represents the concurrency level for the worker.
 	ODIN_WORKER_BUFFER_SIZE  int    `mapstructure:"ODIN_WORKER_BUFFER_SIZE"`  // represents the buffer size for the worker.
 	ODIN_WORKER_TASK_TIMEOUT int    `mapstructure:"ODIN_WORKER_TASK_TIMEOUT"` // represents the task timeout.
 	ODIN_WORKER_POLL_FREQ    int    `mapstructure:"ODIN_WORKER_POLL_FREQ"`    // represents the polling frequency for the worker in seconds.
+	ODIN_WORKER_RUNTIME      string `mapstructure:"ODIN_WORKER_RUNTIME"`      // represents the runtime for the worker in seconds.
 
 	ODIN_LOG_LEVEL string `mapstructure:"ODIN_LOG_LEVEL"`
 
@@ -60,8 +62,9 @@ func GetEnvConfig() (*EnvConfig, error) {
 	viper.SetDefault("ODIN_WORKER_BUFFER_SIZE", 100)
 	viper.SetDefault("ODIN_WORKER_TASK_TIMEOUT", 30)
 	viper.SetDefault("ODIN_WORKER_POLL_FREQ", 5)
+	viper.SetDefault("ODIN_WORKER_RUNTIME", "runc")
 
-	viper.SetDefault("ODIN_SYSTEM_PROVIDER_BASE_DIR", fmt.Sprintf("%s/%s", os.TempDir(), "odin"))
+	viper.SetDefault("ODIN_SYSTEM_PROVIDER_BASE_DIR", filepath.Join(os.TempDir(), "valkyrie"))
 	viper.SetDefault("ODIN_SYSTEM_PROVIDER_CLEAN_UP", true)
 
 	viper.SetDefault("ODIN_LOG_LEVEL", "info")

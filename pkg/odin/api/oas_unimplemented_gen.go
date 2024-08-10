@@ -13,12 +13,30 @@ type UnimplementedHandler struct{}
 
 var _ Handler = UnimplementedHandler{}
 
+// DeleteExecution implements deleteExecution operation.
+//
+// Delete execution.
+//
+// DELETE /executions/{executionId}/
+func (UnimplementedHandler) DeleteExecution(ctx context.Context, params DeleteExecutionParams) (r DeleteExecutionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // Execute implements execute operation.
 //
 // Execute a script.
 //
-// POST /execution/execute/
+// POST /executions/execute/
 func (UnimplementedHandler) Execute(ctx context.Context, req *ExecutionRequest) (r ExecuteRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetExecutionConfig implements getExecutionConfig operation.
+//
+// Get execution config.
+//
+// GET /execution/config/
+func (UnimplementedHandler) GetExecutionConfig(ctx context.Context) (r GetExecutionConfigRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -26,17 +44,17 @@ func (UnimplementedHandler) Execute(ctx context.Context, req *ExecutionRequest) 
 //
 // Get execution result.
 //
-// GET /execution/{executionId}/
+// GET /executions/{executionId}/
 func (UnimplementedHandler) GetExecutionResult(ctx context.Context, params GetExecutionResultParams) (r GetExecutionResultRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
-// GetExecutionResults implements getExecutionResults operation.
+// GetExecutionWorkers implements getExecutionWorkers operation.
 //
-// Get all execution results.
+// Get all execution workers.
 //
-// GET /execution/results/
-func (UnimplementedHandler) GetExecutionResults(ctx context.Context) (r GetExecutionResultsRes, _ error) {
+// GET /executions/workers
+func (UnimplementedHandler) GetExecutionWorkers(ctx context.Context, params GetExecutionWorkersParams) (r GetExecutionWorkersRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -44,7 +62,16 @@ func (UnimplementedHandler) GetExecutionResults(ctx context.Context) (r GetExecu
 //
 // Get all executions.
 //
-// GET /execution/
-func (UnimplementedHandler) GetExecutions(ctx context.Context) (r GetExecutionsRes, _ error) {
+// GET /executions/
+func (UnimplementedHandler) GetExecutions(ctx context.Context, params GetExecutionsParams) (r GetExecutionsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetVersion implements getVersion operation.
+//
+// Get version.
+//
+// GET /version/
+func (UnimplementedHandler) GetVersion(ctx context.Context) (r GetVersionRes, _ error) {
 	return r, ht.ErrNotImplemented
 }

@@ -13,10 +13,16 @@ import (
 
 const getAllWorkers = `-- name: GetAllWorkers :many
 SELECT id, name, created_at, created_by, modified_at, modified_by FROM Worker
+LIMIT $1 OFFSET $2
 `
 
-func (q *Queries) GetAllWorkers(ctx context.Context) ([]Worker, error) {
-	rows, err := q.db.Query(ctx, getAllWorkers)
+type GetAllWorkersParams struct {
+	Limit  int32 `db:"limit" json:"limit"`
+	Offset int32 `db:"offset" json:"offset"`
+}
+
+func (q *Queries) GetAllWorkers(ctx context.Context, arg GetAllWorkersParams) ([]Worker, error) {
+	rows, err := q.db.Query(ctx, getAllWorkers, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -40,6 +46,17 @@ func (q *Queries) GetAllWorkers(ctx context.Context) ([]Worker, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const getTotalWorkers = `-- name: GetTotalWorkers :one
+SELECT count(*) FROM Worker
+`
+
+func (q *Queries) GetTotalWorkers(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, getTotalWorkers)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
 }
 
 const getWorker = `-- name: GetWorker :one

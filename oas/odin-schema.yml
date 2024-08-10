@@ -5,7 +5,7 @@ info:
 servers:
   - url: http://localhost:8080/api/v1
 paths:
-  /execution/execute/:
+  /executions/execute/:
     post:
       summary: Execute a script
       description: Execute a script
@@ -41,7 +41,44 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /execution/{executionId}/:
+  /executions/:
+    get:
+      summary: Get all executions
+      description: Get all executions
+      operationId: getExecutions
+      parameters:
+        - $ref: '#/components/parameters/PageNumber'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - executions
+                  - pagination
+                properties:
+                  executions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Execution'
+                  pagination:
+                    $ref: '#/components/schemas/PaginationResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /executions/{executionId}/:
     get:
       summary: Get execution result
       description: Get execution result
@@ -74,20 +111,59 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /execution/:
+    delete:
+      summary: Delete execution
+      description: Delete execution
+      operationId: deleteExecution
+      parameters:
+        - name: executionId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Execution not found
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /executions/workers:
     get:
-      summary: Get all executions
-      description: Get all executions
-      operationId: getExecutions
+      summary: Get all execution workers
+      description: Get all execution workers
+      operationId: getExecutionWorkers
+      parameters:
+        - $ref: '#/components/parameters/PageNumber'
+        - $ref: '#/components/parameters/PageSize'
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Execution'
+                type: object
+                required:
+                  - workers
+                  - pagination
+                properties:
+                  workers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ExecutionWorker'
+                  pagination:
+                    $ref: '#/components/schemas/PaginationResponse'
         '400':
           description: Bad Request
           content:
@@ -100,26 +176,41 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /execution/results/:
+  /version/:
     get:
-      summary: Get all execution results
-      description: Get all execution results
-      operationId: getExecutionResults
+      summary: Get version
+      description: Get version
+      operationId: getVersion
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ExecutionResult'
-        '400':
-          description: Bad Request
+                type: object
+                required:
+                  - version
+                properties:
+                  version:
+                    type: string
+        '500':
+          description: Internal Server Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /execution/config/:
+    get:
+      summary: Get execution config
+      description: Get execution config
+      operationId: getExecutionConfig
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecutionConfig'
         '500':
           description: Internal Server Error
           content:
@@ -127,6 +218,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 components:
+  parameters:
+    PageNumber:
+      name: page
+      in: query
+      description: The page number to retrieve.
+      required: false
+      schema:
+        type: integer
+        format: int32
+        default: 0
+    PageSize:
+      name: pageSize
+      in: query
+      description: The number of items per page.
+      required: false
+      schema:
+        type: integer
+        format: int32
+        default: 20
   schemas:
     EnvironmentVariable:
       type: object
@@ -144,21 +254,21 @@ components:
           type: string
     ExecutionEnvironmentSpec:
       type: object
-      required:
-        - language
       properties:
         environment_variables:
           type: array
           items:
             $ref: '#/components/schemas/EnvironmentVariable'
-        packages:
+        languageDependencies:
           type: array
           items:
             type: string
-        dependencies:
+        systemDependencies:
           type: array
           items:
             type: string
+        args:
+          type: string
     ProgrammingLanguage:
       type: object
       required:
@@ -180,14 +290,10 @@ components:
     ExecutionRequest:
       type: object
       required:
-        - environment
-        - file
+        - code
         - language
+        - environment
       properties:
-        language:
-          oneOf:
-            - type: string
-            - $ref: '#/components/schemas/ProgrammingLanguage'
         environment:
           oneOf:
             - $ref: '#/components/schemas/Flake'
@@ -196,8 +302,10 @@ components:
           oneOf:
             - $ref: '#/components/schemas/DockerExecutionConfig'
             - $ref: '#/components/schemas/PodmanExecutionConfig'
-        file:
-          $ref: '#/components/schemas/File'
+        code:
+          type: string
+        language:
+          type: string
         priority:
           type: integer
           format: int4
@@ -285,7 +393,100 @@ components:
           format: date-time
     Flake:
       type: string
-        
+    ExecutionStatus:
+      type: object
+      required:
+        - id
+        - status
+      properties:
+        id:
+          type: integer
+          format: int64
+        status:
+          type: string
+    ExecutionWorker:
+      type: object
+      required:
+        - id
+        - name
+        - status
+        - created_at
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+    ExecutionConfig:
+      type: object
+      required:
+        - ODIN_WORKER_PROVIDER
+        - ODIN_WORKER_CONCURRENCY
+        - ODIN_WORKER_BUFFER_SIZE
+        - ODIN_WORKER_TASK_TIMEOUT
+        - ODIN_WORKER_POLL_FREQ
+        - ODIN_WORKER_RUNTIME
+        - ODIN_LOG_LEVEL
+      properties:
+        ODIN_WORKER_PROVIDER:
+          type: string
+          description: Represents the worker provider.
+        ODIN_WORKER_CONCURRENCY:
+          type: integer
+          format: int32
+          description: Represents the concurrency level for the worker.
+        ODIN_WORKER_BUFFER_SIZE:
+          type: integer
+          format: int32
+          description: Represents the buffer size for the worker.
+        ODIN_WORKER_TASK_TIMEOUT:
+          type: integer
+          description: Represents the task timeout.
+        ODIN_WORKER_POLL_FREQ:
+          type: integer
+          description: Represents the polling frequency for the worker in seconds.
+        ODIN_WORKER_RUNTIME:
+          type: string
+          description: Represents the runtime for the worker in seconds.
+        ODIN_LOG_LEVEL:
+          type: string
+          description: Represents the log level.
+        ODIN_SYSTEM_PROVIDER_BASE_DIR:
+          type: string
+          description: Represents the base directory for the system provider.
+        ODIN_SYSTEM_PROVIDER_CLEAN_UP:
+          type: boolean
+          description: Represents whether to clean up directories created by the system provider.
+    PaginationResponse:
+      type: object
+      required:
+        - total
+        - limit
+        - offset
+      properties:
+        total:
+          type: integer
+          format: int64
+          description: Represents the total number of items.
+        pages:
+          type: integer
+          format: int32
+          description: Represents the total number of pages.
+        page:
+          type: integer
+          format: int32
+          description: Represents the current page.
+        limit:
+          type: integer
+          format: int32
+          description: Represents the number of items per page.
+        next:
+          type: string
         
         
         

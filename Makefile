@@ -19,6 +19,10 @@ start-server:
 start-worker:
 	@go run cmd/odin/main.go worker start
 
+.PHONY: standalone
+standalone:
+	@go run cmd/odin/main.go standalone
+
 .PHONY: start-db
 start-db:
 	@docker compose up postgres -d
@@ -27,6 +31,10 @@ start-db:
 .PHONY: odin
 odin:
 	@go build -o odin cmd/odin/main.go
+
+.PHONY: clear-standalone-data
+clear-standalone-data:
+	rm -rf ~/data
 
 .PHONY: oapi-gen
 oapi-gen:
