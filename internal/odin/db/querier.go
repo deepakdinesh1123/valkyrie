@@ -12,17 +12,21 @@ import (
 
 type Querier interface {
 	DeleteJob(ctx context.Context, id int64) error
-	FetchJob(ctx context.Context, workerID pgtype.Int4) (Jobqueue, error)
-	GetAllJobs(ctx context.Context, arg GetAllJobsParams) ([]GetAllJobsRow, error)
+	FetchJob(ctx context.Context, workerID pgtype.Int4) (Job, error)
+	GetAllExecutionResults(ctx context.Context, arg GetAllExecutionResultsParams) ([]JobRun, error)
+	GetAllJobs(ctx context.Context, arg GetAllJobsParams) ([]Job, error)
 	GetAllWorkers(ctx context.Context, arg GetAllWorkersParams) ([]Worker, error)
-	GetJob(ctx context.Context, id int64) (Jobqueue, error)
-	GetResultUsingExecutionID(ctx context.Context, id int64) (Jobqueue, error)
+	GetExecutionResultsByID(ctx context.Context, arg GetExecutionResultsByIDParams) ([]JobRun, error)
+	GetJob(ctx context.Context, id int64) (Job, error)
+	GetTotalExecutions(ctx context.Context) (int64, error)
+	GetTotalExecutionsForJob(ctx context.Context, jobID int64) (int64, error)
 	GetTotalJobs(ctx context.Context) (int64, error)
 	GetTotalWorkers(ctx context.Context) (int64, error)
-	GetWorker(ctx context.Context, name pgtype.Text) (Worker, error)
-	InsertJob(ctx context.Context, arg InsertJobParams) (Jobqueue, error)
-	InsertWorker(ctx context.Context, name pgtype.Text) (Worker, error)
-	UpdateJob(ctx context.Context, arg UpdateJobParams) (Jobqueue, error)
+	GetWorker(ctx context.Context, name string) (Worker, error)
+	InsertJob(ctx context.Context, arg InsertJobParams) (Job, error)
+	InsertJobRun(ctx context.Context, arg InsertJobRunParams) (JobRun, error)
+	InsertWorker(ctx context.Context, name string) (Worker, error)
+	UpdateJob(ctx context.Context, id int64) error
 }
 
 var _ Querier = (*Queries)(nil)

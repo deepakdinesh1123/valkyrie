@@ -34,15 +34,15 @@ func NewExecutionService(queries *db.Queries, envConfig *config.EnvConfig, logge
 
 func (s *ExecutionService) prepareExecutionRequest(req *api.ExecutionRequest) (*models.ExecutionRequest, error) {
 	scriptName := fmt.Sprintf("main.%s", config.LANGUAGE_EXTENSION[req.Language])
-	if req.Environment.Type == "Flake" {
+	if req.Environment.Value.Type == "Flake" {
 		return &models.ExecutionRequest{
-			Environment: string(req.Environment.Flake),
+			Environment: string(req.Environment.Value.Flake),
 			File: models.File{
 				Name:    scriptName,
 				Content: req.Code,
 			},
 		}, nil
-	} else if req.Environment.Type == "ExecutionEnvironmentSpec" {
+	} else if req.Environment.Value.Type == "ExecutionEnvironmentSpec" {
 		flake, err := s.convertExecSpecToFlake(req)
 		if err != nil {
 			return nil, &ExecutionServiceError{
@@ -56,7 +56,23 @@ func (s *ExecutionService) prepareExecutionRequest(req *api.ExecutionRequest) (*
 				Name:    scriptName,
 				Content: req.Code,
 			},
-			Args: req.Environment.ExecutionEnvironmentSpec.Args.Value,
+			Args: req.Environment.Value.ExecutionEnvironmentSpec.Args.Value,
+		}, nil
+	} else if !req.Environment.Set {
+		flake, err := s.convertExecSpecToFlake(req)
+		if err != nil {
+			return nil, &ExecutionServiceError{
+				Type:    "flake",
+				Message: err.Error(),
+			}
+		}
+		return &models.ExecutionRequest{
+			Environment: flake,
+			File: models.File{
+				Name:    scriptName,
+				Content: req.Code,
+			},
+			Args: req.Environment.Value.ExecutionEnvironmentSpec.Args.Value,
 		}, nil
 	}
 	return nil, &ExecutionServiceError{
@@ -83,7 +99,7 @@ func (s *ExecutionService) convertExecSpecToFlake(execSpec *api.ExecutionRequest
 		}
 	}
 
-	err = tmpl.Execute(&res, execSpec.Environment.ExecutionEnvironmentSpec)
+	err = tmpl.Execute(&res, execSpec.Environment.Value.ExecutionEnvironmentSpec)
 	if err != nil {
 		s.logger.Err(err).Msg("failed to execute template")
 		return "", &ExecutionServiceError{
@@ -100,12 +116,10 @@ func (s *ExecutionService) AddJob(ctx context.Context, req *api.ExecutionRequest
 		return 0, err
 	}
 	job, err := s.queries.InsertJob(ctx, db.InsertJobParams{
-		Script: pgtype.Text{
-			String: execReq.File.Content,
-			Valid:  true},
-		Flake:      pgtype.Text{String: execReq.Environment, Valid: true},
-		Language:   pgtype.Text{String: execReq.Language, Valid: true},
-		ScriptPath: pgtype.Text{String: execReq.File.Name, Valid: true},
+		Script:     execReq.File.Content,
+		Flake:      execReq.Environment,
+		Language:   req.Language,
+		ScriptPath: execReq.File.Name,
 		Args:       pgtype.Text{String: execReq.Args, Valid: true},
 	})
 	if err != nil {

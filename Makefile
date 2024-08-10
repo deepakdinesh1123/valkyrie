@@ -32,9 +32,9 @@ start-db:
 odin:
 	@go build -o odin cmd/odin/main.go
 
-.PHONY: clear-standalone-data
-clear-standalone-data:
-	rm -rf ~/data
+.PHONY: clear-stdb
+clear-stdb:
+	rm -rf ~/.zango/data
 
 .PHONY: oapi-gen
 oapi-gen:

@@ -11,15 +11,15 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-func encodeDeleteExecutionResponse(response DeleteExecutionRes, w http.ResponseWriter, span trace.Span) error {
+func encodeDeleteJobResponse(response DeleteJobRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
-	case *DeleteExecutionOK:
+	case *DeleteJobOK:
 		w.WriteHeader(200)
 		span.SetStatus(codes.Ok, http.StatusText(200))
 
 		return nil
 
-	case *DeleteExecutionBadRequest:
+	case *DeleteJobBadRequest:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(400)
 		span.SetStatus(codes.Error, http.StatusText(400))
@@ -32,13 +32,13 @@ func encodeDeleteExecutionResponse(response DeleteExecutionRes, w http.ResponseW
 
 		return nil
 
-	case *DeleteExecutionNotFound:
+	case *DeleteJobNotFound:
 		w.WriteHeader(404)
 		span.SetStatus(codes.Error, http.StatusText(404))
 
 		return nil
 
-	case *DeleteExecutionInternalServerError:
+	case *DeleteJobInternalServerError:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
 		span.SetStatus(codes.Error, http.StatusText(500))
@@ -102,6 +102,98 @@ func encodeExecuteResponse(response ExecuteRes, w http.ResponseWriter, span trac
 	}
 }
 
+func encodeGetAllExecutionResultsResponse(response GetAllExecutionResultsRes, w http.ResponseWriter, span trace.Span) error {
+	switch response := response.(type) {
+	case *GetAllExecutionResultsOK:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(200)
+		span.SetStatus(codes.Ok, http.StatusText(200))
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *GetAllExecutionResultsBadRequest:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(400)
+		span.SetStatus(codes.Error, http.StatusText(400))
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *GetAllExecutionResultsInternalServerError:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(500)
+		span.SetStatus(codes.Error, http.StatusText(500))
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	default:
+		return errors.Errorf("unexpected response type: %T", response)
+	}
+}
+
+func encodeGetAllExecutionsResponse(response GetAllExecutionsRes, w http.ResponseWriter, span trace.Span) error {
+	switch response := response.(type) {
+	case *GetAllExecutionsOK:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(200)
+		span.SetStatus(codes.Ok, http.StatusText(200))
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *GetAllExecutionsBadRequest:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(400)
+		span.SetStatus(codes.Error, http.StatusText(400))
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *GetAllExecutionsInternalServerError:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(500)
+		span.SetStatus(codes.Error, http.StatusText(500))
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	default:
+		return errors.Errorf("unexpected response type: %T", response)
+	}
+}
+
 func encodeGetExecutionConfigResponse(response GetExecutionConfigRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *ExecutionConfig:
@@ -135,9 +227,9 @@ func encodeGetExecutionConfigResponse(response GetExecutionConfigRes, w http.Res
 	}
 }
 
-func encodeGetExecutionResultResponse(response GetExecutionResultRes, w http.ResponseWriter, span trace.Span) error {
+func encodeGetExecutionResultsByIdResponse(response GetExecutionResultsByIdRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
-	case *ExecutionResult:
+	case *GetExecutionResultsByIdOK:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(200)
 		span.SetStatus(codes.Ok, http.StatusText(200))
@@ -150,7 +242,7 @@ func encodeGetExecutionResultResponse(response GetExecutionResultRes, w http.Res
 
 		return nil
 
-	case *GetExecutionResultBadRequest:
+	case *GetExecutionResultsByIdBadRequest:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(400)
 		span.SetStatus(codes.Error, http.StatusText(400))
@@ -163,13 +255,13 @@ func encodeGetExecutionResultResponse(response GetExecutionResultRes, w http.Res
 
 		return nil
 
-	case *GetExecutionResultNotFound:
+	case *GetExecutionResultsByIdNotFound:
 		w.WriteHeader(404)
 		span.SetStatus(codes.Error, http.StatusText(404))
 
 		return nil
 
-	case *GetExecutionResultInternalServerError:
+	case *GetExecutionResultsByIdInternalServerError:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
 		span.SetStatus(codes.Error, http.StatusText(500))
@@ -216,52 +308,6 @@ func encodeGetExecutionWorkersResponse(response GetExecutionWorkersRes, w http.R
 		return nil
 
 	case *GetExecutionWorkersInternalServerError:
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(500)
-		span.SetStatus(codes.Error, http.StatusText(500))
-
-		e := new(jx.Encoder)
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-
-		return nil
-
-	default:
-		return errors.Errorf("unexpected response type: %T", response)
-	}
-}
-
-func encodeGetExecutionsResponse(response GetExecutionsRes, w http.ResponseWriter, span trace.Span) error {
-	switch response := response.(type) {
-	case *GetExecutionsOK:
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(200)
-		span.SetStatus(codes.Ok, http.StatusText(200))
-
-		e := new(jx.Encoder)
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-
-		return nil
-
-	case *GetExecutionsBadRequest:
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(400)
-		span.SetStatus(codes.Error, http.StatusText(400))
-
-		e := new(jx.Encoder)
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-
-		return nil
-
-	case *GetExecutionsInternalServerError:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
 		span.SetStatus(codes.Error, http.StatusText(500))

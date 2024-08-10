@@ -13,31 +13,43 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, execReq db.Jobqueue) {
+func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, execReq db.Job) {
 	defer wg.Done()
-	dir := filepath.Join(s.envConfig.ODIN_SYSTEM_PROVIDER_BASE_DIR, execReq.CreatedAt.Time.Format("20060102150405"))
+	dir := filepath.Join(s.envConfig.ODIN_SYSTEM_PROVIDER_BASE_DIR, execReq.InsertedAt.Time.Format("20060102150405"))
 	s.logger.Info().Str("dir", dir).Msg("Executing job")
 	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
 		s.logger.Err(err).Msg("Failed to create directory")
-		s.updateJob(ctx, execReq.ID, err.Error())
+		err := s.updateJob(ctx, &execReq, err.Error())
+		if err != nil {
+			s.logger.Err(err).Msg("Failed to update job")
+		}
 		return
 	}
 	if err := s.writeFiles(dir, execReq); err != nil {
 		s.logger.Err(err).Msg("Failed to write files")
-		s.updateJob(ctx, execReq.ID, err.Error())
+		err := s.updateJob(ctx, &execReq, err.Error())
+		if err != nil {
+			s.logger.Err(err).Msg("Failed to update job")
+		}
 		return
 	}
 	outFile, err := os.Create(filepath.Join(dir, "output.txt"))
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to create output file")
-		s.updateJob(ctx, execReq.ID, err.Error())
+		err := s.updateJob(ctx, &execReq, err.Error())
+		if err != nil {
+			s.logger.Err(err).Msg("Failed to update job")
+		}
 		return
 	}
 	defer outFile.Close()
 	errFile, err := os.Create(filepath.Join(dir, "error.txt"))
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to create error file")
-		s.updateJob(ctx, execReq.ID, err.Error())
+		err := s.updateJob(ctx, &execReq, err.Error())
+		if err != nil {
+			s.logger.Err(err).Msg("Failed to update job")
+		}
 		return
 	}
 	defer errFile.Close()
@@ -70,7 +82,10 @@ func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 				}
 			}
 			s.logger.Err(err).Msg("Failed to execute command")
-			s.updateJob(ctx, execReq.ID, err.Error())
+			err := s.updateJob(ctx, &execReq, err.Error())
+			if err != nil {
+				s.logger.Err(err).Msg("Failed to update job")
+			}
 			done <- true
 			return
 		}
@@ -101,19 +116,22 @@ func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	}
 }
 
-func (s *SystemProvider) updateExecutionDetails(ctx context.Context, dir string, execReq db.Jobqueue) {
+func (s *SystemProvider) updateExecutionDetails(ctx context.Context, dir string, execReq db.Job) {
 	out, err := os.ReadFile(filepath.Join(dir, "output.txt"))
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to read output file")
 		return
 	}
-	s.updateJob(ctx, execReq.ID, string(out))
+	err = s.updateJob(ctx, &execReq, string(out))
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to update job")
+	}
 }
 
-func (s *SystemProvider) writeFiles(dir string, execReq db.Jobqueue) error {
+func (s *SystemProvider) writeFiles(dir string, execReq db.Job) error {
 	files := map[string]string{
-		"flake.nix":               execReq.Flake.String,
-		execReq.ScriptPath.String: execReq.Script.String,
+		"flake.nix":        execReq.Flake,
+		execReq.ScriptPath: execReq.Script,
 	}
 
 	for name, content := range files {
@@ -124,11 +142,22 @@ func (s *SystemProvider) writeFiles(dir string, execReq db.Jobqueue) error {
 	return nil
 }
 
-func (s *SystemProvider) updateJob(ctx context.Context, jobID int64, message string) {
-	if _, err := s.queries.UpdateJob(ctx, db.UpdateJobParams{
-		ID:   jobID,
-		Logs: pgtype.Text{String: message, Valid: true},
-	}); err != nil {
-		s.logger.Error().Err(err).Msg("Failed to update job")
+func (d *SystemProvider) updateJob(ctx context.Context, execReq *db.Job, message string) error {
+	if err := d.queries.UpdateJob(ctx, execReq.ID); err != nil {
+		return err
 	}
+	if _, err := d.queries.InsertJobRun(ctx, db.InsertJobRunParams{
+		JobID:      execReq.ID,
+		WorkerID:   execReq.WorkerID.Int32,
+		StartedAt:  pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		FinishedAt: pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		Script:     message,
+		Flake:      execReq.Flake,
+		Args:       execReq.Args,
+		Logs:       pgtype.Text{String: message, Valid: true},
+		CreatedAt:  execReq.InsertedAt,
+	}); err != nil {
+		return err
+	}
+	return nil
 }

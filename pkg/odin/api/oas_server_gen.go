@@ -8,42 +8,48 @@ import (
 
 // Handler handles operations described by OpenAPI v3 specification.
 type Handler interface {
-	// DeleteExecution implements deleteExecution operation.
+	// DeleteJob implements deleteJob operation.
 	//
-	// Delete execution.
+	// Delete job.
 	//
-	// DELETE /executions/{executionId}/
-	DeleteExecution(ctx context.Context, params DeleteExecutionParams) (DeleteExecutionRes, error)
+	// DELETE /executions/{JobId}/
+	DeleteJob(ctx context.Context, params DeleteJobParams) (DeleteJobRes, error)
 	// Execute implements execute operation.
 	//
 	// Execute a script.
 	//
 	// POST /executions/execute/
 	Execute(ctx context.Context, req *ExecutionRequest) (ExecuteRes, error)
+	// GetAllExecutionResults implements getAllExecutionResults operation.
+	//
+	// Get all execution results.
+	//
+	// GET /executions/results/
+	GetAllExecutionResults(ctx context.Context, params GetAllExecutionResultsParams) (GetAllExecutionResultsRes, error)
+	// GetAllExecutions implements getAllExecutions operation.
+	//
+	// Get all executions.
+	//
+	// GET /executions/
+	GetAllExecutions(ctx context.Context, params GetAllExecutionsParams) (GetAllExecutionsRes, error)
 	// GetExecutionConfig implements getExecutionConfig operation.
 	//
 	// Get execution config.
 	//
 	// GET /execution/config/
 	GetExecutionConfig(ctx context.Context) (GetExecutionConfigRes, error)
-	// GetExecutionResult implements getExecutionResult operation.
+	// GetExecutionResultsById implements getExecutionResultsById operation.
 	//
 	// Get execution result.
 	//
-	// GET /executions/{executionId}/
-	GetExecutionResult(ctx context.Context, params GetExecutionResultParams) (GetExecutionResultRes, error)
+	// GET /executions/{JobId}/
+	GetExecutionResultsById(ctx context.Context, params GetExecutionResultsByIdParams) (GetExecutionResultsByIdRes, error)
 	// GetExecutionWorkers implements getExecutionWorkers operation.
 	//
 	// Get all execution workers.
 	//
 	// GET /executions/workers
 	GetExecutionWorkers(ctx context.Context, params GetExecutionWorkersParams) (GetExecutionWorkersRes, error)
-	// GetExecutions implements getExecutions operation.
-	//
-	// Get all executions.
-	//
-	// GET /executions/
-	GetExecutions(ctx context.Context, params GetExecutionsParams) (GetExecutionsRes, error)
 	// GetVersion implements getVersion operation.
 	//
 	// Get version.

@@ -1,27 +1,22 @@
-CREATE TABLE IF NOT EXISTS Worker(
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(50) NOT NULL UNIQUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_by VARCHAR(50),
-    modified_at TIMESTAMP,
-    modified_by VARCHAR(50)
+create table workers (
+    id int primary key,
+    name text not null unique,
+    created_at timestamptz not null default now()
 );
 
 -- name: InsertWorker :one
-INSERT INTO Worker
+insert into workers
     (name)
-VALUES
+values
     ($1)
-RETURNING *;
+returning *;
 
 -- name: GetWorker :one
-SELECT * FROM Worker
-WHERE name = $1
-LIMIT 1;
+select * from workers where name = $1;
 
 -- name: GetAllWorkers :many
-SELECT * FROM Worker
-LIMIT $1 OFFSET $2;
+select * from workers
+limit $1 offset $2;
 
 -- name: GetTotalWorkers :one
-SELECT count(*) FROM Worker;
+select count(*) from workers;

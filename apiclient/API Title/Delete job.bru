@@ -1,0 +1,15 @@
+meta {
+  name: Delete job
+  type: http
+  seq: 5
+}
+
+delete {
+  url: http://localhost:8080/api/v1/executions/{JobId}/
+  body: none
+  auth: none
+}
+
+params:path {
+  JobId: 
+}
