@@ -23,12 +23,14 @@
           kubens 
           helm ];
         devDependencies = with pkgs; [ 
-          sqlc go-migrate 
-          go_1_22 
-          gpgme 
-          libgpg-error 
-          libassuan 
-          pkg-config ] ++ docsDependencies ++ lib.optionals stdenv.isLinux [ btrfs-progs ] ;
+          sqlc 
+          go-migrate 
+          go_1_22  
+          pkg-config ] ++ docsDependencies ++ lib.optionals stdenv.isLinux [ 
+            gpgme 
+            libgpg-error 
+            libassuanbtrfs-progs 
+          ] ;
 
         packages = {
           odin = pkgs.callPackage ./build/package/nix/odin.nix { inherit pkgs; };
