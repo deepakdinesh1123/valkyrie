@@ -7,13 +7,11 @@ package db
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const getAllWorkers = `-- name: GetAllWorkers :many
-SELECT id, name, created_at, created_by, modified_at, modified_by FROM Worker
-LIMIT $1 OFFSET $2
+select id, name, created_at from workers
+limit $1 offset $2
 `
 
 type GetAllWorkersParams struct {
@@ -30,14 +28,7 @@ func (q *Queries) GetAllWorkers(ctx context.Context, arg GetAllWorkersParams) ([
 	var items []Worker
 	for rows.Next() {
 		var i Worker
-		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
-			&i.CreatedAt,
-			&i.CreatedBy,
-			&i.ModifiedAt,
-			&i.ModifiedBy,
-		); err != nil {
+		if err := rows.Scan(&i.ID, &i.Name, &i.CreatedAt); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -49,7 +40,7 @@ func (q *Queries) GetAllWorkers(ctx context.Context, arg GetAllWorkersParams) ([
 }
 
 const getTotalWorkers = `-- name: GetTotalWorkers :one
-SELECT count(*) FROM Worker
+select count(*) from workers
 `
 
 func (q *Queries) GetTotalWorkers(ctx context.Context) (int64, error) {
@@ -60,43 +51,27 @@ func (q *Queries) GetTotalWorkers(ctx context.Context) (int64, error) {
 }
 
 const getWorker = `-- name: GetWorker :one
-SELECT id, name, created_at, created_by, modified_at, modified_by FROM Worker
-WHERE name = $1
-LIMIT 1
+select id, name, created_at from workers where name = $1
 `
 
-func (q *Queries) GetWorker(ctx context.Context, name pgtype.Text) (Worker, error) {
+func (q *Queries) GetWorker(ctx context.Context, name string) (Worker, error) {
 	row := q.db.QueryRow(ctx, getWorker, name)
 	var i Worker
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.CreatedAt,
-		&i.CreatedBy,
-		&i.ModifiedAt,
-		&i.ModifiedBy,
-	)
+	err := row.Scan(&i.ID, &i.Name, &i.CreatedAt)
 	return i, err
 }
 
 const insertWorker = `-- name: InsertWorker :one
-INSERT INTO Worker
+insert into workers
     (name)
-VALUES
+values
     ($1)
-RETURNING id, name, created_at, created_by, modified_at, modified_by
+returning id, name, created_at
 `
 
-func (q *Queries) InsertWorker(ctx context.Context, name pgtype.Text) (Worker, error) {
+func (q *Queries) InsertWorker(ctx context.Context, name string) (Worker, error) {
 	row := q.db.QueryRow(ctx, insertWorker, name)
 	var i Worker
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.CreatedAt,
-		&i.CreatedBy,
-		&i.ModifiedAt,
-		&i.ModifiedBy,
-	)
+	err := row.Scan(&i.ID, &i.Name, &i.CreatedAt)
 	return i, err
 }

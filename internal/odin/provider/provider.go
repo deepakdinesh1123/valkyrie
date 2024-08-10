@@ -8,5 +8,5 @@ import (
 )
 
 type Provider interface {
-	Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, execReq db.Jobqueue)
+	Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, execReq db.Job)
 }

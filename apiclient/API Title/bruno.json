@@ -1,6 +1,6 @@
 {
   "version": "1",
-  "name": "odin",
+  "name": "API Title",
   "type": "collection",
   "ignore": [
     "node_modules",

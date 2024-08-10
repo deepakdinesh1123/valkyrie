@@ -105,7 +105,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					if len(elem) == 0 {
 						switch r.Method {
 						case "GET":
-							s.handleGetExecutionsRequest([0]string{}, elemIsEscaped, w, r)
+							s.handleGetAllExecutionsRequest([0]string{}, elemIsEscaped, w, r)
 						default:
 							s.notAllowed(w, r, "GET")
 						}
@@ -134,6 +134,27 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 						}
 
 						elem = origElem
+					case 'r': // Prefix: "results/"
+						origElem := elem
+						if l := len("results/"); len(elem) >= l && elem[0:l] == "results/" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch r.Method {
+							case "GET":
+								s.handleGetAllExecutionResultsRequest([0]string{}, elemIsEscaped, w, r)
+							default:
+								s.notAllowed(w, r, "GET")
+							}
+
+							return
+						}
+
+						elem = origElem
 					case 'w': // Prefix: "workers"
 						origElem := elem
 						if l := len("workers"); len(elem) >= l && elem[0:l] == "workers" {
@@ -156,7 +177,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 						elem = origElem
 					}
-					// Param: "executionId"
+					// Param: "JobId"
 					// Match until "/"
 					idx := strings.IndexByte(elem, '/')
 					if idx < 0 {
@@ -181,11 +202,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 							// Leaf node.
 							switch r.Method {
 							case "DELETE":
-								s.handleDeleteExecutionRequest([1]string{
+								s.handleDeleteJobRequest([1]string{
 									args[0],
 								}, elemIsEscaped, w, r)
 							case "GET":
-								s.handleGetExecutionResultRequest([1]string{
+								s.handleGetExecutionResultsByIdRequest([1]string{
 									args[0],
 								}, elemIsEscaped, w, r)
 							default:
@@ -366,9 +387,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					if len(elem) == 0 {
 						switch method {
 						case "GET":
-							r.name = "GetExecutions"
+							r.name = "GetAllExecutions"
 							r.summary = "Get all executions"
-							r.operationID = "getExecutions"
+							r.operationID = "getAllExecutions"
 							r.pathPattern = "/executions/"
 							r.args = args
 							r.count = 0
@@ -394,6 +415,31 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.summary = "Execute a script"
 								r.operationID = "execute"
 								r.pathPattern = "/executions/execute/"
+								r.args = args
+								r.count = 0
+								return r, true
+							default:
+								return
+							}
+						}
+
+						elem = origElem
+					case 'r': // Prefix: "results/"
+						origElem := elem
+						if l := len("results/"); len(elem) >= l && elem[0:l] == "results/" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch method {
+							case "GET":
+								r.name = "GetAllExecutionResults"
+								r.summary = "Get all execution results"
+								r.operationID = "getAllExecutionResults"
+								r.pathPattern = "/executions/results/"
 								r.args = args
 								r.count = 0
 								return r, true
@@ -429,7 +475,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 
 						elem = origElem
 					}
-					// Param: "executionId"
+					// Param: "JobId"
 					// Match until "/"
 					idx := strings.IndexByte(elem, '/')
 					if idx < 0 {
@@ -454,18 +500,18 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							// Leaf node.
 							switch method {
 							case "DELETE":
-								r.name = "DeleteExecution"
-								r.summary = "Delete execution"
-								r.operationID = "deleteExecution"
-								r.pathPattern = "/executions/{executionId}/"
+								r.name = "DeleteJob"
+								r.summary = "Delete job"
+								r.operationID = "deleteJob"
+								r.pathPattern = "/executions/{JobId}/"
 								r.args = args
 								r.count = 1
 								return r, true
 							case "GET":
-								r.name = "GetExecutionResult"
+								r.name = "GetExecutionResultsById"
 								r.summary = "Get execution result"
-								r.operationID = "getExecutionResult"
-								r.pathPattern = "/executions/{executionId}/"
+								r.operationID = "getExecutionResultsById"
+								r.pathPattern = "/executions/{JobId}/"
 								r.args = args
 								r.count = 1
 								return r, true

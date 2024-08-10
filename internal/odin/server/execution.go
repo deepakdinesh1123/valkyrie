@@ -30,32 +30,96 @@ func (s *OdinServer) Execute(ctx context.Context, req *api.ExecutionRequest) (ap
 	return &api.ExecuteOK{ExecutionId: execId}, nil
 }
 
-func (s *OdinServer) GetExecutionResult(ctx context.Context, params api.GetExecutionResultParams) (api.GetExecutionResultRes, error) {
-	execResult, err := s.queries.GetResultUsingExecutionID(ctx, params.ExecutionId)
+func (s *OdinServer) GetAllExecutionResults(ctx context.Context, params api.GetAllExecutionResultsParams) (api.GetAllExecutionResultsRes, error) {
+	execResDB, err := s.queries.GetAllExecutionResults(ctx, db.GetAllExecutionResultsParams{
+		Limit:  params.PageSize.Value,
+		Offset: params.Page.Value * params.PageSize.Value,
+	})
 	if err != nil {
-		return &api.GetExecutionResultNotFound{}, nil
+		return &api.GetAllExecutionResultsInternalServerError{
+			Message: fmt.Sprintf("Failed to get execution results: %v", err),
+		}, nil
 	}
-
-	return &api.ExecutionResult{
-		ExecutionId: execResult.ID,
-		Logs:        execResult.Logs.String,
-	}, nil
+	total, err := s.queries.GetTotalExecutions(ctx)
+	if err != nil {
+		return &api.GetAllExecutionResultsInternalServerError{
+			Message: fmt.Sprintf("Failed to get total execution results: %v", err),
+		}, nil
+	}
+	var executions []api.ExecutionResult
+	for _, execRes := range execResDB {
+		executions = append(executions, api.ExecutionResult{
+			ExecutionId: execRes.ID,
+			Logs:        execRes.Logs.String,
+			Script:      execRes.Script,
+			Flake:       execRes.Flake,
+			Args:        execRes.Args.String,
+			StartedAt:   execRes.StartedAt.Time,
+			FinishedAt:  execRes.FinishedAt.Time,
+			CreatedAt:   execRes.CreatedAt.Time,
+		})
+	}
+	resp := api.GetAllExecutionResultsOK{
+		Executions: executions,
+		Pagination: api.PaginationResponse{
+			Total: total,
+		},
+	}
+	return &resp, nil
 }
 
-func (s *OdinServer) GetExecutions(ctx context.Context, params api.GetExecutionsParams) (api.GetExecutionsRes, error) {
-	s.logger.Debug().Int32("page", params.Page.Value).Int32("pageSize", params.PageSize.Value).Msg("GetExecutions")
+func (s *OdinServer) GetExecutionResultsById(ctx context.Context, params api.GetExecutionResultsByIdParams) (api.GetExecutionResultsByIdRes, error) {
+	execRes, err := s.queries.GetExecutionResultsByID(ctx, db.GetExecutionResultsByIDParams{
+		JobID:  params.JobId,
+		Limit:  params.PageSize.Value,
+		Offset: params.Page.Value * params.PageSize.Value,
+	})
+	if err != nil {
+		return &api.GetExecutionResultsByIdInternalServerError{
+			Message: fmt.Sprintf("Failed to get execution results: %v", err),
+		}, nil
+	}
+	total, err := s.queries.GetTotalExecutionsForJob(ctx, params.JobId)
+	if err != nil {
+		return &api.GetExecutionResultsByIdInternalServerError{
+			Message: fmt.Sprintf("Failed to get total execution results: %v", err),
+		}, nil
+	}
+	var executions []api.ExecutionResult
+	for _, execRes := range execRes {
+		executions = append(executions, api.ExecutionResult{
+			ExecutionId: execRes.ID,
+			Logs:        execRes.Logs.String,
+			Script:      execRes.Script,
+			Flake:       execRes.Flake,
+			Args:        execRes.Args.String,
+			StartedAt:   execRes.StartedAt.Time,
+			FinishedAt:  execRes.FinishedAt.Time,
+			CreatedAt:   execRes.CreatedAt.Time,
+		})
+	}
+	resp := api.GetExecutionResultsByIdOK{
+		Executions: executions,
+		Pagination: api.PaginationResponse{
+			Total: total,
+		},
+	}
+	return &resp, nil
+}
+
+func (s *OdinServer) GetAllExecutions(ctx context.Context, params api.GetAllExecutionsParams) (api.GetAllExecutionsRes, error) {
 	executionsDB, err := s.queries.GetAllJobs(ctx, db.GetAllJobsParams{
 		Limit:  params.PageSize.Value,
 		Offset: params.Page.Value * params.PageSize.Value,
 	})
 	if err != nil {
-		return &api.GetExecutionsInternalServerError{
+		return &api.GetAllExecutionsInternalServerError{
 			Message: fmt.Sprintf("Failed to get executions: %v", err),
 		}, nil
 	}
 	total, err := s.queries.GetTotalJobs(ctx)
 	if err != nil {
-		return &api.GetExecutionsInternalServerError{
+		return &api.GetAllExecutionsInternalServerError{
 			Message: fmt.Sprintf("Failed to get total executions: %v", err),
 		}, nil
 	}
@@ -63,14 +127,12 @@ func (s *OdinServer) GetExecutions(ctx context.Context, params api.GetExecutions
 	for _, exec := range executionsDB {
 		executions = append(executions, api.Execution{
 			ExecutionId: exec.ID,
-			Script:      exec.Script.String,
-			Flake:       exec.Flake.String,
-			CreatedAt:   exec.CreatedAt.Time,
-			FinishedAt:  exec.CompletedAt.Time,
-			Logs:        exec.Logs.String,
+			Script:      exec.Script,
+			Flake:       exec.Flake,
+			CreatedAt:   exec.InsertedAt.Time,
 		})
 	}
-	resp := api.GetExecutionsOK{
+	resp := api.GetAllExecutionsOK{
 		Executions: executions,
 		Pagination: api.PaginationResponse{
 			Total: total,
@@ -110,8 +172,8 @@ func (s *OdinServer) GetExecutionWorkers(ctx context.Context, params api.GetExec
 	var workers []api.ExecutionWorker
 	for _, worker := range workersDB {
 		workers = append(workers, api.ExecutionWorker{
-			ID:        int64(worker.ID),
-			Name:      worker.Name.String,
+			ID:        worker.ID,
+			Name:      worker.Name,
 			CreatedAt: worker.CreatedAt.Time,
 			Status:    "status",
 		})
@@ -125,12 +187,12 @@ func (s *OdinServer) GetExecutionWorkers(ctx context.Context, params api.GetExec
 	return &resp, nil
 }
 
-func (s *OdinServer) DeleteExecution(ctx context.Context, params api.DeleteExecutionParams) (api.DeleteExecutionRes, error) {
-	err := s.queries.DeleteJob(ctx, params.ExecutionId)
+func (s *OdinServer) DeleteJob(ctx context.Context, params api.DeleteJobParams) (api.DeleteJobRes, error) {
+	err := s.queries.DeleteJob(ctx, params.JobId)
 	if err != nil {
-		return &api.DeleteExecutionBadRequest{
+		return &api.DeleteJobBadRequest{
 			Message: fmt.Sprintf("Failed to delete execution: %v", err),
 		}, nil
 	}
-	return &api.DeleteExecutionOK{}, nil
+	return &api.DeleteJobOK{}, nil
 }

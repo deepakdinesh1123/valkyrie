@@ -23,42 +23,48 @@ import (
 
 // Invoker invokes operations described by OpenAPI v3 specification.
 type Invoker interface {
-	// DeleteExecution invokes deleteExecution operation.
+	// DeleteJob invokes deleteJob operation.
 	//
-	// Delete execution.
+	// Delete job.
 	//
-	// DELETE /executions/{executionId}/
-	DeleteExecution(ctx context.Context, params DeleteExecutionParams) (DeleteExecutionRes, error)
+	// DELETE /executions/{JobId}/
+	DeleteJob(ctx context.Context, params DeleteJobParams) (DeleteJobRes, error)
 	// Execute invokes execute operation.
 	//
 	// Execute a script.
 	//
 	// POST /executions/execute/
 	Execute(ctx context.Context, request *ExecutionRequest) (ExecuteRes, error)
+	// GetAllExecutionResults invokes getAllExecutionResults operation.
+	//
+	// Get all execution results.
+	//
+	// GET /executions/results/
+	GetAllExecutionResults(ctx context.Context, params GetAllExecutionResultsParams) (GetAllExecutionResultsRes, error)
+	// GetAllExecutions invokes getAllExecutions operation.
+	//
+	// Get all executions.
+	//
+	// GET /executions/
+	GetAllExecutions(ctx context.Context, params GetAllExecutionsParams) (GetAllExecutionsRes, error)
 	// GetExecutionConfig invokes getExecutionConfig operation.
 	//
 	// Get execution config.
 	//
 	// GET /execution/config/
 	GetExecutionConfig(ctx context.Context) (GetExecutionConfigRes, error)
-	// GetExecutionResult invokes getExecutionResult operation.
+	// GetExecutionResultsById invokes getExecutionResultsById operation.
 	//
 	// Get execution result.
 	//
-	// GET /executions/{executionId}/
-	GetExecutionResult(ctx context.Context, params GetExecutionResultParams) (GetExecutionResultRes, error)
+	// GET /executions/{JobId}/
+	GetExecutionResultsById(ctx context.Context, params GetExecutionResultsByIdParams) (GetExecutionResultsByIdRes, error)
 	// GetExecutionWorkers invokes getExecutionWorkers operation.
 	//
 	// Get all execution workers.
 	//
 	// GET /executions/workers
 	GetExecutionWorkers(ctx context.Context, params GetExecutionWorkersParams) (GetExecutionWorkersRes, error)
-	// GetExecutions invokes getExecutions operation.
-	//
-	// Get all executions.
-	//
-	// GET /executions/
-	GetExecutions(ctx context.Context, params GetExecutionsParams) (GetExecutionsRes, error)
 	// GetVersion invokes getVersion operation.
 	//
 	// Get version.
@@ -115,21 +121,21 @@ func (c *Client) requestURL(ctx context.Context) *url.URL {
 	return u
 }
 
-// DeleteExecution invokes deleteExecution operation.
+// DeleteJob invokes deleteJob operation.
 //
-// Delete execution.
+// Delete job.
 //
-// DELETE /executions/{executionId}/
-func (c *Client) DeleteExecution(ctx context.Context, params DeleteExecutionParams) (DeleteExecutionRes, error) {
-	res, err := c.sendDeleteExecution(ctx, params)
+// DELETE /executions/{JobId}/
+func (c *Client) DeleteJob(ctx context.Context, params DeleteJobParams) (DeleteJobRes, error) {
+	res, err := c.sendDeleteJob(ctx, params)
 	return res, err
 }
 
-func (c *Client) sendDeleteExecution(ctx context.Context, params DeleteExecutionParams) (res DeleteExecutionRes, err error) {
+func (c *Client) sendDeleteJob(ctx context.Context, params DeleteJobParams) (res DeleteJobRes, err error) {
 	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("deleteExecution"),
+		otelogen.OperationID("deleteJob"),
 		semconv.HTTPMethodKey.String("DELETE"),
-		semconv.HTTPRouteKey.String("/executions/{executionId}/"),
+		semconv.HTTPRouteKey.String("/executions/{JobId}/"),
 	}
 
 	// Run stopwatch.
@@ -144,7 +150,7 @@ func (c *Client) sendDeleteExecution(ctx context.Context, params DeleteExecution
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "DeleteExecution",
+	ctx, span := c.cfg.Tracer.Start(ctx, "DeleteJob",
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -164,14 +170,14 @@ func (c *Client) sendDeleteExecution(ctx context.Context, params DeleteExecution
 	var pathParts [3]string
 	pathParts[0] = "/executions/"
 	{
-		// Encode "executionId" parameter.
+		// Encode "JobId" parameter.
 		e := uri.NewPathEncoder(uri.PathEncoderConfig{
-			Param:   "executionId",
+			Param:   "JobId",
 			Style:   uri.PathStyleSimple,
 			Explode: false,
 		})
 		if err := func() error {
-			return e.EncodeValue(conv.Int64ToString(params.ExecutionId))
+			return e.EncodeValue(conv.Int64ToString(params.JobId))
 		}(); err != nil {
 			return res, errors.Wrap(err, "encode path")
 		}
@@ -198,7 +204,7 @@ func (c *Client) sendDeleteExecution(ctx context.Context, params DeleteExecution
 	defer resp.Body.Close()
 
 	stage = "DecodeResponse"
-	result, err := decodeDeleteExecutionResponse(resp)
+	result, err := decodeDeleteJobResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -281,6 +287,226 @@ func (c *Client) sendExecute(ctx context.Context, request *ExecutionRequest) (re
 	return result, nil
 }
 
+// GetAllExecutionResults invokes getAllExecutionResults operation.
+//
+// Get all execution results.
+//
+// GET /executions/results/
+func (c *Client) GetAllExecutionResults(ctx context.Context, params GetAllExecutionResultsParams) (GetAllExecutionResultsRes, error) {
+	res, err := c.sendGetAllExecutionResults(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendGetAllExecutionResults(ctx context.Context, params GetAllExecutionResultsParams) (res GetAllExecutionResultsRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getAllExecutionResults"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/executions/results/"),
+	}
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "GetAllExecutionResults",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/executions/results/"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeQueryParams"
+	q := uri.NewQueryEncoder()
+	{
+		// Encode "page" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "page",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.Page.Get(); ok {
+				return e.EncodeValue(conv.Int32ToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	{
+		// Encode "pageSize" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "pageSize",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.PageSize.Get(); ok {
+				return e.EncodeValue(conv.Int32ToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	u.RawQuery = q.Values().Encode()
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodeGetAllExecutionResultsResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// GetAllExecutions invokes getAllExecutions operation.
+//
+// Get all executions.
+//
+// GET /executions/
+func (c *Client) GetAllExecutions(ctx context.Context, params GetAllExecutionsParams) (GetAllExecutionsRes, error) {
+	res, err := c.sendGetAllExecutions(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendGetAllExecutions(ctx context.Context, params GetAllExecutionsParams) (res GetAllExecutionsRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getAllExecutions"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/executions/"),
+	}
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "GetAllExecutions",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/executions/"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeQueryParams"
+	q := uri.NewQueryEncoder()
+	{
+		// Encode "page" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "page",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.Page.Get(); ok {
+				return e.EncodeValue(conv.Int32ToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	{
+		// Encode "pageSize" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "pageSize",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.PageSize.Get(); ok {
+				return e.EncodeValue(conv.Int32ToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	u.RawQuery = q.Values().Encode()
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodeGetAllExecutionsResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // GetExecutionConfig invokes getExecutionConfig operation.
 //
 // Get execution config.
@@ -353,21 +579,21 @@ func (c *Client) sendGetExecutionConfig(ctx context.Context) (res GetExecutionCo
 	return result, nil
 }
 
-// GetExecutionResult invokes getExecutionResult operation.
+// GetExecutionResultsById invokes getExecutionResultsById operation.
 //
 // Get execution result.
 //
-// GET /executions/{executionId}/
-func (c *Client) GetExecutionResult(ctx context.Context, params GetExecutionResultParams) (GetExecutionResultRes, error) {
-	res, err := c.sendGetExecutionResult(ctx, params)
+// GET /executions/{JobId}/
+func (c *Client) GetExecutionResultsById(ctx context.Context, params GetExecutionResultsByIdParams) (GetExecutionResultsByIdRes, error) {
+	res, err := c.sendGetExecutionResultsById(ctx, params)
 	return res, err
 }
 
-func (c *Client) sendGetExecutionResult(ctx context.Context, params GetExecutionResultParams) (res GetExecutionResultRes, err error) {
+func (c *Client) sendGetExecutionResultsById(ctx context.Context, params GetExecutionResultsByIdParams) (res GetExecutionResultsByIdRes, err error) {
 	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("getExecutionResult"),
+		otelogen.OperationID("getExecutionResultsById"),
 		semconv.HTTPMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/executions/{executionId}/"),
+		semconv.HTTPRouteKey.String("/executions/{JobId}/"),
 	}
 
 	// Run stopwatch.
@@ -382,7 +608,7 @@ func (c *Client) sendGetExecutionResult(ctx context.Context, params GetExecution
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "GetExecutionResult",
+	ctx, span := c.cfg.Tracer.Start(ctx, "GetExecutionResultsById",
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -402,14 +628,14 @@ func (c *Client) sendGetExecutionResult(ctx context.Context, params GetExecution
 	var pathParts [3]string
 	pathParts[0] = "/executions/"
 	{
-		// Encode "executionId" parameter.
+		// Encode "JobId" parameter.
 		e := uri.NewPathEncoder(uri.PathEncoderConfig{
-			Param:   "executionId",
+			Param:   "JobId",
 			Style:   uri.PathStyleSimple,
 			Explode: false,
 		})
 		if err := func() error {
-			return e.EncodeValue(conv.Int64ToString(params.ExecutionId))
+			return e.EncodeValue(conv.Int64ToString(params.JobId))
 		}(); err != nil {
 			return res, errors.Wrap(err, "encode path")
 		}
@@ -421,6 +647,44 @@ func (c *Client) sendGetExecutionResult(ctx context.Context, params GetExecution
 	}
 	pathParts[2] = "/"
 	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeQueryParams"
+	q := uri.NewQueryEncoder()
+	{
+		// Encode "page" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "page",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.Page.Get(); ok {
+				return e.EncodeValue(conv.Int32ToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	{
+		// Encode "pageSize" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "pageSize",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.PageSize.Get(); ok {
+				return e.EncodeValue(conv.Int32ToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	u.RawQuery = q.Values().Encode()
 
 	stage = "EncodeRequest"
 	r, err := ht.NewRequest(ctx, "GET", u)
@@ -436,7 +700,7 @@ func (c *Client) sendGetExecutionResult(ctx context.Context, params GetExecution
 	defer resp.Body.Close()
 
 	stage = "DecodeResponse"
-	result, err := decodeGetExecutionResultResponse(resp)
+	result, err := decodeGetExecutionResultsByIdResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -547,116 +811,6 @@ func (c *Client) sendGetExecutionWorkers(ctx context.Context, params GetExecutio
 
 	stage = "DecodeResponse"
 	result, err := decodeGetExecutionWorkersResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// GetExecutions invokes getExecutions operation.
-//
-// Get all executions.
-//
-// GET /executions/
-func (c *Client) GetExecutions(ctx context.Context, params GetExecutionsParams) (GetExecutionsRes, error) {
-	res, err := c.sendGetExecutions(ctx, params)
-	return res, err
-}
-
-func (c *Client) sendGetExecutions(ctx context.Context, params GetExecutionsParams) (res GetExecutionsRes, err error) {
-	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("getExecutions"),
-		semconv.HTTPMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/executions/"),
-	}
-
-	// Run stopwatch.
-	startTime := time.Now()
-	defer func() {
-		// Use floating point division here for higher precision (instead of Millisecond method).
-		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
-	}()
-
-	// Increment request counter.
-	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-
-	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "GetExecutions",
-		trace.WithAttributes(otelAttrs...),
-		clientSpanKind,
-	)
-	// Track stage for error reporting.
-	var stage string
-	defer func() {
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, stage)
-			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-		}
-		span.End()
-	}()
-
-	stage = "BuildURL"
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [1]string
-	pathParts[0] = "/executions/"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	stage = "EncodeQueryParams"
-	q := uri.NewQueryEncoder()
-	{
-		// Encode "page" parameter.
-		cfg := uri.QueryParameterEncodingConfig{
-			Name:    "page",
-			Style:   uri.QueryStyleForm,
-			Explode: true,
-		}
-
-		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.Page.Get(); ok {
-				return e.EncodeValue(conv.Int32ToString(val))
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode query")
-		}
-	}
-	{
-		// Encode "pageSize" parameter.
-		cfg := uri.QueryParameterEncodingConfig{
-			Name:    "pageSize",
-			Style:   uri.QueryStyleForm,
-			Explode: true,
-		}
-
-		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.PageSize.Get(); ok {
-				return e.EncodeValue(conv.Int32ToString(val))
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode query")
-		}
-	}
-	u.RawQuery = q.Values().Encode()
-
-	stage = "EncodeRequest"
-	r, err := ht.NewRequest(ctx, "GET", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-
-	stage = "SendRequest"
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	defer resp.Body.Close()
-
-	stage = "DecodeResponse"
-	result, err := decodeGetExecutionsResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

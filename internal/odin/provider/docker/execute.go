@@ -17,7 +17,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, execReq db.Jobqueue) {
+func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, execReq db.Job) {
 	tctx, cancel := context.WithTimeout(ctx, time.Duration(d.envConfig.ODIN_WORKER_TASK_TIMEOUT)*time.Second)
 	defer cancel()
 	defer wg.Done()
@@ -38,19 +38,28 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	)
 	if err != nil {
 		d.logger.Err(err).Msg("Failed to create container")
-		d.updateJob(ctx, execReq.ID, err.Error())
+		err := d.updateJob(ctx, &execReq, err.Error())
+		if err != nil {
+			d.logger.Err(err).Msg("Failed to update job")
+		}
 		return
 	}
 	err = d.client.ContainerStart(ctx, resp.ID, container.StartOptions{})
 	if err != nil {
 		d.logger.Err(err).Msg("Failed to start container")
-		d.updateJob(ctx, execReq.ID, err.Error())
+		err := d.updateJob(ctx, &execReq, err.Error())
+		if err != nil {
+			d.logger.Err(err).Msg("Failed to update job")
+		}
 		return
 	}
 
 	if _, err := d.client.ContainerInspect(ctx, resp.ID); err != nil {
 		d.logger.Err(err).Msg("Failed to inspect container")
-		d.updateJob(ctx, execReq.ID, err.Error())
+		err := d.updateJob(ctx, &execReq, err.Error())
+		if err != nil {
+			d.logger.Err(err).Msg("Failed to update job")
+		}
 		return
 	}
 
@@ -58,7 +67,10 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	if err != nil {
 		d.logger.Err(err).Msg("Failed to write files")
 		d.client.ContainerKill(ctx, containerName, "SIGKILL")
-		d.updateJob(ctx, execReq.ID, err.Error())
+		err := d.updateJob(ctx, &execReq, err.Error())
+		if err != nil {
+			d.logger.Err(err).Msg("Failed to update job")
+		}
 		return
 	}
 
@@ -77,25 +89,34 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 		)
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to create exec")
-			d.updateJob(ctx, execReq.ID, err.Error())
+			err := d.updateJob(ctx, &execReq, err.Error())
+			if err != nil {
+				d.logger.Err(err).Msg("Failed to update job")
+			}
 			done <- true
 			return
 		}
 		hijResp, err := d.client.ContainerExecAttach(ctx, resp.ID, container.ExecAttachOptions{})
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to attach exec")
-			d.updateJob(ctx, execReq.ID, err.Error())
+			err := d.updateJob(ctx, &execReq, err.Error())
+			if err != nil {
+				d.logger.Err(err).Msg("Failed to update job")
+			}
 			done <- true
 			return
 		}
 		out, err := io.ReadAll(hijResp.Reader)
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to read output")
-			d.updateJob(ctx, execReq.ID, err.Error())
+			err := d.updateJob(ctx, &execReq, err.Error())
+			if err != nil {
+				d.logger.Err(err).Msg("Failed to update job")
+			}
 			done <- true
 			return
 		}
-		err = d.updateJob(ctx, execReq.ID, stripCtlAndExtFromUTF8(string(out)))
+		err = d.updateJob(ctx, &execReq, stripCtlAndExtFromUTF8(string(out)))
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to update job")
 		}
@@ -144,10 +165,10 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	}
 }
 
-func (d *DockerProvider) writeFiles(ctx context.Context, containerName string, execReq db.Jobqueue) error {
+func (d *DockerProvider) writeFiles(ctx context.Context, containerName string, execReq db.Job) error {
 	files := map[string]string{
-		"flake.nix":               execReq.Flake.String,
-		execReq.ScriptPath.String: execReq.Script.String,
+		"flake.nix":        execReq.Flake,
+		execReq.ScriptPath: execReq.Script,
 	}
 
 	tarFilePath, err := createTarArchive(files)
@@ -197,14 +218,22 @@ func createTarArchive(files map[string]string) (string, error) {
 	return tarFilePath, nil
 }
 
-func (d *DockerProvider) updateJob(ctx context.Context, jobID int64, message string) error {
-	if _, err := d.queries.UpdateJob(ctx, db.UpdateJobParams{
-		ID:   jobID,
-		Logs: pgtype.Text{String: message, Valid: true},
+func (d *DockerProvider) updateJob(ctx context.Context, execReq *db.Job, message string) error {
+	if err := d.queries.UpdateJob(ctx, execReq.ID); err != nil {
+		return err
+	}
+	if _, err := d.queries.InsertJobRun(ctx, db.InsertJobRunParams{
+		JobID:      execReq.ID,
+		WorkerID:   execReq.WorkerID.Int32,
+		StartedAt:  pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		FinishedAt: pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		Script:     message,
+		Flake:      execReq.Flake,
+		Args:       execReq.Args,
+		Logs:       pgtype.Text{String: message, Valid: true},
 	}); err != nil {
 		return err
 	}
-
 	return nil
 }
 

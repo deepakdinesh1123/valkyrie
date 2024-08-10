@@ -90,10 +90,10 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 }
 
 func (w *Worker) upsertWorker(ctx context.Context, name string) (int, error) {
-	wrkr, err := w.queries.GetWorker(ctx, pgtype.Text{String: name, Valid: true})
+	wrkr, err := w.queries.GetWorker(ctx, name)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			wrkr, err = w.queries.InsertWorker(ctx, pgtype.Text{String: name, Valid: true})
+			wrkr, err = w.queries.InsertWorker(ctx, name)
 			if err != nil {
 				w.logger.Err(err).Msg("Worker: failed to insert worker")
 				return 0, err

@@ -13,12 +13,12 @@ type UnimplementedHandler struct{}
 
 var _ Handler = UnimplementedHandler{}
 
-// DeleteExecution implements deleteExecution operation.
+// DeleteJob implements deleteJob operation.
 //
-// Delete execution.
+// Delete job.
 //
-// DELETE /executions/{executionId}/
-func (UnimplementedHandler) DeleteExecution(ctx context.Context, params DeleteExecutionParams) (r DeleteExecutionRes, _ error) {
+// DELETE /executions/{JobId}/
+func (UnimplementedHandler) DeleteJob(ctx context.Context, params DeleteJobParams) (r DeleteJobRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -31,6 +31,24 @@ func (UnimplementedHandler) Execute(ctx context.Context, req *ExecutionRequest) 
 	return r, ht.ErrNotImplemented
 }
 
+// GetAllExecutionResults implements getAllExecutionResults operation.
+//
+// Get all execution results.
+//
+// GET /executions/results/
+func (UnimplementedHandler) GetAllExecutionResults(ctx context.Context, params GetAllExecutionResultsParams) (r GetAllExecutionResultsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetAllExecutions implements getAllExecutions operation.
+//
+// Get all executions.
+//
+// GET /executions/
+func (UnimplementedHandler) GetAllExecutions(ctx context.Context, params GetAllExecutionsParams) (r GetAllExecutionsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetExecutionConfig implements getExecutionConfig operation.
 //
 // Get execution config.
@@ -40,12 +58,12 @@ func (UnimplementedHandler) GetExecutionConfig(ctx context.Context) (r GetExecut
 	return r, ht.ErrNotImplemented
 }
 
-// GetExecutionResult implements getExecutionResult operation.
+// GetExecutionResultsById implements getExecutionResultsById operation.
 //
 // Get execution result.
 //
-// GET /executions/{executionId}/
-func (UnimplementedHandler) GetExecutionResult(ctx context.Context, params GetExecutionResultParams) (r GetExecutionResultRes, _ error) {
+// GET /executions/{JobId}/
+func (UnimplementedHandler) GetExecutionResultsById(ctx context.Context, params GetExecutionResultsByIdParams) (r GetExecutionResultsByIdRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -55,15 +73,6 @@ func (UnimplementedHandler) GetExecutionResult(ctx context.Context, params GetEx
 //
 // GET /executions/workers
 func (UnimplementedHandler) GetExecutionWorkers(ctx context.Context, params GetExecutionWorkersParams) (r GetExecutionWorkersRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
-// GetExecutions implements getExecutions operation.
-//
-// Get all executions.
-//
-// GET /executions/
-func (UnimplementedHandler) GetExecutions(ctx context.Context, params GetExecutionsParams) (r GetExecutionsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

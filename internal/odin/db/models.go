@@ -8,32 +8,46 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type Jobqueue struct {
-	ID           int64            `db:"id" json:"id"`
-	CreatedBy    pgtype.Text      `db:"created_by" json:"created_by"`
-	CreatedAt    pgtype.Timestamp `db:"created_at" json:"created_at"`
-	StartedAt    pgtype.Timestamp `db:"started_at" json:"started_at"`
-	CompletedAt  pgtype.Timestamp `db:"completed_at" json:"completed_at"`
-	Script       pgtype.Text      `db:"script" json:"script"`
-	ScriptPath   pgtype.Text      `db:"script_path" json:"script_path"`
-	Args         pgtype.Text      `db:"args" json:"args"`
-	Logs         pgtype.Text      `db:"logs" json:"logs"`
-	Flake        pgtype.Text      `db:"flake" json:"flake"`
-	Language     pgtype.Text      `db:"language" json:"language"`
-	MemPeak      pgtype.Int4      `db:"mem_peak" json:"mem_peak"`
-	Timeout      pgtype.Int4      `db:"timeout" json:"timeout"`
-	Priority     pgtype.Int4      `db:"priority" json:"priority"`
-	LeaseTimeout pgtype.Float8    `db:"lease_timeout" json:"lease_timeout"`
-	Queue        string           `db:"queue" json:"queue"`
-	JobType      string           `db:"job_type" json:"job_type"`
-	WorkerID     pgtype.Int4      `db:"worker_id" json:"worker_id"`
+type Job struct {
+	ID         int64              `db:"id" json:"id"`
+	InsertedAt pgtype.Timestamptz `db:"inserted_at" json:"inserted_at"`
+	WorkerID   pgtype.Int4        `db:"worker_id" json:"worker_id"`
+	Script     string             `db:"script" json:"script"`
+	ScriptPath string             `db:"script_path" json:"script_path"`
+	Args       pgtype.Text        `db:"args" json:"args"`
+	Flake      string             `db:"flake" json:"flake"`
+	Language   string             `db:"language" json:"language"`
+	Completed  bool               `db:"completed" json:"completed"`
+	Running    bool               `db:"running" json:"running"`
+}
+
+type JobGroup struct {
+	ID        int32              `db:"id" json:"id"`
+	Name      string             `db:"name" json:"name"`
+	CreatedAt pgtype.Timestamptz `db:"created_at" json:"created_at"`
+}
+
+type JobRun struct {
+	ID         int64              `db:"id" json:"id"`
+	JobID      int64              `db:"job_id" json:"job_id"`
+	WorkerID   int32              `db:"worker_id" json:"worker_id"`
+	CreatedAt  pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	StartedAt  pgtype.Timestamptz `db:"started_at" json:"started_at"`
+	FinishedAt pgtype.Timestamptz `db:"finished_at" json:"finished_at"`
+	Script     string             `db:"script" json:"script"`
+	Flake      string             `db:"flake" json:"flake"`
+	Args       pgtype.Text        `db:"args" json:"args"`
+	Logs       pgtype.Text        `db:"logs" json:"logs"`
+}
+
+type JobType struct {
+	ID        int32              `db:"id" json:"id"`
+	Name      string             `db:"name" json:"name"`
+	CreatedAt pgtype.Timestamptz `db:"created_at" json:"created_at"`
 }
 
 type Worker struct {
-	ID         int32            `db:"id" json:"id"`
-	Name       pgtype.Text      `db:"name" json:"name"`
-	CreatedAt  pgtype.Timestamp `db:"created_at" json:"created_at"`
-	CreatedBy  pgtype.Text      `db:"created_by" json:"created_by"`
-	ModifiedAt pgtype.Timestamp `db:"modified_at" json:"modified_at"`
-	ModifiedBy pgtype.Text      `db:"modified_by" json:"modified_by"`
+	ID        int32              `db:"id" json:"id"`
+	Name      string             `db:"name" json:"name"`
+	CreatedAt pgtype.Timestamptz `db:"created_at" json:"created_at"`
 }
