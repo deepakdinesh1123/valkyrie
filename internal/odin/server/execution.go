@@ -9,6 +9,15 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
 )
 
+// Execute Adds a job to the execution queue and returns the execution ID.
+//
+// Parameters:
+// - ctx: the context of the execution request
+// - req: the execution request
+//
+// Returns:
+// - api.ExecuteRes: the result of the execution
+// - error: any error that occurred during execution
 func (s *OdinServer) Execute(ctx context.Context, req *api.ExecutionRequest) (api.ExecuteRes, error) {
 	execId, err := s.executionService.AddJob(ctx, req)
 	if err != nil {
@@ -30,6 +39,15 @@ func (s *OdinServer) Execute(ctx context.Context, req *api.ExecutionRequest) (ap
 	return &api.ExecuteOK{ExecutionId: execId}, nil
 }
 
+// GetAllExecutionResults Retrieves all execution results.
+//
+// Parameters:
+// - ctx: The context of the request.
+// - params: The parameters of the request, including pagination options.
+//
+// Returns:
+// - api.GetAllExecutionResultsRes: The response containing the execution results.
+// - error: Any error that occurred during the request.
 func (s *OdinServer) GetAllExecutionResults(ctx context.Context, params api.GetAllExecutionResultsParams) (api.GetAllExecutionResultsRes, error) {
 	execResDB, err := s.queries.GetAllExecutionResults(ctx, db.GetAllExecutionResultsParams{
 		Limit:  params.PageSize.Value,
@@ -68,6 +86,15 @@ func (s *OdinServer) GetAllExecutionResults(ctx context.Context, params api.GetA
 	return &resp, nil
 }
 
+// GetExecutionResultsById returns the execution results for a specific job ID.
+//
+// Parameters:
+// - ctx: The context of the request.
+// - params: The parameters of the request, including the job ID, page size, and page value.
+//
+// Returns:
+// - api.GetExecutionResultsByIdRes: The response containing the execution results.
+// - error: Any error that occurred during the request.
 func (s *OdinServer) GetExecutionResultsById(ctx context.Context, params api.GetExecutionResultsByIdParams) (api.GetExecutionResultsByIdRes, error) {
 	execRes, err := s.queries.GetExecutionResultsByID(ctx, db.GetExecutionResultsByIDParams{
 		JobID:  params.JobId,
@@ -107,6 +134,15 @@ func (s *OdinServer) GetExecutionResultsById(ctx context.Context, params api.Get
 	return &resp, nil
 }
 
+// GetAllExecutions Retrieves a list of all executions.
+//
+// Parameters:
+// - ctx: The context for the request.
+// - params: The parameters for the request, including pagination options.
+//
+// Returns:
+// - api.GetAllExecutionsRes: The response containing the list of executions and pagination metadata.
+// - error: Any error that occurred during the request.
 func (s *OdinServer) GetAllExecutions(ctx context.Context, params api.GetAllExecutionsParams) (api.GetAllExecutionsRes, error) {
 	executionsDB, err := s.queries.GetAllJobs(ctx, db.GetAllJobsParams{
 		Limit:  params.PageSize.Value,
@@ -141,6 +177,14 @@ func (s *OdinServer) GetAllExecutions(ctx context.Context, params api.GetAllExec
 	return &resp, nil
 }
 
+// GetExecutionConfig returns the execution configuration.
+//
+// Parameters:
+// - ctx (context.Context): the context for the request.
+//
+// Returns:
+// - api.GetExecutionConfigRes: the execution configuration response.
+// - error: any error that occurred while retrieving the configuration.
 func (s *OdinServer) GetExecutionConfig(ctx context.Context) (api.GetExecutionConfigRes, error) {
 	return &api.ExecutionConfig{
 		ODINWORKERPROVIDER:    s.envConfig.ODIN_WORKER_PROVIDER,
@@ -153,6 +197,14 @@ func (s *OdinServer) GetExecutionConfig(ctx context.Context) (api.GetExecutionCo
 	}, nil
 }
 
+// GetExecutionWorkers returns a list of execution workers based on the provided pagination parameters.
+//
+// Parameters:
+// - ctx: The context for the request.
+// - params: The pagination parameters for the request.
+// Returns:
+// - api.GetExecutionWorkersRes: The response containing the list of execution workers.
+// - error: Any error that occurred during the request.
 func (s *OdinServer) GetExecutionWorkers(ctx context.Context, params api.GetExecutionWorkersParams) (api.GetExecutionWorkersRes, error) {
 	workersDB, err := s.queries.GetAllWorkers(ctx, db.GetAllWorkersParams{
 		Limit:  params.PageSize.Value,
@@ -187,6 +239,14 @@ func (s *OdinServer) GetExecutionWorkers(ctx context.Context, params api.GetExec
 	return &resp, nil
 }
 
+// DeleteJob deletes a job by its ID.
+//
+// Parameters:
+// - ctx: context for the request.
+// - params: DeleteJobParams containing the JobId to delete.
+// Returns:
+// - api.DeleteJobRes: result of the delete operation.
+// - error: error if the delete operation fails.
 func (s *OdinServer) DeleteJob(ctx context.Context, params api.DeleteJobParams) (api.DeleteJobRes, error) {
 	err := s.queries.DeleteJob(ctx, params.JobId)
 	if err != nil {

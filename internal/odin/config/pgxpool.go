@@ -8,6 +8,13 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// Config returns a pgxpool configuration based on the provided database URL and logger.
+//
+// Parameters:
+// - dbUrl: the URL of the PostgreSQL database
+// - logger: the logger to use for logging purposes
+// Returns:
+// - *pgxpool.Config: the pgxpool configuration
 func Config(dbUrl string, logger *zerolog.Logger) *pgxpool.Config {
 	const defaultMaxConns = int32(4)
 	const defaultMinConns = int32(0)

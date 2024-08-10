@@ -36,6 +36,18 @@ type Worker struct {
 	}
 }
 
+// GetWorker returns a worker instance based on the provided configuration and name.
+//
+// Parameters:
+// - ctx: the context for the function call
+// - name: the name of the worker
+// - envConfig: the environment configuration
+// - newWorker: flag indicating whether to create a new worker
+// - standalone: flag indicating whether the worker is standalone
+// - logger: the logger instance
+// Returns:
+// - *Worker: the worker instance
+// - error: any error that occurred during the function call
 func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, newWorker bool, standalone bool, logger *zerolog.Logger) (*Worker, error) {
 	if newWorker {
 		deleteWorkerInfo(envConfig.ODIN_WORKER_INFO_FILE)
@@ -89,6 +101,14 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 	return wrkr, nil
 }
 
+// upsertWorker Upserts a worker in the database.
+//
+// Parameters:
+// - ctx: the context for the function call
+// - name: the name of the worker
+// Returns:
+// - int: the ID of the worker
+// - error: any error that occurred during the function call
 func (w *Worker) upsertWorker(ctx context.Context, name string) (int, error) {
 	wrkr, err := w.queries.GetWorker(ctx, name)
 	if err != nil {
@@ -106,6 +126,13 @@ func (w *Worker) upsertWorker(ctx context.Context, name string) (int, error) {
 	return int(wrkr.ID), nil
 }
 
+// Run runs the worker in a separate goroutine.
+//
+// Parameters:
+// - ctx: the context for the function call
+// - wg: the WaitGroup to wait for the worker to finish
+// Returns:
+// - error: any error that occurred during the function call
 func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 	infLock := flock.New(w.envConfig.ODIN_WORKER_INFO_FILE)
 	defer infLock.Unlock()
@@ -157,6 +184,13 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 	}
 }
 
+// writeWorkerInfo writes worker information to a file.
+//
+// Parameters:
+// - infoFile: the file path where the worker information will be written
+// - worker: the worker instance containing the information to be written
+// Returns:
+// - error: any error that occurred during the file write operation
 func writeWorkerInfo(infoFile string, worker *Worker) error {
 	wrkrInfo := models.WorkerInfo{
 		ID:   worker.ID,
@@ -178,6 +212,12 @@ func writeWorkerInfo(infoFile string, worker *Worker) error {
 	return nil
 }
 
+// deleteWorkerInfo deletes the worker information stored in a file.
+//
+// Parameters:
+// - infoFile: the file path from which the worker information will be deleted
+// Returns:
+// - error: any error that occurred during the file deletion operation
 func deleteWorkerInfo(infoFile string) error {
 	err := os.Remove(infoFile)
 	if err != nil {
@@ -186,6 +226,14 @@ func deleteWorkerInfo(infoFile string) error {
 	return nil
 }
 
+// readWorkerInfo reads the worker information from a file.
+//
+// Parameters:
+// - infoFile: the file path from which the worker information will be read
+// - logger: the logger instance used for logging errors
+// Returns:
+// - *models.WorkerInfo: the worker information read from the file
+// - error: any error that occurred during the file read operation
 func readWorkerInfo(infoFile string, logger *zerolog.Logger) (*models.WorkerInfo, error) {
 	if _, err := os.Stat(infoFile); err != nil {
 		if os.IsNotExist(err) {

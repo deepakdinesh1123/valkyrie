@@ -7,6 +7,10 @@ import (
 	"github.com/shirou/gopsutil/v4/mem"
 )
 
+// updateStats updates the worker's statistics by retrieving CPU and memory usage.
+//
+// Returns:
+// - error: nil if the statistics were successfully updated, otherwise an error indicating the cause of the failure.
 func (w *Worker) updateStats() error {
 
 	cpuPercent, err := cpu.Percent(time.Second, false)

@@ -13,6 +13,12 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+// Execute executes a job using the system provider.
+//
+// Parameters:
+// - ctx: the context for the execution operation
+// - wg: the wait group for the execution operation
+// - execReq: the job execution request
 func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, execReq db.Job) {
 	defer wg.Done()
 	dir := filepath.Join(s.envConfig.ODIN_SYSTEM_PROVIDER_BASE_DIR, execReq.InsertedAt.Time.Format("20060102150405"))
@@ -60,14 +66,14 @@ func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	execCmd := exec.CommandContext(tctx, "nix", "run")
 	execCmd.Cancel = func() error {
 		s.logger.Info().Msg("Task timed out. Terminating execution")
-		syscall.Kill(-execCmd.Process.Pid, syscall.SIGKILL)
+		syscall.Kill(-execCmd.Process.Pid, syscall.SIGKILL) // send SIGKILL to child process
 		return nil
 	}
 	execCmd.Dir = dir
 	execCmd.Stdout = outFile
 	execCmd.Stderr = errFile
 	execCmd.SysProcAttr = &syscall.SysProcAttr{
-		Setpgid: true,
+		Setpgid: true, // prevent child process from receiving termination signal
 	}
 
 	done := make(chan bool, 1)
@@ -116,6 +122,12 @@ func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	}
 }
 
+// updateExecutionDetails updates the execution details of a job by reading the output file and updating the job status.
+//
+// Parameters:
+// - ctx: the context for the update operation
+// - dir: the directory containing the output file
+// - execReq: the job execution request
 func (s *SystemProvider) updateExecutionDetails(ctx context.Context, dir string, execReq db.Job) {
 	out, err := os.ReadFile(filepath.Join(dir, "output.txt"))
 	if err != nil {
@@ -128,6 +140,13 @@ func (s *SystemProvider) updateExecutionDetails(ctx context.Context, dir string,
 	}
 }
 
+// writeFiles writes the flake and script files to the odin execution directory.
+//
+// Parameters:
+// - dir: the directory to write the files to
+// - execReq: the job execution request containing the flake and script and other metadata
+// Returns:
+// - error: any error that occurs during file writing
 func (s *SystemProvider) writeFiles(dir string, execReq db.Job) error {
 	files := map[string]string{
 		"flake.nix":        execReq.Flake,
@@ -142,6 +161,14 @@ func (s *SystemProvider) writeFiles(dir string, execReq db.Job) error {
 	return nil
 }
 
+// updateJob updates the job status to completed and inserts a new job run.
+//
+// Parameters:
+// - ctx: the context for the update operation.
+// - execReq: the job execution request.
+// - message: the message to be logged.
+// Returns:
+// - error: an error if the update operation fails.
 func (d *SystemProvider) updateJob(ctx context.Context, execReq *db.Job, message string) error {
 	if err := d.queries.UpdateJob(ctx, execReq.ID); err != nil {
 		return err

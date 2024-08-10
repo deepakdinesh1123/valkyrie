@@ -24,6 +24,15 @@ type ExecutionService struct {
 	logger    *zerolog.Logger
 }
 
+// NewExecutionService returns a new instance of ExecutionService.
+//
+// Parameters:
+// - queries: database queries
+// - envConfig: environment configuration
+// - logger: logger instance
+//
+// Returns:
+// - *ExecutionService: a new instance of ExecutionService
 func NewExecutionService(queries *db.Queries, envConfig *config.EnvConfig, logger *zerolog.Logger) *ExecutionService {
 	return &ExecutionService{
 		queries:   queries,
@@ -32,6 +41,14 @@ func NewExecutionService(queries *db.Queries, envConfig *config.EnvConfig, logge
 	}
 }
 
+// prepareExecutionRequest Prepares an execution request based on the provided ExecutionRequest.
+//
+// Parameters:
+// - req: The ExecutionRequest to prepare.
+//
+// Returns:
+// - *models.ExecutionRequest: The prepared ExecutionRequest.
+// - error: An error if the preparation fails.
 func (s *ExecutionService) prepareExecutionRequest(req *api.ExecutionRequest) (*models.ExecutionRequest, error) {
 	scriptName := fmt.Sprintf("main.%s", config.LANGUAGE_EXTENSION[req.Language])
 	if req.Environment.Value.Type == "Flake" {
@@ -81,6 +98,13 @@ func (s *ExecutionService) prepareExecutionRequest(req *api.ExecutionRequest) (*
 	}
 }
 
+// convertExecSpecToFlake converts an execution spec to a flake.
+//
+// Parameters:
+// - execSpec: The execution request to convert.
+// Returns:
+// - string: The flake.
+// - error: An error if the conversion fails.
 func (s *ExecutionService) convertExecSpecToFlake(execSpec *api.ExecutionRequest) (string, error) {
 	tmplF, err := flakes.ReadFile(fmt.Sprintf("templates/%s.tmpl", execSpec.Language))
 	if err != nil {
@@ -110,6 +134,15 @@ func (s *ExecutionService) convertExecSpecToFlake(execSpec *api.ExecutionRequest
 	return res.String(), nil
 }
 
+// AddJob adds a job to the ExecutionService.
+//
+// Parameters:
+// - ctx: The context.Context for the request.
+// - req: The api.ExecutionRequest containing the job details.
+//
+// Returns:
+// - int64: The ID of the inserted job.
+// - error: An error if the job insertion fails.
 func (s *ExecutionService) AddJob(ctx context.Context, req *api.ExecutionRequest) (int64, error) {
 	execReq, err := s.prepareExecutionRequest(req)
 	if err != nil {

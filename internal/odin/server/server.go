@@ -18,6 +18,18 @@ type OdinServer struct {
 	server           *api.Server
 }
 
+// NewServer creates a new OdinServer instance with the provided configuration.
+//
+// Parameters:
+// - ctx: The context.Context object for the function.
+// - envConfig: The configuration of the OdinServer.
+// - standalone: A boolean indicating whether the server is standalone.
+// - applyMigrations: A boolean indicating whether to apply migrations.
+// - logger: The logger for the OdinServer.
+//
+// Returns:
+// - *OdinServer: The newly created OdinServer instance.
+// - error: An error if the OdinServer could not be created.
 func NewServer(ctx context.Context, envConfig *config.EnvConfig, standalone bool, applyMigrations bool, logger *zerolog.Logger) (*OdinServer, error) {
 	queries, err := db.GetDBConnection(ctx, standalone, envConfig, applyMigrations, false, logger)
 	if err != nil {

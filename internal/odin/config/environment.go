@@ -39,8 +39,13 @@ type EnvConfig struct {
 	USER_HOME_DIR string
 }
 
-// EnvConfig holds the configuration settings for the application.
-
+// GetEnvConfig retrieves the environment configuration settings for the application.
+//
+// Parameters:
+// - None
+// Returns:
+// - *EnvConfig: A pointer to the EnvConfig struct containing the environment configuration settings.
+// - error: An error object if the configuration retrieval fails.
 func GetEnvConfig() (*EnvConfig, error) {
 	viper.SetConfigType("env")
 	viper.AddConfigPath(".")

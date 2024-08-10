@@ -218,6 +218,14 @@ func createTarArchive(files map[string]string) (string, error) {
 	return tarFilePath, nil
 }
 
+// updateJob updates the job status to completed and inserts a new job run.
+//
+// Parameters:
+// - ctx: the context for the update operation.
+// - execReq: the job execution request.
+// - message: the message to be logged.
+// Returns:
+// - error: an error if the update operation fails.
 func (d *DockerProvider) updateJob(ctx context.Context, execReq *db.Job, message string) error {
 	if err := d.queries.UpdateJob(ctx, execReq.ID); err != nil {
 		return err
@@ -237,6 +245,12 @@ func (d *DockerProvider) updateJob(ctx context.Context, execReq *db.Job, message
 	return nil
 }
 
+// stripCtlAndExtFromUTF8 removes control characters and non-ASCII characters from a UTF8 string.
+//
+// Parameters:
+// - str: the input string to be processed.
+// Returns:
+// - string: the processed string with control characters and non-ASCII characters removed.
 func stripCtlAndExtFromUTF8(str string) string {
 	return strings.Map(func(r rune) rune {
 		if r >= 32 && r < 127 || r == 10 {

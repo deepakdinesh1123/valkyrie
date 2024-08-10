@@ -9,6 +9,11 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/middleware"
 )
 
+// Start starts the Odin server.
+//
+// Parameters:
+// - ctx: context.Context for managing the lifecycle of the server.
+// - wg: *sync.WaitGroup to wait for the server to finish before returning.
 func (s *OdinServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
 	addr := fmt.Sprintf("%s:%s", s.envConfig.ODIN_SERVER_HOST, s.envConfig.ODIN_SERVER_PORT)
@@ -35,6 +40,8 @@ func (s *OdinServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 	go func() {
 		<-ctx.Done()
 		s.logger.Info().Msg("Shutting down server")
+
+		// Shutdown the server after 5 seconds
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5)
 		defer cancel()
 		err := httpServer.Shutdown(shutdownCtx)
@@ -43,5 +50,6 @@ func (s *OdinServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 		}
 		done <- true
 	}()
+	// Wait for the server to shutdown
 	<-done
 }

@@ -20,6 +20,19 @@ import (
 //go:embed all:migrations/*.sql
 var migrationsFS embed.FS
 
+// GetDBConnection returns a connection to the PostgreSQL database.
+//
+// Parameters:
+// - ctx: The context.Context used for cancellation.
+// - standalone: A boolean indicating whether to start an embedded PostgreSQL instance.
+// - envConfig: A pointer to the config.EnvConfig struct.
+// - applyMigrations: A boolean indicating whether to apply migrations.
+// - worker: A boolean indicating whether the function is being called by a worker.
+// - logger: A pointer to the zerolog.Logger.
+//
+// Returns:
+// - *Queries: A pointer to the Queries struct.
+// - error: An error if any occurred.
 func GetDBConnection(ctx context.Context, standalone bool, envConfig *config.EnvConfig, applyMigrations bool, worker bool, logger *zerolog.Logger) (*Queries, error) {
 	// Start embedded Postgres if standalone mode is enabled
 	var pge *embeddedpostgres.EmbeddedPostgres

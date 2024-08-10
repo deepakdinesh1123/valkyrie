@@ -14,6 +14,17 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// GetProvider returns a provider based on the environment configuration.
+//
+// Parameters:
+// - ctx: the context for the function call
+// - queries: the database queries
+// - envConfig: the environment configuration
+// - logger: the logger for logging errors
+//
+// Returns:
+// - Provider: the provider instance
+// - error: any error that occurred during the function call
 func GetProvider(ctx context.Context, queries *db.Queries, envConfig *config.EnvConfig, logger *zerolog.Logger) (Provider, error) {
 	var provider Provider
 	var err error
