@@ -50,7 +50,8 @@ returning *;
 -- name: UpdateJob :exec
 update jobs
 set
-    completed = true
+    completed = true,
+    running = false
 where id = $1 AND completed = false;
 
 -- name: InsertJobRun :one
@@ -90,3 +91,6 @@ select count(*) from job_runs;
 
 -- name: StopJob :exec
 update jobs set running = false, worker_id = null where id = $1;
+
+-- name: PruneCompletedJobs :exec
+delete from jobs where completed = true and running = false;
