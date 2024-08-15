@@ -19,7 +19,7 @@ func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	s.logger.Info().Str("dir", dir).Msg("Executing job")
 	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
 		s.logger.Err(err).Msg("Failed to create directory")
-		err := s.updateJob(ctx, &execReq, start, err.Error())
+		err := s.updateJob(ctx, &execReq, start, err.Error(), false)
 		if err != nil {
 			s.logger.Err(err).Msg("Failed to update job")
 		}
@@ -27,7 +27,7 @@ func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	}
 	if err := s.writeFiles(dir, execReq); err != nil {
 		s.logger.Err(err).Msg("Failed to write files")
-		err := s.updateJob(ctx, &execReq, start, err.Error())
+		err := s.updateJob(ctx, &execReq, start, err.Error(), false)
 		if err != nil {
 			s.logger.Err(err).Msg("Failed to update job")
 		}
@@ -36,7 +36,7 @@ func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	outFile, err := os.Create(filepath.Join(dir, "output.txt"))
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to create output file")
-		err := s.updateJob(ctx, &execReq, start, err.Error())
+		err := s.updateJob(ctx, &execReq, start, err.Error(), false)
 		if err != nil {
 			s.logger.Err(err).Msg("Failed to update job")
 		}
@@ -46,7 +46,7 @@ func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	errFile, err := os.Create(filepath.Join(dir, "error.txt"))
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to create error file")
-		err := s.updateJob(ctx, &execReq, start, err.Error())
+		err := s.updateJob(ctx, &execReq, start, err.Error(), false)
 		if err != nil {
 			s.logger.Err(err).Msg("Failed to update job")
 		}
@@ -82,7 +82,7 @@ func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 				}
 			}
 			s.logger.Err(err).Msg("Failed to execute command")
-			err := s.updateJob(ctx, &execReq, start, err.Error())
+			err := s.updateJob(ctx, &execReq, start, err.Error(), false)
 			if err != nil {
 				s.logger.Err(err).Msg("Failed to update job")
 			}
@@ -122,7 +122,7 @@ func (s *SystemProvider) updateExecutionDetails(ctx context.Context, dir string,
 		s.logger.Err(err).Msg("Failed to read output file")
 		return
 	}
-	err = s.updateJob(ctx, &execReq, startTime, string(out))
+	err = s.updateJob(ctx, &execReq, startTime, string(out), true)
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to update job")
 	}
@@ -142,11 +142,12 @@ func (s *SystemProvider) writeFiles(dir string, execReq db.Job) error {
 	return nil
 }
 
-func (d *SystemProvider) updateJob(ctx context.Context, execReq *db.Job, startTime time.Time, message string) error {
+func (d *SystemProvider) updateJob(ctx context.Context, execReq *db.Job, startTime time.Time, message string, success bool) error {
 	if _, err := d.store.UpdateJobResultTx(ctx, db.UpdateJobResultTxParams{
 		StartTime: startTime,
 		Job:       *execReq,
 		Message:   message,
+		Success:   success,
 	}); err != nil {
 		return err
 	}

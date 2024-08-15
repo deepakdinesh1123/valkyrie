@@ -26,6 +26,7 @@ type Querier interface {
 	InsertJob(ctx context.Context, arg InsertJobParams) (Job, error)
 	InsertJobRun(ctx context.Context, arg InsertJobRunParams) (JobRun, error)
 	InsertWorker(ctx context.Context, name string) (Worker, error)
+	StopJob(ctx context.Context, id int64) error
 	UpdateJob(ctx context.Context, id int64) error
 }
 

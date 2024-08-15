@@ -38,7 +38,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	)
 	if err != nil {
 		d.logger.Err(err).Msg("Failed to create container")
-		err := d.updateJob(ctx, &execReq, start, err.Error())
+		err := d.updateJob(ctx, &execReq, start, err.Error(), false)
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to update job")
 		}
@@ -47,7 +47,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	err = d.client.ContainerStart(ctx, resp.ID, container.StartOptions{})
 	if err != nil {
 		d.logger.Err(err).Msg("Failed to start container")
-		err := d.updateJob(ctx, &execReq, start, err.Error())
+		err := d.updateJob(ctx, &execReq, start, err.Error(), false)
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to update job")
 		}
@@ -56,7 +56,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 
 	if _, err := d.client.ContainerInspect(ctx, resp.ID); err != nil {
 		d.logger.Err(err).Msg("Failed to inspect container")
-		err := d.updateJob(ctx, &execReq, start, err.Error())
+		err := d.updateJob(ctx, &execReq, start, err.Error(), false)
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to update job")
 		}
@@ -67,7 +67,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	if err != nil {
 		d.logger.Err(err).Msg("Failed to write files")
 		d.client.ContainerKill(ctx, containerName, "SIGKILL")
-		err := d.updateJob(ctx, &execReq, start, err.Error())
+		err := d.updateJob(ctx, &execReq, start, err.Error(), false)
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to update job")
 		}
@@ -89,7 +89,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 		)
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to create exec")
-			err := d.updateJob(ctx, &execReq, start, err.Error())
+			err := d.updateJob(ctx, &execReq, start, err.Error(), false)
 			if err != nil {
 				d.logger.Err(err).Msg("Failed to update job")
 			}
@@ -99,7 +99,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 		hijResp, err := d.client.ContainerExecAttach(ctx, resp.ID, container.ExecAttachOptions{})
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to attach exec")
-			err := d.updateJob(ctx, &execReq, start, err.Error())
+			err := d.updateJob(ctx, &execReq, start, err.Error(), false)
 			if err != nil {
 				d.logger.Err(err).Msg("Failed to update job")
 			}
@@ -109,14 +109,14 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 		out, err := io.ReadAll(hijResp.Reader)
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to read output")
-			err := d.updateJob(ctx, &execReq, start, err.Error())
+			err := d.updateJob(ctx, &execReq, start, err.Error(), false)
 			if err != nil {
 				d.logger.Err(err).Msg("Failed to update job")
 			}
 			done <- true
 			return
 		}
-		err = d.updateJob(ctx, &execReq, start, stripCtlAndExtFromUTF8(string(out)))
+		err = d.updateJob(ctx, &execReq, start, stripCtlAndExtFromUTF8(string(out)), true)
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to update job")
 		}
@@ -218,11 +218,12 @@ func createTarArchive(files map[string]string) (string, error) {
 	return tarFilePath, nil
 }
 
-func (d *DockerProvider) updateJob(ctx context.Context, execReq *db.Job, startTime time.Time, message string) error {
+func (d *DockerProvider) updateJob(ctx context.Context, execReq *db.Job, startTime time.Time, message string, success bool) error {
 	if _, err := d.store.UpdateJobResultTx(ctx, db.UpdateJobResultTxParams{
 		StartTime: startTime,
 		Job:       *execReq,
 		Message:   message,
+		Success:   success,
 	}); err != nil {
 		return err
 	}

@@ -11,6 +11,7 @@ type UpdateJobResultTxParams struct {
 	StartTime time.Time
 	Job       Job
 	Message   string
+	Success   bool
 }
 
 type UpdateJobTxResult struct {
@@ -20,11 +21,18 @@ type UpdateJobTxResult struct {
 func (s *SQLStore) UpdateJobResultTx(ctx context.Context, arg UpdateJobResultTxParams) (UpdateJobTxResult, error) {
 	var updateJobTxResult UpdateJobTxResult
 	err := s.execTx(ctx, func(q *Queries) error {
-		err := q.UpdateJob(ctx, arg.Job.ID)
-		if err != nil {
-			return err
+		if arg.Success {
+			err := q.UpdateJob(ctx, arg.Job.ID)
+			if err != nil {
+				return err
+			}
+		} else {
+			err := q.StopJob(ctx, arg.Job.ID)
+			if err != nil {
+				return err
+			}
 		}
-		updateJobTxResult.JobRun, err = q.InsertJobRun(ctx, InsertJobRunParams{
+		jobRun, err := q.InsertJobRun(ctx, InsertJobRunParams{
 			JobID:      arg.Job.ID,
 			WorkerID:   arg.Job.WorkerID.Int32,
 			StartedAt:  pgtype.Timestamptz{Time: arg.StartTime, Valid: true},
@@ -35,7 +43,11 @@ func (s *SQLStore) UpdateJobResultTx(ctx context.Context, arg UpdateJobResultTxP
 			Args:       arg.Job.Args,
 			Logs:       arg.Message,
 		})
-		return err
+		if err != nil {
+			return err
+		}
+		updateJobTxResult.JobRun = jobRun
+		return nil
 	})
 	if err != nil {
 		return UpdateJobTxResult{}, err

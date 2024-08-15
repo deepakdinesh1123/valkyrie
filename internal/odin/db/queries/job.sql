@@ -87,3 +87,6 @@ select count(*) from job_runs where job_id = $1;
 
 -- name: GetTotalExecutions :one
 select count(*) from job_runs;
+
+-- name: StopJob :exec
+update jobs set running = false, worker_id = null where id = $1;

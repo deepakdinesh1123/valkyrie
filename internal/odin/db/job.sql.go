@@ -319,6 +319,15 @@ func (q *Queries) InsertJobRun(ctx context.Context, arg InsertJobRunParams) (Job
 	return i, err
 }
 
+const stopJob = `-- name: StopJob :exec
+update jobs set running = false, worker_id = null where id = $1
+`
+
+func (q *Queries) StopJob(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, stopJob, id)
+	return err
+}
+
 const updateJob = `-- name: UpdateJob :exec
 update jobs
 set
