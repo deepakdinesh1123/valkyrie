@@ -10,7 +10,6 @@ import (
 
 	"github.com/deepakdinesh1123/valkyrie/internal/concurrency"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, execReq db.Job) {
@@ -144,28 +143,11 @@ func (s *SystemProvider) writeFiles(dir string, execReq db.Job) error {
 }
 
 func (d *SystemProvider) updateJob(ctx context.Context, execReq *db.Job, startTime time.Time, message string) error {
-	tx, err := d.connPool.Begin(ctx)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback(ctx)
-	if err := d.queries.UpdateJob(ctx, execReq.ID); err != nil {
-		return err
-	}
-	if _, err := d.queries.InsertJobRun(ctx, db.InsertJobRunParams{
-		JobID:      execReq.ID,
-		WorkerID:   execReq.WorkerID.Int32,
-		StartedAt:  pgtype.Timestamptz{Time: startTime, Valid: true},
-		FinishedAt: pgtype.Timestamptz{Time: time.Now(), Valid: true},
-		Script:     execReq.Script,
-		Flake:      execReq.Flake,
-		Args:       execReq.Args,
-		Logs:       message,
-		CreatedAt:  execReq.InsertedAt,
+	if _, err := d.store.UpdateJobResultTx(ctx, db.UpdateJobResultTxParams{
+		StartTime: startTime,
+		Job:       *execReq,
+		Message:   message,
 	}); err != nil {
-		return err
-	}
-	if err := tx.Commit(ctx); err != nil {
 		return err
 	}
 	return nil

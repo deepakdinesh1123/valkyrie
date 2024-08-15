@@ -15,7 +15,6 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/pkg/namesgenerator"
 	"github.com/gofrs/flock"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 )
@@ -24,6 +23,7 @@ type Worker struct {
 	ID        int
 	Name      string
 	queries   *db.Queries
+	store     db.Store
 	connPool  *pgxpool.Pool
 	envConfig *config.EnvConfig
 	provider  provider.Provider
@@ -58,6 +58,7 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 		provider:  prvdr,
 		logger:    logger,
 		connPool:  connPool,
+		store:     db.NewStore(connPool),
 	}
 	workerInfo, err := readWorkerInfo(envConfig.ODIN_WORKER_INFO_FILE, logger)
 	if err != nil {
@@ -140,12 +141,7 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 				w.logger.Info().Int("Tasks in progress", int(swg.Count())).Int32("Concurrency limit", w.envConfig.ODIN_WORKER_CONCURRENCY).Msg("Worker: concurrency limit reached")
 				continue
 			}
-			tx, err := w.connPool.Begin(ctx)
-			if err != nil {
-				tx.Rollback(ctx)
-				return err
-			}
-			job, err := w.queries.WithTx(tx).FetchJob(ctx, pgtype.Int4{Int32: int32(w.ID), Valid: true})
+			res, err := w.store.FetchJobTx(ctx, db.FetchJobTxParams{WorkerID: int32(w.ID)})
 			if err != nil {
 				switch err {
 				case pgx.ErrNoRows:
@@ -158,13 +154,9 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 					return &WorkerError{Type: "FetchJob", Message: err.Error()}
 				}
 			}
-			err = tx.Commit(ctx)
-			if err != nil {
-				return err
-			}
-			w.logger.Info().Msgf("Worker: fetched job %d", job.ID)
+			w.logger.Info().Msgf("Worker: fetched job %d", res.Job.ID)
 			swg.Add(1)
-			go w.provider.Execute(ctx, &swg, job)
+			go w.provider.Execute(ctx, &swg, res.Job)
 		}
 	}
 }

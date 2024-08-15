@@ -14,7 +14,6 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/pkg/namesgenerator"
 	"github.com/docker/docker/api/types/container"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, execReq db.Job) {
@@ -220,27 +219,11 @@ func createTarArchive(files map[string]string) (string, error) {
 }
 
 func (d *DockerProvider) updateJob(ctx context.Context, execReq *db.Job, startTime time.Time, message string) error {
-	tx, err := d.connPool.Begin(ctx)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback(ctx)
-	if err := d.queries.WithTx(tx).UpdateJob(ctx, execReq.ID); err != nil {
-		return err
-	}
-	if _, err := d.queries.InsertJobRun(ctx, db.InsertJobRunParams{
-		JobID:      execReq.ID,
-		WorkerID:   execReq.WorkerID.Int32,
-		StartedAt:  pgtype.Timestamptz{Time: startTime, Valid: true},
-		FinishedAt: pgtype.Timestamptz{Time: time.Now(), Valid: true},
-		Script:     execReq.Script,
-		Flake:      execReq.Flake,
-		Args:       execReq.Args,
-		Logs:       message,
+	if _, err := d.store.UpdateJobResultTx(ctx, db.UpdateJobResultTxParams{
+		StartTime: startTime,
+		Job:       *execReq,
+		Message:   message,
 	}); err != nil {
-		return err
-	}
-	if err := tx.Commit(ctx); err != nil {
 		return err
 	}
 	return nil

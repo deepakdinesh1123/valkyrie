@@ -10,6 +10,7 @@ import (
 
 type DockerProvider struct {
 	queries   *db.Queries
+	store     db.Store
 	connPool  *pgxpool.Pool
 	client    *client.Client
 	envConfig *config.EnvConfig
@@ -27,5 +28,6 @@ func NewDockerProvider(env *config.EnvConfig, queries *db.Queries, connPool *pgx
 		envConfig: env,
 		logger:    logger,
 		queries:   queries,
+		store:     db.NewStore(connPool),
 	}, nil
 }

@@ -12,6 +12,7 @@ type SystemProvider struct {
 	queries   *db.Queries
 	connPool  *pgxpool.Pool
 	logger    *zerolog.Logger
+	store     db.Store
 }
 
 func NewSystemProvider(envConfig *config.EnvConfig, connPool *pgxpool.Pool, queries *db.Queries, logger *zerolog.Logger) (*SystemProvider, error) {
@@ -20,5 +21,6 @@ func NewSystemProvider(envConfig *config.EnvConfig, connPool *pgxpool.Pool, quer
 		queries:   queries,
 		connPool:  connPool,
 		logger:    logger,
+		store:     db.NewStore(connPool),
 	}, nil
 }
