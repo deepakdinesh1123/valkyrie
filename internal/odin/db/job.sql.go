@@ -287,7 +287,7 @@ type InsertJobRunParams struct {
 	Script     string             `db:"script" json:"script"`
 	Flake      string             `db:"flake" json:"flake"`
 	Args       pgtype.Text        `db:"args" json:"args"`
-	Logs       pgtype.Text        `db:"logs" json:"logs"`
+	Logs       string             `db:"logs" json:"logs"`
 	CreatedAt  pgtype.Timestamptz `db:"created_at" json:"created_at"`
 }
 
@@ -319,10 +319,29 @@ func (q *Queries) InsertJobRun(ctx context.Context, arg InsertJobRunParams) (Job
 	return i, err
 }
 
+const pruneCompletedJobs = `-- name: PruneCompletedJobs :exec
+delete from jobs where completed = true and running = false
+`
+
+func (q *Queries) PruneCompletedJobs(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, pruneCompletedJobs)
+	return err
+}
+
+const stopJob = `-- name: StopJob :exec
+update jobs set running = false, worker_id = null where id = $1
+`
+
+func (q *Queries) StopJob(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, stopJob, id)
+	return err
+}
+
 const updateJob = `-- name: UpdateJob :exec
 update jobs
 set
-    completed = true
+    completed = true,
+    running = false
 where id = $1 AND completed = false
 `
 

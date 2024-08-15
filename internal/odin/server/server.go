@@ -7,6 +7,7 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/services/execution"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 )
 
@@ -16,10 +17,11 @@ type OdinServer struct {
 	executionService *execution.ExecutionService
 	logger           *zerolog.Logger
 	server           *api.Server
+	connPool         *pgxpool.Pool
 }
 
 func NewServer(ctx context.Context, envConfig *config.EnvConfig, standalone bool, applyMigrations bool, logger *zerolog.Logger) (*OdinServer, error) {
-	queries, err := db.GetDBConnection(ctx, standalone, envConfig, applyMigrations, false, logger)
+	connPool, queries, err := db.GetDBConnection(ctx, standalone, envConfig, applyMigrations, false, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -29,6 +31,7 @@ func NewServer(ctx context.Context, envConfig *config.EnvConfig, standalone bool
 		executionService: executionService,
 		envConfig:        envConfig,
 		logger:           logger,
+		connPool:         connPool,
 	}
 	srv, err := api.NewServer(odinServer)
 	if err != nil {

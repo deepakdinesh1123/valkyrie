@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/middleware"
 )
@@ -31,6 +32,23 @@ func (s *OdinServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 			done <- true
 		}
 	}()
+
+	go func(ctx context.Context) {
+		ticker := time.NewTicker(time.Duration(s.envConfig.ODIN_JOB_PRUNE_FREQ) * time.Hour)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				s.logger.Info().Msg("Pruning completed jobs")
+				err := s.queries.PruneCompletedJobs(ctx)
+				if err != nil {
+					s.logger.Err(err).Msg("Failed to prune completed jobs")
+				}
+			}
+		}
+	}(ctx)
 
 	go func() {
 		<-ctx.Done()

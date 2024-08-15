@@ -33,6 +33,8 @@ type EnvConfig struct {
 	ODIN_WORKER_DIR       string
 	ODIN_WORKER_INFO_FILE string
 
+	ODIN_JOB_PRUNE_FREQ int // represents the job prune frequency in hours.
+
 	ODIN_SYSTEM_PROVIDER_BASE_DIR string `mapstructure:"ODIN_SYSTEM_PROVIDER_BASE_DIR"` // represents the base directory for the system provider.
 	ODIN_SYSTEM_PROVIDER_CLEAN_UP bool   `mapstructure:"ODIN_SYSTEM_PROVIDER_CLEAN_UP"` // represents whether to clean up direcories created by the system provider.
 
@@ -66,6 +68,8 @@ func GetEnvConfig() (*EnvConfig, error) {
 
 	viper.SetDefault("ODIN_SYSTEM_PROVIDER_BASE_DIR", filepath.Join(os.TempDir(), "valkyrie"))
 	viper.SetDefault("ODIN_SYSTEM_PROVIDER_CLEAN_UP", true)
+
+	viper.SetDefault("ODIN_JOB_PRUNE_FREQ", 1)
 
 	viper.SetDefault("ODIN_LOG_LEVEL", "info")
 

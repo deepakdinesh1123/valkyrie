@@ -37,7 +37,7 @@ type JobRun struct {
 	Script     string             `db:"script" json:"script"`
 	Flake      string             `db:"flake" json:"flake"`
 	Args       pgtype.Text        `db:"args" json:"args"`
-	Logs       pgtype.Text        `db:"logs" json:"logs"`
+	Logs       string             `db:"logs" json:"logs"`
 }
 
 type JobType struct {

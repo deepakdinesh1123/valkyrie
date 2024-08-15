@@ -50,7 +50,7 @@ func (s *OdinServer) GetAllExecutionResults(ctx context.Context, params api.GetA
 	for _, execRes := range execResDB {
 		executions = append(executions, api.ExecutionResult{
 			ExecutionId: execRes.ID,
-			Logs:        execRes.Logs.String,
+			Logs:        execRes.Logs,
 			Script:      execRes.Script,
 			Flake:       execRes.Flake,
 			Args:        execRes.Args.String,
@@ -89,7 +89,7 @@ func (s *OdinServer) GetExecutionResultsById(ctx context.Context, params api.Get
 	for _, execRes := range execRes {
 		executions = append(executions, api.ExecutionResult{
 			ExecutionId: execRes.ID,
-			Logs:        execRes.Logs.String,
+			Logs:        execRes.Logs,
 			Script:      execRes.Script,
 			Flake:       execRes.Flake,
 			Args:        execRes.Args.String,

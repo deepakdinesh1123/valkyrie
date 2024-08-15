@@ -25,7 +25,7 @@ create table job_runs (
     script text not null,
     flake text not null,
     args varchar(1024),
-    logs text
+    logs text not null
 );
 
 -- name: FetchJob :one
@@ -50,7 +50,8 @@ returning *;
 -- name: UpdateJob :exec
 update jobs
 set
-    completed = true
+    completed = true,
+    running = false
 where id = $1 AND completed = false;
 
 -- name: InsertJobRun :one
@@ -87,3 +88,9 @@ select count(*) from job_runs where job_id = $1;
 
 -- name: GetTotalExecutions :one
 select count(*) from job_runs;
+
+-- name: StopJob :exec
+update jobs set running = false, worker_id = null where id = $1;
+
+-- name: PruneCompletedJobs :exec
+delete from jobs where completed = true and running = false;
