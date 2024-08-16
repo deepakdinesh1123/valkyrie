@@ -40,7 +40,7 @@ func GetDBConnection(ctx context.Context, standalone bool, envConfig *config.Env
 		envConfig.POSTGRES_USER, envConfig.POSTGRES_PASSWORD, envConfig.POSTGRES_HOST,
 		envConfig.POSTGRES_PORT, envConfig.POSTGRES_DB, envConfig.POSTGRES_SSL_MODE)
 
-	connPool, err := pgxpool.NewWithConfig(ctx, config.Config(POSTGRES_URL, logger))
+	connPool, err := pgxpool.NewWithConfig(ctx, config.PgxConfig(POSTGRES_URL, envConfig.ODIN_ENABLE_TELEMETRY, logger))
 	if err != nil {
 		logger.Err(err).Msg("Failed to create connection pool")
 		return nil, nil, err

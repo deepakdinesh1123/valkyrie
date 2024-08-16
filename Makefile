@@ -40,3 +40,6 @@ clear-stdb:
 oapi-gen:
 	@go generate
 
+.PHONY: start-observability
+start-observability:
+	@docker compose up valkyrie-otel-collector jaeger prometheus -d
