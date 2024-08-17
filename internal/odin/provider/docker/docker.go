@@ -6,6 +6,8 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type DockerProvider struct {
@@ -15,9 +17,11 @@ type DockerProvider struct {
 	client    *client.Client
 	envConfig *config.EnvConfig
 	logger    *zerolog.Logger
+	tp        trace.TracerProvider
+	mp        metric.MeterProvider
 }
 
-func NewDockerProvider(env *config.EnvConfig, queries *db.Queries, connPool *pgxpool.Pool, logger *zerolog.Logger) (*DockerProvider, error) {
+func NewDockerProvider(env *config.EnvConfig, queries *db.Queries, tp trace.TracerProvider, mp metric.MeterProvider, connPool *pgxpool.Pool, logger *zerolog.Logger) (*DockerProvider, error) {
 	client, err := newClient()
 	if err != nil {
 		return nil, err
@@ -29,5 +33,7 @@ func NewDockerProvider(env *config.EnvConfig, queries *db.Queries, connPool *pgx
 		logger:    logger,
 		queries:   queries,
 		store:     db.NewStore(connPool),
+		tp:        tp,
+		mp:        mp,
 	}, nil
 }

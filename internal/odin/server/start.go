@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/middleware"
-	"github.com/deepakdinesh1123/valkyrie/internal/telemetry"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
@@ -22,17 +21,6 @@ func (s *OdinServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 	var server *http.Server
 
 	if s.envConfig.ODIN_ENABLE_TELEMETRY {
-		otelShutdown, err := telemetry.SetupOTelSDK(ctx, s.envConfig)
-		if err != nil {
-			s.logger.Err(err).Msg("Failed to setup OpenTelemetry")
-			return
-		}
-		defer func() {
-			err = errors.Join(err, otelShutdown(context.Background()))
-			if err != nil {
-				s.logger.Err(err).Msg("Failed to shutdown OpenTelemetry")
-			}
-		}()
 		server = &http.Server{
 			Addr:    addr,
 			Handler: otelhttp.NewHandler(middleware.LoggingMiddleware(s.server), "/"),
@@ -44,9 +32,6 @@ func (s *OdinServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 		server = &http.Server{
 			Addr:    addr,
 			Handler: middleware.LoggingMiddleware(s.server),
-			BaseContext: func(_ net.Listener) context.Context {
-				return ctx
-			},
 		}
 	}
 
@@ -82,10 +67,18 @@ func (s *OdinServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 	go func() {
 		<-ctx.Done()
+
+		s.logger.Info().Msg("Shutting down OpenTelemetry")
+		var err error
+		err = errors.Join(err, s.otelShutdown(context.Background()))
+		if err != nil {
+			s.logger.Err(err).Msg("Failed to shutdown OpenTelemetry")
+		}
+
 		s.logger.Info().Msg("Shutting down server")
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5)
 		defer cancel()
-		err := server.Shutdown(shutdownCtx)
+		err = server.Shutdown(shutdownCtx)
 		if err != nil {
 			s.logger.Err(err).Msg("Failed to shutdown server")
 		}

@@ -13,6 +13,12 @@ import (
 )
 
 func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, execReq db.Job) {
+	tracer := s.tp.Tracer("Execute")
+	_, span := tracer.Start(ctx, "Execute")
+	defer span.End()
+
+	span.AddEvent("Executing job")
+
 	start := time.Now()
 	defer wg.Done()
 	dir := filepath.Join(s.envConfig.ODIN_SYSTEM_PROVIDER_BASE_DIR, execReq.InsertedAt.Time.Format("20060102150405"))
@@ -73,6 +79,7 @@ func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	done := make(chan bool, 1)
 
 	go func() {
+		s.logger.Info().Msg("Executing nix run command")
 		if err := execCmd.Run(); err != nil {
 			if tctx.Err() != nil {
 				switch tctx.Err() {
