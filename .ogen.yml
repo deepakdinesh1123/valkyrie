@@ -1,0 +1,4 @@
+generator:
+  features:
+    disable:
+      - "ogen/otel"

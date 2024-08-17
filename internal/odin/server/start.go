@@ -2,12 +2,15 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/middleware"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 func (s *OdinServer) Start(ctx context.Context, wg *sync.WaitGroup) {
@@ -15,14 +18,26 @@ func (s *OdinServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 	addr := fmt.Sprintf("%s:%s", s.envConfig.ODIN_SERVER_HOST, s.envConfig.ODIN_SERVER_PORT)
 	done := make(chan bool, 1)
 
-	httpServer := &http.Server{
-		Addr:    addr,
-		Handler: middleware.LoggingMiddleware(s.server),
+	var server *http.Server
+
+	if s.envConfig.ODIN_ENABLE_TELEMETRY {
+		server = &http.Server{
+			Addr:    addr,
+			Handler: otelhttp.NewHandler(middleware.LoggingMiddleware(s.server), "/"),
+			BaseContext: func(_ net.Listener) context.Context {
+				return ctx
+			},
+		}
+	} else {
+		server = &http.Server{
+			Addr:    addr,
+			Handler: middleware.LoggingMiddleware(s.server),
+		}
 	}
 
 	go func() {
 		s.logger.Info().Msg(fmt.Sprintf("Starting server on %s", addr))
-		err := httpServer.ListenAndServe()
+		err := server.ListenAndServe()
 		if err != nil {
 			if err == http.ErrServerClosed {
 				s.logger.Info().Msg("Server closed")
@@ -52,10 +67,18 @@ func (s *OdinServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 	go func() {
 		<-ctx.Done()
+
+		s.logger.Info().Msg("Shutting down OpenTelemetry")
+		var err error
+		err = errors.Join(err, s.otelShutdown(context.Background()))
+		if err != nil {
+			s.logger.Err(err).Msg("Failed to shutdown OpenTelemetry")
+		}
+
 		s.logger.Info().Msg("Shutting down server")
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5)
 		defer cancel()
-		err := httpServer.Shutdown(shutdownCtx)
+		err = server.Shutdown(shutdownCtx)
 		if err != nil {
 			s.logger.Err(err).Msg("Failed to shutdown server")
 		}

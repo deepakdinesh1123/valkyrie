@@ -11,7 +11,7 @@ services:
     command: ["server", "start"]
     ports:
       - "8080:8080"
-  
+
   odin-worker:
     build:
       context: .
@@ -42,3 +42,23 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  valkyrie-otel-collector:
+    image: otel/opentelemetry-collector-contrib
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./configs/telemetry/collector.yml:/etc/otel-collector-config.yaml
+    ports:
+      - 4317:4317 # OTLP grpc receiver
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "6831:6831/udp" # UDP port for Jaeger agent
+      - "16686:16686" # Web UI
+      - "14268:14268" # HTTP port for spans
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./configs/telemetry/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"

@@ -3,6 +3,7 @@ package worker
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"sync"
 	"time"
@@ -12,22 +13,28 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/models"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/provider"
+	"github.com/deepakdinesh1123/valkyrie/internal/telemetry"
 	"github.com/deepakdinesh1123/valkyrie/pkg/namesgenerator"
 	"github.com/gofrs/flock"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type Worker struct {
-	ID        int
-	Name      string
-	queries   *db.Queries
-	store     db.Store
-	connPool  *pgxpool.Pool
-	envConfig *config.EnvConfig
-	provider  provider.Provider
-	logger    *zerolog.Logger
+	ID           int
+	Name         string
+	queries      *db.Queries
+	store        db.Store
+	connPool     *pgxpool.Pool
+	envConfig    *config.EnvConfig
+	provider     provider.Provider
+	logger       *zerolog.Logger
+	tp           trace.TracerProvider
+	mp           metric.MeterProvider
+	otelShutdown func(context.Context) error
 
 	WorkerStats struct {
 		CPUUsage  float64
@@ -42,23 +49,34 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 	if newWorker {
 		deleteWorkerInfo(envConfig.ODIN_WORKER_INFO_FILE)
 	}
+
+	otelShutdown, tp, mp, err := telemetry.SetupOTelSDK(ctx, "Odin Worker", envConfig)
+	if err != nil {
+		logger.Err(err).Msg("Failed to setup OpenTelemetry")
+		return nil, err
+	}
+
 	connPool, queries, err := db.GetDBConnection(ctx, standalone, envConfig, false, true, logger)
 	if err != nil {
 		logger.Err(err).Msg("Failed to get database connection")
 		return nil, err
 	}
-	prvdr, err := provider.GetProvider(ctx, connPool, queries, envConfig, logger)
+
+	prvdr, err := provider.GetProvider(ctx, connPool, queries, tp, mp, envConfig, logger)
 	if err != nil {
 		logger.Err(err).Msg("Failed to get provider")
 	}
 
 	wrkr := &Worker{
-		queries:   queries,
-		envConfig: envConfig,
-		provider:  prvdr,
-		logger:    logger,
-		connPool:  connPool,
-		store:     db.NewStore(connPool),
+		queries:      queries,
+		envConfig:    envConfig,
+		provider:     prvdr,
+		logger:       logger,
+		connPool:     connPool,
+		store:        db.NewStore(connPool),
+		tp:           tp,
+		mp:           mp,
+		otelShutdown: otelShutdown,
 	}
 	workerInfo, err := readWorkerInfo(envConfig.ODIN_WORKER_INFO_FILE, logger)
 	if err != nil {
@@ -111,6 +129,21 @@ func (w *Worker) upsertWorker(ctx context.Context, name string) (int, error) {
 }
 
 func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
+	defer func() {
+		var err error
+
+		w.logger.Info().Msg("Shutting down opentelemetry")
+		err = errors.Join(err, w.otelShutdown(context.Background()))
+		if err != nil {
+			w.logger.Err(err).Msg("Failed to shutdown OpenTelemetry")
+		}
+	}()
+
+	tracer := w.tp.Tracer("worker")
+	tracerCtx, span := tracer.Start(ctx, "Run")
+	defer span.End()
+
+	span.AddEvent("Acquiring lock on worker info")
 	infLock := flock.New(w.envConfig.ODIN_WORKER_INFO_FILE)
 	defer infLock.Unlock()
 	defer wg.Done()
@@ -156,7 +189,8 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 			}
 			w.logger.Info().Msgf("Worker: fetched job %d", res.Job.ID)
 			swg.Add(1)
-			go w.provider.Execute(ctx, &swg, res.Job)
+			span.AddEvent("Executing job")
+			go w.provider.Execute(tracerCtx, &swg, res.Job)
 		}
 	}
 }
