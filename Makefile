@@ -43,3 +43,7 @@ oapi-gen:
 .PHONY: start-observability
 start-observability:
 	@docker compose up valkyrie-otel-collector jaeger prometheus -d
+
+.PHONY: odinc
+odinc:
+	@go build -o odinc pkg/odin/client/main.go

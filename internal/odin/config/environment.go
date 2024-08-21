@@ -17,8 +17,9 @@ type EnvConfig struct {
 	POSTGRES_DB       string `mapstructure:"POSTGRES_DB"`       // represents the name of the PostgreSQL database.
 	POSTGRES_SSL_MODE string `mapstructure:"POSTGRES_SSL_MODE"` // represents the SSL mode for connecting to PostgreSQL.
 
-	ODIN_SERVER_HOST string `mapstructure:"ODIN_SERVER_HOST"` // represents the host on which the Odin server will listen.
-	ODIN_SERVER_PORT string `mapstructure:"ODIN_SERVER_PORT"` // represents the port on which the Odin server will listen.
+	ODIN_SERVER_HOST     string `mapstructure:"ODIN_SERVER_HOST"` // represents the host on which the Odin server will listen.
+	ODIN_SERVER_PORT     string `mapstructure:"ODIN_SERVER_PORT"` // represents the port on which the Odin server will listen.
+	ODIN_SERVER_BASE_URL string
 
 	ODIN_WORKER_PROVIDER     string `mapstructure:"ODIN_WORKER_PROVIDER"`     // represents the worker provider.
 	ODIN_WORKER_CONCURRENCY  int32  `mapstructure:"ODIN_WORKER_CONCURRENCY"`  // represents the concurrency level for the worker.
@@ -103,5 +104,6 @@ func GetEnvConfig() (*EnvConfig, error) {
 	EnvConfig.ODIN_INFO_DIR = fmt.Sprintf("%s/%s", EnvConfig.USER_HOME_DIR, ".odin")
 	EnvConfig.ODIN_WORKER_DIR = fmt.Sprintf("%s/%s", EnvConfig.ODIN_INFO_DIR, "worker")
 	EnvConfig.ODIN_WORKER_INFO_FILE = fmt.Sprintf("%s/%s", EnvConfig.ODIN_WORKER_DIR, "worker-info.json")
+	EnvConfig.ODIN_SERVER_BASE_URL = fmt.Sprintf("http://%s:%s", EnvConfig.ODIN_SERVER_HOST, EnvConfig.ODIN_SERVER_PORT)
 	return &EnvConfig, nil
 }
