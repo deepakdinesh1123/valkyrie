@@ -10,6 +10,7 @@ type Store interface {
 	Querier
 	UpdateJobResultTx(ctx context.Context, arg UpdateJobResultTxParams) (UpdateJobTxResult, error)
 	FetchJobTx(ctx context.Context, arg FetchJobTxParams) (FetchJobTxResult, error)
+	AddJobTx(ctx context.Context, arg AddJobTxParams) (AddJobTxResult, error)
 }
 
 type SQLStore struct {

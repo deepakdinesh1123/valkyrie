@@ -209,8 +209,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 								s.handleGetExecutionResultsByIdRequest([1]string{
 									args[0],
 								}, elemIsEscaped, w, r)
+							case "PUT":
+								s.handleCancelJobRequest([1]string{
+									args[0],
+								}, elemIsEscaped, w, r)
 							default:
-								s.notAllowed(w, r, "DELETE,GET")
+								s.notAllowed(w, r, "DELETE,GET,PUT")
 							}
 
 							return
@@ -511,6 +515,14 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.name = "GetExecutionResultsById"
 								r.summary = "Get execution result"
 								r.operationID = "getExecutionResultsById"
+								r.pathPattern = "/executions/{JobId}/"
+								r.args = args
+								r.count = 1
+								return r, true
+							case "PUT":
+								r.name = "CancelJob"
+								r.summary = "Cancel Job"
+								r.operationID = "cancelJob"
 								r.pathPattern = "/executions/{JobId}/"
 								r.args = args
 								r.count = 1

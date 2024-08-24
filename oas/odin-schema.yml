@@ -160,6 +160,32 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+    put:
+      summary: Cancel Job
+      description: Cancel Job
+      operationId: cancelJob
+      parameters:
+        - name: JobId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     delete:
       summary: Delete job
       description: Delete job
@@ -354,6 +380,16 @@ components:
           type: string
         language:
           type: string
+        cron_expression:
+          type: string
+        max_retries:
+          type: integer
+          format: int4
+          default: 0
+        timeout:
+          type: integer
+          format: int64
+          default: 0
         priority:
           type: integer
           format: int4

@@ -15,6 +15,85 @@ import (
 
 func recordError(string, error) {}
 
+// handleCancelJobRequest handles cancelJob operation.
+//
+// Cancel Job.
+//
+// PUT /executions/{JobId}/
+func (s *Server) handleCancelJobRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var (
+		err          error
+		opErrContext = ogenerrors.OperationContext{
+			Name: "CancelJob",
+			ID:   "cancelJob",
+		}
+	)
+	params, err := decodeCancelJobParams(args, argsEscaped, r)
+	if err != nil {
+		err = &ogenerrors.DecodeParamsError{
+			OperationContext: opErrContext,
+			Err:              err,
+		}
+		defer recordError("DecodeParams", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+
+	var response CancelJobRes
+	if m := s.cfg.Middleware; m != nil {
+		mreq := middleware.Request{
+			Context:          ctx,
+			OperationName:    "CancelJob",
+			OperationSummary: "Cancel Job",
+			OperationID:      "cancelJob",
+			Body:             nil,
+			Params: middleware.Parameters{
+				{
+					Name: "JobId",
+					In:   "path",
+				}: params.JobId,
+			},
+			Raw: r,
+		}
+
+		type (
+			Request  = struct{}
+			Params   = CancelJobParams
+			Response = CancelJobRes
+		)
+		response, err = middleware.HookMiddleware[
+			Request,
+			Params,
+			Response,
+		](
+			m,
+			mreq,
+			unpackCancelJobParams,
+			func(ctx context.Context, request Request, params Params) (response Response, err error) {
+				response, err = s.h.CancelJob(ctx, params)
+				return response, err
+			},
+		)
+	} else {
+		response, err = s.h.CancelJob(ctx, params)
+	}
+	if err != nil {
+		defer recordError("Internal", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+
+	if err := encodeCancelJobResponse(response, w); err != nil {
+		defer recordError("EncodeResponse", err)
+		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
+			s.cfg.ErrorHandler(ctx, w, r, err)
+		}
+		return
+	}
+}
+
 // handleDeleteJobRequest handles deleteJob operation.
 //
 // Delete job.

@@ -1,38 +1,34 @@
 create table jobs (
     id bigint primary key default nextval('jobs_id_seq'),
-    inserted_at timestamptz not null default now(),
-    -- group_id int not null, will be added later
-    -- type_id int not null, will be added later
-    worker_id int references workers on delete set null,
-    script text not null,
-    script_path text not null,
-    args varchar(1024),
-    flake text not null,
-    language text not null,
-    completed bool not null default false,
-    running bool not null default false
+    inserted_at timestamptz not null  default now(),
+    cron_expression text,
+    last_scheduled_at timestamptz default null,
+    next_run_at timestamptz default null,
+    created_at timestamptz not null  default now(),
+    updated_at timestamptz,
+    exec_request_id int references exec_request on delete set null,
+    status TEXT NOT NULL CHECK (status IN ('pending', 'scheduled', 'completed', 'failed', 'cancelled')) DEFAULT 'pending',
+    retries int default 0,
+    max_retries int default 0
 );
 
 create table job_runs (
     id bigint primary key default nextval('job_runs_id_seq'),
-    job_id bigint not null,
+    job_id bigint not null references jobs on delete set null,
     worker_id int not null references workers on delete set null,
-    started_at timestamptz not null,
-    finished_at timestamptz not null,
-    created_at timestamptz not null,
-    -- group_id int not null,
-    -- type_id int not null,
-    script text not null,
-    flake text not null,
-    args varchar(1024),
+    started_at timestamptz not null ,
+    finished_at timestamptz not null ,
+    exec_request_id int references exec_request on delete set null,
     logs text not null
 );
 
 -- name: FetchJob :one
-update jobs set running = true, worker_id = $1
+update jobs set status = 'scheduled'
 where id = (
     select id from jobs
-    where (running = false and completed = false)
+    where 
+        status = 'pending'
+        and next_run_at <= now()
     order by
         id asc
     for update skip locked
@@ -42,31 +38,42 @@ returning *;
 
 -- name: InsertJob :one
 insert into jobs
-    (script, flake, language, script_path, args)
+    (cron_expression, exec_request_id, last_scheduled_at, next_run_at, max_retries)
 values
     ($1, $2, $3, $4, $5)
 returning *;
 
--- name: UpdateJob :exec
+-- name: UpdateJobCompleted :exec
 update jobs
 set
-    completed = true,
-    running = false
-where id = $1 AND completed = false;
+    status = 'completed',
+    updated_at = now()
+where id = $1 AND status = 'scheduled';
+
+-- name: UpdateJobSchedule :exec
+update jobs
+set
+    status = 'pending',
+    last_scheduled_at = $2,
+    next_run_at = $3,
+    updated_at = now()
+where id = $1 AND status = 'completed';
 
 -- name: InsertJobRun :one
 insert into job_runs
-    (job_id, worker_id, started_at, finished_at, script, flake, args, logs, created_at)
+    (job_id, worker_id, started_at, finished_at, exec_request_id, logs)
 values
-    ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    ($1, $2, $3, $4, $5, $6)
 returning *;
 
 -- name: GetAllJobs :many
 select * from jobs
+inner join exec_request on jobs.exec_request_id = exec_request.id
+order by jobs.id
 limit $1 offset $2;
 
 -- name: GetJob :one
-select * from jobs where id = $1;
+select * from jobs inner join exec_request on jobs.exec_request_id = exec_request.id where jobs.id = $1;
 
 -- name: DeleteJob :exec
 delete from jobs where id = $1 and completed = false;
@@ -75,11 +82,14 @@ delete from jobs where id = $1 and completed = false;
 SELECT count(*) FROM jobs;
 
 -- name: GetExecutionResultsByID :many
-select * from job_runs where job_id = $1
+select * from job_runs
+inner join exec_request on job_runs.exec_request_id = exec_request.id
+where job_runs.job_id = $1
 limit $2 offset $3;
 
 -- name: GetAllExecutionResults :many
 select * from job_runs
+inner join exec_request on job_runs.exec_request_id = exec_request.id
 order by started_at desc
 limit $1 offset $2;
 
@@ -90,7 +100,25 @@ select count(*) from job_runs where job_id = $1;
 select count(*) from job_runs;
 
 -- name: StopJob :exec
-update jobs set running = false, worker_id = null where id = $1;
+update jobs set status = 'pending' where id = $1;
+
+-- name: CancelJob :exec
+update jobs set status = 'cancelled' where id = $1;
+
+-- name: updateJobFailed :exec
+update jobs
+set
+    status = 'failed',
+    updated_at = now()
+where id = $1 AND status = 'scheduled';
+
+-- name: RetryJob :exec
+update jobs
+set
+    status = 'pending',
+    retries = retries + 1,
+    updated_at = now()
+where id = $1 AND status = 'scheduled';
 
 -- name: PruneCompletedJobs :exec
-delete from jobs where completed = true and running = false;
+delete from jobs where status = 'completed';

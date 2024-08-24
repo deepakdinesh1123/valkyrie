@@ -16,6 +16,12 @@ import (
 
 // Invoker invokes operations described by OpenAPI v3 specification.
 type Invoker interface {
+	// CancelJob invokes cancelJob operation.
+	//
+	// Cancel Job.
+	//
+	// PUT /executions/{JobId}/
+	CancelJob(ctx context.Context, params CancelJobParams) (CancelJobRes, error)
 	// DeleteJob invokes deleteJob operation.
 	//
 	// Delete job.
@@ -112,6 +118,61 @@ func (c *Client) requestURL(ctx context.Context) *url.URL {
 		return c.serverURL
 	}
 	return u
+}
+
+// CancelJob invokes cancelJob operation.
+//
+// Cancel Job.
+//
+// PUT /executions/{JobId}/
+func (c *Client) CancelJob(ctx context.Context, params CancelJobParams) (CancelJobRes, error) {
+	res, err := c.sendCancelJob(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendCancelJob(ctx context.Context, params CancelJobParams) (res CancelJobRes, err error) {
+
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [3]string
+	pathParts[0] = "/executions/"
+	{
+		// Encode "JobId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "JobId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			return e.EncodeValue(conv.Int64ToString(params.JobId))
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	r, err := ht.NewRequest(ctx, "PUT", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	result, err := decodeCancelJobResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
 }
 
 // DeleteJob invokes deleteJob operation.

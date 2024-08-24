@@ -7,6 +7,7 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/services/execution"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
+	"github.com/jackc/pgx/v5"
 )
 
 func (s *OdinServer) Execute(ctx context.Context, req *api.ExecutionRequest) (api.ExecuteRes, error) {
@@ -22,6 +23,7 @@ func (s *OdinServer) Execute(ctx context.Context, req *api.ExecutionRequest) (ap
 				Message: fmt.Sprintf("Failed to execute: %v", err),
 			}, nil
 		default:
+			s.logger.Error().Stack().Err(err).Msg("Failed to execute")
 			return &api.ExecuteInternalServerError{
 				Message: fmt.Sprintf("Failed to execute: %v", err),
 			}, nil
@@ -49,14 +51,13 @@ func (s *OdinServer) GetAllExecutionResults(ctx context.Context, params api.GetA
 	var executions []api.ExecutionResult
 	for _, execRes := range execResDB {
 		executions = append(executions, api.ExecutionResult{
-			ExecutionId: execRes.ID,
+			ExecutionId: int64(execRes.ExecRequestID.Int32),
 			Logs:        execRes.Logs,
-			Script:      execRes.Script,
+			Script:      execRes.Code,
 			Flake:       execRes.Flake,
 			Args:        execRes.Args.String,
 			StartedAt:   execRes.StartedAt.Time,
 			FinishedAt:  execRes.FinishedAt.Time,
-			CreatedAt:   execRes.CreatedAt.Time,
 		})
 	}
 	resp := api.GetAllExecutionResultsOK{
@@ -88,14 +89,13 @@ func (s *OdinServer) GetExecutionResultsById(ctx context.Context, params api.Get
 	var executions []api.ExecutionResult
 	for _, execRes := range execRes {
 		executions = append(executions, api.ExecutionResult{
-			ExecutionId: execRes.ID,
+			ExecutionId: int64(execRes.ExecRequestID.Int32),
 			Logs:        execRes.Logs,
-			Script:      execRes.Script,
+			Script:      execRes.Code,
 			Flake:       execRes.Flake,
 			Args:        execRes.Args.String,
 			StartedAt:   execRes.StartedAt.Time,
 			FinishedAt:  execRes.FinishedAt.Time,
-			CreatedAt:   execRes.CreatedAt.Time,
 		})
 	}
 	resp := api.GetExecutionResultsByIdOK{
@@ -127,9 +127,8 @@ func (s *OdinServer) GetAllExecutions(ctx context.Context, params api.GetAllExec
 	for _, exec := range executionsDB {
 		executions = append(executions, api.Execution{
 			ExecutionId: exec.ID,
-			Script:      exec.Script,
+			Script:      exec.Code,
 			Flake:       exec.Flake,
-			CreatedAt:   exec.InsertedAt.Time,
 		})
 	}
 	resp := api.GetAllExecutionsOK{
@@ -195,4 +194,19 @@ func (s *OdinServer) DeleteJob(ctx context.Context, params api.DeleteJobParams) 
 		}, nil
 	}
 	return &api.DeleteJobOK{}, nil
+}
+
+func (s *OdinServer) CancelJob(ctx context.Context, params api.CancelJobParams) (api.CancelJobRes, error) {
+	err := s.queries.CancelJob(ctx, params.JobId)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return &api.CancelJobBadRequest{
+				Message: fmt.Sprintf("Job not found: %v", err),
+			}, nil
+		}
+		return &api.CancelJobInternalServerError{
+			Message: fmt.Sprintf("Failed to cancel job: %v", err),
+		}, nil
+	}
+	return &api.CancelJobOK{}, nil
 }

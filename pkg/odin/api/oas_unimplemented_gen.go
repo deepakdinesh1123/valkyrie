@@ -13,6 +13,15 @@ type UnimplementedHandler struct{}
 
 var _ Handler = UnimplementedHandler{}
 
+// CancelJob implements cancelJob operation.
+//
+// Cancel Job.
+//
+// PUT /executions/{JobId}/
+func (UnimplementedHandler) CancelJob(ctx context.Context, params CancelJobParams) (r CancelJobRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // DeleteJob implements deleteJob operation.
 //
 // Delete job.
