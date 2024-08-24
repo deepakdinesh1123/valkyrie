@@ -17,7 +17,6 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/pkg/namesgenerator"
 	"github.com/gofrs/flock"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
@@ -26,9 +25,7 @@ import (
 type Worker struct {
 	ID           int
 	Name         string
-	queries      *db.Queries
-	store        db.Store
-	connPool     *pgxpool.Pool
+	queries      db.Store
 	envConfig    *config.EnvConfig
 	provider     provider.Provider
 	logger       *zerolog.Logger
@@ -56,24 +53,16 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 		return nil, err
 	}
 
-	connPool, queries, err := db.GetDBConnection(ctx, standalone, envConfig, false, true, logger)
+	queries, err := db.GetDBConnection(ctx, standalone, envConfig, false, true, logger)
 	if err != nil {
 		logger.Err(err).Msg("Failed to get database connection")
 		return nil, err
 	}
 
-	prvdr, err := provider.GetProvider(ctx, connPool, queries, tp, mp, envConfig, logger)
-	if err != nil {
-		logger.Err(err).Msg("Failed to get provider")
-	}
-
 	wrkr := &Worker{
 		queries:      queries,
 		envConfig:    envConfig,
-		provider:     prvdr,
 		logger:       logger,
-		connPool:     connPool,
-		store:        db.NewStore(connPool),
 		tp:           tp,
 		mp:           mp,
 		otelShutdown: otelShutdown,
@@ -102,6 +91,11 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 			logger.Err(err).Msg("Failed to get worker")
 		}
 	}
+	prvdr, err := provider.GetProvider(ctx, queries, int32(wrkr.ID), tp, mp, envConfig, logger)
+	if err != nil {
+		logger.Err(err).Msg("Failed to get provider")
+	}
+	wrkr.provider = prvdr
 	logger.Info().Msgf("Starting worker %d", wrkr.ID)
 
 	err = writeWorkerInfo(envConfig.ODIN_WORKER_INFO_FILE, wrkr)
@@ -174,7 +168,7 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 				w.logger.Info().Int("Tasks in progress", int(swg.Count())).Int32("Concurrency limit", w.envConfig.ODIN_WORKER_CONCURRENCY).Msg("Worker: concurrency limit reached")
 				continue
 			}
-			res, err := w.store.FetchJobTx(ctx, db.FetchJobTxParams{WorkerID: int32(w.ID)})
+			res, err := w.queries.FetchJobTx(ctx, db.FetchJobTxParams{WorkerID: int32(w.ID)})
 			if err != nil {
 				switch err {
 				case pgx.ErrNoRows:

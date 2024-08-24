@@ -8,6 +8,12 @@ import (
 
 // Handler handles operations described by OpenAPI v3 specification.
 type Handler interface {
+	// CancelJob implements cancelJob operation.
+	//
+	// Cancel Job.
+	//
+	// PUT /executions/{JobId}/
+	CancelJob(ctx context.Context, params CancelJobParams) (CancelJobRes, error)
 	// DeleteJob implements deleteJob operation.
 	//
 	// Delete job.

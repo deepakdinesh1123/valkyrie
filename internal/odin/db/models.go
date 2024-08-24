@@ -8,17 +8,27 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type ExecRequest struct {
+	ID                  int32       `db:"id" json:"id"`
+	Hash                string      `db:"hash" json:"hash"`
+	Code                string      `db:"code" json:"code"`
+	Path                string      `db:"path" json:"path"`
+	Flake               string      `db:"flake" json:"flake"`
+	Args                pgtype.Text `db:"args" json:"args"`
+	ProgrammingLanguage pgtype.Text `db:"programming_language" json:"programming_language"`
+}
+
 type Job struct {
-	ID         int64              `db:"id" json:"id"`
-	InsertedAt pgtype.Timestamptz `db:"inserted_at" json:"inserted_at"`
-	WorkerID   pgtype.Int4        `db:"worker_id" json:"worker_id"`
-	Script     string             `db:"script" json:"script"`
-	ScriptPath string             `db:"script_path" json:"script_path"`
-	Args       pgtype.Text        `db:"args" json:"args"`
-	Flake      string             `db:"flake" json:"flake"`
-	Language   string             `db:"language" json:"language"`
-	Completed  bool               `db:"completed" json:"completed"`
-	Running    bool               `db:"running" json:"running"`
+	ID              int64              `db:"id" json:"id"`
+	CronExpression  pgtype.Text        `db:"cron_expression" json:"cron_expression"`
+	LastScheduledAt pgtype.Timestamptz `db:"last_scheduled_at" json:"last_scheduled_at"`
+	NextRunAt       pgtype.Timestamptz `db:"next_run_at" json:"next_run_at"`
+	CreatedAt       pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+	ExecRequestID   pgtype.Int4        `db:"exec_request_id" json:"exec_request_id"`
+	Status          string             `db:"status" json:"status"`
+	Retries         pgtype.Int4        `db:"retries" json:"retries"`
+	MaxRetries      pgtype.Int4        `db:"max_retries" json:"max_retries"`
 }
 
 type JobGroup struct {
@@ -28,16 +38,13 @@ type JobGroup struct {
 }
 
 type JobRun struct {
-	ID         int64              `db:"id" json:"id"`
-	JobID      int64              `db:"job_id" json:"job_id"`
-	WorkerID   int32              `db:"worker_id" json:"worker_id"`
-	CreatedAt  pgtype.Timestamptz `db:"created_at" json:"created_at"`
-	StartedAt  pgtype.Timestamptz `db:"started_at" json:"started_at"`
-	FinishedAt pgtype.Timestamptz `db:"finished_at" json:"finished_at"`
-	Script     string             `db:"script" json:"script"`
-	Flake      string             `db:"flake" json:"flake"`
-	Args       pgtype.Text        `db:"args" json:"args"`
-	Logs       string             `db:"logs" json:"logs"`
+	ID            int64              `db:"id" json:"id"`
+	JobID         int64              `db:"job_id" json:"job_id"`
+	WorkerID      int32              `db:"worker_id" json:"worker_id"`
+	StartedAt     pgtype.Timestamptz `db:"started_at" json:"started_at"`
+	FinishedAt    pgtype.Timestamptz `db:"finished_at" json:"finished_at"`
+	ExecRequestID pgtype.Int4        `db:"exec_request_id" json:"exec_request_id"`
+	Logs          string             `db:"logs" json:"logs"`
 }
 
 type JobType struct {

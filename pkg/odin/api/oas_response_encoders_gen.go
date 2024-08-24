@@ -9,6 +9,42 @@ import (
 	"github.com/go-faster/jx"
 )
 
+func encodeCancelJobResponse(response CancelJobRes, w http.ResponseWriter) error {
+	switch response := response.(type) {
+	case *CancelJobOK:
+		w.WriteHeader(200)
+
+		return nil
+
+	case *CancelJobBadRequest:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(400)
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *CancelJobInternalServerError:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(500)
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	default:
+		return errors.Errorf("unexpected response type: %T", response)
+	}
+}
+
 func encodeDeleteJobResponse(response DeleteJobRes, w http.ResponseWriter) error {
 	switch response := response.(type) {
 	case *DeleteJobOK:

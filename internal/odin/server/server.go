@@ -8,26 +8,24 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/services/execution"
 	"github.com/deepakdinesh1123/valkyrie/internal/telemetry"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
 type OdinServer struct {
-	queries          *db.Queries
+	queries          db.Store
 	envConfig        *config.EnvConfig
 	executionService *execution.ExecutionService
 	logger           *zerolog.Logger
 	server           *api.Server
-	connPool         *pgxpool.Pool
 	tp               trace.TracerProvider
 	mp               metric.MeterProvider
 	otelShutdown     func(context.Context) error
 }
 
 func NewServer(ctx context.Context, envConfig *config.EnvConfig, standalone bool, applyMigrations bool, logger *zerolog.Logger) (*OdinServer, error) {
-	connPool, queries, err := db.GetDBConnection(ctx, standalone, envConfig, applyMigrations, false, logger)
+	queries, err := db.GetDBConnection(ctx, standalone, envConfig, applyMigrations, false, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +40,6 @@ func NewServer(ctx context.Context, envConfig *config.EnvConfig, standalone bool
 		executionService: executionService,
 		envConfig:        envConfig,
 		logger:           logger,
-		connPool:         connPool,
 		tp:               tp,
 		mp:               mp,
 		otelShutdown:     otelShutdown,

@@ -6,3 +6,5 @@ drop table if exists jobs;
 drop sequence if exists jobs_id_seq;
 drop table if exists job_runs;
 drop sequence if exists job_runs_id_seq;
+drop table if exists execute;
+drop sequence if exists execute_id_seq;

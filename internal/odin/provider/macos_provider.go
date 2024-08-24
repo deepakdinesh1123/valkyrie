@@ -11,18 +11,17 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/provider/docker"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/provider/system"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
-func GetProvider(ctx context.Context, connPool *pgxpool.Pool, queries *db.Queries, tp trace.TracerProvider, mp metric.MeterProvider, envConfig *config.EnvConfig, logger *zerolog.Logger) (Provider, error) {
+func GetProvider(ctx context.Context, queries db.Store, workerId int32, tp trace.TracerProvider, mp metric.MeterProvider, envConfig *config.EnvConfig, logger *zerolog.Logger) (Provider, error) {
 	var provider Provider
 	var err error
 	switch envConfig.ODIN_WORKER_PROVIDER {
 	case "docker":
-		provider, err = docker.NewDockerProvider(envConfig, queries, tp, mp, connPool, logger)
+		provider, err = docker.NewDockerProvider(envConfig, queries, workerId, tp, mp, logger)
 		if err != nil {
 			logger.Err(err).Msg("Failed to create docker provider")
 			return nil, err
@@ -35,7 +34,7 @@ func GetProvider(ctx context.Context, connPool *pgxpool.Pool, queries *db.Querie
 				return nil, err
 			}
 		}
-		provider, err = system.NewSystemProvider(envConfig, queries, tp, mp, connPool, logger)
+		provider, err = system.NewSystemProvider(envConfig, queries, workerId, tp, mp, logger)
 		if err != nil {
 			logger.Err(err).Msg("Failed to create system provider")
 			return nil, err

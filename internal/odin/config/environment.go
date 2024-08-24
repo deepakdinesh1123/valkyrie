@@ -67,7 +67,7 @@ func GetEnvConfig() (*EnvConfig, error) {
 	viper.SetDefault("ODIN_WORKER_CONCURRENCY", 10)
 	viper.SetDefault("ODIN_WORKER_BUFFER_SIZE", 100)
 	viper.SetDefault("ODIN_WORKER_TASK_TIMEOUT", 30)
-	viper.SetDefault("ODIN_WORKER_POLL_FREQ", 5)
+	viper.SetDefault("ODIN_WORKER_POLL_FREQ", 1)
 	viper.SetDefault("ODIN_WORKER_RUNTIME", "runc")
 
 	viper.SetDefault("ODIN_ENABLE_TELEMETRY", false)

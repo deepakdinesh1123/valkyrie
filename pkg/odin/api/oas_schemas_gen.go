@@ -6,6 +6,19 @@ import (
 	"time"
 )
 
+type CancelJobBadRequest Error
+
+func (*CancelJobBadRequest) cancelJobRes() {}
+
+type CancelJobInternalServerError Error
+
+func (*CancelJobInternalServerError) cancelJobRes() {}
+
+// CancelJobOK is response for CancelJob operation.
+type CancelJobOK struct{}
+
+func (*CancelJobOK) cancelJobRes() {}
+
 type DeleteJobBadRequest Error
 
 func (*DeleteJobBadRequest) deleteJobRes() {}
@@ -394,11 +407,14 @@ func (s *ExecutionEnvironmentSpec) SetArgs(val OptString) {
 
 // Ref: #/components/schemas/ExecutionRequest
 type ExecutionRequest struct {
-	Environment OptExecutionRequestEnvironment `json:"environment"`
-	Config      OptExecutionRequestConfig      `json:"config"`
-	Code        string                         `json:"code"`
-	Language    string                         `json:"language"`
-	Priority    OptInt                         `json:"priority"`
+	Environment    OptExecutionRequestEnvironment `json:"environment"`
+	Config         OptExecutionRequestConfig      `json:"config"`
+	Code           string                         `json:"code"`
+	Language       string                         `json:"language"`
+	CronExpression OptString                      `json:"cron_expression"`
+	MaxRetries     OptInt                         `json:"max_retries"`
+	Timeout        OptInt64                       `json:"timeout"`
+	Priority       OptInt                         `json:"priority"`
 }
 
 // GetEnvironment returns the value of Environment.
@@ -419,6 +435,21 @@ func (s *ExecutionRequest) GetCode() string {
 // GetLanguage returns the value of Language.
 func (s *ExecutionRequest) GetLanguage() string {
 	return s.Language
+}
+
+// GetCronExpression returns the value of CronExpression.
+func (s *ExecutionRequest) GetCronExpression() OptString {
+	return s.CronExpression
+}
+
+// GetMaxRetries returns the value of MaxRetries.
+func (s *ExecutionRequest) GetMaxRetries() OptInt {
+	return s.MaxRetries
+}
+
+// GetTimeout returns the value of Timeout.
+func (s *ExecutionRequest) GetTimeout() OptInt64 {
+	return s.Timeout
 }
 
 // GetPriority returns the value of Priority.
@@ -444,6 +475,21 @@ func (s *ExecutionRequest) SetCode(val string) {
 // SetLanguage sets the value of Language.
 func (s *ExecutionRequest) SetLanguage(val string) {
 	s.Language = val
+}
+
+// SetCronExpression sets the value of CronExpression.
+func (s *ExecutionRequest) SetCronExpression(val OptString) {
+	s.CronExpression = val
+}
+
+// SetMaxRetries sets the value of MaxRetries.
+func (s *ExecutionRequest) SetMaxRetries(val OptInt) {
+	s.MaxRetries = val
+}
+
+// SetTimeout sets the value of Timeout.
+func (s *ExecutionRequest) SetTimeout(val OptInt64) {
+	s.Timeout = val
 }
 
 // SetPriority sets the value of Priority.
@@ -1255,6 +1301,52 @@ func (o OptInt32) Get() (v int32, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptInt32) Or(d int32) int32 {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptInt64 returns new OptInt64 with value set to v.
+func NewOptInt64(v int64) OptInt64 {
+	return OptInt64{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptInt64 is optional int64.
+type OptInt64 struct {
+	Value int64
+	Set   bool
+}
+
+// IsSet returns true if OptInt64 was set.
+func (o OptInt64) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptInt64) Reset() {
+	var v int64
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptInt64) SetTo(v int64) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptInt64) Get() (v int64, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptInt64) Or(d int64) int64 {
 	if v, ok := o.Get(); ok {
 		return v
 	}
