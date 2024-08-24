@@ -35,6 +35,7 @@
         packages = {
           odin = pkgs.callPackage ./build/package/nix/odin.nix { inherit pkgs; };
           nardump = pkgs.callPackage ./build/package/nix/nardump.nix { inherit pkgs; };
+          odinc = pkgs.callPackage ./build/package/nix/odin_client.nix { inherit pkgs; };
         };
 		    defaultPackage = packages.odin;
 

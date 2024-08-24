@@ -112,6 +112,12 @@ func (s *ExecutionService) convertExecSpecToFlake(execSpec *api.ExecutionRequest
 }
 
 func (s *ExecutionService) AddJob(ctx context.Context, req *api.ExecutionRequest) (int64, error) {
+	if req.Environment.Value.Type == "" {
+		return 0, &ExecutionServiceError{
+			Type:    "environment",
+			Message: "Specify flake or language",
+		}
+	}
 	execReq, err := s.prepareExecutionRequest(req)
 	if err != nil {
 		return 0, err

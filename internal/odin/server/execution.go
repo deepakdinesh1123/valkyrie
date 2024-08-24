@@ -16,16 +16,16 @@ func (s *OdinServer) Execute(ctx context.Context, req *api.ExecutionRequest) (ap
 		switch err.(type) {
 		case *execution.ExecutionServiceError:
 			return &api.ExecuteInternalServerError{
-				Message: fmt.Sprintf("Execution Service: %v", err),
+				Message: fmt.Sprintf("Execution Service -> %v", err),
 			}, nil
 		case *execution.TemplateError:
 			return &api.ExecuteBadRequest{
-				Message: fmt.Sprintf("Failed to execute: %v", err),
+				Message: fmt.Sprintf("Failed to execute -> %v", err),
 			}, nil
 		default:
 			s.logger.Error().Stack().Err(err).Msg("Failed to execute")
 			return &api.ExecuteInternalServerError{
-				Message: fmt.Sprintf("Failed to execute: %v", err),
+				Message: fmt.Sprintf("Failed to execute -> %v", err),
 			}, nil
 		}
 	}
