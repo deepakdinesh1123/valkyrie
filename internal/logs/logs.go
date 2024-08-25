@@ -22,6 +22,8 @@ func GetLogger(level string) *zerolog.Logger {
 		zerolog.SetGlobalLevel(zerolog.FatalLevel)
 	case "panic":
 		zerolog.SetGlobalLevel(zerolog.PanicLevel)
+	case "disable":
+		zerolog.SetGlobalLevel(zerolog.Disabled)
 	default:
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}

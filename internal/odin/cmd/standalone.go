@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"os/signal"
+	"strconv"
 	"sync"
 	"syscall"
 
@@ -36,7 +37,22 @@ func standaloneExec(cmd *cobra.Command, args []string) error {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 
-	envConfig, err := config.GetEnvConfig()
+	pg_user := cmd.Flag("pg-user").Value.String()
+	pg_password := cmd.Flag("pg-password").Value.String()
+	pg_port := cmd.Flag("pg-port").Value.String()
+	pg_port_int, err := strconv.ParseUint(pg_port, 10, 32)
+	if err != nil {
+		logger.Err(err).Msg("Failed to parse pg-port")
+		return err
+	}
+	pg_db := cmd.Flag("pg-db").Value.String()
+
+	envConfig, err := config.GetEnvConfig(
+		config.WithPostgresDB(pg_db),
+		config.WithPostgresUser(pg_user),
+		config.WithPostgresPassword(pg_password),
+		config.WithPostgresPort(uint32(pg_port_int)),
+	)
 	if err != nil {
 		logger.Err(err).Msg("Failed to get environment config")
 		return err
