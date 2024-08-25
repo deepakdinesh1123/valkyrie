@@ -1,6 +1,7 @@
 package server
 
 import (
+	"strconv"
 	"sync"
 
 	"github.com/spf13/cobra"
@@ -24,7 +25,22 @@ func serverExec(cmd *cobra.Command, args []string) error {
 	logger := logs.GetLogger(logLevel)
 	logger.Info().Msg("Starting Odin in standalone mode")
 
-	envConfig, err := config.GetEnvConfig()
+	pg_user := cmd.Flag("pg-user").Value.String()
+	pg_password := cmd.Flag("pg-password").Value.String()
+	pg_port := cmd.Flag("pg-port").Value.String()
+	pg_port_int, err := strconv.ParseUint(pg_port, 10, 32)
+	if err != nil {
+		logger.Err(err).Msg("Failed to parse pg-port")
+		return err
+	}
+	pg_db := cmd.Flag("pg-db").Value.String()
+
+	envConfig, err := config.GetEnvConfig(
+		config.WithPostgresDB(pg_db),
+		config.WithPostgresUser(pg_user),
+		config.WithPostgresPassword(pg_password),
+		config.WithPostgresPort(uint32(pg_port_int)),
+	)
 	if err != nil {
 		logger.Err(err).Msg("Failed to get environment config")
 		return err

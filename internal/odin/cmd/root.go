@@ -32,6 +32,10 @@ func init() {
 	}
 
 	RootCmd.PersistentFlags().String("log-level", envConfig.ODIN_LOG_LEVEL, "Log level")
+	RootCmd.PersistentFlags().String("pg-user", envConfig.POSTGRES_USER, "Postgres user")
+	RootCmd.PersistentFlags().String("pg-password", envConfig.POSTGRES_PASSWORD, "Postgres password")
+	RootCmd.PersistentFlags().Uint32("pg-port", envConfig.POSTGRES_PORT, "Postgres port")
+	RootCmd.PersistentFlags().String("pg-db", envConfig.POSTGRES_DB, "Postgres database")
 
 	RootCmd.AddCommand(server.ServerCmd)
 	RootCmd.AddCommand(worker.WorkerCmd)

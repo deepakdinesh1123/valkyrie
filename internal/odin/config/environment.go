@@ -2,11 +2,44 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
 	"github.com/spf13/viper"
 )
+
+type EnvOptsFunc func(*EnvConfig)
+
+func WithPostgresHost(host string) EnvOptsFunc {
+	return func(envConfig *EnvConfig) {
+		envConfig.POSTGRES_HOST = host
+	}
+}
+
+func WithPostgresPort(port uint32) EnvOptsFunc {
+	return func(envConfig *EnvConfig) {
+		envConfig.POSTGRES_PORT = port
+	}
+}
+
+func WithPostgresUser(user string) EnvOptsFunc {
+	return func(envConfig *EnvConfig) {
+		envConfig.POSTGRES_USER = user
+	}
+}
+
+func WithPostgresPassword(password string) EnvOptsFunc {
+	return func(envConfig *EnvConfig) {
+		envConfig.POSTGRES_PASSWORD = password
+	}
+}
+
+func WithPostgresDB(db string) EnvOptsFunc {
+	return func(envConfig *EnvConfig) {
+		envConfig.POSTGRES_DB = db
+	}
+}
 
 // Environment struct represents the configuration settings for the application.
 type EnvConfig struct {
@@ -47,7 +80,7 @@ type EnvConfig struct {
 
 // EnvConfig holds the configuration settings for the application.
 
-func GetEnvConfig() (*EnvConfig, error) {
+func GetEnvConfig(opts ...EnvOptsFunc) (*EnvConfig, error) {
 	viper.SetConfigType("env")
 	viper.AddConfigPath(".")
 	viper.SetConfigName(".env")
@@ -85,7 +118,7 @@ func GetEnvConfig() (*EnvConfig, error) {
 	// Read configuration from file
 	err := viper.ReadInConfig()
 	if err != nil {
-		return nil, err
+		log.Println(".env file not found. Using default values.")
 	}
 
 	// Unmarshal configuration into EnvConfig struct
@@ -103,5 +136,9 @@ func GetEnvConfig() (*EnvConfig, error) {
 	EnvConfig.ODIN_INFO_DIR = fmt.Sprintf("%s/%s", EnvConfig.USER_HOME_DIR, ".odin")
 	EnvConfig.ODIN_WORKER_DIR = fmt.Sprintf("%s/%s", EnvConfig.ODIN_INFO_DIR, "worker")
 	EnvConfig.ODIN_WORKER_INFO_FILE = fmt.Sprintf("%s/%s", EnvConfig.ODIN_WORKER_DIR, "worker-info.json")
+
+	for _, opt := range opts {
+		opt(&EnvConfig)
+	}
 	return &EnvConfig, nil
 }
