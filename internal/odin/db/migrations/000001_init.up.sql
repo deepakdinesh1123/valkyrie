@@ -34,15 +34,12 @@ create table exec_request (
 
 create table jobs (
     id bigint primary key default nextval('jobs_id_seq'),
-    cron_expression text,
-    last_scheduled_at timestamptz default null,
-    next_run_at timestamptz default null,
     created_at timestamptz not null  default now(),
     updated_at timestamptz,
     exec_request_id int references exec_request on delete set null,
     status TEXT NOT NULL CHECK (status IN ('pending', 'scheduled', 'completed', 'failed', 'cancelled')) DEFAULT 'pending',
     retries int default 0,
-    max_retries int default 0
+    max_retries int default 5
 );
 
 create sequence job_runs_id_seq as bigint;

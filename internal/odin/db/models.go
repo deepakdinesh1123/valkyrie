@@ -19,16 +19,13 @@ type ExecRequest struct {
 }
 
 type Job struct {
-	ID              int64              `db:"id" json:"id"`
-	CronExpression  pgtype.Text        `db:"cron_expression" json:"cron_expression"`
-	LastScheduledAt pgtype.Timestamptz `db:"last_scheduled_at" json:"last_scheduled_at"`
-	NextRunAt       pgtype.Timestamptz `db:"next_run_at" json:"next_run_at"`
-	CreatedAt       pgtype.Timestamptz `db:"created_at" json:"created_at"`
-	UpdatedAt       pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
-	ExecRequestID   pgtype.Int4        `db:"exec_request_id" json:"exec_request_id"`
-	Status          string             `db:"status" json:"status"`
-	Retries         pgtype.Int4        `db:"retries" json:"retries"`
-	MaxRetries      pgtype.Int4        `db:"max_retries" json:"max_retries"`
+	ID            int64              `db:"id" json:"id"`
+	CreatedAt     pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+	ExecRequestID pgtype.Int4        `db:"exec_request_id" json:"exec_request_id"`
+	Status        string             `db:"status" json:"status"`
+	Retries       pgtype.Int4        `db:"retries" json:"retries"`
+	MaxRetries    pgtype.Int4        `db:"max_retries" json:"max_retries"`
 }
 
 type JobGroup struct {

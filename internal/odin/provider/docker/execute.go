@@ -228,13 +228,12 @@ func (d *DockerProvider) updateJob(ctx context.Context, job *db.Job, startTime t
 		retry = false
 	}
 	if _, err := d.queries.UpdateJobResultTx(ctx, db.UpdateJobResultTxParams{
-		StartTime:      startTime,
-		Job:            *job,
-		Message:        message,
-		Success:        success,
-		Retry:          retry,
-		WorkerId:       d.workerId,
-		CronExpression: job.CronExpression.String,
+		StartTime: startTime,
+		Job:       *job,
+		Message:   message,
+		Success:   success,
+		Retry:     retry,
+		WorkerId:  d.workerId,
 	}); err != nil {
 		return err
 	}
