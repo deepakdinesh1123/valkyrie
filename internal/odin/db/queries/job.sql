@@ -1,15 +1,11 @@
 create table jobs (
     id bigint primary key default nextval('jobs_id_seq'),
-    inserted_at timestamptz not null  default now(),
-    cron_expression text,
-    last_scheduled_at timestamptz default null,
-    next_run_at timestamptz default null,
     created_at timestamptz not null  default now(),
     updated_at timestamptz,
     exec_request_id int references exec_request on delete set null,
     status TEXT NOT NULL CHECK (status IN ('pending', 'scheduled', 'completed', 'failed', 'cancelled')) DEFAULT 'pending',
     retries int default 0,
-    max_retries int default 0
+    max_retries int default 5
 );
 
 create table job_runs (
@@ -28,7 +24,7 @@ where id = (
     select id from jobs
     where 
         status = 'pending'
-        and next_run_at <= now()
+        and retries < max_retries
     order by
         id asc
     for update skip locked
@@ -38,9 +34,9 @@ returning *;
 
 -- name: InsertJob :one
 insert into jobs
-    (cron_expression, exec_request_id, last_scheduled_at, next_run_at, max_retries)
+    (exec_request_id, max_retries)
 values
-    ($1, $2, $3, $4, $5)
+    ($1, $2)
 returning *;
 
 -- name: UpdateJobCompleted :exec
@@ -49,15 +45,6 @@ set
     status = 'completed',
     updated_at = now()
 where id = $1 AND status = 'scheduled';
-
--- name: UpdateJobSchedule :exec
-update jobs
-set
-    status = 'pending',
-    last_scheduled_at = $2,
-    next_run_at = $3,
-    updated_at = now()
-where id = $1 AND status = 'completed';
 
 -- name: InsertJobRun :one
 insert into job_runs

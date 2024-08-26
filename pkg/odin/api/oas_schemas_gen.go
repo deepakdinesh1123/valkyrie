@@ -407,14 +407,13 @@ func (s *ExecutionEnvironmentSpec) SetArgs(val OptString) {
 
 // Ref: #/components/schemas/ExecutionRequest
 type ExecutionRequest struct {
-	Environment    OptExecutionRequestEnvironment `json:"environment"`
-	Config         OptExecutionRequestConfig      `json:"config"`
-	Code           string                         `json:"code"`
-	Language       string                         `json:"language"`
-	CronExpression OptString                      `json:"cron_expression"`
-	MaxRetries     OptInt                         `json:"max_retries"`
-	Timeout        OptInt64                       `json:"timeout"`
-	Priority       OptInt                         `json:"priority"`
+	Environment OptExecutionRequestEnvironment `json:"environment"`
+	Config      OptExecutionRequestConfig      `json:"config"`
+	Code        string                         `json:"code"`
+	Language    string                         `json:"language"`
+	MaxRetries  OptInt                         `json:"max_retries"`
+	Timeout     OptInt64                       `json:"timeout"`
+	Priority    OptInt                         `json:"priority"`
 }
 
 // GetEnvironment returns the value of Environment.
@@ -435,11 +434,6 @@ func (s *ExecutionRequest) GetCode() string {
 // GetLanguage returns the value of Language.
 func (s *ExecutionRequest) GetLanguage() string {
 	return s.Language
-}
-
-// GetCronExpression returns the value of CronExpression.
-func (s *ExecutionRequest) GetCronExpression() OptString {
-	return s.CronExpression
 }
 
 // GetMaxRetries returns the value of MaxRetries.
@@ -475,11 +469,6 @@ func (s *ExecutionRequest) SetCode(val string) {
 // SetLanguage sets the value of Language.
 func (s *ExecutionRequest) SetLanguage(val string) {
 	s.Language = val
-}
-
-// SetCronExpression sets the value of CronExpression.
-func (s *ExecutionRequest) SetCronExpression(val OptString) {
-	s.CronExpression = val
 }
 
 // SetMaxRetries sets the value of MaxRetries.

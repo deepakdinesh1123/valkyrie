@@ -154,13 +154,17 @@ func (s *SystemProvider) writeFiles(ctx context.Context, dir string, job db.Job)
 }
 
 func (s *SystemProvider) updateJob(ctx context.Context, job *db.Job, startTime time.Time, message string, success bool) error {
+	retry := true
+	if job.Retries.Int32+1 >= job.MaxRetries.Int32 || success {
+		retry = false
+	}
 	if _, err := s.queries.UpdateJobResultTx(ctx, db.UpdateJobResultTxParams{
-		StartTime:      startTime,
-		Job:            *job,
-		Message:        message,
-		Success:        success,
-		WorkerId:       s.workerId,
-		CronExpression: job.CronExpression.String,
+		StartTime: startTime,
+		Job:       *job,
+		Message:   message,
+		Success:   success,
+		WorkerId:  s.workerId,
+		Retry:     retry,
 	}); err != nil {
 		return err
 	}

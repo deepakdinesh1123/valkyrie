@@ -380,12 +380,10 @@ components:
           type: string
         language:
           type: string
-        cron_expression:
-          type: string
         max_retries:
           type: integer
           format: int4
-          default: 0
+          default: 5
         timeout:
           type: integer
           format: int64

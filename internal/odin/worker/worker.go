@@ -63,19 +63,18 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 		queries:      queries,
 		envConfig:    envConfig,
 		logger:       logger,
-		tp:           tp,
-		mp:           mp,
+		tp:           tp, // trace provider
+		mp:           mp, // metric provider
 		otelShutdown: otelShutdown,
 	}
 	workerInfo, err := readWorkerInfo(envConfig.ODIN_WORKER_INFO_FILE, logger)
 	if err != nil {
-		logger.Err(err).Msg("Failed to read worker info")
 		switch err.(type) {
 		case *WorkerInfoNotFoundError:
-			logger.Info().Msgf("Creating new worker")
 			if name == "" {
 				name = namesgenerator.GetRandomName(0)
 			}
+			wrkr.Name = name
 			wrkr.ID, err = wrkr.upsertWorker(ctx, name)
 			if err != nil {
 				logger.Err(err).Msg("Failed to create worker")
@@ -85,7 +84,8 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 		}
 	}
 	if wrkr.ID == 0 && workerInfo != nil {
-		logger.Info().Msgf("Found worker info")
+		logger.Info().Str("workerName", workerInfo.Name).Int("workerID", workerInfo.ID).Msgf("Found worker info")
+		wrkr.Name = workerInfo.Name
 		wrkr.ID, err = wrkr.upsertWorker(ctx, workerInfo.Name)
 		if err != nil {
 			logger.Err(err).Msg("Failed to get worker")
@@ -96,7 +96,7 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 		logger.Err(err).Msg("Failed to get provider")
 	}
 	wrkr.provider = prvdr
-	logger.Info().Msgf("Starting worker %d", wrkr.ID)
+	logger.Info().Msgf("Starting worker %d with name %s", wrkr.ID, wrkr.Name)
 
 	err = writeWorkerInfo(envConfig.ODIN_WORKER_INFO_FILE, wrkr)
 	if err != nil {
@@ -123,6 +123,7 @@ func (w *Worker) upsertWorker(ctx context.Context, name string) (int, error) {
 }
 
 func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
+	defer wg.Done()
 	defer func() {
 		var err error
 
@@ -139,8 +140,16 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 
 	span.AddEvent("Acquiring lock on worker info")
 	infLock := flock.New(w.envConfig.ODIN_WORKER_INFO_FILE)
+	locked, err := infLock.TryLock()
+	if err != nil {
+		w.logger.Err(err).Msg("Failed to acquire lock on worker info")
+		return err
+	}
+	if !locked {
+		w.logger.Info().Msg("Worker: failed to acquire lock on worker info, another worker is running")
+		return &WorkerError{Type: "Lock", Message: "Failed to acquire lock on worker info"}
+	}
 	defer infLock.Unlock()
-	defer wg.Done()
 	var swg concurrency.SafeWaitGroup
 	ticker := time.NewTicker(time.Duration(w.envConfig.ODIN_WORKER_POLL_FREQ) * time.Second)
 	for {

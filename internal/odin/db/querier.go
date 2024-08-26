@@ -34,7 +34,6 @@ type Querier interface {
 	RetryJob(ctx context.Context, id int64) error
 	StopJob(ctx context.Context, id int64) error
 	UpdateJobCompleted(ctx context.Context, id int64) error
-	UpdateJobSchedule(ctx context.Context, arg UpdateJobScheduleParams) error
 	updateJobFailed(ctx context.Context, id int64) error
 }
 

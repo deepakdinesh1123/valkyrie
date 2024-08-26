@@ -35,13 +35,13 @@ where id = (
     select id from jobs
     where 
         status = 'pending'
-        and next_run_at <= now()
+        and retries < max_retries
     order by
         id asc
     for update skip locked
     limit 1
     )
-returning id, cron_expression, last_scheduled_at, next_run_at, created_at, updated_at, exec_request_id, status, retries, max_retries
+returning id, created_at, updated_at, exec_request_id, status, retries, max_retries
 `
 
 func (q *Queries) FetchJob(ctx context.Context) (Job, error) {
@@ -49,9 +49,6 @@ func (q *Queries) FetchJob(ctx context.Context) (Job, error) {
 	var i Job
 	err := row.Scan(
 		&i.ID,
-		&i.CronExpression,
-		&i.LastScheduledAt,
-		&i.NextRunAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.ExecRequestID,
@@ -127,7 +124,7 @@ func (q *Queries) GetAllExecutionResults(ctx context.Context, arg GetAllExecutio
 }
 
 const getAllJobs = `-- name: GetAllJobs :many
-select jobs.id, cron_expression, last_scheduled_at, next_run_at, created_at, updated_at, exec_request_id, status, retries, max_retries, exec_request.id, hash, code, path, flake, args, programming_language from jobs
+select jobs.id, created_at, updated_at, exec_request_id, status, retries, max_retries, exec_request.id, hash, code, path, flake, args, programming_language from jobs
 inner join exec_request on jobs.exec_request_id = exec_request.id
 order by jobs.id
 limit $1 offset $2
@@ -140,9 +137,6 @@ type GetAllJobsParams struct {
 
 type GetAllJobsRow struct {
 	ID                  int64              `db:"id" json:"id"`
-	CronExpression      pgtype.Text        `db:"cron_expression" json:"cron_expression"`
-	LastScheduledAt     pgtype.Timestamptz `db:"last_scheduled_at" json:"last_scheduled_at"`
-	NextRunAt           pgtype.Timestamptz `db:"next_run_at" json:"next_run_at"`
 	CreatedAt           pgtype.Timestamptz `db:"created_at" json:"created_at"`
 	UpdatedAt           pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
 	ExecRequestID       pgtype.Int4        `db:"exec_request_id" json:"exec_request_id"`
@@ -169,9 +163,6 @@ func (q *Queries) GetAllJobs(ctx context.Context, arg GetAllJobsParams) ([]GetAl
 		var i GetAllJobsRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.CronExpression,
-			&i.LastScheduledAt,
-			&i.NextRunAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.ExecRequestID,
@@ -262,14 +253,11 @@ func (q *Queries) GetExecutionResultsByID(ctx context.Context, arg GetExecutionR
 }
 
 const getJob = `-- name: GetJob :one
-select jobs.id, cron_expression, last_scheduled_at, next_run_at, created_at, updated_at, exec_request_id, status, retries, max_retries, exec_request.id, hash, code, path, flake, args, programming_language from jobs inner join exec_request on jobs.exec_request_id = exec_request.id where jobs.id = $1
+select jobs.id, created_at, updated_at, exec_request_id, status, retries, max_retries, exec_request.id, hash, code, path, flake, args, programming_language from jobs inner join exec_request on jobs.exec_request_id = exec_request.id where jobs.id = $1
 `
 
 type GetJobRow struct {
 	ID                  int64              `db:"id" json:"id"`
-	CronExpression      pgtype.Text        `db:"cron_expression" json:"cron_expression"`
-	LastScheduledAt     pgtype.Timestamptz `db:"last_scheduled_at" json:"last_scheduled_at"`
-	NextRunAt           pgtype.Timestamptz `db:"next_run_at" json:"next_run_at"`
 	CreatedAt           pgtype.Timestamptz `db:"created_at" json:"created_at"`
 	UpdatedAt           pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
 	ExecRequestID       pgtype.Int4        `db:"exec_request_id" json:"exec_request_id"`
@@ -290,9 +278,6 @@ func (q *Queries) GetJob(ctx context.Context, id int64) (GetJobRow, error) {
 	var i GetJobRow
 	err := row.Scan(
 		&i.ID,
-		&i.CronExpression,
-		&i.LastScheduledAt,
-		&i.NextRunAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.ExecRequestID,
@@ -345,34 +330,22 @@ func (q *Queries) GetTotalJobs(ctx context.Context) (int64, error) {
 
 const insertJob = `-- name: InsertJob :one
 insert into jobs
-    (cron_expression, exec_request_id, last_scheduled_at, next_run_at, max_retries)
+    (exec_request_id, max_retries)
 values
-    ($1, $2, $3, $4, $5)
-returning id, cron_expression, last_scheduled_at, next_run_at, created_at, updated_at, exec_request_id, status, retries, max_retries
+    ($1, $2)
+returning id, created_at, updated_at, exec_request_id, status, retries, max_retries
 `
 
 type InsertJobParams struct {
-	CronExpression  pgtype.Text        `db:"cron_expression" json:"cron_expression"`
-	ExecRequestID   pgtype.Int4        `db:"exec_request_id" json:"exec_request_id"`
-	LastScheduledAt pgtype.Timestamptz `db:"last_scheduled_at" json:"last_scheduled_at"`
-	NextRunAt       pgtype.Timestamptz `db:"next_run_at" json:"next_run_at"`
-	MaxRetries      pgtype.Int4        `db:"max_retries" json:"max_retries"`
+	ExecRequestID pgtype.Int4 `db:"exec_request_id" json:"exec_request_id"`
+	MaxRetries    pgtype.Int4 `db:"max_retries" json:"max_retries"`
 }
 
 func (q *Queries) InsertJob(ctx context.Context, arg InsertJobParams) (Job, error) {
-	row := q.db.QueryRow(ctx, insertJob,
-		arg.CronExpression,
-		arg.ExecRequestID,
-		arg.LastScheduledAt,
-		arg.NextRunAt,
-		arg.MaxRetries,
-	)
+	row := q.db.QueryRow(ctx, insertJob, arg.ExecRequestID, arg.MaxRetries)
 	var i Job
 	err := row.Scan(
 		&i.ID,
-		&i.CronExpression,
-		&i.LastScheduledAt,
-		&i.NextRunAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.ExecRequestID,
@@ -464,27 +437,6 @@ where id = $1 AND status = 'scheduled'
 
 func (q *Queries) UpdateJobCompleted(ctx context.Context, id int64) error {
 	_, err := q.db.Exec(ctx, updateJobCompleted, id)
-	return err
-}
-
-const updateJobSchedule = `-- name: UpdateJobSchedule :exec
-update jobs
-set
-    status = 'pending',
-    last_scheduled_at = $2,
-    next_run_at = $3,
-    updated_at = now()
-where id = $1 AND status = 'scheduled'
-`
-
-type UpdateJobScheduleParams struct {
-	ID              int64              `db:"id" json:"id"`
-	LastScheduledAt pgtype.Timestamptz `db:"last_scheduled_at" json:"last_scheduled_at"`
-	NextRunAt       pgtype.Timestamptz `db:"next_run_at" json:"next_run_at"`
-}
-
-func (q *Queries) UpdateJobSchedule(ctx context.Context, arg UpdateJobScheduleParams) error {
-	_, err := q.db.Exec(ctx, updateJobSchedule, arg.ID, arg.LastScheduledAt, arg.NextRunAt)
 	return err
 }
 

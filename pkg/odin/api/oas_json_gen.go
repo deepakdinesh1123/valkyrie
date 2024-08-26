@@ -1377,12 +1377,6 @@ func (s *ExecutionRequest) encodeFields(e *jx.Encoder) {
 		e.Str(s.Language)
 	}
 	{
-		if s.CronExpression.Set {
-			e.FieldStart("cron_expression")
-			s.CronExpression.Encode(e)
-		}
-	}
-	{
 		if s.MaxRetries.Set {
 			e.FieldStart("max_retries")
 			s.MaxRetries.Encode(e)
@@ -1402,15 +1396,14 @@ func (s *ExecutionRequest) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfExecutionRequest = [8]string{
+var jsonFieldsNameOfExecutionRequest = [7]string{
 	0: "environment",
 	1: "config",
 	2: "code",
 	3: "language",
-	4: "cron_expression",
-	5: "max_retries",
-	6: "timeout",
-	7: "priority",
+	4: "max_retries",
+	5: "timeout",
+	6: "priority",
 }
 
 // Decode decodes ExecutionRequest from json.
@@ -1466,16 +1459,6 @@ func (s *ExecutionRequest) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"language\"")
-			}
-		case "cron_expression":
-			if err := func() error {
-				s.CronExpression.Reset()
-				if err := s.CronExpression.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"cron_expression\"")
 			}
 		case "max_retries":
 			if err := func() error {
