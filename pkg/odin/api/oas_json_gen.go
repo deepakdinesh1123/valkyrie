@@ -733,10 +733,15 @@ func (s *ExecuteOK) encodeFields(e *jx.Encoder) {
 		e.FieldStart("executionId")
 		e.Int64(s.ExecutionId)
 	}
+	{
+		e.FieldStart("events")
+		e.Str(s.Events)
+	}
 }
 
-var jsonFieldsNameOfExecuteOK = [1]string{
+var jsonFieldsNameOfExecuteOK = [2]string{
 	0: "executionId",
+	1: "events",
 }
 
 // Decode decodes ExecuteOK from json.
@@ -760,6 +765,18 @@ func (s *ExecuteOK) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"executionId\"")
 			}
+		case "events":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := d.Str()
+				s.Events = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"events\"")
+			}
 		default:
 			return d.Skip()
 		}
@@ -770,7 +787,7 @@ func (s *ExecuteOK) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00000001,
+		0b00000011,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.

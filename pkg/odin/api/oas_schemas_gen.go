@@ -180,7 +180,8 @@ type ExecuteInternalServerError Error
 func (*ExecuteInternalServerError) executeRes() {}
 
 type ExecuteOK struct {
-	ExecutionId int64 `json:"executionId"`
+	ExecutionId int64  `json:"executionId"`
+	Events      string `json:"events"`
 }
 
 // GetExecutionId returns the value of ExecutionId.
@@ -188,9 +189,19 @@ func (s *ExecuteOK) GetExecutionId() int64 {
 	return s.ExecutionId
 }
 
+// GetEvents returns the value of Events.
+func (s *ExecuteOK) GetEvents() string {
+	return s.Events
+}
+
 // SetExecutionId sets the value of ExecutionId.
 func (s *ExecuteOK) SetExecutionId(val int64) {
 	s.ExecutionId = val
+}
+
+// SetEvents sets the value of Events.
+func (s *ExecuteOK) SetEvents(val string) {
+	s.Events = val
 }
 
 func (*ExecuteOK) executeRes() {}

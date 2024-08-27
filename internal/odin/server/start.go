@@ -19,11 +19,16 @@ func (s *OdinServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 	done := make(chan bool, 1)
 
 	var server *http.Server
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/executions/{executionId}/sse", s.ExecuteSSE)
+	mux.HandleFunc("/executions/execute/ws", s.ExecuteWS)
+	mux.Handle("/", s.server)
 
 	if s.envConfig.ODIN_ENABLE_TELEMETRY {
 		server = &http.Server{
 			Addr:    addr,
-			Handler: otelhttp.NewHandler(middleware.LoggingMiddleware(s.server), "/"),
+			Handler: otelhttp.NewHandler(middleware.LoggingMiddleware(mux), "/"),
 			BaseContext: func(_ net.Listener) context.Context {
 				return ctx
 			},
@@ -31,7 +36,7 @@ func (s *OdinServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 	} else {
 		server = &http.Server{
 			Addr:    addr,
-			Handler: middleware.LoggingMiddleware(s.server),
+			Handler: middleware.LoggingMiddleware(mux),
 		}
 	}
 

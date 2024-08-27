@@ -25,10 +25,14 @@ paths:
                 type: object
                 required:
                   - executionId
+                  - events
                 properties:
                   executionId:
                     type: integer
                     format: int64
+                  events:
+                    type: string
+                    format: url
         '400':
           description: Bad Request
           content:

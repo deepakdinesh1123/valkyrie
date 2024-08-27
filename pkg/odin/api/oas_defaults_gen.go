@@ -5,7 +5,7 @@ package api
 // setDefaults set default value of fields.
 func (s *ExecutionRequest) setDefaults() {
 	{
-		val := int(0)
+		val := int(5)
 		s.MaxRetries.SetTo(val)
 	}
 	{
