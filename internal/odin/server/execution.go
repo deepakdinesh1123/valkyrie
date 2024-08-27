@@ -77,8 +77,20 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 
 			switch job.Status {
 			case "completed":
+				res, err := s.queries.GetExecutionResultsByID(ctx, db.GetExecutionResultsByIDParams{
+					JobID:  execId,
+					Limit:  1,
+					Offset: 0,
+				})
+				if err != nil {
+					s.logger.Error().Stack().Err(err).Msg("Failed to get execution results")
+					fmt.Fprintf(w, "data: error %s\n\n", err)
+					flusher.Flush()
+					return
+				}
 				fmt.Fprintf(w, "data: completed: %d\n\n", execId)
 				flusher.Flush()
+				fmt.Fprintf(w, "data: %s\n\n", res[0].Logs)
 				return
 			case "failed":
 				fmt.Fprintf(w, "data: failed: %d\n\n", execId)
@@ -139,6 +151,17 @@ func (s *OdinServer) ExecuteWS(w http.ResponseWriter, r *http.Request) {
 			switch job.Status {
 			case "completed":
 				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("completed: %d\n\n", execId)))
+				res, err := s.queries.GetExecutionResultsByID(ctx, db.GetExecutionResultsByIDParams{
+					JobID:  execId,
+					Limit:  1,
+					Offset: 0,
+				})
+				if err != nil {
+					s.logger.Error().Stack().Err(err).Msg("Failed to get execution results")
+					c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("failed: %s\n\n", err)))
+					return
+				}
+				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("data: %s\n\n", res[0].Logs)))
 				return
 			case "failed":
 				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("failed: %d\n\n", execId)))

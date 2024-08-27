@@ -191,6 +191,7 @@ const getExecutionResultsByID = `-- name: GetExecutionResultsByID :many
 select job_runs.id, job_id, worker_id, started_at, finished_at, exec_request_id, logs, exec_request.id, hash, code, path, flake, args, programming_language from job_runs
 inner join exec_request on job_runs.exec_request_id = exec_request.id
 where job_runs.job_id = $1
+order by finished_at desc
 limit $2 offset $3
 `
 

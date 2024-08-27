@@ -72,6 +72,7 @@ SELECT count(*) FROM jobs;
 select * from job_runs
 inner join exec_request on job_runs.exec_request_id = exec_request.id
 where job_runs.job_id = $1
+order by finished_at desc
 limit $2 offset $3;
 
 -- name: GetAllExecutionResults :many
