@@ -1,7 +1,7 @@
-openapi: "3.0.2"
+openapi: '3.0.2'
 info:
   title: API Title
-  version: "0.0.1"
+  version: '0.0.1'
 servers:
   - url: http://localhost:8080/api/v1
 paths:
@@ -15,9 +15,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ExecutionRequest"
+              $ref: '#/components/schemas/ExecutionRequest'
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
@@ -33,28 +33,28 @@ paths:
                   events:
                     type: string
                     format: url
-        "400":
+        '400':
           description: Bad Request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
-        "500":
+                $ref: '#/components/schemas/Error'
+        '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: '#/components/schemas/Error'
   /executions/:
     get:
       summary: Get all executions
       description: Get all executions
       operationId: getAllExecutions
       parameters:
-        - $ref: "#/components/parameters/PageNumber"
-        - $ref: "#/components/parameters/PageSize"
+        - $ref: '#/components/parameters/PageNumber'
+        - $ref: '#/components/parameters/PageSize'
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
@@ -67,31 +67,31 @@ paths:
                   executions:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Execution"
+                      $ref: '#/components/schemas/Execution'
                   pagination:
-                    $ref: "#/components/schemas/PaginationResponse"
-        "400":
+                    $ref: '#/components/schemas/PaginationResponse'
+        '400':
           description: Bad Request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
-        "500":
+                $ref: '#/components/schemas/Error'
+        '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: '#/components/schemas/Error'
   /executions/results/:
     get:
       summary: Get all execution results
       description: Get all execution results
       operationId: getAllExecutionResults
       parameters:
-        - $ref: "#/components/parameters/PageNumber"
-        - $ref: "#/components/parameters/PageSize"
+        - $ref: '#/components/parameters/PageNumber'
+        - $ref: '#/components/parameters/PageSize'
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
@@ -104,21 +104,21 @@ paths:
                   executions:
                     type: array
                     items:
-                      $ref: "#/components/schemas/ExecutionResult"
+                      $ref: '#/components/schemas/ExecutionResult'
                   pagination:
-                    $ref: "#/components/schemas/PaginationResponse"
-        "400":
+                    $ref: '#/components/schemas/PaginationResponse'
+        '400':
           description: Bad Request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
-        "500":
+                $ref: '#/components/schemas/Error'
+        '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: '#/components/schemas/Error'
   /executions/{JobId}/:
     get:
       summary: Get execution result
@@ -131,10 +131,10 @@ paths:
           schema:
             type: integer
             format: int64
-        - $ref: "#/components/parameters/PageNumber"
-        - $ref: "#/components/parameters/PageSize"
+        - $ref: '#/components/parameters/PageNumber'
+        - $ref: '#/components/parameters/PageSize'
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
@@ -147,23 +147,23 @@ paths:
                   executions:
                     type: array
                     items:
-                      $ref: "#/components/schemas/ExecutionResult"
+                      $ref: '#/components/schemas/ExecutionResult'
                   pagination:
-                    $ref: "#/components/schemas/PaginationResponse"
-        "400":
+                    $ref: '#/components/schemas/PaginationResponse'
+        '400':
           description: Bad Request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
-        "404":
+                $ref: '#/components/schemas/Error'
+        '404':
           description: Execution not found
-        "500":
+        '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: '#/components/schemas/Error'
     put:
       summary: Cancel Job
       description: Cancel Job
@@ -176,20 +176,20 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: OK
-        "400":
+        '400':
           description: Bad Request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
-        "500":
+                $ref: '#/components/schemas/Error'
+        '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: '#/components/schemas/Error'
     delete:
       summary: Delete job
       description: Delete job
@@ -202,32 +202,32 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: OK
-        "400":
+        '400':
           description: Bad Request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
-        "404":
+                $ref: '#/components/schemas/Error'
+        '404':
           description: Execution not found
-        "500":
+        '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: '#/components/schemas/Error'
   /executions/workers:
     get:
       summary: Get all execution workers
       description: Get all execution workers
       operationId: getExecutionWorkers
       parameters:
-        - $ref: "#/components/parameters/PageNumber"
-        - $ref: "#/components/parameters/PageSize"
+        - $ref: '#/components/parameters/PageNumber'
+        - $ref: '#/components/parameters/PageSize'
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
@@ -240,28 +240,28 @@ paths:
                   workers:
                     type: array
                     items:
-                      $ref: "#/components/schemas/ExecutionWorker"
+                      $ref: '#/components/schemas/ExecutionWorker'
                   pagination:
-                    $ref: "#/components/schemas/PaginationResponse"
-        "400":
+                    $ref: '#/components/schemas/PaginationResponse'
+        '400':
           description: Bad Request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
-        "500":
+                $ref: '#/components/schemas/Error'
+        '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: '#/components/schemas/Error'
   /version/:
     get:
       summary: Get version
       description: Get version
       operationId: getVersion
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
@@ -272,30 +272,30 @@ paths:
                 properties:
                   version:
                     type: string
-        "500":
+        '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: '#/components/schemas/Error'
   /execution/config/:
     get:
       summary: Get execution config
       description: Get execution config
       operationId: getExecutionConfig
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ExecutionConfig"
-        "500":
+                $ref: '#/components/schemas/ExecutionConfig'
+        '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: '#/components/schemas/Error'
 components:
   parameters:
     PageNumber:
@@ -305,7 +305,7 @@ components:
       required: false
       schema:
         type: integer
-        format: int64
+        format: int32
         default: 0
     PageSize:
       name: pageSize
@@ -314,7 +314,7 @@ components:
       required: false
       schema:
         type: integer
-        format: int64
+        format: int32
         default: 20
   schemas:
     EnvironmentVariable:
@@ -337,7 +337,7 @@ components:
         environment_variables:
           type: array
           items:
-            $ref: "#/components/schemas/EnvironmentVariable"
+            $ref: '#/components/schemas/EnvironmentVariable'
         languageDependencies:
           type: array
           items:
@@ -374,19 +374,19 @@ components:
       properties:
         environment:
           oneOf:
-            - $ref: "#/components/schemas/Flake"
-            - $ref: "#/components/schemas/ExecutionEnvironmentSpec"
+            - $ref: '#/components/schemas/Flake'
+            - $ref: '#/components/schemas/ExecutionEnvironmentSpec'
         config:
           oneOf:
-            - $ref: "#/components/schemas/DockerExecutionConfig"
-            - $ref: "#/components/schemas/PodmanExecutionConfig"
+            - $ref: '#/components/schemas/DockerExecutionConfig'
+            - $ref: '#/components/schemas/PodmanExecutionConfig'
         code:
           type: string
         language:
           type: string
         max_retries:
           type: integer
-          format: int64
+          format: int4
           default: 5
         timeout:
           type: integer
@@ -394,7 +394,7 @@ components:
           default: 0
         priority:
           type: integer
-          format: int64
+          format: int4
     DockerExecutionConfig:
       type: object
       properties:
@@ -461,7 +461,7 @@ components:
           format: date-time
     ExecutionResult:
       allOf:
-        - $ref: "#/components/schemas/Execution"
+        - $ref: '#/components/schemas/Execution'
         - type: object
           required:
             - script
@@ -508,7 +508,7 @@ components:
       properties:
         id:
           type: integer
-          format: int64
+          format: int32
         name:
           type: string
         created_at:
@@ -532,11 +532,11 @@ components:
           description: Represents the worker provider.
         ODIN_WORKER_CONCURRENCY:
           type: integer
-          format: int64
+          format: int32
           description: Represents the concurrency level for the worker.
         ODIN_WORKER_BUFFER_SIZE:
           type: integer
-          format: int64
+          format: int32
           description: Represents the buffer size for the worker.
         ODIN_WORKER_TASK_TIMEOUT:
           type: integer
@@ -569,15 +569,18 @@ components:
           description: Represents the total number of items.
         pages:
           type: integer
-          format: int64
+          format: int32
           description: Represents the total number of pages.
         page:
           type: integer
-          format: int64
+          format: int32
           description: Represents the current page.
         limit:
           type: integer
-          format: int64
+          format: int32
           description: Represents the number of items per page.
         next:
           type: string
+        
+        
+        

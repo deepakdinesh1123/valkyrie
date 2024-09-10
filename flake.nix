@@ -29,8 +29,7 @@
           pkg-config ] ++ docsDependencies ++ lib.optionals stdenv.isLinux [ 
             gpgme 
             libgpg-error 
-            libassuan
-            btrfs-progs 
+            libassuanbtrfs-progs 
           ] ;
 
         packages = {
