@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -14,6 +15,12 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
 	"github.com/jackc/pgx/v5"
 )
+
+type ExecutionStatus struct {
+	Status      string `json:"status"`
+	ExecutionID int64  `json:"executionId"`
+	Logs        string `json:"logs,omitempty"`
+}
 
 func (s *OdinServer) Execute(ctx context.Context, req *api.ExecutionRequest) (api.ExecuteRes, error) {
 	execId, err := s.executionService.AddJob(ctx, req)
@@ -68,12 +75,17 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 			job, err := s.queries.GetJob(ctx, execId)
 			if err != nil {
 				s.logger.Error().Stack().Err(err).Msg("Failed to get job")
-				fmt.Fprintf(w, "data: error\n\n")
+				sendSSEvent(w, flusher, ExecutionStatus{Status: "error", ExecutionID: execId, Logs: "Failed to get job"})
 				flusher.Flush()
 				return
 			}
 
 			s.logger.Debug().Str("status", job.Status).Msg("Status fetched")
+
+			status := ExecutionStatus{
+				Status:      job.Status,
+				ExecutionID: execId,
+			}
 
 			switch job.Status {
 			case "completed":
@@ -84,26 +96,22 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 				})
 				if err != nil {
 					s.logger.Error().Stack().Err(err).Msg("Failed to get execution results")
-					fmt.Fprintf(w, "data: error %s\n\n", err)
-					flusher.Flush()
-					return
+					status.Status = "error"
+					status.Logs = fmt.Sprintf("Failed to get execution results: %v", err)
+				} else {
+					status.Logs = res[0].Logs
 				}
-				fmt.Fprintf(w, "data: completed: %d\n\n", execId)
-				flusher.Flush()
-				fmt.Fprintf(w, "data: %s\n\n", res[0].Logs)
+				sendSSEvent(w, flusher, status)
 				return
 			case "failed":
-				fmt.Fprintf(w, "data: failed: %d\n\n", execId)
-				flusher.Flush()
+				sendSSEvent(w, flusher, status)
 				return
-			case "pending":
-				fmt.Fprintf(w, "data: pending: %d\n\n", execId)
-				flusher.Flush()
-			case "scheduled":
-				fmt.Fprintf(w, "data: scheduled: %d\n\n", execId)
-				flusher.Flush()
+			case "pending", "scheduled":
+				sendSSEvent(w, flusher, status)
 			default:
 				s.logger.Warn().Str("status", job.Status).Msg("Unknown status")
+				status.Status = "unknown"
+				sendSSEvent(w, flusher, status)
 			}
 
 			time.Sleep(3 * time.Second)
@@ -143,14 +151,19 @@ func (s *OdinServer) ExecuteWS(w http.ResponseWriter, r *http.Request) {
 			job, err := s.queries.GetJob(ctx, execId)
 			if err != nil {
 				s.logger.Error().Stack().Err(err).Msg("Failed to get job")
+				wsjson.Write(ctx, c, ExecutionStatus{Status: "error", ExecutionID: execId, Logs: "Failed to get job"})
 				return
 			}
 
 			s.logger.Debug().Str("status", job.Status).Msg("Status fetched")
 
+			status := ExecutionStatus{
+				Status:      job.Status,
+				ExecutionID: execId,
+			}
+
 			switch job.Status {
 			case "completed":
-				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("completed: %d\n\n", execId)))
 				res, err := s.queries.GetExecutionResultsByID(ctx, db.GetExecutionResultsByIDParams{
 					JobID:  execId,
 					Limit:  1,
@@ -158,20 +171,22 @@ func (s *OdinServer) ExecuteWS(w http.ResponseWriter, r *http.Request) {
 				})
 				if err != nil {
 					s.logger.Error().Stack().Err(err).Msg("Failed to get execution results")
-					c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("failed: %s\n\n", err)))
-					return
+					status.Status = "error"
+					status.Logs = fmt.Sprintf("Failed to get execution results: %v", err)
+				} else {
+					status.Logs = res[0].Logs
 				}
-				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("data: %s\n\n", res[0].Logs)))
+				wsjson.Write(ctx, c, status)
 				return
 			case "failed":
-				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("failed: %d\n\n", execId)))
+				wsjson.Write(ctx, c, status)
 				return
-			case "pending":
-				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("pending: %d\n\n", execId)))
-			case "scheduled":
-				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("scheduled: %d\n\n", execId)))
+			case "pending", "scheduled":
+				wsjson.Write(ctx, c, status)
 			default:
 				s.logger.Warn().Str("status", job.Status).Msg("Unknown status")
+				status.Status = "unknown"
+				wsjson.Write(ctx, c, status)
 			}
 			time.Sleep(3 * time.Second)
 		}
@@ -340,6 +355,15 @@ func (s *OdinServer) DeleteJob(ctx context.Context, params api.DeleteJobParams) 
 		}, nil
 	}
 	return &api.DeleteJobOK{}, nil
+}
+func sendSSEvent(w http.ResponseWriter, flusher http.Flusher, data interface{}) {
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		fmt.Fprintf(w, "data: %s\n\n", `{"error":"Failed to marshal JSON"}`)
+	} else {
+		fmt.Fprintf(w, "data: %s\n\n", jsonData)
+	}
+	flusher.Flush()
 }
 
 func (s *OdinServer) CancelJob(ctx context.Context, params api.CancelJobParams) (api.CancelJobRes, error) {
