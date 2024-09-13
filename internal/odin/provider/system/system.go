@@ -4,28 +4,26 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type SystemProvider struct {
 	envConfig *config.EnvConfig
-	queries   *db.Queries
+	queries   db.Store
 	logger    *zerolog.Logger
+	tp        trace.TracerProvider
+	mp        metric.MeterProvider
+	workerId  int32
 }
 
-// NewSystemProvider creates a new SystemProvider instance.
-//
-// Parameters:
-// - envConfig: A pointer to a config.EnvConfig object containing the environment configuration.
-// - queries: A pointer to a db.Queries object containing the database queries.
-// - logger: A pointer to a zerolog.Logger object for logging.
-//
-// Returns:
-// - A pointer to a SystemProvider object if successful.
-// - An error if the instance creation fails.
-func NewSystemProvider(envConfig *config.EnvConfig, queries *db.Queries, logger *zerolog.Logger) (*SystemProvider, error) {
+func NewSystemProvider(envConfig *config.EnvConfig, queries db.Store, workerId int32, tp trace.TracerProvider, mp metric.MeterProvider, logger *zerolog.Logger) (*SystemProvider, error) {
 	return &SystemProvider{
 		envConfig: envConfig,
 		queries:   queries,
+		workerId:  workerId,
 		logger:    logger,
+		tp:        tp,
+		mp:        mp,
 	}, nil
 }

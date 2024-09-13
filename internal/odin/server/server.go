@@ -6,16 +6,22 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/services/execution"
+	"github.com/deepakdinesh1123/valkyrie/internal/telemetry"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
 	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type OdinServer struct {
-	queries          *db.Queries
+	queries          db.Store
 	envConfig        *config.EnvConfig
 	executionService *execution.ExecutionService
 	logger           *zerolog.Logger
 	server           *api.Server
+	tp               trace.TracerProvider
+	mp               metric.MeterProvider
+	otelShutdown     func(context.Context) error
 }
 
 // NewServer creates a new OdinServer instance with the provided configuration.
@@ -36,11 +42,19 @@ func NewServer(ctx context.Context, envConfig *config.EnvConfig, standalone bool
 		return nil, err
 	}
 	executionService := execution.NewExecutionService(queries, envConfig, logger)
+	otelShutdown, tp, mp, err := telemetry.SetupOTelSDK(ctx, "Odin Server", envConfig)
+	if err != nil {
+		logger.Err(err).Msg("Failed to setup OpenTelemetry")
+		return nil, err
+	}
 	odinServer := &OdinServer{
 		queries:          queries,
 		executionService: executionService,
 		envConfig:        envConfig,
 		logger:           logger,
+		tp:               tp,
+		mp:               mp,
+		otelShutdown:     otelShutdown,
 	}
 	srv, err := api.NewServer(odinServer)
 	if err != nil {

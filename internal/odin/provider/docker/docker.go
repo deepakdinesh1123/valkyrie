@@ -5,26 +5,21 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/docker/docker/client"
 	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type DockerProvider struct {
-	queries   *db.Queries
+	queries   db.Store
 	client    *client.Client
 	envConfig *config.EnvConfig
+	workerId  int32
 	logger    *zerolog.Logger
+	tp        trace.TracerProvider
+	mp        metric.MeterProvider
 }
 
-// NewDockerProvider creates a new DockerProvider instance.
-//
-// Parameters:
-// - env: A pointer to a config.EnvConfig object containing the environment configuration.
-// - queries: A pointer to a db.Queries object containing the database queries.
-// - logger: A pointer to a zerolog.Logger object for logging.
-//
-// Returns:
-// - A pointer to a DockerProvider object if successful.
-// - An error if the client creation fails.
-func NewDockerProvider(env *config.EnvConfig, queries *db.Queries, logger *zerolog.Logger) (*DockerProvider, error) {
+func NewDockerProvider(env *config.EnvConfig, queries db.Store, workerId int32, tp trace.TracerProvider, mp metric.MeterProvider, logger *zerolog.Logger) (*DockerProvider, error) {
 	client, err := newClient()
 	if err != nil {
 		return nil, err
@@ -34,5 +29,8 @@ func NewDockerProvider(env *config.EnvConfig, queries *db.Queries, logger *zerol
 		envConfig: env,
 		logger:    logger,
 		queries:   queries,
+		workerId:  workerId,
+		tp:        tp,
+		mp:        mp,
 	}, nil
 }

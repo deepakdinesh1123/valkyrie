@@ -20,20 +20,7 @@ import (
 //go:embed all:migrations/*.sql
 var migrationsFS embed.FS
 
-// GetDBConnection returns a connection to the PostgreSQL database.
-//
-// Parameters:
-// - ctx: The context.Context used for cancellation.
-// - standalone: A boolean indicating whether to start an embedded PostgreSQL instance.
-// - envConfig: A pointer to the config.EnvConfig struct.
-// - applyMigrations: A boolean indicating whether to apply migrations.
-// - worker: A boolean indicating whether the function is being called by a worker.
-// - logger: A pointer to the zerolog.Logger.
-//
-// Returns:
-// - *Queries: A pointer to the Queries struct.
-// - error: An error if any occurred.
-func GetDBConnection(ctx context.Context, standalone bool, envConfig *config.EnvConfig, applyMigrations bool, worker bool, logger *zerolog.Logger) (*Queries, error) {
+func GetDBConnection(ctx context.Context, standalone bool, envConfig *config.EnvConfig, applyMigrations bool, worker bool, logger *zerolog.Logger) (Store, error) {
 	// Start embedded Postgres if standalone mode is enabled
 	var pge *embeddedpostgres.EmbeddedPostgres
 	if standalone && !worker {
@@ -53,7 +40,7 @@ func GetDBConnection(ctx context.Context, standalone bool, envConfig *config.Env
 		envConfig.POSTGRES_USER, envConfig.POSTGRES_PASSWORD, envConfig.POSTGRES_HOST,
 		envConfig.POSTGRES_PORT, envConfig.POSTGRES_DB, envConfig.POSTGRES_SSL_MODE)
 
-	connPool, err := pgxpool.NewWithConfig(ctx, config.Config(POSTGRES_URL, logger))
+	connPool, err := pgxpool.NewWithConfig(ctx, config.PgxConfig(POSTGRES_URL, envConfig.ODIN_ENABLE_TELEMETRY, logger))
 	if err != nil {
 		logger.Err(err).Msg("Failed to create connection pool")
 		return nil, err
@@ -83,9 +70,7 @@ func GetDBConnection(ctx context.Context, standalone bool, envConfig *config.Env
 		}
 		logger.Info().Msg("Migrations applied")
 	}
-
-	queries := New(connPool)
-	return queries, nil
+	return NewStore(connPool), nil
 }
 
 // Helper function to apply migrations

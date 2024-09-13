@@ -6,6 +6,37 @@ import (
 	"time"
 )
 
+type CancelJobBadRequest Error
+
+func (*CancelJobBadRequest) cancelJobRes() {}
+
+type CancelJobInternalServerError Error
+
+func (*CancelJobInternalServerError) cancelJobRes() {}
+
+// CancelJobOK is response for CancelJob operation.
+type CancelJobOK struct{}
+
+func (*CancelJobOK) cancelJobRes() {}
+
+type DeleteExecutionWorkerBadRequest Error
+
+func (*DeleteExecutionWorkerBadRequest) deleteExecutionWorkerRes() {}
+
+type DeleteExecutionWorkerInternalServerError Error
+
+func (*DeleteExecutionWorkerInternalServerError) deleteExecutionWorkerRes() {}
+
+// DeleteExecutionWorkerNotFound is response for DeleteExecutionWorker operation.
+type DeleteExecutionWorkerNotFound struct{}
+
+func (*DeleteExecutionWorkerNotFound) deleteExecutionWorkerRes() {}
+
+// DeleteExecutionWorkerOK is response for DeleteExecutionWorker operation.
+type DeleteExecutionWorkerOK struct{}
+
+func (*DeleteExecutionWorkerOK) deleteExecutionWorkerRes() {}
+
 type DeleteJobBadRequest Error
 
 func (*DeleteJobBadRequest) deleteJobRes() {}
@@ -167,7 +198,8 @@ type ExecuteInternalServerError Error
 func (*ExecuteInternalServerError) executeRes() {}
 
 type ExecuteOK struct {
-	ExecutionId int64 `json:"executionId"`
+	ExecutionId int64  `json:"executionId"`
+	Events      string `json:"events"`
 }
 
 // GetExecutionId returns the value of ExecutionId.
@@ -175,9 +207,19 @@ func (s *ExecuteOK) GetExecutionId() int64 {
 	return s.ExecutionId
 }
 
+// GetEvents returns the value of Events.
+func (s *ExecuteOK) GetEvents() string {
+	return s.Events
+}
+
 // SetExecutionId sets the value of ExecutionId.
 func (s *ExecuteOK) SetExecutionId(val int64) {
 	s.ExecutionId = val
+}
+
+// SetEvents sets the value of Events.
+func (s *ExecuteOK) SetEvents(val string) {
+	s.Events = val
 }
 
 func (*ExecuteOK) executeRes() {}
@@ -398,6 +440,8 @@ type ExecutionRequest struct {
 	Config      OptExecutionRequestConfig      `json:"config"`
 	Code        string                         `json:"code"`
 	Language    string                         `json:"language"`
+	MaxRetries  OptInt                         `json:"max_retries"`
+	Timeout     OptInt32                       `json:"timeout"`
 	Priority    OptInt                         `json:"priority"`
 }
 
@@ -419,6 +463,16 @@ func (s *ExecutionRequest) GetCode() string {
 // GetLanguage returns the value of Language.
 func (s *ExecutionRequest) GetLanguage() string {
 	return s.Language
+}
+
+// GetMaxRetries returns the value of MaxRetries.
+func (s *ExecutionRequest) GetMaxRetries() OptInt {
+	return s.MaxRetries
+}
+
+// GetTimeout returns the value of Timeout.
+func (s *ExecutionRequest) GetTimeout() OptInt32 {
+	return s.Timeout
 }
 
 // GetPriority returns the value of Priority.
@@ -444,6 +498,16 @@ func (s *ExecutionRequest) SetCode(val string) {
 // SetLanguage sets the value of Language.
 func (s *ExecutionRequest) SetLanguage(val string) {
 	s.Language = val
+}
+
+// SetMaxRetries sets the value of MaxRetries.
+func (s *ExecutionRequest) SetMaxRetries(val OptInt) {
+	s.MaxRetries = val
+}
+
+// SetTimeout sets the value of Timeout.
+func (s *ExecutionRequest) SetTimeout(val OptInt32) {
+	s.Timeout = val
 }
 
 // SetPriority sets the value of Priority.
@@ -599,7 +663,8 @@ type ExecutionResult struct {
 	Args       string    `json:"args"`
 	StartedAt  time.Time `json:"started_at"`
 	FinishedAt time.Time `json:"finished_at"`
-	Logs       string    `json:"logs"`
+	ExecLogs   string    `json:"exec_logs"`
+	NixLogs    OptString `json:"nix_logs"`
 }
 
 // GetExecutionId returns the value of ExecutionId.
@@ -637,9 +702,14 @@ func (s *ExecutionResult) GetFinishedAt() time.Time {
 	return s.FinishedAt
 }
 
-// GetLogs returns the value of Logs.
-func (s *ExecutionResult) GetLogs() string {
-	return s.Logs
+// GetExecLogs returns the value of ExecLogs.
+func (s *ExecutionResult) GetExecLogs() string {
+	return s.ExecLogs
+}
+
+// GetNixLogs returns the value of NixLogs.
+func (s *ExecutionResult) GetNixLogs() OptString {
+	return s.NixLogs
 }
 
 // SetExecutionId sets the value of ExecutionId.
@@ -677,9 +747,14 @@ func (s *ExecutionResult) SetFinishedAt(val time.Time) {
 	s.FinishedAt = val
 }
 
-// SetLogs sets the value of Logs.
-func (s *ExecutionResult) SetLogs(val string) {
-	s.Logs = val
+// SetExecLogs sets the value of ExecLogs.
+func (s *ExecutionResult) SetExecLogs(val string) {
+	s.ExecLogs = val
+}
+
+// SetNixLogs sets the value of NixLogs.
+func (s *ExecutionResult) SetNixLogs(val OptString) {
+	s.NixLogs = val
 }
 
 // Ref: #/components/schemas/ExecutionWorker

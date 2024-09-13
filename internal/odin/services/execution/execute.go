@@ -3,7 +3,9 @@ package execution
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"embed"
+	"encoding/hex"
 	"fmt"
 	"text/template"
 
@@ -11,7 +13,6 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/models"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/rs/zerolog"
 )
 
@@ -19,21 +20,12 @@ import (
 var flakes embed.FS
 
 type ExecutionService struct {
-	queries   *db.Queries
+	queries   db.Store
 	envConfig *config.EnvConfig
 	logger    *zerolog.Logger
 }
 
-// NewExecutionService returns a new instance of ExecutionService.
-//
-// Parameters:
-// - queries: database queries
-// - envConfig: environment configuration
-// - logger: logger instance
-//
-// Returns:
-// - *ExecutionService: a new instance of ExecutionService
-func NewExecutionService(queries *db.Queries, envConfig *config.EnvConfig, logger *zerolog.Logger) *ExecutionService {
+func NewExecutionService(queries db.Store, envConfig *config.EnvConfig, logger *zerolog.Logger) *ExecutionService {
 	return &ExecutionService{
 		queries:   queries,
 		envConfig: envConfig,
@@ -148,15 +140,30 @@ func (s *ExecutionService) AddJob(ctx context.Context, req *api.ExecutionRequest
 	if err != nil {
 		return 0, err
 	}
-	job, err := s.queries.InsertJob(ctx, db.InsertJobParams{
-		Script:     execReq.File.Content,
-		Flake:      execReq.Environment,
-		Language:   req.Language,
-		ScriptPath: execReq.File.Name,
-		Args:       pgtype.Text{String: execReq.Args, Valid: true},
-	})
+	var jobParams db.AddJobTxParams
+	jobParams.Code = execReq.File.Content
+	jobParams.Flake = execReq.Environment
+	jobParams.ProgrammingLanguage = req.Language
+	jobParams.MaxRetries = req.MaxRetries.Value
+	jobParams.Path = execReq.File.Name
+	jobParams.Timeout = req.Timeout.Value
+
+	hash := calculateHash(jobParams.Code, jobParams.ProgrammingLanguage, jobParams.Flake, jobParams.Path)
+	jobParams.Hash = hash
+
+	job, err := s.queries.AddJobTx(ctx, jobParams)
 	if err != nil {
+		s.logger.Err(err).Msg("failed to add job")
 		return 0, err
 	}
-	return job.ID, nil
+	return int64(job.JobID), nil
+}
+
+func calculateHash(code string, language string, flake string, path string) string {
+	hashInstance := sha256.New()
+	hashInstance.Write([]byte(code))
+	hashInstance.Write([]byte(language))
+	hashInstance.Write([]byte(flake))
+	hashInstance.Write([]byte(path))
+	return hex.EncodeToString(hashInstance.Sum(nil))
 }

@@ -13,42 +13,49 @@ create table job_types (
 create table workers (
     id int primary key,
     name text not null unique,
-    created_at timestamptz not null default now()
+    created_at timestamptz not null default now(),
+    last_heartbeat timestamptz
 );
 
 create sequence workers_id_seq as int cycle owned by workers.id;
 alter table workers alter column id set default nextval('workers_id_seq');
 
 create sequence jobs_id_seq as bigint;
+create sequence exec_request_id_seq as int;
+
+create table exec_request (
+    id int primary key default nextval('exec_request_id_seq'),
+    hash text not null,
+    code text not null,
+    path text not null,
+    flake text not null,
+    args varchar(1024),
+    programming_language text
+);
 
 create table jobs (
     id bigint primary key default nextval('jobs_id_seq'),
-    inserted_at timestamptz not null default now(),
-    -- group_id int not null, will be added later
-    -- type_id int not null, will be added later
-    worker_id int references workers on delete set null,
-    script text not null,
-    script_path text not null,
-    args varchar(1024),
-    flake text not null,
-    language text not null,
-    completed bool not null default false,
-    running bool not null default false
+    created_at timestamptz not null  default now(),
+    updated_at timestamptz,
+    time_out int,
+    started_at timestamptz,
+    exec_request_id int references exec_request on delete set null,
+    status TEXT NOT NULL CHECK (status IN ('pending', 'scheduled', 'completed', 'failed', 'cancelled')) DEFAULT 'pending',
+    retries int default 0,
+    max_retries int default 5,
+    worker_id int references workers on delete set null
 );
 
 create sequence job_runs_id_seq as bigint;
 
 create table job_runs (
     id bigint primary key default nextval('job_runs_id_seq'),
-    job_id bigint not null,
+    job_id bigint not null references jobs on delete set null,
     worker_id int not null references workers on delete set null,
-    created_at timestamptz not null,
     started_at timestamptz not null,
     finished_at timestamptz not null,
-    -- group_id int not null,
-    -- type_id int not null,
-    script text not null,
-    flake text not null,
-    args varchar(1024),
-    logs text
+    exec_request_id int references exec_request on delete set null,
+    exec_logs text not null,
+    nix_logs text,
+    status TEXT NOT NULL
 );

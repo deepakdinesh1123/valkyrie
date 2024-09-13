@@ -11,22 +11,38 @@ import (
 )
 
 type Querier interface {
+	CancelJob(ctx context.Context, id int64) error
+	DeleteExecRequest(ctx context.Context, id int32) error
 	DeleteJob(ctx context.Context, id int64) error
+	DeleteWorker(ctx context.Context, id int32) error
 	FetchJob(ctx context.Context, workerID pgtype.Int4) (Job, error)
-	GetAllExecutionResults(ctx context.Context, arg GetAllExecutionResultsParams) ([]JobRun, error)
-	GetAllJobs(ctx context.Context, arg GetAllJobsParams) ([]Job, error)
+	GetAllExecutionResults(ctx context.Context, arg GetAllExecutionResultsParams) ([]GetAllExecutionResultsRow, error)
+	GetAllJobs(ctx context.Context, arg GetAllJobsParams) ([]GetAllJobsRow, error)
 	GetAllWorkers(ctx context.Context, arg GetAllWorkersParams) ([]Worker, error)
-	GetExecutionResultsByID(ctx context.Context, arg GetExecutionResultsByIDParams) ([]JobRun, error)
-	GetJob(ctx context.Context, id int64) (Job, error)
+	GetExecRequest(ctx context.Context, id int32) (ExecRequest, error)
+	GetExecRequestByHash(ctx context.Context, hash string) (ExecRequest, error)
+	GetExecutionResultsByID(ctx context.Context, arg GetExecutionResultsByIDParams) ([]GetExecutionResultsByIDRow, error)
+	GetJob(ctx context.Context, id int64) (GetJobRow, error)
+	GetStaleWorkers(ctx context.Context) ([]int32, error)
 	GetTotalExecutions(ctx context.Context) (int64, error)
 	GetTotalExecutionsForJob(ctx context.Context, jobID int64) (int64, error)
 	GetTotalJobs(ctx context.Context) (int64, error)
 	GetTotalWorkers(ctx context.Context) (int64, error)
 	GetWorker(ctx context.Context, name string) (Worker, error)
+	InsertExecRequest(ctx context.Context, arg InsertExecRequestParams) (int32, error)
 	InsertJob(ctx context.Context, arg InsertJobParams) (Job, error)
 	InsertJobRun(ctx context.Context, arg InsertJobRunParams) (JobRun, error)
 	InsertWorker(ctx context.Context, name string) (Worker, error)
-	UpdateJob(ctx context.Context, id int64) error
+	ListExecRequests(ctx context.Context, arg ListExecRequestsParams) ([]ExecRequest, error)
+	PruneCompletedJobs(ctx context.Context) error
+	RequeueLTJobs(ctx context.Context) error
+	RequeueWorkerJobs(ctx context.Context, workerID pgtype.Int4) error
+	RetryJob(ctx context.Context, id int64) error
+	StopJob(ctx context.Context, id int64) error
+	UpdateHeartbeat(ctx context.Context, id int32) error
+	UpdateJobCompleted(ctx context.Context, id int64) error
+	WorkerTaskCount(ctx context.Context, workerID pgtype.Int4) (int64, error)
+	updateJobFailed(ctx context.Context, id int64) error
 }
 
 var _ Querier = (*Queries)(nil)

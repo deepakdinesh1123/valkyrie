@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/pkgerrors"
 )
 
 func GetLogger(level string) *zerolog.Logger {
@@ -24,6 +25,8 @@ func GetLogger(level string) *zerolog.Logger {
 	default:
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
+
+	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
 
 	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339}).
 		Level(zerolog.TraceLevel).

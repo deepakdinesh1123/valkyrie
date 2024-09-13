@@ -10,30 +10,30 @@ import (
 
 	"github.com/deepakdinesh1123/valkyrie/internal/concurrency"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
-// Execute executes a job using the system provider.
-//
-// Parameters:
-// - ctx: the context for the execution operation
-// - wg: the wait group for the execution operation
-// - execReq: the job execution request
-func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, execReq db.Job) {
+func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, job db.Job) {
+	tracer := s.tp.Tracer("Execute")
+	_, span := tracer.Start(ctx, "Execute")
+	defer span.End()
+
+	span.AddEvent("Executing job")
+
+	start := time.Now()
 	defer wg.Done()
-	dir := filepath.Join(s.envConfig.ODIN_SYSTEM_PROVIDER_BASE_DIR, execReq.InsertedAt.Time.Format("20060102150405"))
+	dir := filepath.Join(s.envConfig.ODIN_SYSTEM_PROVIDER_BASE_DIR, job.CreatedAt.Time.Format("20060102150405"))
 	s.logger.Info().Str("dir", dir).Msg("Executing job")
 	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
 		s.logger.Err(err).Msg("Failed to create directory")
-		err := s.updateJob(ctx, &execReq, err.Error())
+		err := s.updateJob(ctx, &job, start, err.Error(), false)
 		if err != nil {
 			s.logger.Err(err).Msg("Failed to update job")
 		}
 		return
 	}
-	if err := s.writeFiles(dir, execReq); err != nil {
+	if err := s.writeFiles(ctx, dir, job); err != nil {
 		s.logger.Err(err).Msg("Failed to write files")
-		err := s.updateJob(ctx, &execReq, err.Error())
+		err := s.updateJob(ctx, &job, start, err.Error(), false)
 		if err != nil {
 			s.logger.Err(err).Msg("Failed to update job")
 		}
@@ -42,7 +42,7 @@ func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	outFile, err := os.Create(filepath.Join(dir, "output.txt"))
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to create output file")
-		err := s.updateJob(ctx, &execReq, err.Error())
+		err := s.updateJob(ctx, &job, start, err.Error(), false)
 		if err != nil {
 			s.logger.Err(err).Msg("Failed to update job")
 		}
@@ -52,7 +52,7 @@ func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	errFile, err := os.Create(filepath.Join(dir, "error.txt"))
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to create error file")
-		err := s.updateJob(ctx, &execReq, err.Error())
+		err := s.updateJob(ctx, &job, start, err.Error(), false)
 		if err != nil {
 			s.logger.Err(err).Msg("Failed to update job")
 		}
@@ -60,7 +60,22 @@ func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	}
 	defer errFile.Close()
 
-	tctx, cancel := context.WithTimeout(context.TODO(), time.Duration(s.envConfig.ODIN_WORKER_TASK_TIMEOUT)*time.Second)
+	var timeout int
+	if job.TimeOut.Int32 > 0 { // By default, timeout is set to -1
+		timeout = int(job.TimeOut.Int32)
+	} else if job.TimeOut.Int32 == 0 {
+		timeout = 0
+	} else {
+		timeout = s.envConfig.ODIN_WORKER_TASK_TIMEOUT
+	}
+
+	var tctx context.Context
+	var cancel context.CancelFunc
+	if timeout > 0 {
+		tctx, cancel = context.WithTimeout(context.TODO(), time.Duration(timeout)*time.Second)
+	} else {
+		tctx, cancel = context.WithCancel(context.TODO())
+	}
 	defer cancel()
 
 	execCmd := exec.CommandContext(tctx, "nix", "run")
@@ -79,6 +94,7 @@ func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	done := make(chan bool, 1)
 
 	go func() {
+		s.logger.Info().Msg("Executing nix run command")
 		if err := execCmd.Run(); err != nil {
 			if tctx.Err() != nil {
 				switch tctx.Err() {
@@ -88,7 +104,7 @@ func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 				}
 			}
 			s.logger.Err(err).Msg("Failed to execute command")
-			err := s.updateJob(ctx, &execReq, err.Error())
+			err := s.updateJob(ctx, &job, start, err.Error(), false)
 			if err != nil {
 				s.logger.Err(err).Msg("Failed to update job")
 			}
@@ -104,7 +120,7 @@ func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			case context.Canceled:
 				s.logger.Info().Msg("context canceled wating for process to exit")
 				<-done
-				s.updateExecutionDetails(context.TODO(), dir, execReq)
+				s.updateExecutionDetails(context.TODO(), dir, start, job)
 				return
 			default:
 				s.logger.Info().Msg("context error killing process")
@@ -112,16 +128,17 @@ func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 				if err != nil {
 					s.logger.Err(err).Msg("Failed to send kill signal")
 				}
-				s.updateExecutionDetails(context.TODO(), dir, execReq)
+				s.updateExecutionDetails(context.TODO(), dir, start, job)
 				return
 			}
 		case <-done:
-			s.updateExecutionDetails(context.TODO(), dir, execReq)
+			s.updateExecutionDetails(context.TODO(), dir, start, job)
 			return
 		}
 	}
 }
 
+<<<<<<< HEAD
 // updateExecutionDetails updates the execution details of a job by reading the output file and updating the job status.
 //
 // Parameters:
@@ -129,17 +146,21 @@ func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 // - dir: the directory containing the output file
 // - execReq: the job execution request
 func (s *SystemProvider) updateExecutionDetails(ctx context.Context, dir string, execReq db.Job) {
+=======
+func (s *SystemProvider) updateExecutionDetails(ctx context.Context, dir string, startTime time.Time, job db.Job) {
+>>>>>>> feat/sse_and_ws
 	out, err := os.ReadFile(filepath.Join(dir, "output.txt"))
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to read output file")
 		return
 	}
-	err = s.updateJob(ctx, &execReq, string(out))
+	err = s.updateJob(ctx, &job, startTime, string(out), true)
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to update job")
 	}
 }
 
+<<<<<<< HEAD
 // writeFiles writes the flake and script files to the odin execution directory.
 //
 // Parameters:
@@ -148,9 +169,16 @@ func (s *SystemProvider) updateExecutionDetails(ctx context.Context, dir string,
 // Returns:
 // - error: any error that occurs during file writing
 func (s *SystemProvider) writeFiles(dir string, execReq db.Job) error {
+=======
+func (s *SystemProvider) writeFiles(ctx context.Context, dir string, job db.Job) error {
+	execReq, err := s.queries.GetExecRequest(ctx, job.ExecRequestID.Int32)
+	if err != nil {
+		return err
+	}
+>>>>>>> feat/sse_and_ws
 	files := map[string]string{
-		"flake.nix":        execReq.Flake,
-		execReq.ScriptPath: execReq.Script,
+		"flake.nix":  execReq.Flake,
+		execReq.Path: execReq.Code,
 	}
 
 	for name, content := range files {
@@ -161,6 +189,7 @@ func (s *SystemProvider) writeFiles(dir string, execReq db.Job) error {
 	return nil
 }
 
+<<<<<<< HEAD
 // updateJob updates the job status to completed and inserts a new job run.
 //
 // Parameters:
@@ -172,17 +201,20 @@ func (s *SystemProvider) writeFiles(dir string, execReq db.Job) error {
 func (d *SystemProvider) updateJob(ctx context.Context, execReq *db.Job, message string) error {
 	if err := d.queries.UpdateJob(ctx, execReq.ID); err != nil {
 		return err
+=======
+func (s *SystemProvider) updateJob(ctx context.Context, job *db.Job, startTime time.Time, message string, success bool) error {
+	retry := true
+	if job.Retries.Int32+1 >= job.MaxRetries.Int32 || success {
+		retry = false
+>>>>>>> feat/sse_and_ws
 	}
-	if _, err := d.queries.InsertJobRun(ctx, db.InsertJobRunParams{
-		JobID:      execReq.ID,
-		WorkerID:   execReq.WorkerID.Int32,
-		StartedAt:  pgtype.Timestamptz{Time: time.Now(), Valid: true},
-		FinishedAt: pgtype.Timestamptz{Time: time.Now(), Valid: true},
-		Script:     message,
-		Flake:      execReq.Flake,
-		Args:       execReq.Args,
-		Logs:       pgtype.Text{String: message, Valid: true},
-		CreatedAt:  execReq.InsertedAt,
+	if _, err := s.queries.UpdateJobResultTx(ctx, db.UpdateJobResultTxParams{
+		StartTime: startTime,
+		Job:       *job,
+		Message:   message,
+		Success:   success,
+		WorkerId:  s.workerId,
+		Retry:     retry,
 	}); err != nil {
 		return err
 	}

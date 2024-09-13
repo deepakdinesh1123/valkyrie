@@ -15,6 +15,193 @@ import (
 	"github.com/ogen-go/ogen/validate"
 )
 
+// CancelJobParams is parameters of cancelJob operation.
+type CancelJobParams struct {
+	JobId int64
+}
+
+func unpackCancelJobParams(packed middleware.Parameters) (params CancelJobParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "JobId",
+			In:   "path",
+		}
+		params.JobId = packed[key].(int64)
+	}
+	return params
+}
+
+func decodeCancelJobParams(args [1]string, argsEscaped bool, r *http.Request) (params CancelJobParams, _ error) {
+	// Decode path: JobId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "JobId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToInt64(val)
+				if err != nil {
+					return err
+				}
+
+				params.JobId = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "JobId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// DeleteExecutionWorkerParams is parameters of deleteExecutionWorker operation.
+type DeleteExecutionWorkerParams struct {
+	WorkerId int64
+	Force    OptBool
+}
+
+func unpackDeleteExecutionWorkerParams(packed middleware.Parameters) (params DeleteExecutionWorkerParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "workerId",
+			In:   "path",
+		}
+		params.WorkerId = packed[key].(int64)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "force",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Force = v.(OptBool)
+		}
+	}
+	return params
+}
+
+func decodeDeleteExecutionWorkerParams(args [1]string, argsEscaped bool, r *http.Request) (params DeleteExecutionWorkerParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
+	// Decode path: workerId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "workerId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToInt64(val)
+				if err != nil {
+					return err
+				}
+
+				params.WorkerId = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "workerId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	// Set default value for query: force.
+	{
+		val := bool(false)
+		params.Force.SetTo(val)
+	}
+	// Decode query: force.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "force",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotForceVal bool
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToBool(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotForceVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Force.SetTo(paramsDotForceVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "force",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // DeleteJobParams is parameters of deleteJob operation.
 type DeleteJobParams struct {
 	JobId int64
