@@ -25,7 +25,7 @@ type Querier interface {
 	GetJob(ctx context.Context, id int64) (GetJobRow, error)
 	GetStaleWorkers(ctx context.Context) ([]int32, error)
 	GetTotalExecutions(ctx context.Context) (int64, error)
-	GetTotalExecutionsForJob(ctx context.Context, jobID int64) (int64, error)
+	GetTotalExecutionsForJob(ctx context.Context, jobID pgtype.Int8) (int64, error)
 	GetTotalJobs(ctx context.Context) (int64, error)
 	GetTotalWorkers(ctx context.Context) (int64, error)
 	GetWorker(ctx context.Context, name string) (Worker, error)

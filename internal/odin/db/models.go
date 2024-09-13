@@ -25,7 +25,7 @@ type Job struct {
 	TimeOut       pgtype.Int4        `db:"time_out" json:"time_out"`
 	StartedAt     pgtype.Timestamptz `db:"started_at" json:"started_at"`
 	ExecRequestID pgtype.Int4        `db:"exec_request_id" json:"exec_request_id"`
-	Status        string             `db:"status" json:"status"`
+	CurrentState  string             `db:"current_state" json:"current_state"`
 	Retries       pgtype.Int4        `db:"retries" json:"retries"`
 	MaxRetries    pgtype.Int4        `db:"max_retries" json:"max_retries"`
 	WorkerID      pgtype.Int4        `db:"worker_id" json:"worker_id"`
@@ -39,14 +39,14 @@ type JobGroup struct {
 
 type JobRun struct {
 	ID            int64              `db:"id" json:"id"`
-	JobID         int64              `db:"job_id" json:"job_id"`
-	WorkerID      int32              `db:"worker_id" json:"worker_id"`
+	JobID         pgtype.Int8        `db:"job_id" json:"job_id"`
+	WorkerID      pgtype.Int4        `db:"worker_id" json:"worker_id"`
 	StartedAt     pgtype.Timestamptz `db:"started_at" json:"started_at"`
 	FinishedAt    pgtype.Timestamptz `db:"finished_at" json:"finished_at"`
 	ExecRequestID pgtype.Int4        `db:"exec_request_id" json:"exec_request_id"`
 	ExecLogs      string             `db:"exec_logs" json:"exec_logs"`
 	NixLogs       pgtype.Text        `db:"nix_logs" json:"nix_logs"`
-	Status        string             `db:"status" json:"status"`
+	Success       pgtype.Bool        `db:"success" json:"success"`
 }
 
 type JobType struct {

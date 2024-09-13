@@ -57,7 +57,7 @@ func (q *Queries) GetAllWorkers(ctx context.Context, arg GetAllWorkersParams) ([
 
 const getStaleWorkers = `-- name: GetStaleWorkers :many
 select id from workers
-where last_heartbeat < now() - interval '1 minute'
+where last_heartbeat < now() - interval '10 seconds'
 `
 
 func (q *Queries) GetStaleWorkers(ctx context.Context) ([]int32, error) {
@@ -141,7 +141,7 @@ func (q *Queries) UpdateHeartbeat(ctx context.Context, id int32) error {
 
 const workerTaskCount = `-- name: WorkerTaskCount :one
 select count(*) from jobs
-where status = 'scheduled' and worker_id = $1
+where current_state = 'scheduled' and worker_id = $1
 `
 
 func (q *Queries) WorkerTaskCount(ctx context.Context, workerID pgtype.Int4) (int64, error) {

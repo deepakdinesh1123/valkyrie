@@ -12,6 +12,8 @@ type UpdateJobResultTxParams struct {
 	Job       Job
 	WorkerId  int32
 	Message   string
+	ExecLogs  string
+	NixLogs   string
 	Success   bool
 	Retry     bool
 }
@@ -42,12 +44,14 @@ func (s *SQLStore) UpdateJobResultTx(ctx context.Context, arg UpdateJobResultTxP
 			}
 		}
 		jobRun, err := q.InsertJobRun(ctx, InsertJobRunParams{
-			JobID:         arg.Job.ID,
-			WorkerID:      arg.WorkerId,
+			JobID:         pgtype.Int8{Int64: int64(arg.Job.ID), Valid: true},
+			WorkerID:      pgtype.Int4{Int32: arg.WorkerId, Valid: true},
 			StartedAt:     pgtype.Timestamptz{Time: arg.StartTime, Valid: true},
 			FinishedAt:    pgtype.Timestamptz{Time: time.Now(), Valid: true},
 			ExecRequestID: arg.Job.ExecRequestID,
-			ExecLogs:      arg.Message,
+			ExecLogs:      arg.ExecLogs,
+			NixLogs:       pgtype.Text{String: arg.NixLogs, Valid: true},
+			Success:       pgtype.Bool{Bool: arg.Success, Valid: true},
 		})
 		if err != nil {
 			return err

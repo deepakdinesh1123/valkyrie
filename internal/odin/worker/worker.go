@@ -123,6 +123,7 @@ func (w *Worker) upsertWorker(ctx context.Context, name string) (int, error) {
 }
 
 func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
+	w.queries.UpdateHeartbeat(ctx, int32(w.ID))
 	defer wg.Done()
 	defer func() {
 		var err error
@@ -152,8 +153,7 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 	defer infLock.Unlock()
 	var swg concurrency.SafeWaitGroup
 	fetchJobTicker := time.NewTicker(time.Duration(w.envConfig.ODIN_WORKER_POLL_FREQ) * time.Second)
-	rqJobTicker := time.NewTicker(time.Duration(30) * time.Second)
-	heartBeatTicker := time.NewTicker(time.Duration(1) * time.Second)
+	heartBeatTicker := time.NewTicker(time.Duration(10) * time.Second)
 	for {
 		select {
 		case <-ctx.Done():
@@ -196,8 +196,6 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 			swg.Add(1)
 			span.AddEvent("Executing job")
 			go w.provider.Execute(tracerCtx, &swg, res.Job)
-		case <-rqJobTicker.C:
-			w.queries.RequeueLTJobs(ctx)
 		case <-heartBeatTicker.C:
 			w.queries.UpdateHeartbeat(ctx, int32(w.ID))
 		}

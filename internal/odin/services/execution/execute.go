@@ -34,6 +34,12 @@ func NewExecutionService(queries db.Store, envConfig *config.EnvConfig, logger *
 }
 
 func (s *ExecutionService) prepareExecutionRequest(req *api.ExecutionRequest) (*models.ExecutionRequest, error) {
+	if req.Timeout.Value > 180 {
+		return nil, &ExecutionServiceError{
+			Type:    "timeout",
+			Message: "Timeout cannot be more than 180 seconds",
+		}
+	}
 	scriptName := fmt.Sprintf("main.%s", config.LANGUAGE_EXTENSION[req.Language])
 	if req.Environment.Value.Type == "Flake" {
 		return &models.ExecutionRequest{

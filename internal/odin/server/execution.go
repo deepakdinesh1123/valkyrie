@@ -13,6 +13,7 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/services/execution"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 func (s *OdinServer) Execute(ctx context.Context, req *api.ExecutionRequest) (api.ExecuteRes, error) {
@@ -73,12 +74,12 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 				return
 			}
 
-			s.logger.Debug().Str("status", job.Status).Msg("Status fetched")
+			s.logger.Debug().Str("status", job.CurrentState).Msg("CurrentState fetched")
 
-			switch job.Status {
+			switch job.CurrentState {
 			case "completed":
 				res, err := s.queries.GetExecutionResultsByID(ctx, db.GetExecutionResultsByIDParams{
-					JobID:  execId,
+					JobID:  pgtype.Int8{Int64: execId, Valid: true},
 					Limit:  1,
 					Offset: 0,
 				})
@@ -103,7 +104,7 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 				fmt.Fprintf(w, "data: scheduled: %d\n\n", execId)
 				flusher.Flush()
 			default:
-				s.logger.Warn().Str("status", job.Status).Msg("Unknown status")
+				s.logger.Warn().Str("status", job.CurrentState).Msg("Unknown status")
 			}
 
 			time.Sleep(3 * time.Second)
@@ -146,13 +147,13 @@ func (s *OdinServer) ExecuteWS(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			s.logger.Debug().Str("status", job.Status).Msg("Status fetched")
+			s.logger.Debug().Str("status", job.CurrentState).Msg("CurrentState fetched")
 
-			switch job.Status {
+			switch job.CurrentState {
 			case "completed":
 				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("completed: %d\n\n", execId)))
 				res, err := s.queries.GetExecutionResultsByID(ctx, db.GetExecutionResultsByIDParams{
-					JobID:  execId,
+					JobID:  pgtype.Int8{Int64: execId, Valid: true},
 					Limit:  1,
 					Offset: 0,
 				})
@@ -171,7 +172,7 @@ func (s *OdinServer) ExecuteWS(w http.ResponseWriter, r *http.Request) {
 			case "scheduled":
 				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("scheduled: %d\n\n", execId)))
 			default:
-				s.logger.Warn().Str("status", job.Status).Msg("Unknown status")
+				s.logger.Warn().Str("status", job.CurrentState).Msg("Unknown status")
 			}
 			time.Sleep(3 * time.Second)
 		}
@@ -217,7 +218,7 @@ func (s *OdinServer) GetAllExecutionResults(ctx context.Context, params api.GetA
 
 func (s *OdinServer) GetExecutionResultsById(ctx context.Context, params api.GetExecutionResultsByIdParams) (api.GetExecutionResultsByIdRes, error) {
 	execRes, err := s.queries.GetExecutionResultsByID(ctx, db.GetExecutionResultsByIDParams{
-		JobID:  params.JobId,
+		JobID:  pgtype.Int8{Int64: params.JobId, Valid: true},
 		Limit:  params.PageSize.Value,
 		Offset: params.Page.Value * params.PageSize.Value,
 	})
@@ -226,7 +227,7 @@ func (s *OdinServer) GetExecutionResultsById(ctx context.Context, params api.Get
 			Message: fmt.Sprintf("Failed to get execution results: %v", err),
 		}, nil
 	}
-	total, err := s.queries.GetTotalExecutionsForJob(ctx, params.JobId)
+	total, err := s.queries.GetTotalExecutionsForJob(ctx, pgtype.Int8{Int64: params.JobId, Valid: true})
 	if err != nil {
 		return &api.GetExecutionResultsByIdInternalServerError{
 			Message: fmt.Sprintf("Failed to get total execution results: %v", err),

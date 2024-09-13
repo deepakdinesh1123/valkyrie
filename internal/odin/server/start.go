@@ -85,7 +85,14 @@ func (s *OdinServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 				}
 				for _, id := range ids {
 					s.logger.Info().Msg(fmt.Sprintf("Requeuing jobs for stale worker %d", id))
-					s.queries.RequeueWorkerJobs(ctx, pgtype.Int4{Int32: id, Valid: true})
+					err := s.queries.RequeueWorkerJobs(ctx, pgtype.Int4{Int32: id, Valid: true})
+					if err != nil {
+						s.logger.Err(err).Msg("Failed to requeue jobs for stale worker")
+					}
+				}
+				err = s.queries.RequeueLTJobs(ctx)
+				if err != nil {
+					s.logger.Err(err).Msg("Failed to requeue jobs")
 				}
 			}
 		}

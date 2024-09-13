@@ -30,11 +30,11 @@ where id = $1;
 
 -- name: GetStaleWorkers :many
 select id from workers
-where last_heartbeat < now() - interval '1 minute';
+where last_heartbeat < now() - interval '10 seconds';
 
 -- name: DeleteWorker :exec
 delete from workers where id = $1;
 
 -- name: WorkerTaskCount :one
 select count(*) from jobs
-where status = 'scheduled' and worker_id = $1;
+where current_state = 'scheduled' and worker_id = $1;

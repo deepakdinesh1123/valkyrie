@@ -22,7 +22,8 @@
                 ]))
                 {{ range .SystemDependencies }}
                   {{.}}
-                {{- end }} 
+                {{- end }}
+                pkgs.jqp 
               ];
               text = ''
                 python main.py {{ if .Args.Set }}{{ .Args.Value }}{{ end }}

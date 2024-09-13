@@ -5,7 +5,7 @@ create table jobs (
     time_out int,
     started_at timestamptz,
     exec_request_id int references exec_request on delete set null,
-    status TEXT NOT NULL CHECK (status IN ('pending', 'scheduled', 'completed', 'failed', 'cancelled')) DEFAULT 'pending',
+    current_state TEXT NOT NULL CHECK (current_state IN ('pending', 'scheduled', 'completed', 'failed', 'cancelled')) DEFAULT 'pending',
     retries int default 0,
     max_retries int default 5,
     worker_id int references workers on delete set null
@@ -20,15 +20,15 @@ create table job_runs (
     exec_request_id int references exec_request on delete set null,
     exec_logs text not null,
     nix_logs text,
-    status TEXT NOT NULL
+    success boolean
 );
 
 -- name: FetchJob :one
-update jobs set status = 'scheduled', started_at = now(), worker_id = $1, updated_at = now()
+update jobs set current_state = 'scheduled', started_at = now(), worker_id = $1, updated_at = now()
 where id = (
     select id from jobs
     where 
-        status = 'pending'
+        current_state = 'pending'
         and retries < max_retries
     order by
         id asc
@@ -47,15 +47,15 @@ returning *;
 -- name: UpdateJobCompleted :exec
 update jobs
 set
-    status = 'completed',
+    current_state = 'completed',
     updated_at = now()
-where id = $1 AND status = 'scheduled';
+where id = $1 AND current_state = 'scheduled';
 
 -- name: InsertJobRun :one
 insert into job_runs
-    (job_id, worker_id, started_at, finished_at, exec_request_id, exec_logs, nix_logs)
+    (job_id, worker_id, started_at, finished_at, exec_request_id, exec_logs, nix_logs, success)
 values
-    ($1, $2, $3, $4, $5, $6, $7)
+    ($1, $2, $3, $4, $5, $6, $7, $8)
 returning *;
 
 -- name: GetAllJobs :many
@@ -93,42 +93,44 @@ select count(*) from job_runs where job_id = $1;
 select count(*) from job_runs;
 
 -- name: StopJob :exec
-update jobs set status = 'pending' where id = $1;
+update jobs set current_state = 'pending', updated_at = now(), worker_id = null where id = $1;
 
 -- name: CancelJob :exec
-update jobs set status = 'cancelled' where id = $1;
+update jobs set current_state = 'cancelled', updated_at = now(), worker_id = null where id = $1;
 
 -- name: updateJobFailed :exec
 update jobs
 set
-    status = 'failed',
+    current_state = 'failed',
     updated_at = now()
-where id = $1 AND status = 'scheduled';
+where id = $1 AND current_state = 'scheduled';
 
 -- name: RetryJob :exec
 update jobs
 set
-    status = 'pending',
-    retries = retries + 1,
-    updated_at = now()
-where id = $1 AND status = 'scheduled';
+    current_state = 'pending',
+    retries = retries::integer + 1,
+    updated_at = now(),
+    worker_id = null
+where id = $1 AND current_state = 'scheduled';
 
 -- name: PruneCompletedJobs :exec
-delete from jobs where status = 'completed';
+delete from jobs where current_state = 'completed';
 
 -- name: RequeueLTJobs :exec
 update jobs
 set
-    status = 'pending',
-    updated_at = now()
-where status = 'scheduled' 
-  and started_at + time_out * INTERVAL '1 second' < now();
+    current_state = 'pending',
+    updated_at = now(),
+    worker_id = null
+where current_state = 'scheduled' 
+  and started_at + time_out * INTERVAL '1 second' < now() and time_out > 0;
 
 -- name: RequeueWorkerJobs :exec
 update jobs
 set
-    status = 'pending',
+    current_state = 'pending',
     worker_id = null,
     updated_at = now()
-where status = 'scheduled' 
+where current_state = 'scheduled' 
   and worker_id = $1;
