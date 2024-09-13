@@ -22,6 +22,12 @@ type Invoker interface {
 	//
 	// PUT /executions/{JobId}/
 	CancelJob(ctx context.Context, params CancelJobParams) (CancelJobRes, error)
+	// DeleteExecutionWorker invokes deleteExecutionWorker operation.
+	//
+	// Delete execution worker.
+	//
+	// DELETE /executions/workers/{workerId}/
+	DeleteExecutionWorker(ctx context.Context, params DeleteExecutionWorkerParams) (DeleteExecutionWorkerRes, error)
 	// DeleteJob invokes deleteJob operation.
 	//
 	// Delete job.
@@ -168,6 +174,81 @@ func (c *Client) sendCancelJob(ctx context.Context, params CancelJobParams) (res
 	defer resp.Body.Close()
 
 	result, err := decodeCancelJobResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// DeleteExecutionWorker invokes deleteExecutionWorker operation.
+//
+// Delete execution worker.
+//
+// DELETE /executions/workers/{workerId}/
+func (c *Client) DeleteExecutionWorker(ctx context.Context, params DeleteExecutionWorkerParams) (DeleteExecutionWorkerRes, error) {
+	res, err := c.sendDeleteExecutionWorker(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendDeleteExecutionWorker(ctx context.Context, params DeleteExecutionWorkerParams) (res DeleteExecutionWorkerRes, err error) {
+
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [3]string
+	pathParts[0] = "/executions/workers/"
+	{
+		// Encode "workerId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "workerId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			return e.EncodeValue(conv.Int64ToString(params.WorkerId))
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	q := uri.NewQueryEncoder()
+	{
+		// Encode "force" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "force",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.Force.Get(); ok {
+				return e.EncodeValue(conv.BoolToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	u.RawQuery = q.Values().Encode()
+
+	r, err := ht.NewRequest(ctx, "DELETE", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	result, err := decodeDeleteExecutionWorkerResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

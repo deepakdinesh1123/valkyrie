@@ -47,7 +47,7 @@ func (s *SQLStore) UpdateJobResultTx(ctx context.Context, arg UpdateJobResultTxP
 			StartedAt:     pgtype.Timestamptz{Time: arg.StartTime, Valid: true},
 			FinishedAt:    pgtype.Timestamptz{Time: time.Now(), Valid: true},
 			ExecRequestID: arg.Job.ExecRequestID,
-			Logs:          arg.Message,
+			ExecLogs:      arg.Message,
 		})
 		if err != nil {
 			return err

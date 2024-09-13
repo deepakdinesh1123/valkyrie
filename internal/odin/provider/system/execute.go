@@ -60,7 +60,22 @@ func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	}
 	defer errFile.Close()
 
-	tctx, cancel := context.WithTimeout(context.TODO(), time.Duration(s.envConfig.ODIN_WORKER_TASK_TIMEOUT)*time.Second)
+	var timeout int
+	if job.TimeOut.Int32 > 0 { // By default, timeout is set to -1
+		timeout = int(job.TimeOut.Int32)
+	} else if job.TimeOut.Int32 == 0 {
+		timeout = 0
+	} else {
+		timeout = s.envConfig.ODIN_WORKER_TASK_TIMEOUT
+	}
+
+	var tctx context.Context
+	var cancel context.CancelFunc
+	if timeout > 0 {
+		tctx, cancel = context.WithTimeout(context.TODO(), time.Duration(timeout)*time.Second)
+	} else {
+		tctx, cancel = context.WithCancel(context.TODO())
+	}
 	defer cancel()
 
 	execCmd := exec.CommandContext(tctx, "nix", "run")
