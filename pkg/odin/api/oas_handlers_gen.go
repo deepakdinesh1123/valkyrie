@@ -94,6 +94,89 @@ func (s *Server) handleCancelJobRequest(args [1]string, argsEscaped bool, w http
 	}
 }
 
+// handleDeleteExecutionWorkerRequest handles deleteExecutionWorker operation.
+//
+// Delete execution worker.
+//
+// DELETE /executions/workers/{workerId}/
+func (s *Server) handleDeleteExecutionWorkerRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var (
+		err          error
+		opErrContext = ogenerrors.OperationContext{
+			Name: "DeleteExecutionWorker",
+			ID:   "deleteExecutionWorker",
+		}
+	)
+	params, err := decodeDeleteExecutionWorkerParams(args, argsEscaped, r)
+	if err != nil {
+		err = &ogenerrors.DecodeParamsError{
+			OperationContext: opErrContext,
+			Err:              err,
+		}
+		defer recordError("DecodeParams", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+
+	var response DeleteExecutionWorkerRes
+	if m := s.cfg.Middleware; m != nil {
+		mreq := middleware.Request{
+			Context:          ctx,
+			OperationName:    "DeleteExecutionWorker",
+			OperationSummary: "Delete execution worker",
+			OperationID:      "deleteExecutionWorker",
+			Body:             nil,
+			Params: middleware.Parameters{
+				{
+					Name: "workerId",
+					In:   "path",
+				}: params.WorkerId,
+				{
+					Name: "force",
+					In:   "query",
+				}: params.Force,
+			},
+			Raw: r,
+		}
+
+		type (
+			Request  = struct{}
+			Params   = DeleteExecutionWorkerParams
+			Response = DeleteExecutionWorkerRes
+		)
+		response, err = middleware.HookMiddleware[
+			Request,
+			Params,
+			Response,
+		](
+			m,
+			mreq,
+			unpackDeleteExecutionWorkerParams,
+			func(ctx context.Context, request Request, params Params) (response Response, err error) {
+				response, err = s.h.DeleteExecutionWorker(ctx, params)
+				return response, err
+			},
+		)
+	} else {
+		response, err = s.h.DeleteExecutionWorker(ctx, params)
+	}
+	if err != nil {
+		defer recordError("Internal", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+
+	if err := encodeDeleteExecutionWorkerResponse(response, w); err != nil {
+		defer recordError("EncodeResponse", err)
+		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
+			s.cfg.ErrorHandler(ctx, w, r, err)
+		}
+		return
+	}
+}
+
 // handleDeleteJobRequest handles deleteJob operation.
 //
 // Delete job.

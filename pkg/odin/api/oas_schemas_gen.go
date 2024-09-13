@@ -19,6 +19,24 @@ type CancelJobOK struct{}
 
 func (*CancelJobOK) cancelJobRes() {}
 
+type DeleteExecutionWorkerBadRequest Error
+
+func (*DeleteExecutionWorkerBadRequest) deleteExecutionWorkerRes() {}
+
+type DeleteExecutionWorkerInternalServerError Error
+
+func (*DeleteExecutionWorkerInternalServerError) deleteExecutionWorkerRes() {}
+
+// DeleteExecutionWorkerNotFound is response for DeleteExecutionWorker operation.
+type DeleteExecutionWorkerNotFound struct{}
+
+func (*DeleteExecutionWorkerNotFound) deleteExecutionWorkerRes() {}
+
+// DeleteExecutionWorkerOK is response for DeleteExecutionWorker operation.
+type DeleteExecutionWorkerOK struct{}
+
+func (*DeleteExecutionWorkerOK) deleteExecutionWorkerRes() {}
+
 type DeleteJobBadRequest Error
 
 func (*DeleteJobBadRequest) deleteJobRes() {}
@@ -423,7 +441,7 @@ type ExecutionRequest struct {
 	Code        string                         `json:"code"`
 	Language    string                         `json:"language"`
 	MaxRetries  OptInt                         `json:"max_retries"`
-	Timeout     OptInt64                       `json:"timeout"`
+	Timeout     OptInt32                       `json:"timeout"`
 	Priority    OptInt                         `json:"priority"`
 }
 
@@ -453,7 +471,7 @@ func (s *ExecutionRequest) GetMaxRetries() OptInt {
 }
 
 // GetTimeout returns the value of Timeout.
-func (s *ExecutionRequest) GetTimeout() OptInt64 {
+func (s *ExecutionRequest) GetTimeout() OptInt32 {
 	return s.Timeout
 }
 
@@ -488,7 +506,7 @@ func (s *ExecutionRequest) SetMaxRetries(val OptInt) {
 }
 
 // SetTimeout sets the value of Timeout.
-func (s *ExecutionRequest) SetTimeout(val OptInt64) {
+func (s *ExecutionRequest) SetTimeout(val OptInt32) {
 	s.Timeout = val
 }
 
@@ -645,7 +663,8 @@ type ExecutionResult struct {
 	Args       string    `json:"args"`
 	StartedAt  time.Time `json:"started_at"`
 	FinishedAt time.Time `json:"finished_at"`
-	Logs       string    `json:"logs"`
+	ExecLogs   string    `json:"exec_logs"`
+	NixLogs    OptString `json:"nix_logs"`
 }
 
 // GetExecutionId returns the value of ExecutionId.
@@ -683,9 +702,14 @@ func (s *ExecutionResult) GetFinishedAt() time.Time {
 	return s.FinishedAt
 }
 
-// GetLogs returns the value of Logs.
-func (s *ExecutionResult) GetLogs() string {
-	return s.Logs
+// GetExecLogs returns the value of ExecLogs.
+func (s *ExecutionResult) GetExecLogs() string {
+	return s.ExecLogs
+}
+
+// GetNixLogs returns the value of NixLogs.
+func (s *ExecutionResult) GetNixLogs() OptString {
+	return s.NixLogs
 }
 
 // SetExecutionId sets the value of ExecutionId.
@@ -723,9 +747,14 @@ func (s *ExecutionResult) SetFinishedAt(val time.Time) {
 	s.FinishedAt = val
 }
 
-// SetLogs sets the value of Logs.
-func (s *ExecutionResult) SetLogs(val string) {
-	s.Logs = val
+// SetExecLogs sets the value of ExecLogs.
+func (s *ExecutionResult) SetExecLogs(val string) {
+	s.ExecLogs = val
+}
+
+// SetNixLogs sets the value of NixLogs.
+func (s *ExecutionResult) SetNixLogs(val OptString) {
+	s.NixLogs = val
 }
 
 // Ref: #/components/schemas/ExecutionWorker
@@ -1301,52 +1330,6 @@ func (o OptInt32) Get() (v int32, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptInt32) Or(d int32) int32 {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
-// NewOptInt64 returns new OptInt64 with value set to v.
-func NewOptInt64(v int64) OptInt64 {
-	return OptInt64{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptInt64 is optional int64.
-type OptInt64 struct {
-	Value int64
-	Set   bool
-}
-
-// IsSet returns true if OptInt64 was set.
-func (o OptInt64) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptInt64) Reset() {
-	var v int64
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptInt64) SetTo(v int64) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptInt64) Get() (v int64, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptInt64) Or(d int64) int64 {
 	if v, ok := o.Get(); ok {
 		return v
 	}

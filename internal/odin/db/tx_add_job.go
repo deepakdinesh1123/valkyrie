@@ -16,6 +16,7 @@ type AddJobTxParams struct {
 	Path                string
 	ProgrammingLanguage string
 	MaxRetries          int
+	Timeout             int32
 }
 
 type AddJobTxResult struct {
@@ -53,6 +54,7 @@ func (s *SQLStore) AddJobTx(ctx context.Context, arg AddJobTxParams) (AddJobTxRe
 		var jobParams InsertJobParams
 		jobParams.ExecRequestID = pgtype.Int4{Int32: execId, Valid: true}
 		jobParams.MaxRetries = pgtype.Int4{Int32: int32(arg.MaxRetries), Valid: true}
+		jobParams.TimeOut = pgtype.Int4{Int32: arg.Timeout, Valid: true}
 		job, err := s.InsertJob(ctx, jobParams)
 		if err != nil {
 			log.Printf("InsertJob error: %v", err)

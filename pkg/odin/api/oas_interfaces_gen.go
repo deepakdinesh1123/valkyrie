@@ -5,6 +5,10 @@ type CancelJobRes interface {
 	cancelJobRes()
 }
 
+type DeleteExecutionWorkerRes interface {
+	deleteExecutionWorkerRes()
+}
+
 type DeleteJobRes interface {
 	deleteJobRes()
 }

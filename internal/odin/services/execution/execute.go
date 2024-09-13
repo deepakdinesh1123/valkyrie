@@ -122,6 +122,7 @@ func (s *ExecutionService) AddJob(ctx context.Context, req *api.ExecutionRequest
 	jobParams.ProgrammingLanguage = req.Language
 	jobParams.MaxRetries = req.MaxRetries.Value
 	jobParams.Path = execReq.File.Name
+	jobParams.Timeout = req.Timeout.Value
 
 	hash := calculateHash(jobParams.Code, jobParams.ProgrammingLanguage, jobParams.Flake, jobParams.Path)
 	jobParams.Hash = hash

@@ -9,7 +9,7 @@ func (s *ExecutionRequest) setDefaults() {
 		s.MaxRetries.SetTo(val)
 	}
 	{
-		val := int64(0)
+		val := int32(-1)
 		s.Timeout.SetTo(val)
 	}
 }

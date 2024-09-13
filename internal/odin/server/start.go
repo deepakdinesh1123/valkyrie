@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/middleware"
+	"github.com/jackc/pgx/v5/pgtype"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
@@ -65,6 +66,26 @@ func (s *OdinServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 				err := s.queries.PruneCompletedJobs(ctx)
 				if err != nil {
 					s.logger.Err(err).Msg("Failed to prune completed jobs")
+				}
+			}
+		}
+	}(ctx)
+
+	go func(ctx context.Context) {
+		ticker := time.NewTicker(time.Duration(5) * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				ids, err := s.queries.GetStaleWorkers(ctx)
+				if err != nil {
+					s.logger.Err(err).Msg("Failed to get stale workers")
+				}
+				for _, id := range ids {
+					s.logger.Info().Msg(fmt.Sprintf("Requeuing jobs for stale worker %d", id))
+					s.queries.RequeueWorkerJobs(ctx, pgtype.Int4{Int32: id, Valid: true})
 				}
 			}
 		}

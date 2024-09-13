@@ -2,24 +2,29 @@ create table jobs (
     id bigint primary key default nextval('jobs_id_seq'),
     created_at timestamptz not null  default now(),
     updated_at timestamptz,
+    time_out int,
+    started_at timestamptz,
     exec_request_id int references exec_request on delete set null,
     status TEXT NOT NULL CHECK (status IN ('pending', 'scheduled', 'completed', 'failed', 'cancelled')) DEFAULT 'pending',
     retries int default 0,
-    max_retries int default 5
+    max_retries int default 5,
+    worker_id int references workers on delete set null
 );
 
 create table job_runs (
     id bigint primary key default nextval('job_runs_id_seq'),
     job_id bigint not null references jobs on delete set null,
     worker_id int not null references workers on delete set null,
-    started_at timestamptz not null ,
-    finished_at timestamptz not null ,
+    started_at timestamptz not null,
+    finished_at timestamptz not null,
     exec_request_id int references exec_request on delete set null,
-    logs text not null
+    exec_logs text not null,
+    nix_logs text,
+    status TEXT NOT NULL
 );
 
 -- name: FetchJob :one
-update jobs set status = 'scheduled'
+update jobs set status = 'scheduled', started_at = now(), worker_id = $1, updated_at = now()
 where id = (
     select id from jobs
     where 
@@ -34,9 +39,9 @@ returning *;
 
 -- name: InsertJob :one
 insert into jobs
-    (exec_request_id, max_retries)
+    (exec_request_id, max_retries, time_out)
 values
-    ($1, $2)
+    ($1, $2, $3)
 returning *;
 
 -- name: UpdateJobCompleted :exec
@@ -48,9 +53,9 @@ where id = $1 AND status = 'scheduled';
 
 -- name: InsertJobRun :one
 insert into job_runs
-    (job_id, worker_id, started_at, finished_at, exec_request_id, logs)
+    (job_id, worker_id, started_at, finished_at, exec_request_id, exec_logs, nix_logs)
 values
-    ($1, $2, $3, $4, $5, $6)
+    ($1, $2, $3, $4, $5, $6, $7)
 returning *;
 
 -- name: GetAllJobs :many
@@ -110,3 +115,20 @@ where id = $1 AND status = 'scheduled';
 
 -- name: PruneCompletedJobs :exec
 delete from jobs where status = 'completed';
+
+-- name: RequeueLTJobs :exec
+update jobs
+set
+    status = 'pending',
+    updated_at = now()
+where status = 'scheduled' 
+  and started_at + time_out * INTERVAL '1 second' < now();
+
+-- name: RequeueWorkerJobs :exec
+update jobs
+set
+    status = 'pending',
+    worker_id = null,
+    updated_at = now()
+where status = 'scheduled' 
+  and worker_id = $1;

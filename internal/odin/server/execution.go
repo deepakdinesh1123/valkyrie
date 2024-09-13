@@ -90,7 +90,7 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 				}
 				fmt.Fprintf(w, "data: completed: %d\n\n", execId)
 				flusher.Flush()
-				fmt.Fprintf(w, "data: %s\n\n", res[0].Logs)
+				fmt.Fprintf(w, "data: %s\n\n", res[0].ExecLogs)
 				return
 			case "failed":
 				fmt.Fprintf(w, "data: failed: %d\n\n", execId)
@@ -161,7 +161,7 @@ func (s *OdinServer) ExecuteWS(w http.ResponseWriter, r *http.Request) {
 					c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("failed: %s\n\n", err)))
 					return
 				}
-				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("data: %s\n\n", res[0].Logs)))
+				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("data: %s\n\n", res[0].ExecLogs)))
 				return
 			case "failed":
 				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("failed: %d\n\n", execId)))
@@ -198,7 +198,7 @@ func (s *OdinServer) GetAllExecutionResults(ctx context.Context, params api.GetA
 	for _, execRes := range execResDB {
 		executions = append(executions, api.ExecutionResult{
 			ExecutionId: int64(execRes.ExecRequestID.Int32),
-			Logs:        execRes.Logs,
+			ExecLogs:    execRes.ExecLogs,
 			Script:      execRes.Code,
 			Flake:       execRes.Flake,
 			Args:        execRes.Args.String,
@@ -236,7 +236,7 @@ func (s *OdinServer) GetExecutionResultsById(ctx context.Context, params api.Get
 	for _, execRes := range execRes {
 		executions = append(executions, api.ExecutionResult{
 			ExecutionId: int64(execRes.ExecRequestID.Int32),
-			Logs:        execRes.Logs,
+			ExecLogs:    execRes.ExecLogs,
 			Script:      execRes.Code,
 			Flake:       execRes.Flake,
 			Args:        execRes.Args.String,

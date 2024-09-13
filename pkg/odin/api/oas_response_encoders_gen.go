@@ -45,6 +45,47 @@ func encodeCancelJobResponse(response CancelJobRes, w http.ResponseWriter) error
 	}
 }
 
+func encodeDeleteExecutionWorkerResponse(response DeleteExecutionWorkerRes, w http.ResponseWriter) error {
+	switch response := response.(type) {
+	case *DeleteExecutionWorkerOK:
+		w.WriteHeader(200)
+
+		return nil
+
+	case *DeleteExecutionWorkerBadRequest:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(400)
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *DeleteExecutionWorkerNotFound:
+		w.WriteHeader(404)
+
+		return nil
+
+	case *DeleteExecutionWorkerInternalServerError:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(500)
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	default:
+		return errors.Errorf("unexpected response type: %T", response)
+	}
+}
+
 func encodeDeleteJobResponse(response DeleteJobRes, w http.ResponseWriter) error {
 	switch response := response.(type) {
 	case *DeleteJobOK:

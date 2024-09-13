@@ -14,6 +14,12 @@ type Handler interface {
 	//
 	// PUT /executions/{JobId}/
 	CancelJob(ctx context.Context, params CancelJobParams) (CancelJobRes, error)
+	// DeleteExecutionWorker implements deleteExecutionWorker operation.
+	//
+	// Delete execution worker.
+	//
+	// DELETE /executions/workers/{workerId}/
+	DeleteExecutionWorker(ctx context.Context, params DeleteExecutionWorkerParams) (DeleteExecutionWorkerRes, error)
 	// DeleteJob implements deleteJob operation.
 	//
 	// Delete job.
