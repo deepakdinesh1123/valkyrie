@@ -138,17 +138,7 @@ func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	}
 }
 
-<<<<<<< HEAD
-// updateExecutionDetails updates the execution details of a job by reading the output file and updating the job status.
-//
-// Parameters:
-// - ctx: the context for the update operation
-// - dir: the directory containing the output file
-// - execReq: the job execution request
-func (s *SystemProvider) updateExecutionDetails(ctx context.Context, dir string, execReq db.Job) {
-=======
 func (s *SystemProvider) updateExecutionDetails(ctx context.Context, dir string, startTime time.Time, job db.Job) {
->>>>>>> feat/sse_and_ws
 	out, err := os.ReadFile(filepath.Join(dir, "output.txt"))
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to read output file")
@@ -160,22 +150,11 @@ func (s *SystemProvider) updateExecutionDetails(ctx context.Context, dir string,
 	}
 }
 
-<<<<<<< HEAD
-// writeFiles writes the flake and script files to the odin execution directory.
-//
-// Parameters:
-// - dir: the directory to write the files to
-// - execReq: the job execution request containing the flake and script and other metadata
-// Returns:
-// - error: any error that occurs during file writing
-func (s *SystemProvider) writeFiles(dir string, execReq db.Job) error {
-=======
 func (s *SystemProvider) writeFiles(ctx context.Context, dir string, job db.Job) error {
 	execReq, err := s.queries.GetExecRequest(ctx, job.ExecRequestID.Int32)
 	if err != nil {
 		return err
 	}
->>>>>>> feat/sse_and_ws
 	files := map[string]string{
 		"flake.nix":  execReq.Flake,
 		execReq.Path: execReq.Code,
@@ -189,24 +168,10 @@ func (s *SystemProvider) writeFiles(ctx context.Context, dir string, job db.Job)
 	return nil
 }
 
-<<<<<<< HEAD
-// updateJob updates the job status to completed and inserts a new job run.
-//
-// Parameters:
-// - ctx: the context for the update operation.
-// - execReq: the job execution request.
-// - message: the message to be logged.
-// Returns:
-// - error: an error if the update operation fails.
-func (d *SystemProvider) updateJob(ctx context.Context, execReq *db.Job, message string) error {
-	if err := d.queries.UpdateJob(ctx, execReq.ID); err != nil {
-		return err
-=======
 func (s *SystemProvider) updateJob(ctx context.Context, job *db.Job, startTime time.Time, message string, success bool) error {
 	retry := true
 	if job.Retries.Int32+1 >= job.MaxRetries.Int32 || success {
 		retry = false
->>>>>>> feat/sse_and_ws
 	}
 	if _, err := s.queries.UpdateJobResultTx(ctx, db.UpdateJobResultTxParams{
 		StartTime: startTime,
