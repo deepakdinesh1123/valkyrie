@@ -16,36 +16,36 @@ import (
 
 // Invoker invokes operations described by OpenAPI v3 specification.
 type Invoker interface {
-	// CancelJob invokes cancelJob operation.
+	// CancelExecutionJob invokes cancelExecutionJob operation.
 	//
-	// Cancel Job.
+	// Cancel Execution Job.
 	//
-	// PUT /executions/{JobId}/
-	CancelJob(ctx context.Context, params CancelJobParams) (CancelJobRes, error)
+	// PUT /executions/jobs/{JobId}/
+	CancelExecutionJob(ctx context.Context, params CancelExecutionJobParams) (CancelExecutionJobRes, error)
+	// DeleteExecutionJob invokes deleteExecutionJob operation.
+	//
+	// Delete execution job.
+	//
+	// DELETE /executions/jobs/{JobId}/
+	DeleteExecutionJob(ctx context.Context, params DeleteExecutionJobParams) (DeleteExecutionJobRes, error)
 	// DeleteExecutionWorker invokes deleteExecutionWorker operation.
 	//
 	// Delete execution worker.
 	//
 	// DELETE /executions/workers/{workerId}/
 	DeleteExecutionWorker(ctx context.Context, params DeleteExecutionWorkerParams) (DeleteExecutionWorkerRes, error)
-	// DeleteJob invokes deleteJob operation.
-	//
-	// Delete job.
-	//
-	// DELETE /executions/{JobId}/
-	DeleteJob(ctx context.Context, params DeleteJobParams) (DeleteJobRes, error)
 	// Execute invokes execute operation.
 	//
 	// Execute a script.
 	//
 	// POST /executions/execute/
 	Execute(ctx context.Context, request *ExecutionRequest) (ExecuteRes, error)
-	// GetAllExecutionResults invokes getAllExecutionResults operation.
+	// GetAllExecutionJobs invokes getAllExecutionJobs operation.
 	//
-	// Get all execution results.
+	// Get all execution jobs.
 	//
-	// GET /executions/results/
-	GetAllExecutionResults(ctx context.Context, params GetAllExecutionResultsParams) (GetAllExecutionResultsRes, error)
+	// GET /jobs/execution/
+	GetAllExecutionJobs(ctx context.Context, params GetAllExecutionJobsParams) (GetAllExecutionJobsRes, error)
 	// GetAllExecutions invokes getAllExecutions operation.
 	//
 	// Get all executions.
@@ -58,18 +58,30 @@ type Invoker interface {
 	//
 	// GET /execution/config/
 	GetExecutionConfig(ctx context.Context) (GetExecutionConfigRes, error)
-	// GetExecutionResultsById invokes getExecutionResultsById operation.
+	// GetExecutionJobById invokes getExecutionJobById operation.
 	//
-	// Get execution result.
+	// Get execution job.
 	//
-	// GET /executions/{JobId}/
-	GetExecutionResultsById(ctx context.Context, params GetExecutionResultsByIdParams) (GetExecutionResultsByIdRes, error)
+	// GET /executions/jobs/{JobId}/
+	GetExecutionJobById(ctx context.Context, params GetExecutionJobByIdParams) (GetExecutionJobByIdRes, error)
+	// GetExecutionResultById invokes getExecutionResultById operation.
+	//
+	// Get execution result by id.
+	//
+	// GET /executions/{execId}/
+	GetExecutionResultById(ctx context.Context, params GetExecutionResultByIdParams) (GetExecutionResultByIdRes, error)
 	// GetExecutionWorkers invokes getExecutionWorkers operation.
 	//
 	// Get all execution workers.
 	//
 	// GET /executions/workers
 	GetExecutionWorkers(ctx context.Context, params GetExecutionWorkersParams) (GetExecutionWorkersRes, error)
+	// GetExecutionsForJob invokes getExecutionsForJob operation.
+	//
+	// Get executions of given job.
+	//
+	// GET /jobs/{JobId}/executions/
+	GetExecutionsForJob(ctx context.Context, params GetExecutionsForJobParams) (GetExecutionsForJobRes, error)
 	// GetVersion invokes getVersion operation.
 	//
 	// Get version.
@@ -126,21 +138,21 @@ func (c *Client) requestURL(ctx context.Context) *url.URL {
 	return u
 }
 
-// CancelJob invokes cancelJob operation.
+// CancelExecutionJob invokes cancelExecutionJob operation.
 //
-// Cancel Job.
+// Cancel Execution Job.
 //
-// PUT /executions/{JobId}/
-func (c *Client) CancelJob(ctx context.Context, params CancelJobParams) (CancelJobRes, error) {
-	res, err := c.sendCancelJob(ctx, params)
+// PUT /executions/jobs/{JobId}/
+func (c *Client) CancelExecutionJob(ctx context.Context, params CancelExecutionJobParams) (CancelExecutionJobRes, error) {
+	res, err := c.sendCancelExecutionJob(ctx, params)
 	return res, err
 }
 
-func (c *Client) sendCancelJob(ctx context.Context, params CancelJobParams) (res CancelJobRes, err error) {
+func (c *Client) sendCancelExecutionJob(ctx context.Context, params CancelExecutionJobParams) (res CancelExecutionJobRes, err error) {
 
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [3]string
-	pathParts[0] = "/executions/"
+	pathParts[0] = "/executions/jobs/"
 	{
 		// Encode "JobId" parameter.
 		e := uri.NewPathEncoder(uri.PathEncoderConfig{
@@ -173,7 +185,62 @@ func (c *Client) sendCancelJob(ctx context.Context, params CancelJobParams) (res
 	}
 	defer resp.Body.Close()
 
-	result, err := decodeCancelJobResponse(resp)
+	result, err := decodeCancelExecutionJobResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// DeleteExecutionJob invokes deleteExecutionJob operation.
+//
+// Delete execution job.
+//
+// DELETE /executions/jobs/{JobId}/
+func (c *Client) DeleteExecutionJob(ctx context.Context, params DeleteExecutionJobParams) (DeleteExecutionJobRes, error) {
+	res, err := c.sendDeleteExecutionJob(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendDeleteExecutionJob(ctx context.Context, params DeleteExecutionJobParams) (res DeleteExecutionJobRes, err error) {
+
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [3]string
+	pathParts[0] = "/executions/jobs/"
+	{
+		// Encode "JobId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "JobId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			return e.EncodeValue(conv.Int64ToString(params.JobId))
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	r, err := ht.NewRequest(ctx, "DELETE", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	result, err := decodeDeleteExecutionJobResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -256,61 +323,6 @@ func (c *Client) sendDeleteExecutionWorker(ctx context.Context, params DeleteExe
 	return result, nil
 }
 
-// DeleteJob invokes deleteJob operation.
-//
-// Delete job.
-//
-// DELETE /executions/{JobId}/
-func (c *Client) DeleteJob(ctx context.Context, params DeleteJobParams) (DeleteJobRes, error) {
-	res, err := c.sendDeleteJob(ctx, params)
-	return res, err
-}
-
-func (c *Client) sendDeleteJob(ctx context.Context, params DeleteJobParams) (res DeleteJobRes, err error) {
-
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [3]string
-	pathParts[0] = "/executions/"
-	{
-		// Encode "JobId" parameter.
-		e := uri.NewPathEncoder(uri.PathEncoderConfig{
-			Param:   "JobId",
-			Style:   uri.PathStyleSimple,
-			Explode: false,
-		})
-		if err := func() error {
-			return e.EncodeValue(conv.Int64ToString(params.JobId))
-		}(); err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		encoded, err := e.Result()
-		if err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		pathParts[1] = encoded
-	}
-	pathParts[2] = "/"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	r, err := ht.NewRequest(ctx, "DELETE", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	defer resp.Body.Close()
-
-	result, err := decodeDeleteJobResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
 // Execute invokes execute operation.
 //
 // Execute a script.
@@ -350,21 +362,21 @@ func (c *Client) sendExecute(ctx context.Context, request *ExecutionRequest) (re
 	return result, nil
 }
 
-// GetAllExecutionResults invokes getAllExecutionResults operation.
+// GetAllExecutionJobs invokes getAllExecutionJobs operation.
 //
-// Get all execution results.
+// Get all execution jobs.
 //
-// GET /executions/results/
-func (c *Client) GetAllExecutionResults(ctx context.Context, params GetAllExecutionResultsParams) (GetAllExecutionResultsRes, error) {
-	res, err := c.sendGetAllExecutionResults(ctx, params)
+// GET /jobs/execution/
+func (c *Client) GetAllExecutionJobs(ctx context.Context, params GetAllExecutionJobsParams) (GetAllExecutionJobsRes, error) {
+	res, err := c.sendGetAllExecutionJobs(ctx, params)
 	return res, err
 }
 
-func (c *Client) sendGetAllExecutionResults(ctx context.Context, params GetAllExecutionResultsParams) (res GetAllExecutionResultsRes, err error) {
+func (c *Client) sendGetAllExecutionJobs(ctx context.Context, params GetAllExecutionJobsParams) (res GetAllExecutionJobsRes, err error) {
 
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
-	pathParts[0] = "/executions/results/"
+	pathParts[0] = "/jobs/execution/"
 	uri.AddPathParts(u, pathParts[:]...)
 
 	q := uri.NewQueryEncoder()
@@ -415,7 +427,7 @@ func (c *Client) sendGetAllExecutionResults(ctx context.Context, params GetAllEx
 	}
 	defer resp.Body.Close()
 
-	result, err := decodeGetAllExecutionResultsResponse(resp)
+	result, err := decodeGetAllExecutionJobsResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -532,21 +544,21 @@ func (c *Client) sendGetExecutionConfig(ctx context.Context) (res GetExecutionCo
 	return result, nil
 }
 
-// GetExecutionResultsById invokes getExecutionResultsById operation.
+// GetExecutionJobById invokes getExecutionJobById operation.
 //
-// Get execution result.
+// Get execution job.
 //
-// GET /executions/{JobId}/
-func (c *Client) GetExecutionResultsById(ctx context.Context, params GetExecutionResultsByIdParams) (GetExecutionResultsByIdRes, error) {
-	res, err := c.sendGetExecutionResultsById(ctx, params)
+// GET /executions/jobs/{JobId}/
+func (c *Client) GetExecutionJobById(ctx context.Context, params GetExecutionJobByIdParams) (GetExecutionJobByIdRes, error) {
+	res, err := c.sendGetExecutionJobById(ctx, params)
 	return res, err
 }
 
-func (c *Client) sendGetExecutionResultsById(ctx context.Context, params GetExecutionResultsByIdParams) (res GetExecutionResultsByIdRes, err error) {
+func (c *Client) sendGetExecutionJobById(ctx context.Context, params GetExecutionJobByIdParams) (res GetExecutionJobByIdRes, err error) {
 
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [3]string
-	pathParts[0] = "/executions/"
+	pathParts[0] = "/executions/jobs/"
 	{
 		// Encode "JobId" parameter.
 		e := uri.NewPathEncoder(uri.PathEncoderConfig{
@@ -568,42 +580,60 @@ func (c *Client) sendGetExecutionResultsById(ctx context.Context, params GetExec
 	pathParts[2] = "/"
 	uri.AddPathParts(u, pathParts[:]...)
 
-	q := uri.NewQueryEncoder()
-	{
-		// Encode "page" parameter.
-		cfg := uri.QueryParameterEncodingConfig{
-			Name:    "page",
-			Style:   uri.QueryStyleForm,
-			Explode: true,
-		}
-
-		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.Page.Get(); ok {
-				return e.EncodeValue(conv.Int32ToString(val))
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode query")
-		}
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
 	}
-	{
-		// Encode "pageSize" parameter.
-		cfg := uri.QueryParameterEncodingConfig{
-			Name:    "pageSize",
-			Style:   uri.QueryStyleForm,
-			Explode: true,
-		}
 
-		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.PageSize.Get(); ok {
-				return e.EncodeValue(conv.Int32ToString(val))
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode query")
-		}
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
 	}
-	u.RawQuery = q.Values().Encode()
+	defer resp.Body.Close()
+
+	result, err := decodeGetExecutionJobByIdResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// GetExecutionResultById invokes getExecutionResultById operation.
+//
+// Get execution result by id.
+//
+// GET /executions/{execId}/
+func (c *Client) GetExecutionResultById(ctx context.Context, params GetExecutionResultByIdParams) (GetExecutionResultByIdRes, error) {
+	res, err := c.sendGetExecutionResultById(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendGetExecutionResultById(ctx context.Context, params GetExecutionResultByIdParams) (res GetExecutionResultByIdRes, err error) {
+
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [3]string
+	pathParts[0] = "/executions/"
+	{
+		// Encode "execId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "execId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			return e.EncodeValue(conv.Int64ToString(params.ExecId))
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/"
+	uri.AddPathParts(u, pathParts[:]...)
 
 	r, err := ht.NewRequest(ctx, "GET", u)
 	if err != nil {
@@ -616,7 +646,7 @@ func (c *Client) sendGetExecutionResultsById(ctx context.Context, params GetExec
 	}
 	defer resp.Body.Close()
 
-	result, err := decodeGetExecutionResultsByIdResponse(resp)
+	result, err := decodeGetExecutionResultByIdResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -690,6 +720,98 @@ func (c *Client) sendGetExecutionWorkers(ctx context.Context, params GetExecutio
 	defer resp.Body.Close()
 
 	result, err := decodeGetExecutionWorkersResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// GetExecutionsForJob invokes getExecutionsForJob operation.
+//
+// Get executions of given job.
+//
+// GET /jobs/{JobId}/executions/
+func (c *Client) GetExecutionsForJob(ctx context.Context, params GetExecutionsForJobParams) (GetExecutionsForJobRes, error) {
+	res, err := c.sendGetExecutionsForJob(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendGetExecutionsForJob(ctx context.Context, params GetExecutionsForJobParams) (res GetExecutionsForJobRes, err error) {
+
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [3]string
+	pathParts[0] = "/jobs/"
+	{
+		// Encode "JobId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "JobId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			return e.EncodeValue(conv.Int64ToString(params.JobId))
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/executions/"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	q := uri.NewQueryEncoder()
+	{
+		// Encode "page" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "page",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.Page.Get(); ok {
+				return e.EncodeValue(conv.Int32ToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	{
+		// Encode "pageSize" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "pageSize",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.PageSize.Get(); ok {
+				return e.EncodeValue(conv.Int32ToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	u.RawQuery = q.Values().Encode()
+
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	result, err := decodeGetExecutionsForJobResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

@@ -34,7 +34,7 @@ create table exec_request (
 );
 
 create table jobs (
-    id bigint primary key default nextval('jobs_id_seq'),
+    job_id bigint primary key default nextval('jobs_id_seq'),
     created_at timestamptz not null  default now(),
     updated_at timestamptz,
     time_out int,
@@ -46,14 +46,15 @@ create table jobs (
     worker_id int references workers on delete set null
 );
 
-create sequence job_runs_id_seq as bigint;
+create sequence executions_id_seq as bigint;
 
-create table job_runs (
-    id bigint primary key default nextval('job_runs_id_seq'),
+create table executions (
+    exec_id bigint primary key default nextval('executions_id_seq'),
     job_id bigint references jobs on delete set null,
     worker_id int references workers on delete set null,
     started_at timestamptz not null,
     finished_at timestamptz not null,
+    created_at timestamptz not null default now(),
     exec_request_id int references exec_request on delete set null,
     exec_logs text not null,
     nix_logs text,

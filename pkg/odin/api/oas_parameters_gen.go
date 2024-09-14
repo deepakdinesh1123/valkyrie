@@ -15,12 +15,12 @@ import (
 	"github.com/ogen-go/ogen/validate"
 )
 
-// CancelJobParams is parameters of cancelJob operation.
-type CancelJobParams struct {
+// CancelExecutionJobParams is parameters of cancelExecutionJob operation.
+type CancelExecutionJobParams struct {
 	JobId int64
 }
 
-func unpackCancelJobParams(packed middleware.Parameters) (params CancelJobParams) {
+func unpackCancelExecutionJobParams(packed middleware.Parameters) (params CancelExecutionJobParams) {
 	{
 		key := middleware.ParameterKey{
 			Name: "JobId",
@@ -31,7 +31,72 @@ func unpackCancelJobParams(packed middleware.Parameters) (params CancelJobParams
 	return params
 }
 
-func decodeCancelJobParams(args [1]string, argsEscaped bool, r *http.Request) (params CancelJobParams, _ error) {
+func decodeCancelExecutionJobParams(args [1]string, argsEscaped bool, r *http.Request) (params CancelExecutionJobParams, _ error) {
+	// Decode path: JobId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "JobId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToInt64(val)
+				if err != nil {
+					return err
+				}
+
+				params.JobId = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "JobId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// DeleteExecutionJobParams is parameters of deleteExecutionJob operation.
+type DeleteExecutionJobParams struct {
+	JobId int64
+}
+
+func unpackDeleteExecutionJobParams(packed middleware.Parameters) (params DeleteExecutionJobParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "JobId",
+			In:   "path",
+		}
+		params.JobId = packed[key].(int64)
+	}
+	return params
+}
+
+func decodeDeleteExecutionJobParams(args [1]string, argsEscaped bool, r *http.Request) (params DeleteExecutionJobParams, _ error) {
 	// Decode path: JobId.
 	if err := func() error {
 		param := args[0]
@@ -202,80 +267,15 @@ func decodeDeleteExecutionWorkerParams(args [1]string, argsEscaped bool, r *http
 	return params, nil
 }
 
-// DeleteJobParams is parameters of deleteJob operation.
-type DeleteJobParams struct {
-	JobId int64
-}
-
-func unpackDeleteJobParams(packed middleware.Parameters) (params DeleteJobParams) {
-	{
-		key := middleware.ParameterKey{
-			Name: "JobId",
-			In:   "path",
-		}
-		params.JobId = packed[key].(int64)
-	}
-	return params
-}
-
-func decodeDeleteJobParams(args [1]string, argsEscaped bool, r *http.Request) (params DeleteJobParams, _ error) {
-	// Decode path: JobId.
-	if err := func() error {
-		param := args[0]
-		if argsEscaped {
-			unescaped, err := url.PathUnescape(args[0])
-			if err != nil {
-				return errors.Wrap(err, "unescape path")
-			}
-			param = unescaped
-		}
-		if len(param) > 0 {
-			d := uri.NewPathDecoder(uri.PathDecoderConfig{
-				Param:   "JobId",
-				Value:   param,
-				Style:   uri.PathStyleSimple,
-				Explode: false,
-			})
-
-			if err := func() error {
-				val, err := d.DecodeValue()
-				if err != nil {
-					return err
-				}
-
-				c, err := conv.ToInt64(val)
-				if err != nil {
-					return err
-				}
-
-				params.JobId = c
-				return nil
-			}(); err != nil {
-				return err
-			}
-		} else {
-			return validate.ErrFieldRequired
-		}
-		return nil
-	}(); err != nil {
-		return params, &ogenerrors.DecodeParamError{
-			Name: "JobId",
-			In:   "path",
-			Err:  err,
-		}
-	}
-	return params, nil
-}
-
-// GetAllExecutionResultsParams is parameters of getAllExecutionResults operation.
-type GetAllExecutionResultsParams struct {
+// GetAllExecutionJobsParams is parameters of getAllExecutionJobs operation.
+type GetAllExecutionJobsParams struct {
 	// The page number to retrieve.
 	Page OptInt32
 	// The number of items per page.
 	PageSize OptInt32
 }
 
-func unpackGetAllExecutionResultsParams(packed middleware.Parameters) (params GetAllExecutionResultsParams) {
+func unpackGetAllExecutionJobsParams(packed middleware.Parameters) (params GetAllExecutionJobsParams) {
 	{
 		key := middleware.ParameterKey{
 			Name: "page",
@@ -297,7 +297,7 @@ func unpackGetAllExecutionResultsParams(packed middleware.Parameters) (params Ge
 	return params
 }
 
-func decodeGetAllExecutionResultsParams(args [0]string, argsEscaped bool, r *http.Request) (params GetAllExecutionResultsParams, _ error) {
+func decodeGetAllExecutionJobsParams(args [0]string, argsEscaped bool, r *http.Request) (params GetAllExecutionJobsParams, _ error) {
 	q := uri.NewQueryDecoder(r.URL.Query())
 	// Set default value for query: page.
 	{
@@ -521,16 +521,12 @@ func decodeGetAllExecutionsParams(args [0]string, argsEscaped bool, r *http.Requ
 	return params, nil
 }
 
-// GetExecutionResultsByIdParams is parameters of getExecutionResultsById operation.
-type GetExecutionResultsByIdParams struct {
+// GetExecutionJobByIdParams is parameters of getExecutionJobById operation.
+type GetExecutionJobByIdParams struct {
 	JobId int64
-	// The page number to retrieve.
-	Page OptInt32
-	// The number of items per page.
-	PageSize OptInt32
 }
 
-func unpackGetExecutionResultsByIdParams(packed middleware.Parameters) (params GetExecutionResultsByIdParams) {
+func unpackGetExecutionJobByIdParams(packed middleware.Parameters) (params GetExecutionJobByIdParams) {
 	{
 		key := middleware.ParameterKey{
 			Name: "JobId",
@@ -538,29 +534,10 @@ func unpackGetExecutionResultsByIdParams(packed middleware.Parameters) (params G
 		}
 		params.JobId = packed[key].(int64)
 	}
-	{
-		key := middleware.ParameterKey{
-			Name: "page",
-			In:   "query",
-		}
-		if v, ok := packed[key]; ok {
-			params.Page = v.(OptInt32)
-		}
-	}
-	{
-		key := middleware.ParameterKey{
-			Name: "pageSize",
-			In:   "query",
-		}
-		if v, ok := packed[key]; ok {
-			params.PageSize = v.(OptInt32)
-		}
-	}
 	return params
 }
 
-func decodeGetExecutionResultsByIdParams(args [1]string, argsEscaped bool, r *http.Request) (params GetExecutionResultsByIdParams, _ error) {
-	q := uri.NewQueryDecoder(r.URL.Query())
+func decodeGetExecutionJobByIdParams(args [1]string, argsEscaped bool, r *http.Request) (params GetExecutionJobByIdParams, _ error) {
 	// Decode path: JobId.
 	if err := func() error {
 		param := args[0]
@@ -606,6 +583,106 @@ func decodeGetExecutionResultsByIdParams(args [1]string, argsEscaped bool, r *ht
 			Err:  err,
 		}
 	}
+	return params, nil
+}
+
+// GetExecutionResultByIdParams is parameters of getExecutionResultById operation.
+type GetExecutionResultByIdParams struct {
+	ExecId int64
+}
+
+func unpackGetExecutionResultByIdParams(packed middleware.Parameters) (params GetExecutionResultByIdParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "execId",
+			In:   "path",
+		}
+		params.ExecId = packed[key].(int64)
+	}
+	return params
+}
+
+func decodeGetExecutionResultByIdParams(args [1]string, argsEscaped bool, r *http.Request) (params GetExecutionResultByIdParams, _ error) {
+	// Decode path: execId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "execId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToInt64(val)
+				if err != nil {
+					return err
+				}
+
+				params.ExecId = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "execId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// GetExecutionWorkersParams is parameters of getExecutionWorkers operation.
+type GetExecutionWorkersParams struct {
+	// The page number to retrieve.
+	Page OptInt32
+	// The number of items per page.
+	PageSize OptInt32
+}
+
+func unpackGetExecutionWorkersParams(packed middleware.Parameters) (params GetExecutionWorkersParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "page",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Page = v.(OptInt32)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "pageSize",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.PageSize = v.(OptInt32)
+		}
+	}
+	return params
+}
+
+func decodeGetExecutionWorkersParams(args [0]string, argsEscaped bool, r *http.Request) (params GetExecutionWorkersParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
 	// Set default value for query: page.
 	{
 		val := int32(0)
@@ -701,15 +778,23 @@ func decodeGetExecutionResultsByIdParams(args [1]string, argsEscaped bool, r *ht
 	return params, nil
 }
 
-// GetExecutionWorkersParams is parameters of getExecutionWorkers operation.
-type GetExecutionWorkersParams struct {
+// GetExecutionsForJobParams is parameters of getExecutionsForJob operation.
+type GetExecutionsForJobParams struct {
+	JobId int64
 	// The page number to retrieve.
 	Page OptInt32
 	// The number of items per page.
 	PageSize OptInt32
 }
 
-func unpackGetExecutionWorkersParams(packed middleware.Parameters) (params GetExecutionWorkersParams) {
+func unpackGetExecutionsForJobParams(packed middleware.Parameters) (params GetExecutionsForJobParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "JobId",
+			In:   "path",
+		}
+		params.JobId = packed[key].(int64)
+	}
 	{
 		key := middleware.ParameterKey{
 			Name: "page",
@@ -731,8 +816,53 @@ func unpackGetExecutionWorkersParams(packed middleware.Parameters) (params GetEx
 	return params
 }
 
-func decodeGetExecutionWorkersParams(args [0]string, argsEscaped bool, r *http.Request) (params GetExecutionWorkersParams, _ error) {
+func decodeGetExecutionsForJobParams(args [1]string, argsEscaped bool, r *http.Request) (params GetExecutionsForJobParams, _ error) {
 	q := uri.NewQueryDecoder(r.URL.Query())
+	// Decode path: JobId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "JobId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToInt64(val)
+				if err != nil {
+					return err
+				}
+
+				params.JobId = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "JobId",
+			In:   "path",
+			Err:  err,
+		}
+	}
 	// Set default value for query: page.
 	{
 		val := int32(0)

@@ -72,7 +72,7 @@ func (s *OdinServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 	}(ctx)
 
 	go func(ctx context.Context) {
-		ticker := time.NewTicker(time.Duration(5) * time.Second)
+		ticker := time.NewTicker(time.Duration(10) * time.Second)
 		defer ticker.Stop()
 		for {
 			select {

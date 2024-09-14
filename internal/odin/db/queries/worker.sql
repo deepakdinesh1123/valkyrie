@@ -5,11 +5,18 @@ create table workers (
     last_heartbeat timestamptz
 );
 
--- name: InsertWorker :one
+-- name: CreateWorker :one
 insert into workers
     (name)
 values
     ($1)
+returning *;
+
+-- name: InsertWorker :one
+insert into workers
+    (id, name)
+values
+    ($1, $2)
 returning *;
 
 -- name: GetWorker :one
@@ -30,7 +37,7 @@ where id = $1;
 
 -- name: GetStaleWorkers :many
 select id from workers
-where last_heartbeat < now() - interval '10 seconds';
+where last_heartbeat < now() - interval '20 seconds';
 
 -- name: DeleteWorker :exec
 delete from workers where id = $1;

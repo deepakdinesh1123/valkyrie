@@ -17,7 +17,7 @@ import (
 )
 
 func (s *OdinServer) Execute(ctx context.Context, req *api.ExecutionRequest) (api.ExecuteRes, error) {
-	execId, err := s.executionService.AddJob(ctx, req)
+	jobId, err := s.executionService.AddJob(ctx, req)
 	if err != nil {
 		switch err.(type) {
 		case *execution.ExecutionServiceError:
@@ -35,7 +35,7 @@ func (s *OdinServer) Execute(ctx context.Context, req *api.ExecutionRequest) (ap
 			}, nil
 		}
 	}
-	return &api.ExecuteOK{ExecutionId: execId, Events: fmt.Sprintf("/executions/%d/events", execId)}, nil
+	return &api.ExecuteOK{JobId: jobId, Events: fmt.Sprintf("/executions/%d/events", jobId)}, nil
 }
 
 func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
@@ -78,13 +78,13 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 
 			switch job.CurrentState {
 			case "completed":
-				res, err := s.queries.GetExecutionResultsByID(ctx, db.GetExecutionResultsByIDParams{
+				res, err := s.queries.GetExecutionsForJob(ctx, db.GetExecutionsForJobParams{
 					JobID:  pgtype.Int8{Int64: execId, Valid: true},
 					Limit:  1,
 					Offset: 0,
 				})
 				if err != nil {
-					s.logger.Error().Stack().Err(err).Msg("Failed to get execution results")
+					s.logger.Error().Stack().Err(err).Msg("Failed to get execution executions")
 					fmt.Fprintf(w, "data: error %s\n\n", err)
 					flusher.Flush()
 					return
@@ -152,13 +152,13 @@ func (s *OdinServer) ExecuteWS(w http.ResponseWriter, r *http.Request) {
 			switch job.CurrentState {
 			case "completed":
 				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("completed: %d\n\n", execId)))
-				res, err := s.queries.GetExecutionResultsByID(ctx, db.GetExecutionResultsByIDParams{
+				res, err := s.queries.GetExecutionsForJob(ctx, db.GetExecutionsForJobParams{
 					JobID:  pgtype.Int8{Int64: execId, Valid: true},
 					Limit:  1,
 					Offset: 0,
 				})
 				if err != nil {
-					s.logger.Error().Stack().Err(err).Msg("Failed to get execution results")
+					s.logger.Error().Stack().Err(err).Msg("Failed to get execution executions")
 					c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("failed: %s\n\n", err)))
 					return
 				}
@@ -179,35 +179,36 @@ func (s *OdinServer) ExecuteWS(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *OdinServer) GetAllExecutionResults(ctx context.Context, params api.GetAllExecutionResultsParams) (api.GetAllExecutionResultsRes, error) {
-	execResDB, err := s.queries.GetAllExecutionResults(ctx, db.GetAllExecutionResultsParams{
+func (s *OdinServer) GetAllExecutions(ctx context.Context, params api.GetAllExecutionsParams) (api.GetAllExecutionsRes, error) {
+	execResDB, err := s.queries.GetAllExecutions(ctx, db.GetAllExecutionsParams{
 		Limit:  params.PageSize.Value,
 		Offset: params.Page.Value * params.PageSize.Value,
 	})
 	if err != nil {
-		return &api.GetAllExecutionResultsInternalServerError{
-			Message: fmt.Sprintf("Failed to get execution results: %v", err),
+		return &api.GetAllExecutionsInternalServerError{
+			Message: fmt.Sprintf("Failed to get execution executions: %v", err),
 		}, nil
 	}
 	total, err := s.queries.GetTotalExecutions(ctx)
 	if err != nil {
-		return &api.GetAllExecutionResultsInternalServerError{
-			Message: fmt.Sprintf("Failed to get total execution results: %v", err),
+		return &api.GetAllExecutionsInternalServerError{
+			Message: fmt.Sprintf("Failed to get total execution executions: %v", err),
 		}, nil
 	}
 	var executions []api.ExecutionResult
-	for _, execRes := range execResDB {
+	for _, execution := range execResDB {
 		executions = append(executions, api.ExecutionResult{
-			ExecutionId: int64(execRes.ExecRequestID.Int32),
-			ExecLogs:    execRes.ExecLogs,
-			Script:      execRes.Code,
-			Flake:       execRes.Flake,
-			Args:        execRes.Args.String,
-			StartedAt:   execRes.StartedAt.Time,
-			FinishedAt:  execRes.FinishedAt.Time,
+			JobId:      int64(execution.ExecRequestID.Int32),
+			ExecLogs:   execution.ExecLogs,
+			NixLogs:    api.OptString{Value: execution.NixLogs.String, Set: true},
+			Script:     execution.Code,
+			Flake:      execution.Flake,
+			Args:       execution.Args.String,
+			StartedAt:  execution.StartedAt.Time,
+			FinishedAt: execution.FinishedAt.Time,
 		})
 	}
-	resp := api.GetAllExecutionResultsOK{
+	resp := api.GetAllExecutionsOK{
 		Executions: executions,
 		Pagination: api.PaginationResponse{
 			Total: total,
@@ -216,36 +217,38 @@ func (s *OdinServer) GetAllExecutionResults(ctx context.Context, params api.GetA
 	return &resp, nil
 }
 
-func (s *OdinServer) GetExecutionResultsById(ctx context.Context, params api.GetExecutionResultsByIdParams) (api.GetExecutionResultsByIdRes, error) {
-	execRes, err := s.queries.GetExecutionResultsByID(ctx, db.GetExecutionResultsByIDParams{
+func (s *OdinServer) GetExecutionsForJob(ctx context.Context, params api.GetExecutionsForJobParams) (api.GetExecutionsForJobRes, error) {
+	execRes, err := s.queries.GetExecutionsForJob(ctx, db.GetExecutionsForJobParams{
 		JobID:  pgtype.Int8{Int64: params.JobId, Valid: true},
 		Limit:  params.PageSize.Value,
 		Offset: params.Page.Value * params.PageSize.Value,
 	})
 	if err != nil {
-		return &api.GetExecutionResultsByIdInternalServerError{
-			Message: fmt.Sprintf("Failed to get execution results: %v", err),
+		return &api.GetExecutionsForJobInternalServerError{
+			Message: fmt.Sprintf("Failed to get execution executions: %v", err),
 		}, nil
 	}
 	total, err := s.queries.GetTotalExecutionsForJob(ctx, pgtype.Int8{Int64: params.JobId, Valid: true})
 	if err != nil {
-		return &api.GetExecutionResultsByIdInternalServerError{
-			Message: fmt.Sprintf("Failed to get total execution results: %v", err),
+		return &api.GetExecutionsForJobInternalServerError{
+			Message: fmt.Sprintf("Failed to get total execution executions: %v", err),
 		}, nil
 	}
 	var executions []api.ExecutionResult
-	for _, execRes := range execRes {
+	for _, execution := range execRes {
 		executions = append(executions, api.ExecutionResult{
-			ExecutionId: int64(execRes.ExecRequestID.Int32),
-			ExecLogs:    execRes.ExecLogs,
-			Script:      execRes.Code,
-			Flake:       execRes.Flake,
-			Args:        execRes.Args.String,
-			StartedAt:   execRes.StartedAt.Time,
-			FinishedAt:  execRes.FinishedAt.Time,
+			JobId:      int64(execution.ExecRequestID.Int32),
+			ExecId:     int64(execution.ID),
+			ExecLogs:   execution.ExecLogs,
+			NixLogs:    api.OptString{Value: execution.NixLogs.String, Set: true},
+			Script:     execution.Code,
+			Flake:      execution.Flake,
+			Args:       execution.Args.String,
+			StartedAt:  execution.StartedAt.Time,
+			FinishedAt: execution.FinishedAt.Time,
 		})
 	}
-	resp := api.GetExecutionResultsByIdOK{
+	resp := api.GetExecutionsForJobOK{
 		Executions: executions,
 		Pagination: api.PaginationResponse{
 			Total: total,
@@ -254,32 +257,35 @@ func (s *OdinServer) GetExecutionResultsById(ctx context.Context, params api.Get
 	return &resp, nil
 }
 
-func (s *OdinServer) GetAllExecutions(ctx context.Context, params api.GetAllExecutionsParams) (api.GetAllExecutionsRes, error) {
+func (s *OdinServer) GetAllExecutionJobs(ctx context.Context, params api.GetAllExecutionJobsParams) (api.GetAllExecutionJobsRes, error) {
 	executionsDB, err := s.queries.GetAllJobs(ctx, db.GetAllJobsParams{
 		Limit:  params.PageSize.Value,
 		Offset: params.Page.Value * params.PageSize.Value,
 	})
 	if err != nil {
-		return &api.GetAllExecutionsInternalServerError{
+		return &api.GetAllExecutionJobsInternalServerError{
 			Message: fmt.Sprintf("Failed to get executions: %v", err),
 		}, nil
 	}
 	total, err := s.queries.GetTotalJobs(ctx)
 	if err != nil {
-		return &api.GetAllExecutionsInternalServerError{
+		return &api.GetAllExecutionJobsInternalServerError{
 			Message: fmt.Sprintf("Failed to get total executions: %v", err),
 		}, nil
 	}
-	var executions []api.Execution
-	for _, exec := range executionsDB {
-		executions = append(executions, api.Execution{
-			ExecutionId: exec.ID,
-			Script:      exec.Code,
-			Flake:       exec.Flake,
+	var jobs []api.Job
+	for _, job := range executionsDB {
+		jobs = append(jobs, api.Job{
+			JobId:     job.JobID,
+			Script:    job.Code,
+			Flake:     job.Flake,
+			CreatedAt: job.UpdatedAt.Time,
+			StartedAt: api.OptDateTime{Value: job.StartedAt.Time, Set: true},
+			UpdatedAt: api.OptDateTime{Value: job.UpdatedAt.Time, Set: true},
 		})
 	}
-	resp := api.GetAllExecutionsOK{
-		Executions: executions,
+	resp := api.GetAllExecutionJobsOK{
+		Jobs: jobs,
 		Pagination: api.PaginationResponse{
 			Total: total,
 		},
@@ -333,27 +339,94 @@ func (s *OdinServer) GetExecutionWorkers(ctx context.Context, params api.GetExec
 	return &resp, nil
 }
 
-func (s *OdinServer) DeleteJob(ctx context.Context, params api.DeleteJobParams) (api.DeleteJobRes, error) {
-	err := s.queries.DeleteJob(ctx, params.JobId)
+func (s *OdinServer) DeleteExecutionJob(ctx context.Context, params api.DeleteExecutionJobParams) (api.DeleteExecutionJobRes, error) {
+	state, err := s.queries.GetJobState(ctx, params.JobId)
 	if err != nil {
-		return &api.DeleteJobBadRequest{
+		return &api.DeleteExecutionJobInternalServerError{
+			Message: fmt.Sprintf("Failed to get job state: %v", err),
+		}, nil
+	}
+	if state == "scheduled" {
+		return &api.DeleteExecutionJobBadRequest{
+			Message: fmt.Sprintf("Execution job with id %d is currently scheduled", params.JobId),
+		}, nil
+	}
+
+	id, err := s.queries.DeleteJob(ctx, params.JobId)
+	if id == 0 {
+		return &api.DeleteExecutionJobBadRequest{
+			Message: fmt.Sprintf("Execution job with id %d not found: %v", params.JobId, err),
+		}, nil
+	}
+	if err != nil {
+		return &api.DeleteExecutionJobInternalServerError{
 			Message: fmt.Sprintf("Failed to delete execution: %v", err),
 		}, nil
 	}
-	return &api.DeleteJobOK{}, nil
+	return &api.DeleteExecutionJobOK{}, nil
 }
 
-func (s *OdinServer) CancelJob(ctx context.Context, params api.CancelJobParams) (api.CancelJobRes, error) {
+func (s *OdinServer) CancelExecutionJob(ctx context.Context, params api.CancelExecutionJobParams) (api.CancelExecutionJobRes, error) {
 	err := s.queries.CancelJob(ctx, params.JobId)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return &api.CancelJobBadRequest{
+			return &api.CancelExecutionJobBadRequest{
 				Message: fmt.Sprintf("Job not found: %v", err),
 			}, nil
 		}
-		return &api.CancelJobInternalServerError{
+		return &api.CancelExecutionJobInternalServerError{
 			Message: fmt.Sprintf("Failed to cancel job: %v", err),
 		}, nil
 	}
-	return &api.CancelJobOK{}, nil
+	return &api.CancelExecutionJobOK{
+		Message: fmt.Sprintf("Execution Job with id %d canceled", params.JobId),
+	}, nil
+}
+
+func (s *OdinServer) GetExecutionResultById(ctx context.Context, params api.GetExecutionResultByIdParams) (api.GetExecutionResultByIdRes, error) {
+	execution, err := s.queries.GetExecution(ctx, params.ExecId)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return &api.GetExecutionResultByIdBadRequest{
+				Message: fmt.Sprintf("Execution execution with id %d not found: %v", params.ExecId, err),
+			}, nil
+		}
+		return &api.GetExecutionResultByIdInternalServerError{
+			Message: fmt.Sprintf("Failed to get execution execution: %v", err),
+		}, nil
+	}
+
+	return &api.ExecutionResult{
+		JobId:      int64(execution.ExecRequestID.Int32),
+		Script:     execution.Code,
+		Flake:      execution.Flake,
+		CreatedAt:  execution.CreatedAt.Time,
+		StartedAt:  execution.StartedAt.Time,
+		FinishedAt: execution.FinishedAt.Time,
+		ExecId:     int64(execution.ID),
+		ExecLogs:   execution.ExecLogs,
+		Args:       execution.Args.String,
+	}, nil
+}
+
+func (s *OdinServer) GetExecutionJobById(ctx context.Context, params api.GetExecutionJobByIdParams) (api.GetExecutionJobByIdRes, error) {
+	job, err := s.queries.GetJob(ctx, params.JobId)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return &api.GetExecutionJobByIdBadRequest{
+				Message: fmt.Sprintf("Execution job with id %d not found: %v", params.JobId, err),
+			}, nil
+		}
+		return &api.GetExecutionJobByIdInternalServerError{
+			Message: fmt.Sprintf("Failed to get execution job: %v", err),
+		}, nil
+	}
+	return &api.Job{
+		JobId:     int64(job.ID),
+		Script:    job.Code,
+		Flake:     job.Flake,
+		CreatedAt: job.CreatedAt.Time,
+		StartedAt: api.OptDateTime{Value: job.StartedAt.Time, Set: true},
+		UpdatedAt: api.OptDateTime{Value: job.UpdatedAt.Time, Set: true},
+	}, nil
 }

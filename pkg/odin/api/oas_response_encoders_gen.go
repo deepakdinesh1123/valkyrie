@@ -9,14 +9,21 @@ import (
 	"github.com/go-faster/jx"
 )
 
-func encodeCancelJobResponse(response CancelJobRes, w http.ResponseWriter) error {
+func encodeCancelExecutionJobResponse(response CancelExecutionJobRes, w http.ResponseWriter) error {
 	switch response := response.(type) {
-	case *CancelJobOK:
+	case *CancelExecutionJobOK:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(200)
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
 
 		return nil
 
-	case *CancelJobBadRequest:
+	case *CancelExecutionJobBadRequest:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(400)
 
@@ -28,7 +35,48 @@ func encodeCancelJobResponse(response CancelJobRes, w http.ResponseWriter) error
 
 		return nil
 
-	case *CancelJobInternalServerError:
+	case *CancelExecutionJobInternalServerError:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(500)
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	default:
+		return errors.Errorf("unexpected response type: %T", response)
+	}
+}
+
+func encodeDeleteExecutionJobResponse(response DeleteExecutionJobRes, w http.ResponseWriter) error {
+	switch response := response.(type) {
+	case *DeleteExecutionJobOK:
+		w.WriteHeader(200)
+
+		return nil
+
+	case *DeleteExecutionJobBadRequest:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(400)
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *DeleteExecutionJobNotFound:
+		w.WriteHeader(404)
+
+		return nil
+
+	case *DeleteExecutionJobInternalServerError:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
 
@@ -48,7 +96,14 @@ func encodeCancelJobResponse(response CancelJobRes, w http.ResponseWriter) error
 func encodeDeleteExecutionWorkerResponse(response DeleteExecutionWorkerRes, w http.ResponseWriter) error {
 	switch response := response.(type) {
 	case *DeleteExecutionWorkerOK:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(200)
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
 
 		return nil
 
@@ -70,47 +125,6 @@ func encodeDeleteExecutionWorkerResponse(response DeleteExecutionWorkerRes, w ht
 		return nil
 
 	case *DeleteExecutionWorkerInternalServerError:
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(500)
-
-		e := new(jx.Encoder)
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-
-		return nil
-
-	default:
-		return errors.Errorf("unexpected response type: %T", response)
-	}
-}
-
-func encodeDeleteJobResponse(response DeleteJobRes, w http.ResponseWriter) error {
-	switch response := response.(type) {
-	case *DeleteJobOK:
-		w.WriteHeader(200)
-
-		return nil
-
-	case *DeleteJobBadRequest:
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(400)
-
-		e := new(jx.Encoder)
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-
-		return nil
-
-	case *DeleteJobNotFound:
-		w.WriteHeader(404)
-
-		return nil
-
-	case *DeleteJobInternalServerError:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
 
@@ -170,9 +184,9 @@ func encodeExecuteResponse(response ExecuteRes, w http.ResponseWriter) error {
 	}
 }
 
-func encodeGetAllExecutionResultsResponse(response GetAllExecutionResultsRes, w http.ResponseWriter) error {
+func encodeGetAllExecutionJobsResponse(response GetAllExecutionJobsRes, w http.ResponseWriter) error {
 	switch response := response.(type) {
-	case *GetAllExecutionResultsOK:
+	case *GetAllExecutionJobsOK:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(200)
 
@@ -184,7 +198,7 @@ func encodeGetAllExecutionResultsResponse(response GetAllExecutionResultsRes, w 
 
 		return nil
 
-	case *GetAllExecutionResultsBadRequest:
+	case *GetAllExecutionJobsBadRequest:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(400)
 
@@ -196,7 +210,7 @@ func encodeGetAllExecutionResultsResponse(response GetAllExecutionResultsRes, w 
 
 		return nil
 
-	case *GetAllExecutionResultsInternalServerError:
+	case *GetAllExecutionJobsInternalServerError:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
 
@@ -287,9 +301,9 @@ func encodeGetExecutionConfigResponse(response GetExecutionConfigRes, w http.Res
 	}
 }
 
-func encodeGetExecutionResultsByIdResponse(response GetExecutionResultsByIdRes, w http.ResponseWriter) error {
+func encodeGetExecutionJobByIdResponse(response GetExecutionJobByIdRes, w http.ResponseWriter) error {
 	switch response := response.(type) {
-	case *GetExecutionResultsByIdOK:
+	case *Job:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(200)
 
@@ -301,7 +315,7 @@ func encodeGetExecutionResultsByIdResponse(response GetExecutionResultsByIdRes, 
 
 		return nil
 
-	case *GetExecutionResultsByIdBadRequest:
+	case *GetExecutionJobByIdBadRequest:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(400)
 
@@ -313,12 +327,60 @@ func encodeGetExecutionResultsByIdResponse(response GetExecutionResultsByIdRes, 
 
 		return nil
 
-	case *GetExecutionResultsByIdNotFound:
+	case *GetExecutionJobByIdNotFound:
 		w.WriteHeader(404)
 
 		return nil
 
-	case *GetExecutionResultsByIdInternalServerError:
+	case *GetExecutionJobByIdInternalServerError:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(500)
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	default:
+		return errors.Errorf("unexpected response type: %T", response)
+	}
+}
+
+func encodeGetExecutionResultByIdResponse(response GetExecutionResultByIdRes, w http.ResponseWriter) error {
+	switch response := response.(type) {
+	case *ExecutionResult:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(200)
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *GetExecutionResultByIdBadRequest:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(400)
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *GetExecutionResultByIdNotFound:
+		w.WriteHeader(404)
+
+		return nil
+
+	case *GetExecutionResultByIdInternalServerError:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
 
@@ -362,6 +424,54 @@ func encodeGetExecutionWorkersResponse(response GetExecutionWorkersRes, w http.R
 		return nil
 
 	case *GetExecutionWorkersInternalServerError:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(500)
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	default:
+		return errors.Errorf("unexpected response type: %T", response)
+	}
+}
+
+func encodeGetExecutionsForJobResponse(response GetExecutionsForJobRes, w http.ResponseWriter) error {
+	switch response := response.(type) {
+	case *GetExecutionsForJobOK:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(200)
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *GetExecutionsForJobBadRequest:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(400)
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *GetExecutionsForJobNotFound:
+		w.WriteHeader(404)
+
+		return nil
+
+	case *GetExecutionsForJobInternalServerError:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
 

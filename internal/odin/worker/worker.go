@@ -75,7 +75,7 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 				name = namesgenerator.GetRandomName(0)
 			}
 			wrkr.Name = name
-			wrkr.ID, err = wrkr.upsertWorker(ctx, name)
+			wrkr.ID, err = wrkr.upsertWorker(ctx, name, -1)
 			if err != nil {
 				logger.Err(err).Msg("Failed to create worker")
 			}
@@ -86,7 +86,7 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 	if wrkr.ID == 0 && workerInfo != nil {
 		logger.Info().Str("workerName", workerInfo.Name).Int("workerID", workerInfo.ID).Msgf("Found worker info")
 		wrkr.Name = workerInfo.Name
-		wrkr.ID, err = wrkr.upsertWorker(ctx, workerInfo.Name)
+		wrkr.ID, err = wrkr.upsertWorker(ctx, workerInfo.Name, workerInfo.ID)
 		if err != nil {
 			logger.Err(err).Msg("Failed to get worker")
 		}
@@ -105,14 +105,25 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 	return wrkr, nil
 }
 
-func (w *Worker) upsertWorker(ctx context.Context, name string) (int, error) {
+func (w *Worker) upsertWorker(ctx context.Context, name string, id int) (int, error) {
 	wrkr, err := w.queries.GetWorker(ctx, name)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			wrkr, err = w.queries.InsertWorker(ctx, name)
-			if err != nil {
-				w.logger.Err(err).Msg("Worker: failed to insert worker")
-				return 0, err
+			if id == -1 {
+				wrkr, err = w.queries.CreateWorker(ctx, name)
+				if err != nil {
+					w.logger.Err(err).Msg("Worker: failed to create worker")
+					return 0, err
+				}
+			} else {
+				wrkr, err = w.queries.InsertWorker(ctx, db.InsertWorkerParams{
+					ID:   int32(id),
+					Name: name,
+				})
+				if err != nil {
+					w.logger.Err(err).Msg("Worker: failed to insert worker")
+					return 0, err
+				}
 			}
 		} else {
 			w.logger.Err(err).Msg("Worker: failed to get worker")
@@ -153,7 +164,7 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 	defer infLock.Unlock()
 	var swg concurrency.SafeWaitGroup
 	fetchJobTicker := time.NewTicker(time.Duration(w.envConfig.ODIN_WORKER_POLL_FREQ) * time.Second)
-	heartBeatTicker := time.NewTicker(time.Duration(10) * time.Second)
+	heartBeatTicker := time.NewTicker(time.Duration(5) * time.Second)
 	for {
 		select {
 		case <-ctx.Done():
@@ -192,7 +203,7 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 					return &WorkerError{Type: "FetchJob", Message: err.Error()}
 				}
 			}
-			w.logger.Info().Msgf("Worker: fetched job %d", res.Job.ID)
+			w.logger.Info().Msgf("Worker: fetched job %d", res.Job.JobID)
 			swg.Add(1)
 			span.AddEvent("Executing job")
 			go w.provider.Execute(tracerCtx, &swg, res.Job)

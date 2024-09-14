@@ -25,5 +25,7 @@ func (s *OdinServer) DeleteExecutionWorker(ctx context.Context, params api.Delet
 		return &api.DeleteExecutionWorkerInternalServerError{
 			Message: fmt.Sprintf("Failed to delete worker: %v", err)}, nil
 	}
-	return &api.DeleteExecutionWorkerOK{}, nil
+	return &api.DeleteExecutionWorkerOK{
+		Message: fmt.Sprintf("Worker %d deleted", params.WorkerId),
+	}, nil
 }

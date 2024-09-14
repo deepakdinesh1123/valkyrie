@@ -15,22 +15,22 @@ import (
 
 func recordError(string, error) {}
 
-// handleCancelJobRequest handles cancelJob operation.
+// handleCancelExecutionJobRequest handles cancelExecutionJob operation.
 //
-// Cancel Job.
+// Cancel Execution Job.
 //
-// PUT /executions/{JobId}/
-func (s *Server) handleCancelJobRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+// PUT /executions/jobs/{JobId}/
+func (s *Server) handleCancelExecutionJobRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var (
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "CancelJob",
-			ID:   "cancelJob",
+			Name: "CancelExecutionJob",
+			ID:   "cancelExecutionJob",
 		}
 	)
-	params, err := decodeCancelJobParams(args, argsEscaped, r)
+	params, err := decodeCancelExecutionJobParams(args, argsEscaped, r)
 	if err != nil {
 		err = &ogenerrors.DecodeParamsError{
 			OperationContext: opErrContext,
@@ -41,13 +41,13 @@ func (s *Server) handleCancelJobRequest(args [1]string, argsEscaped bool, w http
 		return
 	}
 
-	var response CancelJobRes
+	var response CancelExecutionJobRes
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "CancelJob",
-			OperationSummary: "Cancel Job",
-			OperationID:      "cancelJob",
+			OperationName:    "CancelExecutionJob",
+			OperationSummary: "Cancel Execution Job",
+			OperationID:      "cancelExecutionJob",
 			Body:             nil,
 			Params: middleware.Parameters{
 				{
@@ -60,8 +60,8 @@ func (s *Server) handleCancelJobRequest(args [1]string, argsEscaped bool, w http
 
 		type (
 			Request  = struct{}
-			Params   = CancelJobParams
-			Response = CancelJobRes
+			Params   = CancelExecutionJobParams
+			Response = CancelExecutionJobRes
 		)
 		response, err = middleware.HookMiddleware[
 			Request,
@@ -70,14 +70,14 @@ func (s *Server) handleCancelJobRequest(args [1]string, argsEscaped bool, w http
 		](
 			m,
 			mreq,
-			unpackCancelJobParams,
+			unpackCancelExecutionJobParams,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.CancelJob(ctx, params)
+				response, err = s.h.CancelExecutionJob(ctx, params)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.CancelJob(ctx, params)
+		response, err = s.h.CancelExecutionJob(ctx, params)
 	}
 	if err != nil {
 		defer recordError("Internal", err)
@@ -85,7 +85,86 @@ func (s *Server) handleCancelJobRequest(args [1]string, argsEscaped bool, w http
 		return
 	}
 
-	if err := encodeCancelJobResponse(response, w); err != nil {
+	if err := encodeCancelExecutionJobResponse(response, w); err != nil {
+		defer recordError("EncodeResponse", err)
+		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
+			s.cfg.ErrorHandler(ctx, w, r, err)
+		}
+		return
+	}
+}
+
+// handleDeleteExecutionJobRequest handles deleteExecutionJob operation.
+//
+// Delete execution job.
+//
+// DELETE /executions/jobs/{JobId}/
+func (s *Server) handleDeleteExecutionJobRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var (
+		err          error
+		opErrContext = ogenerrors.OperationContext{
+			Name: "DeleteExecutionJob",
+			ID:   "deleteExecutionJob",
+		}
+	)
+	params, err := decodeDeleteExecutionJobParams(args, argsEscaped, r)
+	if err != nil {
+		err = &ogenerrors.DecodeParamsError{
+			OperationContext: opErrContext,
+			Err:              err,
+		}
+		defer recordError("DecodeParams", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+
+	var response DeleteExecutionJobRes
+	if m := s.cfg.Middleware; m != nil {
+		mreq := middleware.Request{
+			Context:          ctx,
+			OperationName:    "DeleteExecutionJob",
+			OperationSummary: "Delete execution job",
+			OperationID:      "deleteExecutionJob",
+			Body:             nil,
+			Params: middleware.Parameters{
+				{
+					Name: "JobId",
+					In:   "path",
+				}: params.JobId,
+			},
+			Raw: r,
+		}
+
+		type (
+			Request  = struct{}
+			Params   = DeleteExecutionJobParams
+			Response = DeleteExecutionJobRes
+		)
+		response, err = middleware.HookMiddleware[
+			Request,
+			Params,
+			Response,
+		](
+			m,
+			mreq,
+			unpackDeleteExecutionJobParams,
+			func(ctx context.Context, request Request, params Params) (response Response, err error) {
+				response, err = s.h.DeleteExecutionJob(ctx, params)
+				return response, err
+			},
+		)
+	} else {
+		response, err = s.h.DeleteExecutionJob(ctx, params)
+	}
+	if err != nil {
+		defer recordError("Internal", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+
+	if err := encodeDeleteExecutionJobResponse(response, w); err != nil {
 		defer recordError("EncodeResponse", err)
 		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
 			s.cfg.ErrorHandler(ctx, w, r, err)
@@ -177,85 +256,6 @@ func (s *Server) handleDeleteExecutionWorkerRequest(args [1]string, argsEscaped 
 	}
 }
 
-// handleDeleteJobRequest handles deleteJob operation.
-//
-// Delete job.
-//
-// DELETE /executions/{JobId}/
-func (s *Server) handleDeleteJobRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	var (
-		err          error
-		opErrContext = ogenerrors.OperationContext{
-			Name: "DeleteJob",
-			ID:   "deleteJob",
-		}
-	)
-	params, err := decodeDeleteJobParams(args, argsEscaped, r)
-	if err != nil {
-		err = &ogenerrors.DecodeParamsError{
-			OperationContext: opErrContext,
-			Err:              err,
-		}
-		defer recordError("DecodeParams", err)
-		s.cfg.ErrorHandler(ctx, w, r, err)
-		return
-	}
-
-	var response DeleteJobRes
-	if m := s.cfg.Middleware; m != nil {
-		mreq := middleware.Request{
-			Context:          ctx,
-			OperationName:    "DeleteJob",
-			OperationSummary: "Delete job",
-			OperationID:      "deleteJob",
-			Body:             nil,
-			Params: middleware.Parameters{
-				{
-					Name: "JobId",
-					In:   "path",
-				}: params.JobId,
-			},
-			Raw: r,
-		}
-
-		type (
-			Request  = struct{}
-			Params   = DeleteJobParams
-			Response = DeleteJobRes
-		)
-		response, err = middleware.HookMiddleware[
-			Request,
-			Params,
-			Response,
-		](
-			m,
-			mreq,
-			unpackDeleteJobParams,
-			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.DeleteJob(ctx, params)
-				return response, err
-			},
-		)
-	} else {
-		response, err = s.h.DeleteJob(ctx, params)
-	}
-	if err != nil {
-		defer recordError("Internal", err)
-		s.cfg.ErrorHandler(ctx, w, r, err)
-		return
-	}
-
-	if err := encodeDeleteJobResponse(response, w); err != nil {
-		defer recordError("EncodeResponse", err)
-		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
-			s.cfg.ErrorHandler(ctx, w, r, err)
-		}
-		return
-	}
-}
-
 // handleExecuteRequest handles execute operation.
 //
 // Execute a script.
@@ -335,22 +335,22 @@ func (s *Server) handleExecuteRequest(args [0]string, argsEscaped bool, w http.R
 	}
 }
 
-// handleGetAllExecutionResultsRequest handles getAllExecutionResults operation.
+// handleGetAllExecutionJobsRequest handles getAllExecutionJobs operation.
 //
-// Get all execution results.
+// Get all execution jobs.
 //
-// GET /executions/results/
-func (s *Server) handleGetAllExecutionResultsRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+// GET /jobs/execution/
+func (s *Server) handleGetAllExecutionJobsRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var (
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "GetAllExecutionResults",
-			ID:   "getAllExecutionResults",
+			Name: "GetAllExecutionJobs",
+			ID:   "getAllExecutionJobs",
 		}
 	)
-	params, err := decodeGetAllExecutionResultsParams(args, argsEscaped, r)
+	params, err := decodeGetAllExecutionJobsParams(args, argsEscaped, r)
 	if err != nil {
 		err = &ogenerrors.DecodeParamsError{
 			OperationContext: opErrContext,
@@ -361,13 +361,13 @@ func (s *Server) handleGetAllExecutionResultsRequest(args [0]string, argsEscaped
 		return
 	}
 
-	var response GetAllExecutionResultsRes
+	var response GetAllExecutionJobsRes
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "GetAllExecutionResults",
-			OperationSummary: "Get all execution results",
-			OperationID:      "getAllExecutionResults",
+			OperationName:    "GetAllExecutionJobs",
+			OperationSummary: "Get all execution jobs",
+			OperationID:      "getAllExecutionJobs",
 			Body:             nil,
 			Params: middleware.Parameters{
 				{
@@ -384,8 +384,8 @@ func (s *Server) handleGetAllExecutionResultsRequest(args [0]string, argsEscaped
 
 		type (
 			Request  = struct{}
-			Params   = GetAllExecutionResultsParams
-			Response = GetAllExecutionResultsRes
+			Params   = GetAllExecutionJobsParams
+			Response = GetAllExecutionJobsRes
 		)
 		response, err = middleware.HookMiddleware[
 			Request,
@@ -394,14 +394,14 @@ func (s *Server) handleGetAllExecutionResultsRequest(args [0]string, argsEscaped
 		](
 			m,
 			mreq,
-			unpackGetAllExecutionResultsParams,
+			unpackGetAllExecutionJobsParams,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.GetAllExecutionResults(ctx, params)
+				response, err = s.h.GetAllExecutionJobs(ctx, params)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.GetAllExecutionResults(ctx, params)
+		response, err = s.h.GetAllExecutionJobs(ctx, params)
 	}
 	if err != nil {
 		defer recordError("Internal", err)
@@ -409,7 +409,7 @@ func (s *Server) handleGetAllExecutionResultsRequest(args [0]string, argsEscaped
 		return
 	}
 
-	if err := encodeGetAllExecutionResultsResponse(response, w); err != nil {
+	if err := encodeGetAllExecutionJobsResponse(response, w); err != nil {
 		defer recordError("EncodeResponse", err)
 		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
 			s.cfg.ErrorHandler(ctx, w, r, err)
@@ -561,22 +561,22 @@ func (s *Server) handleGetExecutionConfigRequest(args [0]string, argsEscaped boo
 	}
 }
 
-// handleGetExecutionResultsByIdRequest handles getExecutionResultsById operation.
+// handleGetExecutionJobByIdRequest handles getExecutionJobById operation.
 //
-// Get execution result.
+// Get execution job.
 //
-// GET /executions/{JobId}/
-func (s *Server) handleGetExecutionResultsByIdRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+// GET /executions/jobs/{JobId}/
+func (s *Server) handleGetExecutionJobByIdRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var (
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "GetExecutionResultsById",
-			ID:   "getExecutionResultsById",
+			Name: "GetExecutionJobById",
+			ID:   "getExecutionJobById",
 		}
 	)
-	params, err := decodeGetExecutionResultsByIdParams(args, argsEscaped, r)
+	params, err := decodeGetExecutionJobByIdParams(args, argsEscaped, r)
 	if err != nil {
 		err = &ogenerrors.DecodeParamsError{
 			OperationContext: opErrContext,
@@ -587,35 +587,27 @@ func (s *Server) handleGetExecutionResultsByIdRequest(args [1]string, argsEscape
 		return
 	}
 
-	var response GetExecutionResultsByIdRes
+	var response GetExecutionJobByIdRes
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "GetExecutionResultsById",
-			OperationSummary: "Get execution result",
-			OperationID:      "getExecutionResultsById",
+			OperationName:    "GetExecutionJobById",
+			OperationSummary: "Get execution job",
+			OperationID:      "getExecutionJobById",
 			Body:             nil,
 			Params: middleware.Parameters{
 				{
 					Name: "JobId",
 					In:   "path",
 				}: params.JobId,
-				{
-					Name: "page",
-					In:   "query",
-				}: params.Page,
-				{
-					Name: "pageSize",
-					In:   "query",
-				}: params.PageSize,
 			},
 			Raw: r,
 		}
 
 		type (
 			Request  = struct{}
-			Params   = GetExecutionResultsByIdParams
-			Response = GetExecutionResultsByIdRes
+			Params   = GetExecutionJobByIdParams
+			Response = GetExecutionJobByIdRes
 		)
 		response, err = middleware.HookMiddleware[
 			Request,
@@ -624,14 +616,14 @@ func (s *Server) handleGetExecutionResultsByIdRequest(args [1]string, argsEscape
 		](
 			m,
 			mreq,
-			unpackGetExecutionResultsByIdParams,
+			unpackGetExecutionJobByIdParams,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.GetExecutionResultsById(ctx, params)
+				response, err = s.h.GetExecutionJobById(ctx, params)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.GetExecutionResultsById(ctx, params)
+		response, err = s.h.GetExecutionJobById(ctx, params)
 	}
 	if err != nil {
 		defer recordError("Internal", err)
@@ -639,7 +631,86 @@ func (s *Server) handleGetExecutionResultsByIdRequest(args [1]string, argsEscape
 		return
 	}
 
-	if err := encodeGetExecutionResultsByIdResponse(response, w); err != nil {
+	if err := encodeGetExecutionJobByIdResponse(response, w); err != nil {
+		defer recordError("EncodeResponse", err)
+		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
+			s.cfg.ErrorHandler(ctx, w, r, err)
+		}
+		return
+	}
+}
+
+// handleGetExecutionResultByIdRequest handles getExecutionResultById operation.
+//
+// Get execution result by id.
+//
+// GET /executions/{execId}/
+func (s *Server) handleGetExecutionResultByIdRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var (
+		err          error
+		opErrContext = ogenerrors.OperationContext{
+			Name: "GetExecutionResultById",
+			ID:   "getExecutionResultById",
+		}
+	)
+	params, err := decodeGetExecutionResultByIdParams(args, argsEscaped, r)
+	if err != nil {
+		err = &ogenerrors.DecodeParamsError{
+			OperationContext: opErrContext,
+			Err:              err,
+		}
+		defer recordError("DecodeParams", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+
+	var response GetExecutionResultByIdRes
+	if m := s.cfg.Middleware; m != nil {
+		mreq := middleware.Request{
+			Context:          ctx,
+			OperationName:    "GetExecutionResultById",
+			OperationSummary: "Get execution result by id",
+			OperationID:      "getExecutionResultById",
+			Body:             nil,
+			Params: middleware.Parameters{
+				{
+					Name: "execId",
+					In:   "path",
+				}: params.ExecId,
+			},
+			Raw: r,
+		}
+
+		type (
+			Request  = struct{}
+			Params   = GetExecutionResultByIdParams
+			Response = GetExecutionResultByIdRes
+		)
+		response, err = middleware.HookMiddleware[
+			Request,
+			Params,
+			Response,
+		](
+			m,
+			mreq,
+			unpackGetExecutionResultByIdParams,
+			func(ctx context.Context, request Request, params Params) (response Response, err error) {
+				response, err = s.h.GetExecutionResultById(ctx, params)
+				return response, err
+			},
+		)
+	} else {
+		response, err = s.h.GetExecutionResultById(ctx, params)
+	}
+	if err != nil {
+		defer recordError("Internal", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+
+	if err := encodeGetExecutionResultByIdResponse(response, w); err != nil {
 		defer recordError("EncodeResponse", err)
 		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
 			s.cfg.ErrorHandler(ctx, w, r, err)
@@ -723,6 +794,93 @@ func (s *Server) handleGetExecutionWorkersRequest(args [0]string, argsEscaped bo
 	}
 
 	if err := encodeGetExecutionWorkersResponse(response, w); err != nil {
+		defer recordError("EncodeResponse", err)
+		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
+			s.cfg.ErrorHandler(ctx, w, r, err)
+		}
+		return
+	}
+}
+
+// handleGetExecutionsForJobRequest handles getExecutionsForJob operation.
+//
+// Get executions of given job.
+//
+// GET /jobs/{JobId}/executions/
+func (s *Server) handleGetExecutionsForJobRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var (
+		err          error
+		opErrContext = ogenerrors.OperationContext{
+			Name: "GetExecutionsForJob",
+			ID:   "getExecutionsForJob",
+		}
+	)
+	params, err := decodeGetExecutionsForJobParams(args, argsEscaped, r)
+	if err != nil {
+		err = &ogenerrors.DecodeParamsError{
+			OperationContext: opErrContext,
+			Err:              err,
+		}
+		defer recordError("DecodeParams", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+
+	var response GetExecutionsForJobRes
+	if m := s.cfg.Middleware; m != nil {
+		mreq := middleware.Request{
+			Context:          ctx,
+			OperationName:    "GetExecutionsForJob",
+			OperationSummary: "Get executions of given job",
+			OperationID:      "getExecutionsForJob",
+			Body:             nil,
+			Params: middleware.Parameters{
+				{
+					Name: "JobId",
+					In:   "path",
+				}: params.JobId,
+				{
+					Name: "page",
+					In:   "query",
+				}: params.Page,
+				{
+					Name: "pageSize",
+					In:   "query",
+				}: params.PageSize,
+			},
+			Raw: r,
+		}
+
+		type (
+			Request  = struct{}
+			Params   = GetExecutionsForJobParams
+			Response = GetExecutionsForJobRes
+		)
+		response, err = middleware.HookMiddleware[
+			Request,
+			Params,
+			Response,
+		](
+			m,
+			mreq,
+			unpackGetExecutionsForJobParams,
+			func(ctx context.Context, request Request, params Params) (response Response, err error) {
+				response, err = s.h.GetExecutionsForJob(ctx, params)
+				return response, err
+			},
+		)
+	} else {
+		response, err = s.h.GetExecutionsForJob(ctx, params)
+	}
+	if err != nil {
+		defer recordError("Internal", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+
+	if err := encodeGetExecutionsForJobResponse(response, w); err != nil {
 		defer recordError("EncodeResponse", err)
 		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
 			s.cfg.ErrorHandler(ctx, w, r, err)

@@ -6,18 +6,47 @@ import (
 	"time"
 )
 
-type CancelJobBadRequest Error
+type CancelExecutionJobBadRequest Error
 
-func (*CancelJobBadRequest) cancelJobRes() {}
+func (*CancelExecutionJobBadRequest) cancelExecutionJobRes() {}
 
-type CancelJobInternalServerError Error
+type CancelExecutionJobInternalServerError Error
 
-func (*CancelJobInternalServerError) cancelJobRes() {}
+func (*CancelExecutionJobInternalServerError) cancelExecutionJobRes() {}
 
-// CancelJobOK is response for CancelJob operation.
-type CancelJobOK struct{}
+type CancelExecutionJobOK struct {
+	Message string `json:"message"`
+}
 
-func (*CancelJobOK) cancelJobRes() {}
+// GetMessage returns the value of Message.
+func (s *CancelExecutionJobOK) GetMessage() string {
+	return s.Message
+}
+
+// SetMessage sets the value of Message.
+func (s *CancelExecutionJobOK) SetMessage(val string) {
+	s.Message = val
+}
+
+func (*CancelExecutionJobOK) cancelExecutionJobRes() {}
+
+type DeleteExecutionJobBadRequest Error
+
+func (*DeleteExecutionJobBadRequest) deleteExecutionJobRes() {}
+
+type DeleteExecutionJobInternalServerError Error
+
+func (*DeleteExecutionJobInternalServerError) deleteExecutionJobRes() {}
+
+// DeleteExecutionJobNotFound is response for DeleteExecutionJob operation.
+type DeleteExecutionJobNotFound struct{}
+
+func (*DeleteExecutionJobNotFound) deleteExecutionJobRes() {}
+
+// DeleteExecutionJobOK is response for DeleteExecutionJob operation.
+type DeleteExecutionJobOK struct{}
+
+func (*DeleteExecutionJobOK) deleteExecutionJobRes() {}
 
 type DeleteExecutionWorkerBadRequest Error
 
@@ -32,28 +61,21 @@ type DeleteExecutionWorkerNotFound struct{}
 
 func (*DeleteExecutionWorkerNotFound) deleteExecutionWorkerRes() {}
 
-// DeleteExecutionWorkerOK is response for DeleteExecutionWorker operation.
-type DeleteExecutionWorkerOK struct{}
+type DeleteExecutionWorkerOK struct {
+	Message string `json:"message"`
+}
+
+// GetMessage returns the value of Message.
+func (s *DeleteExecutionWorkerOK) GetMessage() string {
+	return s.Message
+}
+
+// SetMessage sets the value of Message.
+func (s *DeleteExecutionWorkerOK) SetMessage(val string) {
+	s.Message = val
+}
 
 func (*DeleteExecutionWorkerOK) deleteExecutionWorkerRes() {}
-
-type DeleteJobBadRequest Error
-
-func (*DeleteJobBadRequest) deleteJobRes() {}
-
-type DeleteJobInternalServerError Error
-
-func (*DeleteJobInternalServerError) deleteJobRes() {}
-
-// DeleteJobNotFound is response for DeleteJob operation.
-type DeleteJobNotFound struct{}
-
-func (*DeleteJobNotFound) deleteJobRes() {}
-
-// DeleteJobOK is response for DeleteJob operation.
-type DeleteJobOK struct{}
-
-func (*DeleteJobOK) deleteJobRes() {}
 
 // Ref: #/components/schemas/DockerExecutionConfig
 type DockerExecutionConfig struct {
@@ -198,13 +220,13 @@ type ExecuteInternalServerError Error
 func (*ExecuteInternalServerError) executeRes() {}
 
 type ExecuteOK struct {
-	ExecutionId int64  `json:"executionId"`
-	Events      string `json:"events"`
+	JobId  int64  `json:"jobId"`
+	Events string `json:"events"`
 }
 
-// GetExecutionId returns the value of ExecutionId.
-func (s *ExecuteOK) GetExecutionId() int64 {
-	return s.ExecutionId
+// GetJobId returns the value of JobId.
+func (s *ExecuteOK) GetJobId() int64 {
+	return s.JobId
 }
 
 // GetEvents returns the value of Events.
@@ -212,9 +234,9 @@ func (s *ExecuteOK) GetEvents() string {
 	return s.Events
 }
 
-// SetExecutionId sets the value of ExecutionId.
-func (s *ExecuteOK) SetExecutionId(val int64) {
-	s.ExecutionId = val
+// SetJobId sets the value of JobId.
+func (s *ExecuteOK) SetJobId(val int64) {
+	s.JobId = val
 }
 
 // SetEvents sets the value of Events.
@@ -223,54 +245,6 @@ func (s *ExecuteOK) SetEvents(val string) {
 }
 
 func (*ExecuteOK) executeRes() {}
-
-// Ref: #/components/schemas/Execution
-type Execution struct {
-	ExecutionId int64     `json:"executionId"`
-	Script      string    `json:"script"`
-	Flake       string    `json:"flake"`
-	CreatedAt   time.Time `json:"created_at"`
-}
-
-// GetExecutionId returns the value of ExecutionId.
-func (s *Execution) GetExecutionId() int64 {
-	return s.ExecutionId
-}
-
-// GetScript returns the value of Script.
-func (s *Execution) GetScript() string {
-	return s.Script
-}
-
-// GetFlake returns the value of Flake.
-func (s *Execution) GetFlake() string {
-	return s.Flake
-}
-
-// GetCreatedAt returns the value of CreatedAt.
-func (s *Execution) GetCreatedAt() time.Time {
-	return s.CreatedAt
-}
-
-// SetExecutionId sets the value of ExecutionId.
-func (s *Execution) SetExecutionId(val int64) {
-	s.ExecutionId = val
-}
-
-// SetScript sets the value of Script.
-func (s *Execution) SetScript(val string) {
-	s.Script = val
-}
-
-// SetFlake sets the value of Flake.
-func (s *Execution) SetFlake(val string) {
-	s.Flake = val
-}
-
-// SetCreatedAt sets the value of CreatedAt.
-func (s *Execution) SetCreatedAt(val time.Time) {
-	s.CreatedAt = val
-}
 
 // Ref: #/components/schemas/ExecutionConfig
 type ExecutionConfig struct {
@@ -654,22 +628,25 @@ func NewExecutionEnvironmentSpecExecutionRequestEnvironment(v ExecutionEnvironme
 // Merged schema.
 // Ref: #/components/schemas/ExecutionResult
 type ExecutionResult struct {
-	ExecutionId int64 `json:"executionId"`
+	JobId int64 `json:"jobId"`
 	// Merged property.
 	Script string `json:"script"`
 	// Merged property.
-	Flake      string    `json:"flake"`
-	CreatedAt  time.Time `json:"created_at"`
-	Args       string    `json:"args"`
-	StartedAt  time.Time `json:"started_at"`
-	FinishedAt time.Time `json:"finished_at"`
-	ExecLogs   string    `json:"exec_logs"`
-	NixLogs    OptString `json:"nix_logs"`
+	Flake     string    `json:"flake"`
+	CreatedAt time.Time `json:"created_at"`
+	// Merged property.
+	StartedAt  time.Time   `json:"started_at"`
+	UpdatedAt  OptDateTime `json:"updated_at"`
+	ExecId     int64       `json:"execId"`
+	Args       string      `json:"args"`
+	FinishedAt time.Time   `json:"finished_at"`
+	ExecLogs   string      `json:"exec_logs"`
+	NixLogs    OptString   `json:"nix_logs"`
 }
 
-// GetExecutionId returns the value of ExecutionId.
-func (s *ExecutionResult) GetExecutionId() int64 {
-	return s.ExecutionId
+// GetJobId returns the value of JobId.
+func (s *ExecutionResult) GetJobId() int64 {
+	return s.JobId
 }
 
 // GetScript returns the value of Script.
@@ -687,14 +664,24 @@ func (s *ExecutionResult) GetCreatedAt() time.Time {
 	return s.CreatedAt
 }
 
-// GetArgs returns the value of Args.
-func (s *ExecutionResult) GetArgs() string {
-	return s.Args
-}
-
 // GetStartedAt returns the value of StartedAt.
 func (s *ExecutionResult) GetStartedAt() time.Time {
 	return s.StartedAt
+}
+
+// GetUpdatedAt returns the value of UpdatedAt.
+func (s *ExecutionResult) GetUpdatedAt() OptDateTime {
+	return s.UpdatedAt
+}
+
+// GetExecId returns the value of ExecId.
+func (s *ExecutionResult) GetExecId() int64 {
+	return s.ExecId
+}
+
+// GetArgs returns the value of Args.
+func (s *ExecutionResult) GetArgs() string {
+	return s.Args
 }
 
 // GetFinishedAt returns the value of FinishedAt.
@@ -712,9 +699,9 @@ func (s *ExecutionResult) GetNixLogs() OptString {
 	return s.NixLogs
 }
 
-// SetExecutionId sets the value of ExecutionId.
-func (s *ExecutionResult) SetExecutionId(val int64) {
-	s.ExecutionId = val
+// SetJobId sets the value of JobId.
+func (s *ExecutionResult) SetJobId(val int64) {
+	s.JobId = val
 }
 
 // SetScript sets the value of Script.
@@ -732,14 +719,24 @@ func (s *ExecutionResult) SetCreatedAt(val time.Time) {
 	s.CreatedAt = val
 }
 
-// SetArgs sets the value of Args.
-func (s *ExecutionResult) SetArgs(val string) {
-	s.Args = val
-}
-
 // SetStartedAt sets the value of StartedAt.
 func (s *ExecutionResult) SetStartedAt(val time.Time) {
 	s.StartedAt = val
+}
+
+// SetUpdatedAt sets the value of UpdatedAt.
+func (s *ExecutionResult) SetUpdatedAt(val OptDateTime) {
+	s.UpdatedAt = val
+}
+
+// SetExecId sets the value of ExecId.
+func (s *ExecutionResult) SetExecId(val int64) {
+	s.ExecId = val
+}
+
+// SetArgs sets the value of Args.
+func (s *ExecutionResult) SetArgs(val string) {
+	s.Args = val
 }
 
 // SetFinishedAt sets the value of FinishedAt.
@@ -757,12 +754,15 @@ func (s *ExecutionResult) SetNixLogs(val OptString) {
 	s.NixLogs = val
 }
 
+func (*ExecutionResult) getExecutionResultByIdRes() {}
+
 // Ref: #/components/schemas/ExecutionWorker
 type ExecutionWorker struct {
-	ID        int32     `json:"id"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"created_at"`
-	Status    string    `json:"status"`
+	ID        int32       `json:"id"`
+	Name      string      `json:"name"`
+	CreatedAt time.Time   `json:"created_at"`
+	Status    string      `json:"status"`
+	UpdatedAt OptDateTime `json:"updated_at"`
 }
 
 // GetID returns the value of ID.
@@ -785,6 +785,11 @@ func (s *ExecutionWorker) GetStatus() string {
 	return s.Status
 }
 
+// GetUpdatedAt returns the value of UpdatedAt.
+func (s *ExecutionWorker) GetUpdatedAt() OptDateTime {
+	return s.UpdatedAt
+}
+
 // SetID sets the value of ID.
 func (s *ExecutionWorker) SetID(val int32) {
 	s.ID = val
@@ -805,42 +810,47 @@ func (s *ExecutionWorker) SetStatus(val string) {
 	s.Status = val
 }
 
+// SetUpdatedAt sets the value of UpdatedAt.
+func (s *ExecutionWorker) SetUpdatedAt(val OptDateTime) {
+	s.UpdatedAt = val
+}
+
 type Flake string
 
-type GetAllExecutionResultsBadRequest Error
+type GetAllExecutionJobsBadRequest Error
 
-func (*GetAllExecutionResultsBadRequest) getAllExecutionResultsRes() {}
+func (*GetAllExecutionJobsBadRequest) getAllExecutionJobsRes() {}
 
-type GetAllExecutionResultsInternalServerError Error
+type GetAllExecutionJobsInternalServerError Error
 
-func (*GetAllExecutionResultsInternalServerError) getAllExecutionResultsRes() {}
+func (*GetAllExecutionJobsInternalServerError) getAllExecutionJobsRes() {}
 
-type GetAllExecutionResultsOK struct {
-	Executions []ExecutionResult  `json:"executions"`
+type GetAllExecutionJobsOK struct {
+	Jobs       []Job              `json:"jobs"`
 	Pagination PaginationResponse `json:"pagination"`
 }
 
-// GetExecutions returns the value of Executions.
-func (s *GetAllExecutionResultsOK) GetExecutions() []ExecutionResult {
-	return s.Executions
+// GetJobs returns the value of Jobs.
+func (s *GetAllExecutionJobsOK) GetJobs() []Job {
+	return s.Jobs
 }
 
 // GetPagination returns the value of Pagination.
-func (s *GetAllExecutionResultsOK) GetPagination() PaginationResponse {
+func (s *GetAllExecutionJobsOK) GetPagination() PaginationResponse {
 	return s.Pagination
 }
 
-// SetExecutions sets the value of Executions.
-func (s *GetAllExecutionResultsOK) SetExecutions(val []ExecutionResult) {
-	s.Executions = val
+// SetJobs sets the value of Jobs.
+func (s *GetAllExecutionJobsOK) SetJobs(val []Job) {
+	s.Jobs = val
 }
 
 // SetPagination sets the value of Pagination.
-func (s *GetAllExecutionResultsOK) SetPagination(val PaginationResponse) {
+func (s *GetAllExecutionJobsOK) SetPagination(val PaginationResponse) {
 	s.Pagination = val
 }
 
-func (*GetAllExecutionResultsOK) getAllExecutionResultsRes() {}
+func (*GetAllExecutionJobsOK) getAllExecutionJobsRes() {}
 
 type GetAllExecutionsBadRequest Error
 
@@ -851,12 +861,12 @@ type GetAllExecutionsInternalServerError Error
 func (*GetAllExecutionsInternalServerError) getAllExecutionsRes() {}
 
 type GetAllExecutionsOK struct {
-	Executions []Execution        `json:"executions"`
+	Executions []ExecutionResult  `json:"executions"`
 	Pagination PaginationResponse `json:"pagination"`
 }
 
 // GetExecutions returns the value of Executions.
-func (s *GetAllExecutionsOK) GetExecutions() []Execution {
+func (s *GetAllExecutionsOK) GetExecutions() []ExecutionResult {
 	return s.Executions
 }
 
@@ -866,7 +876,7 @@ func (s *GetAllExecutionsOK) GetPagination() PaginationResponse {
 }
 
 // SetExecutions sets the value of Executions.
-func (s *GetAllExecutionsOK) SetExecutions(val []Execution) {
+func (s *GetAllExecutionsOK) SetExecutions(val []ExecutionResult) {
 	s.Executions = val
 }
 
@@ -877,45 +887,31 @@ func (s *GetAllExecutionsOK) SetPagination(val PaginationResponse) {
 
 func (*GetAllExecutionsOK) getAllExecutionsRes() {}
 
-type GetExecutionResultsByIdBadRequest Error
+type GetExecutionJobByIdBadRequest Error
 
-func (*GetExecutionResultsByIdBadRequest) getExecutionResultsByIdRes() {}
+func (*GetExecutionJobByIdBadRequest) getExecutionJobByIdRes() {}
 
-type GetExecutionResultsByIdInternalServerError Error
+type GetExecutionJobByIdInternalServerError Error
 
-func (*GetExecutionResultsByIdInternalServerError) getExecutionResultsByIdRes() {}
+func (*GetExecutionJobByIdInternalServerError) getExecutionJobByIdRes() {}
 
-// GetExecutionResultsByIdNotFound is response for GetExecutionResultsById operation.
-type GetExecutionResultsByIdNotFound struct{}
+// GetExecutionJobByIdNotFound is response for GetExecutionJobById operation.
+type GetExecutionJobByIdNotFound struct{}
 
-func (*GetExecutionResultsByIdNotFound) getExecutionResultsByIdRes() {}
+func (*GetExecutionJobByIdNotFound) getExecutionJobByIdRes() {}
 
-type GetExecutionResultsByIdOK struct {
-	Executions []ExecutionResult  `json:"executions"`
-	Pagination PaginationResponse `json:"pagination"`
-}
+type GetExecutionResultByIdBadRequest Error
 
-// GetExecutions returns the value of Executions.
-func (s *GetExecutionResultsByIdOK) GetExecutions() []ExecutionResult {
-	return s.Executions
-}
+func (*GetExecutionResultByIdBadRequest) getExecutionResultByIdRes() {}
 
-// GetPagination returns the value of Pagination.
-func (s *GetExecutionResultsByIdOK) GetPagination() PaginationResponse {
-	return s.Pagination
-}
+type GetExecutionResultByIdInternalServerError Error
 
-// SetExecutions sets the value of Executions.
-func (s *GetExecutionResultsByIdOK) SetExecutions(val []ExecutionResult) {
-	s.Executions = val
-}
+func (*GetExecutionResultByIdInternalServerError) getExecutionResultByIdRes() {}
 
-// SetPagination sets the value of Pagination.
-func (s *GetExecutionResultsByIdOK) SetPagination(val PaginationResponse) {
-	s.Pagination = val
-}
+// GetExecutionResultByIdNotFound is response for GetExecutionResultById operation.
+type GetExecutionResultByIdNotFound struct{}
 
-func (*GetExecutionResultsByIdOK) getExecutionResultsByIdRes() {}
+func (*GetExecutionResultByIdNotFound) getExecutionResultByIdRes() {}
 
 type GetExecutionWorkersBadRequest Error
 
@@ -952,6 +948,46 @@ func (s *GetExecutionWorkersOK) SetPagination(val PaginationResponse) {
 
 func (*GetExecutionWorkersOK) getExecutionWorkersRes() {}
 
+type GetExecutionsForJobBadRequest Error
+
+func (*GetExecutionsForJobBadRequest) getExecutionsForJobRes() {}
+
+type GetExecutionsForJobInternalServerError Error
+
+func (*GetExecutionsForJobInternalServerError) getExecutionsForJobRes() {}
+
+// GetExecutionsForJobNotFound is response for GetExecutionsForJob operation.
+type GetExecutionsForJobNotFound struct{}
+
+func (*GetExecutionsForJobNotFound) getExecutionsForJobRes() {}
+
+type GetExecutionsForJobOK struct {
+	Executions []ExecutionResult  `json:"executions"`
+	Pagination PaginationResponse `json:"pagination"`
+}
+
+// GetExecutions returns the value of Executions.
+func (s *GetExecutionsForJobOK) GetExecutions() []ExecutionResult {
+	return s.Executions
+}
+
+// GetPagination returns the value of Pagination.
+func (s *GetExecutionsForJobOK) GetPagination() PaginationResponse {
+	return s.Pagination
+}
+
+// SetExecutions sets the value of Executions.
+func (s *GetExecutionsForJobOK) SetExecutions(val []ExecutionResult) {
+	s.Executions = val
+}
+
+// SetPagination sets the value of Pagination.
+func (s *GetExecutionsForJobOK) SetPagination(val PaginationResponse) {
+	s.Pagination = val
+}
+
+func (*GetExecutionsForJobOK) getExecutionsForJobRes() {}
+
 type GetVersionOK struct {
 	Version string `json:"version"`
 }
@@ -967,6 +1003,78 @@ func (s *GetVersionOK) SetVersion(val string) {
 }
 
 func (*GetVersionOK) getVersionRes() {}
+
+// Ref: #/components/schemas/Job
+type Job struct {
+	JobId     int64       `json:"jobId"`
+	Script    string      `json:"script"`
+	Flake     string      `json:"flake"`
+	CreatedAt time.Time   `json:"created_at"`
+	StartedAt OptDateTime `json:"started_at"`
+	UpdatedAt OptDateTime `json:"updated_at"`
+}
+
+// GetJobId returns the value of JobId.
+func (s *Job) GetJobId() int64 {
+	return s.JobId
+}
+
+// GetScript returns the value of Script.
+func (s *Job) GetScript() string {
+	return s.Script
+}
+
+// GetFlake returns the value of Flake.
+func (s *Job) GetFlake() string {
+	return s.Flake
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *Job) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetStartedAt returns the value of StartedAt.
+func (s *Job) GetStartedAt() OptDateTime {
+	return s.StartedAt
+}
+
+// GetUpdatedAt returns the value of UpdatedAt.
+func (s *Job) GetUpdatedAt() OptDateTime {
+	return s.UpdatedAt
+}
+
+// SetJobId sets the value of JobId.
+func (s *Job) SetJobId(val int64) {
+	s.JobId = val
+}
+
+// SetScript sets the value of Script.
+func (s *Job) SetScript(val string) {
+	s.Script = val
+}
+
+// SetFlake sets the value of Flake.
+func (s *Job) SetFlake(val string) {
+	s.Flake = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *Job) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetStartedAt sets the value of StartedAt.
+func (s *Job) SetStartedAt(val OptDateTime) {
+	s.StartedAt = val
+}
+
+// SetUpdatedAt sets the value of UpdatedAt.
+func (s *Job) SetUpdatedAt(val OptDateTime) {
+	s.UpdatedAt = val
+}
+
+func (*Job) getExecutionJobByIdRes() {}
 
 // NewOptBool returns new OptBool with value set to v.
 func NewOptBool(v bool) OptBool {
@@ -1008,6 +1116,52 @@ func (o OptBool) Get() (v bool, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptBool) Or(d bool) bool {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptDateTime returns new OptDateTime with value set to v.
+func NewOptDateTime(v time.Time) OptDateTime {
+	return OptDateTime{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptDateTime is optional time.Time.
+type OptDateTime struct {
+	Value time.Time
+	Set   bool
+}
+
+// IsSet returns true if OptDateTime was set.
+func (o OptDateTime) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptDateTime) Reset() {
+	var v time.Time
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptDateTime) SetTo(v time.Time) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptDateTime) Get() (v time.Time, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptDateTime) Or(d time.Time) time.Time {
 	if v, ok := o.Get(); ok {
 		return v
 	}

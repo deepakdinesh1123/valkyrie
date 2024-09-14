@@ -60,7 +60,7 @@ func (s *SQLStore) AddJobTx(ctx context.Context, arg AddJobTxParams) (AddJobTxRe
 			log.Printf("InsertJob error: %v", err)
 			return err
 		}
-		addJobTxResult.JobID = job.ID
+		addJobTxResult.JobID = job.JobID
 		return nil
 	})
 	if err != nil {

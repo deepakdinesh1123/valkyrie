@@ -134,24 +134,58 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 						}
 
 						elem = origElem
-					case 'r': // Prefix: "results/"
+					case 'j': // Prefix: "jobs/"
 						origElem := elem
-						if l := len("results/"); len(elem) >= l && elem[0:l] == "results/" {
+						if l := len("jobs/"); len(elem) >= l && elem[0:l] == "jobs/" {
 							elem = elem[l:]
 						} else {
 							break
 						}
 
+						// Param: "JobId"
+						// Match until "/"
+						idx := strings.IndexByte(elem, '/')
+						if idx < 0 {
+							idx = len(elem)
+						}
+						args[0] = elem[:idx]
+						elem = elem[idx:]
+
 						if len(elem) == 0 {
-							// Leaf node.
-							switch r.Method {
-							case "GET":
-								s.handleGetAllExecutionResultsRequest([0]string{}, elemIsEscaped, w, r)
-							default:
-								s.notAllowed(w, r, "GET")
+							break
+						}
+						switch elem[0] {
+						case '/': // Prefix: "/"
+							origElem := elem
+							if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+								elem = elem[l:]
+							} else {
+								break
 							}
 
-							return
+							if len(elem) == 0 {
+								// Leaf node.
+								switch r.Method {
+								case "DELETE":
+									s.handleDeleteExecutionJobRequest([1]string{
+										args[0],
+									}, elemIsEscaped, w, r)
+								case "GET":
+									s.handleGetExecutionJobByIdRequest([1]string{
+										args[0],
+									}, elemIsEscaped, w, r)
+								case "PUT":
+									s.handleCancelExecutionJobRequest([1]string{
+										args[0],
+									}, elemIsEscaped, w, r)
+								default:
+									s.notAllowed(w, r, "DELETE,GET,PUT")
+								}
+
+								return
+							}
+
+							elem = origElem
 						}
 
 						elem = origElem
@@ -225,7 +259,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 						elem = origElem
 					}
-					// Param: "JobId"
+					// Param: "execId"
 					// Match until "/"
 					idx := strings.IndexByte(elem, '/')
 					if idx < 0 {
@@ -249,26 +283,91 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 						if len(elem) == 0 {
 							// Leaf node.
 							switch r.Method {
-							case "DELETE":
-								s.handleDeleteJobRequest([1]string{
-									args[0],
-								}, elemIsEscaped, w, r)
 							case "GET":
-								s.handleGetExecutionResultsByIdRequest([1]string{
-									args[0],
-								}, elemIsEscaped, w, r)
-							case "PUT":
-								s.handleCancelJobRequest([1]string{
+								s.handleGetExecutionResultByIdRequest([1]string{
 									args[0],
 								}, elemIsEscaped, w, r)
 							default:
-								s.notAllowed(w, r, "DELETE,GET,PUT")
+								s.notAllowed(w, r, "GET")
 							}
 
 							return
 						}
 
 						elem = origElem
+					}
+
+					elem = origElem
+				}
+
+				elem = origElem
+			case 'j': // Prefix: "jobs/"
+				origElem := elem
+				if l := len("jobs/"); len(elem) >= l && elem[0:l] == "jobs/" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					break
+				}
+				switch elem[0] {
+				case 'e': // Prefix: "execution/"
+					origElem := elem
+					if l := len("execution/"); len(elem) >= l && elem[0:l] == "execution/" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch r.Method {
+						case "GET":
+							s.handleGetAllExecutionJobsRequest([0]string{}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, "GET")
+						}
+
+						return
+					}
+
+					elem = origElem
+				}
+				// Param: "JobId"
+				// Match until "/"
+				idx := strings.IndexByte(elem, '/')
+				if idx < 0 {
+					idx = len(elem)
+				}
+				args[0] = elem[:idx]
+				elem = elem[idx:]
+
+				if len(elem) == 0 {
+					break
+				}
+				switch elem[0] {
+				case '/': // Prefix: "/executions/"
+					origElem := elem
+					if l := len("/executions/"); len(elem) >= l && elem[0:l] == "/executions/" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch r.Method {
+						case "GET":
+							s.handleGetExecutionsForJobRequest([1]string{
+								args[0],
+							}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, "GET")
+						}
+
+						return
 					}
 
 					elem = origElem
@@ -476,28 +575,68 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						}
 
 						elem = origElem
-					case 'r': // Prefix: "results/"
+					case 'j': // Prefix: "jobs/"
 						origElem := elem
-						if l := len("results/"); len(elem) >= l && elem[0:l] == "results/" {
+						if l := len("jobs/"); len(elem) >= l && elem[0:l] == "jobs/" {
 							elem = elem[l:]
 						} else {
 							break
 						}
 
+						// Param: "JobId"
+						// Match until "/"
+						idx := strings.IndexByte(elem, '/')
+						if idx < 0 {
+							idx = len(elem)
+						}
+						args[0] = elem[:idx]
+						elem = elem[idx:]
+
 						if len(elem) == 0 {
-							// Leaf node.
-							switch method {
-							case "GET":
-								r.name = "GetAllExecutionResults"
-								r.summary = "Get all execution results"
-								r.operationID = "getAllExecutionResults"
-								r.pathPattern = "/executions/results/"
-								r.args = args
-								r.count = 0
-								return r, true
-							default:
-								return
+							break
+						}
+						switch elem[0] {
+						case '/': // Prefix: "/"
+							origElem := elem
+							if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+								elem = elem[l:]
+							} else {
+								break
 							}
+
+							if len(elem) == 0 {
+								// Leaf node.
+								switch method {
+								case "DELETE":
+									r.name = "DeleteExecutionJob"
+									r.summary = "Delete execution job"
+									r.operationID = "deleteExecutionJob"
+									r.pathPattern = "/executions/jobs/{JobId}/"
+									r.args = args
+									r.count = 1
+									return r, true
+								case "GET":
+									r.name = "GetExecutionJobById"
+									r.summary = "Get execution job"
+									r.operationID = "getExecutionJobById"
+									r.pathPattern = "/executions/jobs/{JobId}/"
+									r.args = args
+									r.count = 1
+									return r, true
+								case "PUT":
+									r.name = "CancelExecutionJob"
+									r.summary = "Cancel Execution Job"
+									r.operationID = "cancelExecutionJob"
+									r.pathPattern = "/executions/jobs/{JobId}/"
+									r.args = args
+									r.count = 1
+									return r, true
+								default:
+									return
+								}
+							}
+
+							elem = origElem
 						}
 
 						elem = origElem
@@ -577,7 +716,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 
 						elem = origElem
 					}
-					// Param: "JobId"
+					// Param: "execId"
 					// Match until "/"
 					idx := strings.IndexByte(elem, '/')
 					if idx < 0 {
@@ -601,27 +740,11 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						if len(elem) == 0 {
 							// Leaf node.
 							switch method {
-							case "DELETE":
-								r.name = "DeleteJob"
-								r.summary = "Delete job"
-								r.operationID = "deleteJob"
-								r.pathPattern = "/executions/{JobId}/"
-								r.args = args
-								r.count = 1
-								return r, true
 							case "GET":
-								r.name = "GetExecutionResultsById"
-								r.summary = "Get execution result"
-								r.operationID = "getExecutionResultsById"
-								r.pathPattern = "/executions/{JobId}/"
-								r.args = args
-								r.count = 1
-								return r, true
-							case "PUT":
-								r.name = "CancelJob"
-								r.summary = "Cancel Job"
-								r.operationID = "cancelJob"
-								r.pathPattern = "/executions/{JobId}/"
+								r.name = "GetExecutionResultById"
+								r.summary = "Get execution result by id"
+								r.operationID = "getExecutionResultById"
+								r.pathPattern = "/executions/{execId}/"
 								r.args = args
 								r.count = 1
 								return r, true
@@ -631,6 +754,85 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						}
 
 						elem = origElem
+					}
+
+					elem = origElem
+				}
+
+				elem = origElem
+			case 'j': // Prefix: "jobs/"
+				origElem := elem
+				if l := len("jobs/"); len(elem) >= l && elem[0:l] == "jobs/" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					break
+				}
+				switch elem[0] {
+				case 'e': // Prefix: "execution/"
+					origElem := elem
+					if l := len("execution/"); len(elem) >= l && elem[0:l] == "execution/" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch method {
+						case "GET":
+							r.name = "GetAllExecutionJobs"
+							r.summary = "Get all execution jobs"
+							r.operationID = "getAllExecutionJobs"
+							r.pathPattern = "/jobs/execution/"
+							r.args = args
+							r.count = 0
+							return r, true
+						default:
+							return
+						}
+					}
+
+					elem = origElem
+				}
+				// Param: "JobId"
+				// Match until "/"
+				idx := strings.IndexByte(elem, '/')
+				if idx < 0 {
+					idx = len(elem)
+				}
+				args[0] = elem[:idx]
+				elem = elem[idx:]
+
+				if len(elem) == 0 {
+					break
+				}
+				switch elem[0] {
+				case '/': // Prefix: "/executions/"
+					origElem := elem
+					if l := len("/executions/"); len(elem) >= l && elem[0:l] == "/executions/" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch method {
+						case "GET":
+							r.name = "GetExecutionsForJob"
+							r.summary = "Get executions of given job"
+							r.operationID = "getExecutionsForJob"
+							r.pathPattern = "/jobs/{JobId}/executions/"
+							r.args = args
+							r.count = 1
+							return r, true
+						default:
+							return
+						}
 					}
 
 					elem = origElem

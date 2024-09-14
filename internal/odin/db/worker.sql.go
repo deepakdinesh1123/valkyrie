@@ -11,6 +11,26 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const createWorker = `-- name: CreateWorker :one
+insert into workers
+    (name)
+values
+    ($1)
+returning id, name, created_at, last_heartbeat
+`
+
+func (q *Queries) CreateWorker(ctx context.Context, name string) (Worker, error) {
+	row := q.db.QueryRow(ctx, createWorker, name)
+	var i Worker
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.CreatedAt,
+		&i.LastHeartbeat,
+	)
+	return i, err
+}
+
 const deleteWorker = `-- name: DeleteWorker :exec
 delete from workers where id = $1
 `
@@ -57,7 +77,7 @@ func (q *Queries) GetAllWorkers(ctx context.Context, arg GetAllWorkersParams) ([
 
 const getStaleWorkers = `-- name: GetStaleWorkers :many
 select id from workers
-where last_heartbeat < now() - interval '10 seconds'
+where last_heartbeat < now() - interval '20 seconds'
 `
 
 func (q *Queries) GetStaleWorkers(ctx context.Context) ([]int32, error) {
@@ -109,14 +129,19 @@ func (q *Queries) GetWorker(ctx context.Context, name string) (Worker, error) {
 
 const insertWorker = `-- name: InsertWorker :one
 insert into workers
-    (name)
+    (id, name)
 values
-    ($1)
+    ($1, $2)
 returning id, name, created_at, last_heartbeat
 `
 
-func (q *Queries) InsertWorker(ctx context.Context, name string) (Worker, error) {
-	row := q.db.QueryRow(ctx, insertWorker, name)
+type InsertWorkerParams struct {
+	ID   int32  `db:"id" json:"id"`
+	Name string `db:"name" json:"name"`
+}
+
+func (q *Queries) InsertWorker(ctx context.Context, arg InsertWorkerParams) (Worker, error) {
+	row := q.db.QueryRow(ctx, insertWorker, arg.ID, arg.Name)
 	var i Worker
 	err := row.Scan(
 		&i.ID,
