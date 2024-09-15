@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/auth"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/services/execution"
@@ -44,7 +45,8 @@ func NewServer(ctx context.Context, envConfig *config.EnvConfig, standalone bool
 		mp:               mp,
 		otelShutdown:     otelShutdown,
 	}
-	srv, err := api.NewServer(odinServer)
+	authHandler := auth.NewAuthHandler()
+	srv, err := api.NewServer(odinServer, authHandler)
 	if err != nil {
 		return nil, err
 	}

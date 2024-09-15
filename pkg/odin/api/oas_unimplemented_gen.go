@@ -49,6 +49,15 @@ func (UnimplementedHandler) Execute(ctx context.Context, req *ExecutionRequest) 
 	return r, ht.ErrNotImplemented
 }
 
+// GenerateUserToken implements generateUserToken operation.
+//
+// Generate user token.
+//
+// GET /user/token/
+func (UnimplementedHandler) GenerateUserToken(ctx context.Context) (r GenerateUserTokenRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetAllExecutionJobs implements getAllExecutionJobs operation.
 //
 // Get all execution jobs.
@@ -109,6 +118,15 @@ func (UnimplementedHandler) GetExecutionWorkers(ctx context.Context, params GetE
 //
 // GET /jobs/{JobId}/executions/
 func (UnimplementedHandler) GetExecutionsForJob(ctx context.Context, params GetExecutionsForJobParams) (r GetExecutionsForJobRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetToken implements getToken operation.
+//
+// Get token.
+//
+// POST /admin/token/
+func (UnimplementedHandler) GetToken(ctx context.Context, req *GetTokenReq) (r GetTokenRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

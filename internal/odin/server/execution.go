@@ -9,6 +9,7 @@ import (
 
 	"github.com/coder/websocket"
 	"github.com/coder/websocket/wsjson"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/auth"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/services/execution"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
@@ -294,6 +295,9 @@ func (s *OdinServer) GetAllExecutionJobs(ctx context.Context, params api.GetAllE
 }
 
 func (s *OdinServer) GetExecutionConfig(ctx context.Context) (api.GetExecutionConfigRes, error) {
+	if !auth.CheckRoles(ctx, []string{"admin"}) {
+		return &api.GetExecutionConfigForbidden{}, nil
+	}
 	return &api.ExecutionConfig{
 		ODINWORKERPROVIDER:    s.envConfig.ODIN_WORKER_PROVIDER,
 		ODINWORKERCONCURRENCY: int32(s.envConfig.ODIN_WORKER_CONCURRENCY),
@@ -340,6 +344,9 @@ func (s *OdinServer) GetExecutionWorkers(ctx context.Context, params api.GetExec
 }
 
 func (s *OdinServer) DeleteExecutionJob(ctx context.Context, params api.DeleteExecutionJobParams) (api.DeleteExecutionJobRes, error) {
+	if !auth.CheckRoles(ctx, []string{"admin"}) {
+		return &api.DeleteExecutionJobForbidden{}, nil
+	}
 	state, err := s.queries.GetJobState(ctx, params.JobId)
 	if err != nil {
 		return &api.DeleteExecutionJobInternalServerError{
@@ -367,6 +374,9 @@ func (s *OdinServer) DeleteExecutionJob(ctx context.Context, params api.DeleteEx
 }
 
 func (s *OdinServer) CancelExecutionJob(ctx context.Context, params api.CancelExecutionJobParams) (api.CancelExecutionJobRes, error) {
+	if !auth.CheckRoles(ctx, []string{"admin"}) {
+		return &api.CancelExecutionJobForbidden{}, nil
+	}
 	err := s.queries.CancelJob(ctx, params.JobId)
 	if err != nil {
 		if err == pgx.ErrNoRows {

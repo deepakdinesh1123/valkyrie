@@ -4,13 +4,24 @@ meta {
   seq: 2
 }
 
-get {
-  url: http://localhost:8080/version/
-  body: none
-  auth: none
+post {
+  url: http://localhost:8080/admin/token
+  body: json
+  auth: bearer
 }
 
 params:query {
   ~page: 
   ~pageSize: 
+}
+
+auth:bearer {
+  token: 
+}
+
+body:json {
+  {
+    "username": "something",
+    "password": "something"
+  }
 }

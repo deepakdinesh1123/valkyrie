@@ -35,6 +35,11 @@ func encodeCancelExecutionJobResponse(response CancelExecutionJobRes, w http.Res
 
 		return nil
 
+	case *CancelExecutionJobForbidden:
+		w.WriteHeader(403)
+
+		return nil
+
 	case *CancelExecutionJobInternalServerError:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
@@ -68,6 +73,11 @@ func encodeDeleteExecutionJobResponse(response DeleteExecutionJobRes, w http.Res
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
+		return nil
+
+	case *DeleteExecutionJobForbidden:
+		w.WriteHeader(403)
 
 		return nil
 
@@ -184,6 +194,61 @@ func encodeExecuteResponse(response ExecuteRes, w http.ResponseWriter) error {
 	}
 }
 
+func encodeGenerateUserTokenResponse(response GenerateUserTokenRes, w http.ResponseWriter) error {
+	switch response := response.(type) {
+	case *GenerateUserTokenOK:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(200)
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *GenerateUserTokenBadRequest:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(400)
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *GenerateUserTokenForbidden:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(403)
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *GenerateUserTokenInternalServerError:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(500)
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	default:
+		return errors.Errorf("unexpected response type: %T", response)
+	}
+}
+
 func encodeGetAllExecutionJobsResponse(response GetAllExecutionJobsRes, w http.ResponseWriter) error {
 	switch response := response.(type) {
 	case *GetAllExecutionJobsOK:
@@ -281,6 +346,11 @@ func encodeGetExecutionConfigResponse(response GetExecutionConfigRes, w http.Res
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
+		return nil
+
+	case *GetExecutionConfigForbidden:
+		w.WriteHeader(403)
 
 		return nil
 
@@ -472,6 +542,61 @@ func encodeGetExecutionsForJobResponse(response GetExecutionsForJobRes, w http.R
 		return nil
 
 	case *GetExecutionsForJobInternalServerError:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(500)
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	default:
+		return errors.Errorf("unexpected response type: %T", response)
+	}
+}
+
+func encodeGetTokenResponse(response GetTokenRes, w http.ResponseWriter) error {
+	switch response := response.(type) {
+	case *GetTokenOK:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(200)
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *GetTokenUnauthorized:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(401)
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *GetTokenForbidden:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(403)
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *GetTokenInternalServerError:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
 

@@ -61,6 +61,27 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 			switch elem[0] {
+			case 'a': // Prefix: "admin/token/"
+				origElem := elem
+				if l := len("admin/token/"); len(elem) >= l && elem[0:l] == "admin/token/" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					// Leaf node.
+					switch r.Method {
+					case "POST":
+						s.handleGetTokenRequest([0]string{}, elemIsEscaped, w, r)
+					default:
+						s.notAllowed(w, r, "POST")
+					}
+
+					return
+				}
+
+				elem = origElem
 			case 'e': // Prefix: "execution"
 				origElem := elem
 				if l := len("execution"); len(elem) >= l && elem[0:l] == "execution" {
@@ -374,6 +395,27 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				}
 
 				elem = origElem
+			case 'u': // Prefix: "user/token/"
+				origElem := elem
+				if l := len("user/token/"); len(elem) >= l && elem[0:l] == "user/token/" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					// Leaf node.
+					switch r.Method {
+					case "GET":
+						s.handleGenerateUserTokenRequest([0]string{}, elemIsEscaped, w, r)
+					default:
+						s.notAllowed(w, r, "GET")
+					}
+
+					return
+				}
+
+				elem = origElem
 			case 'v': // Prefix: "version/"
 				origElem := elem
 				if l := len("version/"); len(elem) >= l && elem[0:l] == "version/" {
@@ -490,6 +532,31 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 				break
 			}
 			switch elem[0] {
+			case 'a': // Prefix: "admin/token/"
+				origElem := elem
+				if l := len("admin/token/"); len(elem) >= l && elem[0:l] == "admin/token/" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					// Leaf node.
+					switch method {
+					case "POST":
+						r.name = "GetToken"
+						r.summary = "Get token"
+						r.operationID = "getToken"
+						r.pathPattern = "/admin/token/"
+						r.args = args
+						r.count = 0
+						return r, true
+					default:
+						return
+					}
+				}
+
+				elem = origElem
 			case 'e': // Prefix: "execution"
 				origElem := elem
 				if l := len("execution"); len(elem) >= l && elem[0:l] == "execution" {
@@ -836,6 +903,31 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					}
 
 					elem = origElem
+				}
+
+				elem = origElem
+			case 'u': // Prefix: "user/token/"
+				origElem := elem
+				if l := len("user/token/"); len(elem) >= l && elem[0:l] == "user/token/" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					// Leaf node.
+					switch method {
+					case "GET":
+						r.name = "GenerateUserToken"
+						r.summary = "Generate user token"
+						r.operationID = "generateUserToken"
+						r.pathPattern = "/user/token/"
+						r.args = args
+						r.count = 0
+						return r, true
+					default:
+						return
+					}
 				}
 
 				elem = origElem

@@ -5,6 +5,91 @@ info:
 servers:
   - url: http://localhost:8080/api/v1
 paths:
+  /admin/token/:
+    post:
+      summary: Get token
+      security: []
+      description: Get token
+      operationId: getToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - token
+                properties:
+                  token:
+                    type: string
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /user/token/:
+    get:
+      summary: Generate user token
+      description: Generate user token
+      operationId: generateUserToken
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - token
+                properties:
+                  token:
+                    type: string
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /executions/execute/:
     post:
       summary: Execute a script
@@ -259,6 +344,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
           content:
@@ -287,6 +374,8 @@ paths:
                 $ref: '#/components/schemas/Error'
         '404':
           description: Execution job not found
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
           content:
@@ -415,6 +504,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
 components:
   parameters:
     PageNumber:
@@ -722,5 +813,12 @@ components:
           description: Represents the number of items per page.
         next:
           type: string
-        
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []
         

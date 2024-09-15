@@ -6,9 +6,28 @@ import (
 	"time"
 )
 
+type BearerAuth struct {
+	Token string
+}
+
+// GetToken returns the value of Token.
+func (s *BearerAuth) GetToken() string {
+	return s.Token
+}
+
+// SetToken sets the value of Token.
+func (s *BearerAuth) SetToken(val string) {
+	s.Token = val
+}
+
 type CancelExecutionJobBadRequest Error
 
 func (*CancelExecutionJobBadRequest) cancelExecutionJobRes() {}
+
+// CancelExecutionJobForbidden is response for CancelExecutionJob operation.
+type CancelExecutionJobForbidden struct{}
+
+func (*CancelExecutionJobForbidden) cancelExecutionJobRes() {}
 
 type CancelExecutionJobInternalServerError Error
 
@@ -33,6 +52,11 @@ func (*CancelExecutionJobOK) cancelExecutionJobRes() {}
 type DeleteExecutionJobBadRequest Error
 
 func (*DeleteExecutionJobBadRequest) deleteExecutionJobRes() {}
+
+// DeleteExecutionJobForbidden is response for DeleteExecutionJob operation.
+type DeleteExecutionJobForbidden struct{}
+
+func (*DeleteExecutionJobForbidden) deleteExecutionJobRes() {}
 
 type DeleteExecutionJobInternalServerError Error
 
@@ -817,6 +841,34 @@ func (s *ExecutionWorker) SetUpdatedAt(val OptDateTime) {
 
 type Flake string
 
+type GenerateUserTokenBadRequest Error
+
+func (*GenerateUserTokenBadRequest) generateUserTokenRes() {}
+
+type GenerateUserTokenForbidden Error
+
+func (*GenerateUserTokenForbidden) generateUserTokenRes() {}
+
+type GenerateUserTokenInternalServerError Error
+
+func (*GenerateUserTokenInternalServerError) generateUserTokenRes() {}
+
+type GenerateUserTokenOK struct {
+	Token string `json:"token"`
+}
+
+// GetToken returns the value of Token.
+func (s *GenerateUserTokenOK) GetToken() string {
+	return s.Token
+}
+
+// SetToken sets the value of Token.
+func (s *GenerateUserTokenOK) SetToken(val string) {
+	s.Token = val
+}
+
+func (*GenerateUserTokenOK) generateUserTokenRes() {}
+
 type GetAllExecutionJobsBadRequest Error
 
 func (*GetAllExecutionJobsBadRequest) getAllExecutionJobsRes() {}
@@ -886,6 +938,11 @@ func (s *GetAllExecutionsOK) SetPagination(val PaginationResponse) {
 }
 
 func (*GetAllExecutionsOK) getAllExecutionsRes() {}
+
+// GetExecutionConfigForbidden is response for GetExecutionConfig operation.
+type GetExecutionConfigForbidden struct{}
+
+func (*GetExecutionConfigForbidden) getExecutionConfigRes() {}
 
 type GetExecutionJobByIdBadRequest Error
 
@@ -987,6 +1044,59 @@ func (s *GetExecutionsForJobOK) SetPagination(val PaginationResponse) {
 }
 
 func (*GetExecutionsForJobOK) getExecutionsForJobRes() {}
+
+type GetTokenForbidden Error
+
+func (*GetTokenForbidden) getTokenRes() {}
+
+type GetTokenInternalServerError Error
+
+func (*GetTokenInternalServerError) getTokenRes() {}
+
+type GetTokenOK struct {
+	Token string `json:"token"`
+}
+
+// GetToken returns the value of Token.
+func (s *GetTokenOK) GetToken() string {
+	return s.Token
+}
+
+// SetToken sets the value of Token.
+func (s *GetTokenOK) SetToken(val string) {
+	s.Token = val
+}
+
+func (*GetTokenOK) getTokenRes() {}
+
+type GetTokenReq struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+// GetUsername returns the value of Username.
+func (s *GetTokenReq) GetUsername() string {
+	return s.Username
+}
+
+// GetPassword returns the value of Password.
+func (s *GetTokenReq) GetPassword() string {
+	return s.Password
+}
+
+// SetUsername sets the value of Username.
+func (s *GetTokenReq) SetUsername(val string) {
+	s.Username = val
+}
+
+// SetPassword sets the value of Password.
+func (s *GetTokenReq) SetPassword(val string) {
+	s.Password = val
+}
+
+type GetTokenUnauthorized Error
+
+func (*GetTokenUnauthorized) getTokenRes() {}
 
 type GetVersionOK struct {
 	Version string `json:"version"`

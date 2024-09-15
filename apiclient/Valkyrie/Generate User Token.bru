@@ -1,0 +1,15 @@
+meta {
+  name: Generate User Token
+  type: http
+  seq: 14
+}
+
+get {
+  url: http://localhost:8080/user/token/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhZG1pbiIsImV4cCI6MTcyNjUwOTUyNiwiaWF0IjoxNzI2NDIzMTI2LCJpc3MiOiJvZGluIn0.XPw4Xl2flicOsYMVlVmu9PcVc3AfK6VclG6KJfjoITw
+}
