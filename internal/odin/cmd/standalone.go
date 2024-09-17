@@ -7,6 +7,7 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/logs"
@@ -27,20 +28,21 @@ var StandaloneCmd = &cobra.Command{
 }
 
 func standaloneExec(cmd *cobra.Command, args []string) error {
+	envConfig, err := config.GetEnvConfig()
+	if err != nil {
+		log.Err(err).Msg("Failed to get environment config")
+		return err
+	}
+
 	logLevel := cmd.Flag("log-level").Value.String()
-	logger := logs.GetLogger(logLevel)
+	config := logs.NewLogConfig(logs.WithLevel(logLevel), logs.WithExport(envConfig.ODIN_EXPORT_LOGS))
+	logger := logs.GetLogger(config)
 	logger.Info().Msg("Starting Odin in standalone mode")
 
 	ctx, cancel := context.WithCancel(cmd.Context())
 	defer cancel()
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
-
-	envConfig, err := config.GetEnvConfig()
-	if err != nil {
-		logger.Err(err).Msg("Failed to get environment config")
-		return err
-	}
 
 	applyMigrations, err := cmd.Flags().GetBool("migrate")
 	if err != nil {

@@ -34,6 +34,7 @@ func (s *OdinServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 		Handler: middleware.Wrap(mux,
 			middleware.Instrument("server", route_finder, s.tp, s.mp, s.prop),
 			middleware.Labeler(route_finder),
+			middleware.RequestMiddleware(s.logger),
 		),
 	}
 

@@ -35,6 +35,7 @@ type EnvConfig struct {
 	ODIN_ENABLE_TELEMETRY   bool   `mapstructure:"ODIN_ENABLE_TELEMETRY"` // represents whether to enable OpenTelemetry for the server.
 	ODIN_OTLP_ENDPOINT      string `mapstructure:"ODIN_OTLP_ENDPOINT"`    // represents the OpenTelemetry collector endpoint.
 	ODIN_OTEL_RESOURCE_NAME string `mapstructure:"ODIN_OTEL_RESOURCE_NAME"`
+	ODIN_EXPORT_LOGS        string `mapstructure:"ODIN_EXPORT_LOGS"`
 	ODIN_ENVIRONMENT        string `mapstructure:"ODIN_ENVIRONMENT"` // represents the environment for the server (e.g. dev, staging, prod).
 
 	ODIN_JOB_PRUNE_FREQ int // represents the job prune frequency in hours.
@@ -78,6 +79,7 @@ func GetEnvConfig() (*EnvConfig, error) {
 	viper.SetDefault("ODIN_OTLP_ENDPOINT", "localhost:4317")
 	viper.SetDefault("ODIN_OTEL_RESOURCE_NAME", "Odin")
 	viper.SetDefault("ODIN_ENVIRONMENT", "dev")
+	viper.SetDefault("ODIN_EXPORT_LOGS", "console")
 
 	viper.SetDefault("ODIN_SYSTEM_PROVIDER_BASE_DIR", filepath.Join(os.TempDir(), "valkyrie"))
 	viper.SetDefault("ODIN_SYSTEM_PROVIDER_CLEAN_UP", true)
