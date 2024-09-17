@@ -6,12 +6,19 @@ import (
 	"context"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/go-faster/errors"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/metric"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ogen-go/ogen/conv"
 	ht "github.com/ogen-go/ogen/http"
 	"github.com/ogen-go/ogen/ogenerrors"
+	"github.com/ogen-go/ogen/otelogen"
 	"github.com/ogen-go/ogen/uri"
 )
 
@@ -164,7 +171,40 @@ func (c *Client) CancelExecutionJob(ctx context.Context, params CancelExecutionJ
 }
 
 func (c *Client) sendCancelExecutionJob(ctx context.Context, params CancelExecutionJobParams) (res CancelExecutionJobRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("cancelExecutionJob"),
+		semconv.HTTPRequestMethodKey.String("PUT"),
+		semconv.HTTPRouteKey.String("/executions/jobs/{JobId}/"),
+	}
 
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "CancelExecutionJob",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [3]string
 	pathParts[0] = "/executions/jobs/"
@@ -189,6 +229,7 @@ func (c *Client) sendCancelExecutionJob(ctx context.Context, params CancelExecut
 	pathParts[2] = "/"
 	uri.AddPathParts(u, pathParts[:]...)
 
+	stage = "EncodeRequest"
 	r, err := ht.NewRequest(ctx, "PUT", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
@@ -198,7 +239,7 @@ func (c *Client) sendCancelExecutionJob(ctx context.Context, params CancelExecut
 		type bitset = [1]uint8
 		var satisfied bitset
 		{
-
+			stage = "Security:BearerAuth"
 			switch err := c.securityBearerAuth(ctx, "CancelExecutionJob", r); {
 			case err == nil: // if NO error
 				satisfied[0] |= 1 << 0
@@ -227,12 +268,14 @@ func (c *Client) sendCancelExecutionJob(ctx context.Context, params CancelExecut
 		}
 	}
 
+	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
 		return res, errors.Wrap(err, "do request")
 	}
 	defer resp.Body.Close()
 
+	stage = "DecodeResponse"
 	result, err := decodeCancelExecutionJobResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
@@ -252,7 +295,40 @@ func (c *Client) DeleteExecutionJob(ctx context.Context, params DeleteExecutionJ
 }
 
 func (c *Client) sendDeleteExecutionJob(ctx context.Context, params DeleteExecutionJobParams) (res DeleteExecutionJobRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("deleteExecutionJob"),
+		semconv.HTTPRequestMethodKey.String("DELETE"),
+		semconv.HTTPRouteKey.String("/executions/jobs/{JobId}/"),
+	}
 
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "DeleteExecutionJob",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [3]string
 	pathParts[0] = "/executions/jobs/"
@@ -277,6 +353,7 @@ func (c *Client) sendDeleteExecutionJob(ctx context.Context, params DeleteExecut
 	pathParts[2] = "/"
 	uri.AddPathParts(u, pathParts[:]...)
 
+	stage = "EncodeRequest"
 	r, err := ht.NewRequest(ctx, "DELETE", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
@@ -286,7 +363,7 @@ func (c *Client) sendDeleteExecutionJob(ctx context.Context, params DeleteExecut
 		type bitset = [1]uint8
 		var satisfied bitset
 		{
-
+			stage = "Security:BearerAuth"
 			switch err := c.securityBearerAuth(ctx, "DeleteExecutionJob", r); {
 			case err == nil: // if NO error
 				satisfied[0] |= 1 << 0
@@ -315,12 +392,14 @@ func (c *Client) sendDeleteExecutionJob(ctx context.Context, params DeleteExecut
 		}
 	}
 
+	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
 		return res, errors.Wrap(err, "do request")
 	}
 	defer resp.Body.Close()
 
+	stage = "DecodeResponse"
 	result, err := decodeDeleteExecutionJobResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
@@ -340,7 +419,40 @@ func (c *Client) DeleteExecutionWorker(ctx context.Context, params DeleteExecuti
 }
 
 func (c *Client) sendDeleteExecutionWorker(ctx context.Context, params DeleteExecutionWorkerParams) (res DeleteExecutionWorkerRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("deleteExecutionWorker"),
+		semconv.HTTPRequestMethodKey.String("DELETE"),
+		semconv.HTTPRouteKey.String("/executions/workers/{workerId}/"),
+	}
 
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "DeleteExecutionWorker",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [3]string
 	pathParts[0] = "/executions/workers/"
@@ -365,6 +477,7 @@ func (c *Client) sendDeleteExecutionWorker(ctx context.Context, params DeleteExe
 	pathParts[2] = "/"
 	uri.AddPathParts(u, pathParts[:]...)
 
+	stage = "EncodeQueryParams"
 	q := uri.NewQueryEncoder()
 	{
 		// Encode "force" parameter.
@@ -385,6 +498,7 @@ func (c *Client) sendDeleteExecutionWorker(ctx context.Context, params DeleteExe
 	}
 	u.RawQuery = q.Values().Encode()
 
+	stage = "EncodeRequest"
 	r, err := ht.NewRequest(ctx, "DELETE", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
@@ -394,7 +508,7 @@ func (c *Client) sendDeleteExecutionWorker(ctx context.Context, params DeleteExe
 		type bitset = [1]uint8
 		var satisfied bitset
 		{
-
+			stage = "Security:BearerAuth"
 			switch err := c.securityBearerAuth(ctx, "DeleteExecutionWorker", r); {
 			case err == nil: // if NO error
 				satisfied[0] |= 1 << 0
@@ -423,12 +537,14 @@ func (c *Client) sendDeleteExecutionWorker(ctx context.Context, params DeleteExe
 		}
 	}
 
+	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
 		return res, errors.Wrap(err, "do request")
 	}
 	defer resp.Body.Close()
 
+	stage = "DecodeResponse"
 	result, err := decodeDeleteExecutionWorkerResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
@@ -448,12 +564,46 @@ func (c *Client) Execute(ctx context.Context, request *ExecutionRequest) (Execut
 }
 
 func (c *Client) sendExecute(ctx context.Context, request *ExecutionRequest) (res ExecuteRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("execute"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/executions/execute/"),
+	}
 
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "Execute",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
 	pathParts[0] = "/executions/execute/"
 	uri.AddPathParts(u, pathParts[:]...)
 
+	stage = "EncodeRequest"
 	r, err := ht.NewRequest(ctx, "POST", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
@@ -466,7 +616,7 @@ func (c *Client) sendExecute(ctx context.Context, request *ExecutionRequest) (re
 		type bitset = [1]uint8
 		var satisfied bitset
 		{
-
+			stage = "Security:BearerAuth"
 			switch err := c.securityBearerAuth(ctx, "Execute", r); {
 			case err == nil: // if NO error
 				satisfied[0] |= 1 << 0
@@ -495,12 +645,14 @@ func (c *Client) sendExecute(ctx context.Context, request *ExecutionRequest) (re
 		}
 	}
 
+	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
 		return res, errors.Wrap(err, "do request")
 	}
 	defer resp.Body.Close()
 
+	stage = "DecodeResponse"
 	result, err := decodeExecuteResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
@@ -520,12 +672,46 @@ func (c *Client) GenerateUserToken(ctx context.Context) (GenerateUserTokenRes, e
 }
 
 func (c *Client) sendGenerateUserToken(ctx context.Context) (res GenerateUserTokenRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("generateUserToken"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/user/token/"),
+	}
 
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "GenerateUserToken",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
 	pathParts[0] = "/user/token/"
 	uri.AddPathParts(u, pathParts[:]...)
 
+	stage = "EncodeRequest"
 	r, err := ht.NewRequest(ctx, "GET", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
@@ -535,7 +721,7 @@ func (c *Client) sendGenerateUserToken(ctx context.Context) (res GenerateUserTok
 		type bitset = [1]uint8
 		var satisfied bitset
 		{
-
+			stage = "Security:BearerAuth"
 			switch err := c.securityBearerAuth(ctx, "GenerateUserToken", r); {
 			case err == nil: // if NO error
 				satisfied[0] |= 1 << 0
@@ -564,12 +750,14 @@ func (c *Client) sendGenerateUserToken(ctx context.Context) (res GenerateUserTok
 		}
 	}
 
+	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
 		return res, errors.Wrap(err, "do request")
 	}
 	defer resp.Body.Close()
 
+	stage = "DecodeResponse"
 	result, err := decodeGenerateUserTokenResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
@@ -589,12 +777,46 @@ func (c *Client) GetAllExecutionJobs(ctx context.Context, params GetAllExecution
 }
 
 func (c *Client) sendGetAllExecutionJobs(ctx context.Context, params GetAllExecutionJobsParams) (res GetAllExecutionJobsRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getAllExecutionJobs"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/jobs/execution/"),
+	}
 
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "GetAllExecutionJobs",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
 	pathParts[0] = "/jobs/execution/"
 	uri.AddPathParts(u, pathParts[:]...)
 
+	stage = "EncodeQueryParams"
 	q := uri.NewQueryEncoder()
 	{
 		// Encode "page" parameter.
@@ -632,6 +854,7 @@ func (c *Client) sendGetAllExecutionJobs(ctx context.Context, params GetAllExecu
 	}
 	u.RawQuery = q.Values().Encode()
 
+	stage = "EncodeRequest"
 	r, err := ht.NewRequest(ctx, "GET", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
@@ -641,7 +864,7 @@ func (c *Client) sendGetAllExecutionJobs(ctx context.Context, params GetAllExecu
 		type bitset = [1]uint8
 		var satisfied bitset
 		{
-
+			stage = "Security:BearerAuth"
 			switch err := c.securityBearerAuth(ctx, "GetAllExecutionJobs", r); {
 			case err == nil: // if NO error
 				satisfied[0] |= 1 << 0
@@ -670,12 +893,14 @@ func (c *Client) sendGetAllExecutionJobs(ctx context.Context, params GetAllExecu
 		}
 	}
 
+	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
 		return res, errors.Wrap(err, "do request")
 	}
 	defer resp.Body.Close()
 
+	stage = "DecodeResponse"
 	result, err := decodeGetAllExecutionJobsResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
@@ -695,12 +920,46 @@ func (c *Client) GetAllExecutions(ctx context.Context, params GetAllExecutionsPa
 }
 
 func (c *Client) sendGetAllExecutions(ctx context.Context, params GetAllExecutionsParams) (res GetAllExecutionsRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getAllExecutions"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/executions/"),
+	}
 
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "GetAllExecutions",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
 	pathParts[0] = "/executions/"
 	uri.AddPathParts(u, pathParts[:]...)
 
+	stage = "EncodeQueryParams"
 	q := uri.NewQueryEncoder()
 	{
 		// Encode "page" parameter.
@@ -738,6 +997,7 @@ func (c *Client) sendGetAllExecutions(ctx context.Context, params GetAllExecutio
 	}
 	u.RawQuery = q.Values().Encode()
 
+	stage = "EncodeRequest"
 	r, err := ht.NewRequest(ctx, "GET", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
@@ -747,7 +1007,7 @@ func (c *Client) sendGetAllExecutions(ctx context.Context, params GetAllExecutio
 		type bitset = [1]uint8
 		var satisfied bitset
 		{
-
+			stage = "Security:BearerAuth"
 			switch err := c.securityBearerAuth(ctx, "GetAllExecutions", r); {
 			case err == nil: // if NO error
 				satisfied[0] |= 1 << 0
@@ -776,12 +1036,14 @@ func (c *Client) sendGetAllExecutions(ctx context.Context, params GetAllExecutio
 		}
 	}
 
+	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
 		return res, errors.Wrap(err, "do request")
 	}
 	defer resp.Body.Close()
 
+	stage = "DecodeResponse"
 	result, err := decodeGetAllExecutionsResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
@@ -801,12 +1063,46 @@ func (c *Client) GetExecutionConfig(ctx context.Context) (GetExecutionConfigRes,
 }
 
 func (c *Client) sendGetExecutionConfig(ctx context.Context) (res GetExecutionConfigRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getExecutionConfig"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/execution/config/"),
+	}
 
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "GetExecutionConfig",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
 	pathParts[0] = "/execution/config/"
 	uri.AddPathParts(u, pathParts[:]...)
 
+	stage = "EncodeRequest"
 	r, err := ht.NewRequest(ctx, "GET", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
@@ -816,7 +1112,7 @@ func (c *Client) sendGetExecutionConfig(ctx context.Context) (res GetExecutionCo
 		type bitset = [1]uint8
 		var satisfied bitset
 		{
-
+			stage = "Security:BearerAuth"
 			switch err := c.securityBearerAuth(ctx, "GetExecutionConfig", r); {
 			case err == nil: // if NO error
 				satisfied[0] |= 1 << 0
@@ -845,12 +1141,14 @@ func (c *Client) sendGetExecutionConfig(ctx context.Context) (res GetExecutionCo
 		}
 	}
 
+	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
 		return res, errors.Wrap(err, "do request")
 	}
 	defer resp.Body.Close()
 
+	stage = "DecodeResponse"
 	result, err := decodeGetExecutionConfigResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
@@ -870,7 +1168,40 @@ func (c *Client) GetExecutionJobById(ctx context.Context, params GetExecutionJob
 }
 
 func (c *Client) sendGetExecutionJobById(ctx context.Context, params GetExecutionJobByIdParams) (res GetExecutionJobByIdRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getExecutionJobById"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/executions/jobs/{JobId}/"),
+	}
 
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "GetExecutionJobById",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [3]string
 	pathParts[0] = "/executions/jobs/"
@@ -895,6 +1226,7 @@ func (c *Client) sendGetExecutionJobById(ctx context.Context, params GetExecutio
 	pathParts[2] = "/"
 	uri.AddPathParts(u, pathParts[:]...)
 
+	stage = "EncodeRequest"
 	r, err := ht.NewRequest(ctx, "GET", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
@@ -904,7 +1236,7 @@ func (c *Client) sendGetExecutionJobById(ctx context.Context, params GetExecutio
 		type bitset = [1]uint8
 		var satisfied bitset
 		{
-
+			stage = "Security:BearerAuth"
 			switch err := c.securityBearerAuth(ctx, "GetExecutionJobById", r); {
 			case err == nil: // if NO error
 				satisfied[0] |= 1 << 0
@@ -933,12 +1265,14 @@ func (c *Client) sendGetExecutionJobById(ctx context.Context, params GetExecutio
 		}
 	}
 
+	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
 		return res, errors.Wrap(err, "do request")
 	}
 	defer resp.Body.Close()
 
+	stage = "DecodeResponse"
 	result, err := decodeGetExecutionJobByIdResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
@@ -958,7 +1292,40 @@ func (c *Client) GetExecutionResultById(ctx context.Context, params GetExecution
 }
 
 func (c *Client) sendGetExecutionResultById(ctx context.Context, params GetExecutionResultByIdParams) (res GetExecutionResultByIdRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getExecutionResultById"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/executions/{execId}/"),
+	}
 
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "GetExecutionResultById",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [3]string
 	pathParts[0] = "/executions/"
@@ -983,6 +1350,7 @@ func (c *Client) sendGetExecutionResultById(ctx context.Context, params GetExecu
 	pathParts[2] = "/"
 	uri.AddPathParts(u, pathParts[:]...)
 
+	stage = "EncodeRequest"
 	r, err := ht.NewRequest(ctx, "GET", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
@@ -992,7 +1360,7 @@ func (c *Client) sendGetExecutionResultById(ctx context.Context, params GetExecu
 		type bitset = [1]uint8
 		var satisfied bitset
 		{
-
+			stage = "Security:BearerAuth"
 			switch err := c.securityBearerAuth(ctx, "GetExecutionResultById", r); {
 			case err == nil: // if NO error
 				satisfied[0] |= 1 << 0
@@ -1021,12 +1389,14 @@ func (c *Client) sendGetExecutionResultById(ctx context.Context, params GetExecu
 		}
 	}
 
+	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
 		return res, errors.Wrap(err, "do request")
 	}
 	defer resp.Body.Close()
 
+	stage = "DecodeResponse"
 	result, err := decodeGetExecutionResultByIdResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
@@ -1046,12 +1416,46 @@ func (c *Client) GetExecutionWorkers(ctx context.Context, params GetExecutionWor
 }
 
 func (c *Client) sendGetExecutionWorkers(ctx context.Context, params GetExecutionWorkersParams) (res GetExecutionWorkersRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getExecutionWorkers"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/executions/workers"),
+	}
 
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "GetExecutionWorkers",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
 	pathParts[0] = "/executions/workers"
 	uri.AddPathParts(u, pathParts[:]...)
 
+	stage = "EncodeQueryParams"
 	q := uri.NewQueryEncoder()
 	{
 		// Encode "page" parameter.
@@ -1089,6 +1493,7 @@ func (c *Client) sendGetExecutionWorkers(ctx context.Context, params GetExecutio
 	}
 	u.RawQuery = q.Values().Encode()
 
+	stage = "EncodeRequest"
 	r, err := ht.NewRequest(ctx, "GET", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
@@ -1098,7 +1503,7 @@ func (c *Client) sendGetExecutionWorkers(ctx context.Context, params GetExecutio
 		type bitset = [1]uint8
 		var satisfied bitset
 		{
-
+			stage = "Security:BearerAuth"
 			switch err := c.securityBearerAuth(ctx, "GetExecutionWorkers", r); {
 			case err == nil: // if NO error
 				satisfied[0] |= 1 << 0
@@ -1127,12 +1532,14 @@ func (c *Client) sendGetExecutionWorkers(ctx context.Context, params GetExecutio
 		}
 	}
 
+	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
 		return res, errors.Wrap(err, "do request")
 	}
 	defer resp.Body.Close()
 
+	stage = "DecodeResponse"
 	result, err := decodeGetExecutionWorkersResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
@@ -1152,7 +1559,40 @@ func (c *Client) GetExecutionsForJob(ctx context.Context, params GetExecutionsFo
 }
 
 func (c *Client) sendGetExecutionsForJob(ctx context.Context, params GetExecutionsForJobParams) (res GetExecutionsForJobRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getExecutionsForJob"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/jobs/{JobId}/executions/"),
+	}
 
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "GetExecutionsForJob",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [3]string
 	pathParts[0] = "/jobs/"
@@ -1177,6 +1617,7 @@ func (c *Client) sendGetExecutionsForJob(ctx context.Context, params GetExecutio
 	pathParts[2] = "/executions/"
 	uri.AddPathParts(u, pathParts[:]...)
 
+	stage = "EncodeQueryParams"
 	q := uri.NewQueryEncoder()
 	{
 		// Encode "page" parameter.
@@ -1214,6 +1655,7 @@ func (c *Client) sendGetExecutionsForJob(ctx context.Context, params GetExecutio
 	}
 	u.RawQuery = q.Values().Encode()
 
+	stage = "EncodeRequest"
 	r, err := ht.NewRequest(ctx, "GET", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
@@ -1223,7 +1665,7 @@ func (c *Client) sendGetExecutionsForJob(ctx context.Context, params GetExecutio
 		type bitset = [1]uint8
 		var satisfied bitset
 		{
-
+			stage = "Security:BearerAuth"
 			switch err := c.securityBearerAuth(ctx, "GetExecutionsForJob", r); {
 			case err == nil: // if NO error
 				satisfied[0] |= 1 << 0
@@ -1252,12 +1694,14 @@ func (c *Client) sendGetExecutionsForJob(ctx context.Context, params GetExecutio
 		}
 	}
 
+	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
 		return res, errors.Wrap(err, "do request")
 	}
 	defer resp.Body.Close()
 
+	stage = "DecodeResponse"
 	result, err := decodeGetExecutionsForJobResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
@@ -1277,12 +1721,46 @@ func (c *Client) GetToken(ctx context.Context, request *GetTokenReq) (GetTokenRe
 }
 
 func (c *Client) sendGetToken(ctx context.Context, request *GetTokenReq) (res GetTokenRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getToken"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/admin/token/"),
+	}
 
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "GetToken",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
 	pathParts[0] = "/admin/token/"
 	uri.AddPathParts(u, pathParts[:]...)
 
+	stage = "EncodeRequest"
 	r, err := ht.NewRequest(ctx, "POST", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
@@ -1291,12 +1769,14 @@ func (c *Client) sendGetToken(ctx context.Context, request *GetTokenReq) (res Ge
 		return res, errors.Wrap(err, "encode request")
 	}
 
+	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
 		return res, errors.Wrap(err, "do request")
 	}
 	defer resp.Body.Close()
 
+	stage = "DecodeResponse"
 	result, err := decodeGetTokenResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
@@ -1316,12 +1796,46 @@ func (c *Client) GetVersion(ctx context.Context) (GetVersionRes, error) {
 }
 
 func (c *Client) sendGetVersion(ctx context.Context) (res GetVersionRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getVersion"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/version/"),
+	}
 
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "GetVersion",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
 	pathParts[0] = "/version/"
 	uri.AddPathParts(u, pathParts[:]...)
 
+	stage = "EncodeRequest"
 	r, err := ht.NewRequest(ctx, "GET", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
@@ -1331,7 +1845,7 @@ func (c *Client) sendGetVersion(ctx context.Context) (res GetVersionRes, err err
 		type bitset = [1]uint8
 		var satisfied bitset
 		{
-
+			stage = "Security:BearerAuth"
 			switch err := c.securityBearerAuth(ctx, "GetVersion", r); {
 			case err == nil: // if NO error
 				satisfied[0] |= 1 << 0
@@ -1360,12 +1874,14 @@ func (c *Client) sendGetVersion(ctx context.Context) (res GetVersionRes, err err
 		}
 	}
 
+	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
 		return res, errors.Wrap(err, "do request")
 	}
 	defer resp.Body.Close()
 
+	stage = "DecodeResponse"
 	result, err := decodeGetVersionResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")

@@ -40,7 +40,7 @@
 
         devShells = {
           default = pkgs.mkShell {
-            buildInputs = devDependencies ++ docsDependencies;
+            buildInputs = devDependencies;
           };
         };
     }

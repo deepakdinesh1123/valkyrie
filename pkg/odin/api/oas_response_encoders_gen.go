@@ -7,13 +7,16 @@ import (
 
 	"github.com/go-faster/errors"
 	"github.com/go-faster/jx"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
-func encodeCancelExecutionJobResponse(response CancelExecutionJobRes, w http.ResponseWriter) error {
+func encodeCancelExecutionJobResponse(response CancelExecutionJobRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *CancelExecutionJobOK:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(200)
+		span.SetStatus(codes.Ok, http.StatusText(200))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -26,6 +29,7 @@ func encodeCancelExecutionJobResponse(response CancelExecutionJobRes, w http.Res
 	case *CancelExecutionJobBadRequest:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(400)
+		span.SetStatus(codes.Error, http.StatusText(400))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -37,12 +41,14 @@ func encodeCancelExecutionJobResponse(response CancelExecutionJobRes, w http.Res
 
 	case *CancelExecutionJobForbidden:
 		w.WriteHeader(403)
+		span.SetStatus(codes.Error, http.StatusText(403))
 
 		return nil
 
 	case *CancelExecutionJobInternalServerError:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
+		span.SetStatus(codes.Error, http.StatusText(500))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -57,16 +63,18 @@ func encodeCancelExecutionJobResponse(response CancelExecutionJobRes, w http.Res
 	}
 }
 
-func encodeDeleteExecutionJobResponse(response DeleteExecutionJobRes, w http.ResponseWriter) error {
+func encodeDeleteExecutionJobResponse(response DeleteExecutionJobRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *DeleteExecutionJobOK:
 		w.WriteHeader(200)
+		span.SetStatus(codes.Ok, http.StatusText(200))
 
 		return nil
 
 	case *DeleteExecutionJobBadRequest:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(400)
+		span.SetStatus(codes.Error, http.StatusText(400))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -78,17 +86,20 @@ func encodeDeleteExecutionJobResponse(response DeleteExecutionJobRes, w http.Res
 
 	case *DeleteExecutionJobForbidden:
 		w.WriteHeader(403)
+		span.SetStatus(codes.Error, http.StatusText(403))
 
 		return nil
 
 	case *DeleteExecutionJobNotFound:
 		w.WriteHeader(404)
+		span.SetStatus(codes.Error, http.StatusText(404))
 
 		return nil
 
 	case *DeleteExecutionJobInternalServerError:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
+		span.SetStatus(codes.Error, http.StatusText(500))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -103,11 +114,12 @@ func encodeDeleteExecutionJobResponse(response DeleteExecutionJobRes, w http.Res
 	}
 }
 
-func encodeDeleteExecutionWorkerResponse(response DeleteExecutionWorkerRes, w http.ResponseWriter) error {
+func encodeDeleteExecutionWorkerResponse(response DeleteExecutionWorkerRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *DeleteExecutionWorkerOK:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(200)
+		span.SetStatus(codes.Ok, http.StatusText(200))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -120,6 +132,7 @@ func encodeDeleteExecutionWorkerResponse(response DeleteExecutionWorkerRes, w ht
 	case *DeleteExecutionWorkerBadRequest:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(400)
+		span.SetStatus(codes.Error, http.StatusText(400))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -131,12 +144,14 @@ func encodeDeleteExecutionWorkerResponse(response DeleteExecutionWorkerRes, w ht
 
 	case *DeleteExecutionWorkerNotFound:
 		w.WriteHeader(404)
+		span.SetStatus(codes.Error, http.StatusText(404))
 
 		return nil
 
 	case *DeleteExecutionWorkerInternalServerError:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
+		span.SetStatus(codes.Error, http.StatusText(500))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -151,11 +166,12 @@ func encodeDeleteExecutionWorkerResponse(response DeleteExecutionWorkerRes, w ht
 	}
 }
 
-func encodeExecuteResponse(response ExecuteRes, w http.ResponseWriter) error {
+func encodeExecuteResponse(response ExecuteRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *ExecuteOK:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(200)
+		span.SetStatus(codes.Ok, http.StatusText(200))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -168,6 +184,7 @@ func encodeExecuteResponse(response ExecuteRes, w http.ResponseWriter) error {
 	case *ExecuteBadRequest:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(400)
+		span.SetStatus(codes.Error, http.StatusText(400))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -180,6 +197,7 @@ func encodeExecuteResponse(response ExecuteRes, w http.ResponseWriter) error {
 	case *ExecuteInternalServerError:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
+		span.SetStatus(codes.Error, http.StatusText(500))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -194,11 +212,12 @@ func encodeExecuteResponse(response ExecuteRes, w http.ResponseWriter) error {
 	}
 }
 
-func encodeGenerateUserTokenResponse(response GenerateUserTokenRes, w http.ResponseWriter) error {
+func encodeGenerateUserTokenResponse(response GenerateUserTokenRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *GenerateUserTokenOK:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(200)
+		span.SetStatus(codes.Ok, http.StatusText(200))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -211,6 +230,7 @@ func encodeGenerateUserTokenResponse(response GenerateUserTokenRes, w http.Respo
 	case *GenerateUserTokenBadRequest:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(400)
+		span.SetStatus(codes.Error, http.StatusText(400))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -223,6 +243,7 @@ func encodeGenerateUserTokenResponse(response GenerateUserTokenRes, w http.Respo
 	case *GenerateUserTokenForbidden:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(403)
+		span.SetStatus(codes.Error, http.StatusText(403))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -235,6 +256,7 @@ func encodeGenerateUserTokenResponse(response GenerateUserTokenRes, w http.Respo
 	case *GenerateUserTokenInternalServerError:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
+		span.SetStatus(codes.Error, http.StatusText(500))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -249,11 +271,12 @@ func encodeGenerateUserTokenResponse(response GenerateUserTokenRes, w http.Respo
 	}
 }
 
-func encodeGetAllExecutionJobsResponse(response GetAllExecutionJobsRes, w http.ResponseWriter) error {
+func encodeGetAllExecutionJobsResponse(response GetAllExecutionJobsRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *GetAllExecutionJobsOK:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(200)
+		span.SetStatus(codes.Ok, http.StatusText(200))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -266,6 +289,7 @@ func encodeGetAllExecutionJobsResponse(response GetAllExecutionJobsRes, w http.R
 	case *GetAllExecutionJobsBadRequest:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(400)
+		span.SetStatus(codes.Error, http.StatusText(400))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -278,6 +302,7 @@ func encodeGetAllExecutionJobsResponse(response GetAllExecutionJobsRes, w http.R
 	case *GetAllExecutionJobsInternalServerError:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
+		span.SetStatus(codes.Error, http.StatusText(500))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -292,11 +317,12 @@ func encodeGetAllExecutionJobsResponse(response GetAllExecutionJobsRes, w http.R
 	}
 }
 
-func encodeGetAllExecutionsResponse(response GetAllExecutionsRes, w http.ResponseWriter) error {
+func encodeGetAllExecutionsResponse(response GetAllExecutionsRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *GetAllExecutionsOK:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(200)
+		span.SetStatus(codes.Ok, http.StatusText(200))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -309,6 +335,7 @@ func encodeGetAllExecutionsResponse(response GetAllExecutionsRes, w http.Respons
 	case *GetAllExecutionsBadRequest:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(400)
+		span.SetStatus(codes.Error, http.StatusText(400))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -321,6 +348,7 @@ func encodeGetAllExecutionsResponse(response GetAllExecutionsRes, w http.Respons
 	case *GetAllExecutionsInternalServerError:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
+		span.SetStatus(codes.Error, http.StatusText(500))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -335,11 +363,12 @@ func encodeGetAllExecutionsResponse(response GetAllExecutionsRes, w http.Respons
 	}
 }
 
-func encodeGetExecutionConfigResponse(response GetExecutionConfigRes, w http.ResponseWriter) error {
+func encodeGetExecutionConfigResponse(response GetExecutionConfigRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *ExecutionConfig:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(200)
+		span.SetStatus(codes.Ok, http.StatusText(200))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -351,12 +380,14 @@ func encodeGetExecutionConfigResponse(response GetExecutionConfigRes, w http.Res
 
 	case *GetExecutionConfigForbidden:
 		w.WriteHeader(403)
+		span.SetStatus(codes.Error, http.StatusText(403))
 
 		return nil
 
 	case *Error:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
+		span.SetStatus(codes.Error, http.StatusText(500))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -371,11 +402,12 @@ func encodeGetExecutionConfigResponse(response GetExecutionConfigRes, w http.Res
 	}
 }
 
-func encodeGetExecutionJobByIdResponse(response GetExecutionJobByIdRes, w http.ResponseWriter) error {
+func encodeGetExecutionJobByIdResponse(response GetExecutionJobByIdRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *Job:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(200)
+		span.SetStatus(codes.Ok, http.StatusText(200))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -388,6 +420,7 @@ func encodeGetExecutionJobByIdResponse(response GetExecutionJobByIdRes, w http.R
 	case *GetExecutionJobByIdBadRequest:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(400)
+		span.SetStatus(codes.Error, http.StatusText(400))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -399,12 +432,14 @@ func encodeGetExecutionJobByIdResponse(response GetExecutionJobByIdRes, w http.R
 
 	case *GetExecutionJobByIdNotFound:
 		w.WriteHeader(404)
+		span.SetStatus(codes.Error, http.StatusText(404))
 
 		return nil
 
 	case *GetExecutionJobByIdInternalServerError:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
+		span.SetStatus(codes.Error, http.StatusText(500))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -419,11 +454,12 @@ func encodeGetExecutionJobByIdResponse(response GetExecutionJobByIdRes, w http.R
 	}
 }
 
-func encodeGetExecutionResultByIdResponse(response GetExecutionResultByIdRes, w http.ResponseWriter) error {
+func encodeGetExecutionResultByIdResponse(response GetExecutionResultByIdRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *ExecutionResult:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(200)
+		span.SetStatus(codes.Ok, http.StatusText(200))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -436,6 +472,7 @@ func encodeGetExecutionResultByIdResponse(response GetExecutionResultByIdRes, w 
 	case *GetExecutionResultByIdBadRequest:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(400)
+		span.SetStatus(codes.Error, http.StatusText(400))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -447,12 +484,14 @@ func encodeGetExecutionResultByIdResponse(response GetExecutionResultByIdRes, w 
 
 	case *GetExecutionResultByIdNotFound:
 		w.WriteHeader(404)
+		span.SetStatus(codes.Error, http.StatusText(404))
 
 		return nil
 
 	case *GetExecutionResultByIdInternalServerError:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
+		span.SetStatus(codes.Error, http.StatusText(500))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -467,11 +506,12 @@ func encodeGetExecutionResultByIdResponse(response GetExecutionResultByIdRes, w 
 	}
 }
 
-func encodeGetExecutionWorkersResponse(response GetExecutionWorkersRes, w http.ResponseWriter) error {
+func encodeGetExecutionWorkersResponse(response GetExecutionWorkersRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *GetExecutionWorkersOK:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(200)
+		span.SetStatus(codes.Ok, http.StatusText(200))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -484,6 +524,7 @@ func encodeGetExecutionWorkersResponse(response GetExecutionWorkersRes, w http.R
 	case *GetExecutionWorkersBadRequest:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(400)
+		span.SetStatus(codes.Error, http.StatusText(400))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -496,6 +537,7 @@ func encodeGetExecutionWorkersResponse(response GetExecutionWorkersRes, w http.R
 	case *GetExecutionWorkersInternalServerError:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
+		span.SetStatus(codes.Error, http.StatusText(500))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -510,11 +552,12 @@ func encodeGetExecutionWorkersResponse(response GetExecutionWorkersRes, w http.R
 	}
 }
 
-func encodeGetExecutionsForJobResponse(response GetExecutionsForJobRes, w http.ResponseWriter) error {
+func encodeGetExecutionsForJobResponse(response GetExecutionsForJobRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *GetExecutionsForJobOK:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(200)
+		span.SetStatus(codes.Ok, http.StatusText(200))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -527,6 +570,7 @@ func encodeGetExecutionsForJobResponse(response GetExecutionsForJobRes, w http.R
 	case *GetExecutionsForJobBadRequest:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(400)
+		span.SetStatus(codes.Error, http.StatusText(400))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -538,12 +582,14 @@ func encodeGetExecutionsForJobResponse(response GetExecutionsForJobRes, w http.R
 
 	case *GetExecutionsForJobNotFound:
 		w.WriteHeader(404)
+		span.SetStatus(codes.Error, http.StatusText(404))
 
 		return nil
 
 	case *GetExecutionsForJobInternalServerError:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
+		span.SetStatus(codes.Error, http.StatusText(500))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -558,11 +604,12 @@ func encodeGetExecutionsForJobResponse(response GetExecutionsForJobRes, w http.R
 	}
 }
 
-func encodeGetTokenResponse(response GetTokenRes, w http.ResponseWriter) error {
+func encodeGetTokenResponse(response GetTokenRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *GetTokenOK:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(200)
+		span.SetStatus(codes.Ok, http.StatusText(200))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -575,6 +622,7 @@ func encodeGetTokenResponse(response GetTokenRes, w http.ResponseWriter) error {
 	case *GetTokenUnauthorized:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(401)
+		span.SetStatus(codes.Error, http.StatusText(401))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -587,6 +635,7 @@ func encodeGetTokenResponse(response GetTokenRes, w http.ResponseWriter) error {
 	case *GetTokenForbidden:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(403)
+		span.SetStatus(codes.Error, http.StatusText(403))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -599,6 +648,7 @@ func encodeGetTokenResponse(response GetTokenRes, w http.ResponseWriter) error {
 	case *GetTokenInternalServerError:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
+		span.SetStatus(codes.Error, http.StatusText(500))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -613,11 +663,12 @@ func encodeGetTokenResponse(response GetTokenRes, w http.ResponseWriter) error {
 	}
 }
 
-func encodeGetVersionResponse(response GetVersionRes, w http.ResponseWriter) error {
+func encodeGetVersionResponse(response GetVersionRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *GetVersionOK:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(200)
+		span.SetStatus(codes.Ok, http.StatusText(200))
 
 		e := new(jx.Encoder)
 		response.Encode(e)
@@ -630,6 +681,7 @@ func encodeGetVersionResponse(response GetVersionRes, w http.ResponseWriter) err
 	case *Error:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
+		span.SetStatus(codes.Error, http.StatusText(500))
 
 		e := new(jx.Encoder)
 		response.Encode(e)

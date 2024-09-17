@@ -20,7 +20,7 @@ import (
 	tracenoop "go.opentelemetry.io/otel/trace/noop"
 )
 
-func SetupOTelSDK(ctx context.Context, serviceName string, envConfig *config.EnvConfig) (shutdown func(context.Context) error, tp trace.TracerProvider, mp metric.MeterProvider, err error) {
+func SetupOTelSDK(ctx context.Context, serviceName string, envConfig *config.EnvConfig) (shutdown func(context.Context) error, tp trace.TracerProvider, mp metric.MeterProvider, propogator propagation.TextMapPropagator, err error) {
 	var shutdownFuncs []func(context.Context) error
 
 	// shutdown calls cleanup functions registered via shutdownFuncs.
@@ -46,7 +46,7 @@ func SetupOTelSDK(ctx context.Context, serviceName string, envConfig *config.Env
 
 	res, err := NewResource(ctx)
 	if err != nil {
-		return shutdown, nil, nil, err
+		return shutdown, nil, nil, nil, err
 	}
 	sres, err := resource.Merge(res, resource.NewWithAttributes(
 		semconv.SchemaURL,
@@ -75,7 +75,7 @@ func SetupOTelSDK(ctx context.Context, serviceName string, envConfig *config.Env
 	}
 	otel.SetMeterProvider(meterProvider)
 
-	return shutdown, tracerProvider, meterProvider, nil
+	return shutdown, tracerProvider, meterProvider, prop, nil
 }
 
 func NewResource(ctx context.Context) (*resource.Resource, error) {

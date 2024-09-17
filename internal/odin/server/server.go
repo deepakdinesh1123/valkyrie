@@ -11,6 +11,7 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -22,20 +23,28 @@ type OdinServer struct {
 	server           *api.Server
 	tp               trace.TracerProvider
 	mp               metric.MeterProvider
+	prop             propagation.TextMapPropagator
 	otelShutdown     func(context.Context) error
 }
 
 func NewServer(ctx context.Context, envConfig *config.EnvConfig, standalone bool, applyMigrations bool, logger *zerolog.Logger) (*OdinServer, error) {
-	queries, err := db.GetDBConnection(ctx, standalone, envConfig, applyMigrations, false, logger)
-	if err != nil {
-		return nil, err
-	}
-	executionService := execution.NewExecutionService(queries, envConfig, logger)
-	otelShutdown, tp, mp, err := telemetry.SetupOTelSDK(ctx, "Odin Server", envConfig)
+	otelShutdown, tp, mp, prop, err := telemetry.SetupOTelSDK(ctx, "Odin Server", envConfig)
 	if err != nil {
 		logger.Err(err).Msg("Failed to setup OpenTelemetry")
 		return nil, err
 	}
+	dbConnectionOpts := db.DBConnectionOpts(
+		db.ApplyMigrations(applyMigrations),
+		db.IsStandalone(standalone),
+		db.IsWorker(false),
+		db.WithTracerProvider(tp),
+	)
+
+	queries, err := db.GetDBConnection(ctx, envConfig, logger, dbConnectionOpts)
+	if err != nil {
+		return nil, err
+	}
+	executionService := execution.NewExecutionService(queries, envConfig, logger)
 	odinServer := &OdinServer{
 		queries:          queries,
 		executionService: executionService,
@@ -44,9 +53,10 @@ func NewServer(ctx context.Context, envConfig *config.EnvConfig, standalone bool
 		tp:               tp,
 		mp:               mp,
 		otelShutdown:     otelShutdown,
+		prop:             prop,
 	}
 	authHandler := auth.NewAuthHandler()
-	srv, err := api.NewServer(odinServer, authHandler)
+	srv, err := api.NewServer(odinServer, authHandler, api.WithTracerProvider(tp), api.WithMeterProvider(mp))
 	if err != nil {
 		return nil, err
 	}

@@ -47,13 +47,20 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 		deleteWorkerInfo(envConfig.ODIN_WORKER_INFO_FILE)
 	}
 
-	otelShutdown, tp, mp, err := telemetry.SetupOTelSDK(ctx, "Odin Worker", envConfig)
+	otelShutdown, tp, mp, _, err := telemetry.SetupOTelSDK(ctx, "Odin Worker", envConfig)
 	if err != nil {
 		logger.Err(err).Msg("Failed to setup OpenTelemetry")
 		return nil, err
 	}
 
-	queries, err := db.GetDBConnection(ctx, standalone, envConfig, false, true, logger)
+	dbConnectionOpts := db.DBConnectionOpts(
+		db.ApplyMigrations(false),
+		db.IsStandalone(standalone),
+		db.IsWorker(true),
+		db.WithTracerProvider(tp),
+	)
+
+	queries, err := db.GetDBConnection(ctx, envConfig, logger, dbConnectionOpts)
 	if err != nil {
 		logger.Err(err).Msg("Failed to get database connection")
 		return nil, err
