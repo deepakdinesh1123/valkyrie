@@ -101,6 +101,7 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 	prvdr, err := provider.GetProvider(ctx, queries, int32(wrkr.ID), tp, mp, envConfig, logger)
 	if err != nil {
 		logger.Err(err).Msg("Failed to get provider")
+		return nil, err
 	}
 	wrkr.provider = prvdr
 	logger.Info().Msgf("Starting worker %d with name %s", wrkr.ID, wrkr.Name)
