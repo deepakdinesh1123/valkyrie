@@ -24,17 +24,3 @@ func encodeExecuteRequest(
 	ht.SetBody(r, bytes.NewReader(encoded), contentType)
 	return nil
 }
-
-func encodeGetTokenRequest(
-	req *GetTokenReq,
-	r *http.Request,
-) error {
-	const contentType = "application/json"
-	e := new(jx.Encoder)
-	{
-		req.Encode(e)
-	}
-	encoded := e.Bytes()
-	ht.SetBody(r, bytes.NewReader(encoded), contentType)
-	return nil
-}

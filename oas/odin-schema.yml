@@ -5,96 +5,13 @@ info:
 servers:
   - url: http://localhost:8080/api/v1
 paths:
-  /admin/token/:
-    post:
-      summary: Get token
-      security: []
-      description: Get token
-      operationId: getToken
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - username
-                - password
-              properties:
-                username:
-                  type: string
-                password:
-                  type: string
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - token
-                properties:
-                  token:
-                    type: string
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-  /user/token/:
-    get:
-      summary: Generate user token
-      description: Generate user token
-      operationId: generateUserToken
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - token
-                properties:
-                  token:
-                    type: string
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
   /executions/execute/:
     post:
       summary: Execute a script
       description: Execute a script
       operationId: execute
+      parameters:
+        - $ref: '#/components/parameters/AuthHeader'
       requestBody:
         required: true
         content:
@@ -138,6 +55,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/PageNumber'
         - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
           description: OK
@@ -167,6 +85,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
   /executions/:
     get:
       summary: Get all executions
@@ -175,6 +95,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/PageNumber'
         - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
           description: OK
@@ -204,6 +125,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
   /jobs/{JobId}/executions/:
     get:
       summary: Get executions of given job
@@ -218,6 +141,7 @@ paths:
             format: int64
         - $ref: '#/components/parameters/PageNumber'
         - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
           description: OK
@@ -261,6 +185,7 @@ paths:
           schema:
             type: integer
             format: int64
+        - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
           description: OK
@@ -294,6 +219,7 @@ paths:
           schema:
             type: integer
             format: int64
+        - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
           description: OK
@@ -326,6 +252,7 @@ paths:
           schema:
             type: integer
             format: int64
+        - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
           description: OK
@@ -363,6 +290,7 @@ paths:
           schema:
             type: integer
             format: int64
+        - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
           description: OK
@@ -390,6 +318,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/PageNumber'
         - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
           description: OK
@@ -419,6 +348,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
   /executions/workers/{workerId}/:
     delete:
       summary: Delete execution worker
@@ -437,6 +368,7 @@ paths:
           schema:
             type: boolean
             default: false
+        - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
           description: OK
@@ -463,11 +395,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
   /version/:
     get:
       summary: Get version
       description: Get version
       operationId: getVersion
+      parameters:
+        - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
           description: OK
@@ -491,6 +427,8 @@ paths:
       summary: Get execution config
       description: Get execution config
       operationId: getExecutionConfig
+      parameters:
+        - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
           description: OK
@@ -526,6 +464,13 @@ components:
         type: integer
         format: int32
         default: 20
+    AuthHeader:
+      name: X-Auth-Token
+      in: header
+      description: Authentication token
+      required: false
+      schema:
+        type: string
   schemas:
     EnvironmentVariable:
       type: object
@@ -813,12 +758,5 @@ components:
           description: Represents the number of items per page.
         next:
           type: string
-  securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
 
-security:
-  - BearerAuth: []
         

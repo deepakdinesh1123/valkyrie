@@ -9,7 +9,7 @@ import (
 
 	"github.com/coder/websocket"
 	"github.com/coder/websocket/wsjson"
-	"github.com/deepakdinesh1123/valkyrie/internal/odin/auth"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/services/execution"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
@@ -17,7 +17,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func (s *OdinServer) Execute(ctx context.Context, req *api.ExecutionRequest) (api.ExecuteRes, error) {
+func (s *OdinServer) Execute(ctx context.Context, req *api.ExecutionRequest, params api.ExecuteParams) (api.ExecuteRes, error) {
 	jobId, err := s.executionService.AddJob(ctx, req)
 	if err != nil {
 		switch err.(type) {
@@ -259,6 +259,11 @@ func (s *OdinServer) GetExecutionsForJob(ctx context.Context, params api.GetExec
 }
 
 func (s *OdinServer) GetAllExecutionJobs(ctx context.Context, params api.GetAllExecutionJobsParams) (api.GetAllExecutionJobsRes, error) {
+	user := ctx.Value(config.UserKey).(string)
+
+	if user != "admin" {
+		return &api.GetAllExecutionJobsForbidden{}, nil
+	}
 	executionsDB, err := s.queries.GetAllJobs(ctx, db.GetAllJobsParams{
 		Limit:  params.PageSize.Value,
 		Offset: params.Page.Value * params.PageSize.Value,
@@ -294,10 +299,13 @@ func (s *OdinServer) GetAllExecutionJobs(ctx context.Context, params api.GetAllE
 	return &resp, nil
 }
 
-func (s *OdinServer) GetExecutionConfig(ctx context.Context) (api.GetExecutionConfigRes, error) {
-	if !auth.CheckRoles(ctx, []string{"admin"}) {
+func (s *OdinServer) GetExecutionConfig(ctx context.Context, params api.GetExecutionConfigParams) (api.GetExecutionConfigRes, error) {
+	user := ctx.Value(config.UserKey).(string)
+
+	if user != "admin" {
 		return &api.GetExecutionConfigForbidden{}, nil
 	}
+
 	return &api.ExecutionConfig{
 		ODINWORKERPROVIDER:    s.envConfig.ODIN_WORKER_PROVIDER,
 		ODINWORKERCONCURRENCY: int32(s.envConfig.ODIN_WORKER_CONCURRENCY),
@@ -344,7 +352,9 @@ func (s *OdinServer) GetExecutionWorkers(ctx context.Context, params api.GetExec
 }
 
 func (s *OdinServer) DeleteExecutionJob(ctx context.Context, params api.DeleteExecutionJobParams) (api.DeleteExecutionJobRes, error) {
-	if !auth.CheckRoles(ctx, []string{"admin"}) {
+	user := ctx.Value(config.UserKey).(string)
+
+	if user != "admin" {
 		return &api.DeleteExecutionJobForbidden{}, nil
 	}
 	state, err := s.queries.GetJobState(ctx, params.JobId)
@@ -374,9 +384,6 @@ func (s *OdinServer) DeleteExecutionJob(ctx context.Context, params api.DeleteEx
 }
 
 func (s *OdinServer) CancelExecutionJob(ctx context.Context, params api.CancelExecutionJobParams) (api.CancelExecutionJobRes, error) {
-	if !auth.CheckRoles(ctx, []string{"admin"}) {
-		return &api.CancelExecutionJobForbidden{}, nil
-	}
 	err := s.queries.CancelJob(ctx, params.JobId)
 	if err != nil {
 		if err == pgx.ErrNoRows {

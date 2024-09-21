@@ -68,50 +68,6 @@ func (s *Server) handleCancelExecutionJobRequest(args [1]string, argsEscaped boo
 			ID:   "cancelExecutionJob",
 		}
 	)
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			sctx, ok, err := s.securityBearerAuth(ctx, "CancelExecutionJob", r)
-			if err != nil {
-				err = &ogenerrors.SecurityError{
-					OperationContext: opErrContext,
-					Security:         "BearerAuth",
-					Err:              err,
-				}
-				defer recordError("Security:BearerAuth", err)
-				s.cfg.ErrorHandler(ctx, w, r, err)
-				return
-			}
-			if ok {
-				satisfied[0] |= 1 << 0
-				ctx = sctx
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			err = &ogenerrors.SecurityError{
-				OperationContext: opErrContext,
-				Err:              ogenerrors.ErrSecurityRequirementIsNotSatisfied,
-			}
-			defer recordError("Security", err)
-			s.cfg.ErrorHandler(ctx, w, r, err)
-			return
-		}
-	}
 	params, err := decodeCancelExecutionJobParams(args, argsEscaped, r)
 	if err != nil {
 		err = &ogenerrors.DecodeParamsError{
@@ -136,6 +92,10 @@ func (s *Server) handleCancelExecutionJobRequest(args [1]string, argsEscaped boo
 					Name: "JobId",
 					In:   "path",
 				}: params.JobId,
+				{
+					Name: "X-Auth-Token",
+					In:   "header",
+				}: params.XAuthToken,
 			},
 			Raw: r,
 		}
@@ -224,50 +184,6 @@ func (s *Server) handleDeleteExecutionJobRequest(args [1]string, argsEscaped boo
 			ID:   "deleteExecutionJob",
 		}
 	)
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			sctx, ok, err := s.securityBearerAuth(ctx, "DeleteExecutionJob", r)
-			if err != nil {
-				err = &ogenerrors.SecurityError{
-					OperationContext: opErrContext,
-					Security:         "BearerAuth",
-					Err:              err,
-				}
-				defer recordError("Security:BearerAuth", err)
-				s.cfg.ErrorHandler(ctx, w, r, err)
-				return
-			}
-			if ok {
-				satisfied[0] |= 1 << 0
-				ctx = sctx
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			err = &ogenerrors.SecurityError{
-				OperationContext: opErrContext,
-				Err:              ogenerrors.ErrSecurityRequirementIsNotSatisfied,
-			}
-			defer recordError("Security", err)
-			s.cfg.ErrorHandler(ctx, w, r, err)
-			return
-		}
-	}
 	params, err := decodeDeleteExecutionJobParams(args, argsEscaped, r)
 	if err != nil {
 		err = &ogenerrors.DecodeParamsError{
@@ -292,6 +208,10 @@ func (s *Server) handleDeleteExecutionJobRequest(args [1]string, argsEscaped boo
 					Name: "JobId",
 					In:   "path",
 				}: params.JobId,
+				{
+					Name: "X-Auth-Token",
+					In:   "header",
+				}: params.XAuthToken,
 			},
 			Raw: r,
 		}
@@ -380,50 +300,6 @@ func (s *Server) handleDeleteExecutionWorkerRequest(args [1]string, argsEscaped 
 			ID:   "deleteExecutionWorker",
 		}
 	)
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			sctx, ok, err := s.securityBearerAuth(ctx, "DeleteExecutionWorker", r)
-			if err != nil {
-				err = &ogenerrors.SecurityError{
-					OperationContext: opErrContext,
-					Security:         "BearerAuth",
-					Err:              err,
-				}
-				defer recordError("Security:BearerAuth", err)
-				s.cfg.ErrorHandler(ctx, w, r, err)
-				return
-			}
-			if ok {
-				satisfied[0] |= 1 << 0
-				ctx = sctx
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			err = &ogenerrors.SecurityError{
-				OperationContext: opErrContext,
-				Err:              ogenerrors.ErrSecurityRequirementIsNotSatisfied,
-			}
-			defer recordError("Security", err)
-			s.cfg.ErrorHandler(ctx, w, r, err)
-			return
-		}
-	}
 	params, err := decodeDeleteExecutionWorkerParams(args, argsEscaped, r)
 	if err != nil {
 		err = &ogenerrors.DecodeParamsError{
@@ -452,6 +328,10 @@ func (s *Server) handleDeleteExecutionWorkerRequest(args [1]string, argsEscaped 
 					Name: "force",
 					In:   "query",
 				}: params.Force,
+				{
+					Name: "X-Auth-Token",
+					In:   "header",
+				}: params.XAuthToken,
 			},
 			Raw: r,
 		}
@@ -540,49 +420,15 @@ func (s *Server) handleExecuteRequest(args [0]string, argsEscaped bool, w http.R
 			ID:   "execute",
 		}
 	)
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			sctx, ok, err := s.securityBearerAuth(ctx, "Execute", r)
-			if err != nil {
-				err = &ogenerrors.SecurityError{
-					OperationContext: opErrContext,
-					Security:         "BearerAuth",
-					Err:              err,
-				}
-				defer recordError("Security:BearerAuth", err)
-				s.cfg.ErrorHandler(ctx, w, r, err)
-				return
-			}
-			if ok {
-				satisfied[0] |= 1 << 0
-				ctx = sctx
-			}
+	params, err := decodeExecuteParams(args, argsEscaped, r)
+	if err != nil {
+		err = &ogenerrors.DecodeParamsError{
+			OperationContext: opErrContext,
+			Err:              err,
 		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			err = &ogenerrors.SecurityError{
-				OperationContext: opErrContext,
-				Err:              ogenerrors.ErrSecurityRequirementIsNotSatisfied,
-			}
-			defer recordError("Security", err)
-			s.cfg.ErrorHandler(ctx, w, r, err)
-			return
-		}
+		defer recordError("DecodeParams", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
 	}
 	request, close, err := s.decodeExecuteRequest(r)
 	if err != nil {
@@ -608,13 +454,18 @@ func (s *Server) handleExecuteRequest(args [0]string, argsEscaped bool, w http.R
 			OperationSummary: "Execute a script",
 			OperationID:      "execute",
 			Body:             request,
-			Params:           middleware.Parameters{},
-			Raw:              r,
+			Params: middleware.Parameters{
+				{
+					Name: "X-Auth-Token",
+					In:   "header",
+				}: params.XAuthToken,
+			},
+			Raw: r,
 		}
 
 		type (
 			Request  = *ExecutionRequest
-			Params   = struct{}
+			Params   = ExecuteParams
 			Response = ExecuteRes
 		)
 		response, err = middleware.HookMiddleware[
@@ -624,14 +475,14 @@ func (s *Server) handleExecuteRequest(args [0]string, argsEscaped bool, w http.R
 		](
 			m,
 			mreq,
-			nil,
+			unpackExecuteParams,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.Execute(ctx, request)
+				response, err = s.h.Execute(ctx, request, params)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.Execute(ctx, request)
+		response, err = s.h.Execute(ctx, request, params)
 	}
 	if err != nil {
 		defer recordError("Internal", err)
@@ -640,147 +491,6 @@ func (s *Server) handleExecuteRequest(args [0]string, argsEscaped bool, w http.R
 	}
 
 	if err := encodeExecuteResponse(response, w, span); err != nil {
-		defer recordError("EncodeResponse", err)
-		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
-			s.cfg.ErrorHandler(ctx, w, r, err)
-		}
-		return
-	}
-}
-
-// handleGenerateUserTokenRequest handles generateUserToken operation.
-//
-// Generate user token.
-//
-// GET /user/token/
-func (s *Server) handleGenerateUserTokenRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
-	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("generateUserToken"),
-		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/user/token/"),
-	}
-
-	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "GenerateUserToken",
-		trace.WithAttributes(otelAttrs...),
-		serverSpanKind,
-	)
-	defer span.End()
-
-	// Add Labeler to context.
-	labeler := &Labeler{attrs: otelAttrs}
-	ctx = contextWithLabeler(ctx, labeler)
-
-	// Run stopwatch.
-	startTime := time.Now()
-	defer func() {
-		elapsedDuration := time.Since(startTime)
-		attrOpt := metric.WithAttributeSet(labeler.AttributeSet())
-
-		// Increment request counter.
-		s.requests.Add(ctx, 1, attrOpt)
-
-		// Use floating point division here for higher precision (instead of Millisecond method).
-		s.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), attrOpt)
-	}()
-
-	var (
-		recordError = func(stage string, err error) {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, stage)
-			s.errors.Add(ctx, 1, metric.WithAttributeSet(labeler.AttributeSet()))
-		}
-		err          error
-		opErrContext = ogenerrors.OperationContext{
-			Name: "GenerateUserToken",
-			ID:   "generateUserToken",
-		}
-	)
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			sctx, ok, err := s.securityBearerAuth(ctx, "GenerateUserToken", r)
-			if err != nil {
-				err = &ogenerrors.SecurityError{
-					OperationContext: opErrContext,
-					Security:         "BearerAuth",
-					Err:              err,
-				}
-				defer recordError("Security:BearerAuth", err)
-				s.cfg.ErrorHandler(ctx, w, r, err)
-				return
-			}
-			if ok {
-				satisfied[0] |= 1 << 0
-				ctx = sctx
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			err = &ogenerrors.SecurityError{
-				OperationContext: opErrContext,
-				Err:              ogenerrors.ErrSecurityRequirementIsNotSatisfied,
-			}
-			defer recordError("Security", err)
-			s.cfg.ErrorHandler(ctx, w, r, err)
-			return
-		}
-	}
-
-	var response GenerateUserTokenRes
-	if m := s.cfg.Middleware; m != nil {
-		mreq := middleware.Request{
-			Context:          ctx,
-			OperationName:    "GenerateUserToken",
-			OperationSummary: "Generate user token",
-			OperationID:      "generateUserToken",
-			Body:             nil,
-			Params:           middleware.Parameters{},
-			Raw:              r,
-		}
-
-		type (
-			Request  = struct{}
-			Params   = struct{}
-			Response = GenerateUserTokenRes
-		)
-		response, err = middleware.HookMiddleware[
-			Request,
-			Params,
-			Response,
-		](
-			m,
-			mreq,
-			nil,
-			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.GenerateUserToken(ctx)
-				return response, err
-			},
-		)
-	} else {
-		response, err = s.h.GenerateUserToken(ctx)
-	}
-	if err != nil {
-		defer recordError("Internal", err)
-		s.cfg.ErrorHandler(ctx, w, r, err)
-		return
-	}
-
-	if err := encodeGenerateUserTokenResponse(response, w, span); err != nil {
 		defer recordError("EncodeResponse", err)
 		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
 			s.cfg.ErrorHandler(ctx, w, r, err)
@@ -837,50 +547,6 @@ func (s *Server) handleGetAllExecutionJobsRequest(args [0]string, argsEscaped bo
 			ID:   "getAllExecutionJobs",
 		}
 	)
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			sctx, ok, err := s.securityBearerAuth(ctx, "GetAllExecutionJobs", r)
-			if err != nil {
-				err = &ogenerrors.SecurityError{
-					OperationContext: opErrContext,
-					Security:         "BearerAuth",
-					Err:              err,
-				}
-				defer recordError("Security:BearerAuth", err)
-				s.cfg.ErrorHandler(ctx, w, r, err)
-				return
-			}
-			if ok {
-				satisfied[0] |= 1 << 0
-				ctx = sctx
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			err = &ogenerrors.SecurityError{
-				OperationContext: opErrContext,
-				Err:              ogenerrors.ErrSecurityRequirementIsNotSatisfied,
-			}
-			defer recordError("Security", err)
-			s.cfg.ErrorHandler(ctx, w, r, err)
-			return
-		}
-	}
 	params, err := decodeGetAllExecutionJobsParams(args, argsEscaped, r)
 	if err != nil {
 		err = &ogenerrors.DecodeParamsError{
@@ -909,6 +575,10 @@ func (s *Server) handleGetAllExecutionJobsRequest(args [0]string, argsEscaped bo
 					Name: "pageSize",
 					In:   "query",
 				}: params.PageSize,
+				{
+					Name: "X-Auth-Token",
+					In:   "header",
+				}: params.XAuthToken,
 			},
 			Raw: r,
 		}
@@ -997,50 +667,6 @@ func (s *Server) handleGetAllExecutionsRequest(args [0]string, argsEscaped bool,
 			ID:   "getAllExecutions",
 		}
 	)
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			sctx, ok, err := s.securityBearerAuth(ctx, "GetAllExecutions", r)
-			if err != nil {
-				err = &ogenerrors.SecurityError{
-					OperationContext: opErrContext,
-					Security:         "BearerAuth",
-					Err:              err,
-				}
-				defer recordError("Security:BearerAuth", err)
-				s.cfg.ErrorHandler(ctx, w, r, err)
-				return
-			}
-			if ok {
-				satisfied[0] |= 1 << 0
-				ctx = sctx
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			err = &ogenerrors.SecurityError{
-				OperationContext: opErrContext,
-				Err:              ogenerrors.ErrSecurityRequirementIsNotSatisfied,
-			}
-			defer recordError("Security", err)
-			s.cfg.ErrorHandler(ctx, w, r, err)
-			return
-		}
-	}
 	params, err := decodeGetAllExecutionsParams(args, argsEscaped, r)
 	if err != nil {
 		err = &ogenerrors.DecodeParamsError{
@@ -1069,6 +695,10 @@ func (s *Server) handleGetAllExecutionsRequest(args [0]string, argsEscaped bool,
 					Name: "pageSize",
 					In:   "query",
 				}: params.PageSize,
+				{
+					Name: "X-Auth-Token",
+					In:   "header",
+				}: params.XAuthToken,
 			},
 			Raw: r,
 		}
@@ -1157,49 +787,15 @@ func (s *Server) handleGetExecutionConfigRequest(args [0]string, argsEscaped boo
 			ID:   "getExecutionConfig",
 		}
 	)
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			sctx, ok, err := s.securityBearerAuth(ctx, "GetExecutionConfig", r)
-			if err != nil {
-				err = &ogenerrors.SecurityError{
-					OperationContext: opErrContext,
-					Security:         "BearerAuth",
-					Err:              err,
-				}
-				defer recordError("Security:BearerAuth", err)
-				s.cfg.ErrorHandler(ctx, w, r, err)
-				return
-			}
-			if ok {
-				satisfied[0] |= 1 << 0
-				ctx = sctx
-			}
+	params, err := decodeGetExecutionConfigParams(args, argsEscaped, r)
+	if err != nil {
+		err = &ogenerrors.DecodeParamsError{
+			OperationContext: opErrContext,
+			Err:              err,
 		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			err = &ogenerrors.SecurityError{
-				OperationContext: opErrContext,
-				Err:              ogenerrors.ErrSecurityRequirementIsNotSatisfied,
-			}
-			defer recordError("Security", err)
-			s.cfg.ErrorHandler(ctx, w, r, err)
-			return
-		}
+		defer recordError("DecodeParams", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
 	}
 
 	var response GetExecutionConfigRes
@@ -1210,13 +806,18 @@ func (s *Server) handleGetExecutionConfigRequest(args [0]string, argsEscaped boo
 			OperationSummary: "Get execution config",
 			OperationID:      "getExecutionConfig",
 			Body:             nil,
-			Params:           middleware.Parameters{},
-			Raw:              r,
+			Params: middleware.Parameters{
+				{
+					Name: "X-Auth-Token",
+					In:   "header",
+				}: params.XAuthToken,
+			},
+			Raw: r,
 		}
 
 		type (
 			Request  = struct{}
-			Params   = struct{}
+			Params   = GetExecutionConfigParams
 			Response = GetExecutionConfigRes
 		)
 		response, err = middleware.HookMiddleware[
@@ -1226,14 +827,14 @@ func (s *Server) handleGetExecutionConfigRequest(args [0]string, argsEscaped boo
 		](
 			m,
 			mreq,
-			nil,
+			unpackGetExecutionConfigParams,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.GetExecutionConfig(ctx)
+				response, err = s.h.GetExecutionConfig(ctx, params)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.GetExecutionConfig(ctx)
+		response, err = s.h.GetExecutionConfig(ctx, params)
 	}
 	if err != nil {
 		defer recordError("Internal", err)
@@ -1298,50 +899,6 @@ func (s *Server) handleGetExecutionJobByIdRequest(args [1]string, argsEscaped bo
 			ID:   "getExecutionJobById",
 		}
 	)
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			sctx, ok, err := s.securityBearerAuth(ctx, "GetExecutionJobById", r)
-			if err != nil {
-				err = &ogenerrors.SecurityError{
-					OperationContext: opErrContext,
-					Security:         "BearerAuth",
-					Err:              err,
-				}
-				defer recordError("Security:BearerAuth", err)
-				s.cfg.ErrorHandler(ctx, w, r, err)
-				return
-			}
-			if ok {
-				satisfied[0] |= 1 << 0
-				ctx = sctx
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			err = &ogenerrors.SecurityError{
-				OperationContext: opErrContext,
-				Err:              ogenerrors.ErrSecurityRequirementIsNotSatisfied,
-			}
-			defer recordError("Security", err)
-			s.cfg.ErrorHandler(ctx, w, r, err)
-			return
-		}
-	}
 	params, err := decodeGetExecutionJobByIdParams(args, argsEscaped, r)
 	if err != nil {
 		err = &ogenerrors.DecodeParamsError{
@@ -1366,6 +923,10 @@ func (s *Server) handleGetExecutionJobByIdRequest(args [1]string, argsEscaped bo
 					Name: "JobId",
 					In:   "path",
 				}: params.JobId,
+				{
+					Name: "X-Auth-Token",
+					In:   "header",
+				}: params.XAuthToken,
 			},
 			Raw: r,
 		}
@@ -1454,50 +1015,6 @@ func (s *Server) handleGetExecutionResultByIdRequest(args [1]string, argsEscaped
 			ID:   "getExecutionResultById",
 		}
 	)
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			sctx, ok, err := s.securityBearerAuth(ctx, "GetExecutionResultById", r)
-			if err != nil {
-				err = &ogenerrors.SecurityError{
-					OperationContext: opErrContext,
-					Security:         "BearerAuth",
-					Err:              err,
-				}
-				defer recordError("Security:BearerAuth", err)
-				s.cfg.ErrorHandler(ctx, w, r, err)
-				return
-			}
-			if ok {
-				satisfied[0] |= 1 << 0
-				ctx = sctx
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			err = &ogenerrors.SecurityError{
-				OperationContext: opErrContext,
-				Err:              ogenerrors.ErrSecurityRequirementIsNotSatisfied,
-			}
-			defer recordError("Security", err)
-			s.cfg.ErrorHandler(ctx, w, r, err)
-			return
-		}
-	}
 	params, err := decodeGetExecutionResultByIdParams(args, argsEscaped, r)
 	if err != nil {
 		err = &ogenerrors.DecodeParamsError{
@@ -1522,6 +1039,10 @@ func (s *Server) handleGetExecutionResultByIdRequest(args [1]string, argsEscaped
 					Name: "execId",
 					In:   "path",
 				}: params.ExecId,
+				{
+					Name: "X-Auth-Token",
+					In:   "header",
+				}: params.XAuthToken,
 			},
 			Raw: r,
 		}
@@ -1610,50 +1131,6 @@ func (s *Server) handleGetExecutionWorkersRequest(args [0]string, argsEscaped bo
 			ID:   "getExecutionWorkers",
 		}
 	)
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			sctx, ok, err := s.securityBearerAuth(ctx, "GetExecutionWorkers", r)
-			if err != nil {
-				err = &ogenerrors.SecurityError{
-					OperationContext: opErrContext,
-					Security:         "BearerAuth",
-					Err:              err,
-				}
-				defer recordError("Security:BearerAuth", err)
-				s.cfg.ErrorHandler(ctx, w, r, err)
-				return
-			}
-			if ok {
-				satisfied[0] |= 1 << 0
-				ctx = sctx
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			err = &ogenerrors.SecurityError{
-				OperationContext: opErrContext,
-				Err:              ogenerrors.ErrSecurityRequirementIsNotSatisfied,
-			}
-			defer recordError("Security", err)
-			s.cfg.ErrorHandler(ctx, w, r, err)
-			return
-		}
-	}
 	params, err := decodeGetExecutionWorkersParams(args, argsEscaped, r)
 	if err != nil {
 		err = &ogenerrors.DecodeParamsError{
@@ -1682,6 +1159,10 @@ func (s *Server) handleGetExecutionWorkersRequest(args [0]string, argsEscaped bo
 					Name: "pageSize",
 					In:   "query",
 				}: params.PageSize,
+				{
+					Name: "X-Auth-Token",
+					In:   "header",
+				}: params.XAuthToken,
 			},
 			Raw: r,
 		}
@@ -1770,50 +1251,6 @@ func (s *Server) handleGetExecutionsForJobRequest(args [1]string, argsEscaped bo
 			ID:   "getExecutionsForJob",
 		}
 	)
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			sctx, ok, err := s.securityBearerAuth(ctx, "GetExecutionsForJob", r)
-			if err != nil {
-				err = &ogenerrors.SecurityError{
-					OperationContext: opErrContext,
-					Security:         "BearerAuth",
-					Err:              err,
-				}
-				defer recordError("Security:BearerAuth", err)
-				s.cfg.ErrorHandler(ctx, w, r, err)
-				return
-			}
-			if ok {
-				satisfied[0] |= 1 << 0
-				ctx = sctx
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			err = &ogenerrors.SecurityError{
-				OperationContext: opErrContext,
-				Err:              ogenerrors.ErrSecurityRequirementIsNotSatisfied,
-			}
-			defer recordError("Security", err)
-			s.cfg.ErrorHandler(ctx, w, r, err)
-			return
-		}
-	}
 	params, err := decodeGetExecutionsForJobParams(args, argsEscaped, r)
 	if err != nil {
 		err = &ogenerrors.DecodeParamsError{
@@ -1846,6 +1283,10 @@ func (s *Server) handleGetExecutionsForJobRequest(args [1]string, argsEscaped bo
 					Name: "pageSize",
 					In:   "query",
 				}: params.PageSize,
+				{
+					Name: "X-Auth-Token",
+					In:   "header",
+				}: params.XAuthToken,
 			},
 			Raw: r,
 		}
@@ -1878,118 +1319,6 @@ func (s *Server) handleGetExecutionsForJobRequest(args [1]string, argsEscaped bo
 	}
 
 	if err := encodeGetExecutionsForJobResponse(response, w, span); err != nil {
-		defer recordError("EncodeResponse", err)
-		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
-			s.cfg.ErrorHandler(ctx, w, r, err)
-		}
-		return
-	}
-}
-
-// handleGetTokenRequest handles getToken operation.
-//
-// Get token.
-//
-// POST /admin/token/
-func (s *Server) handleGetTokenRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
-	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("getToken"),
-		semconv.HTTPRequestMethodKey.String("POST"),
-		semconv.HTTPRouteKey.String("/admin/token/"),
-	}
-
-	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetToken",
-		trace.WithAttributes(otelAttrs...),
-		serverSpanKind,
-	)
-	defer span.End()
-
-	// Add Labeler to context.
-	labeler := &Labeler{attrs: otelAttrs}
-	ctx = contextWithLabeler(ctx, labeler)
-
-	// Run stopwatch.
-	startTime := time.Now()
-	defer func() {
-		elapsedDuration := time.Since(startTime)
-		attrOpt := metric.WithAttributeSet(labeler.AttributeSet())
-
-		// Increment request counter.
-		s.requests.Add(ctx, 1, attrOpt)
-
-		// Use floating point division here for higher precision (instead of Millisecond method).
-		s.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), attrOpt)
-	}()
-
-	var (
-		recordError = func(stage string, err error) {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, stage)
-			s.errors.Add(ctx, 1, metric.WithAttributeSet(labeler.AttributeSet()))
-		}
-		err          error
-		opErrContext = ogenerrors.OperationContext{
-			Name: "GetToken",
-			ID:   "getToken",
-		}
-	)
-	request, close, err := s.decodeGetTokenRequest(r)
-	if err != nil {
-		err = &ogenerrors.DecodeRequestError{
-			OperationContext: opErrContext,
-			Err:              err,
-		}
-		defer recordError("DecodeRequest", err)
-		s.cfg.ErrorHandler(ctx, w, r, err)
-		return
-	}
-	defer func() {
-		if err := close(); err != nil {
-			recordError("CloseRequest", err)
-		}
-	}()
-
-	var response GetTokenRes
-	if m := s.cfg.Middleware; m != nil {
-		mreq := middleware.Request{
-			Context:          ctx,
-			OperationName:    "GetToken",
-			OperationSummary: "Get token",
-			OperationID:      "getToken",
-			Body:             request,
-			Params:           middleware.Parameters{},
-			Raw:              r,
-		}
-
-		type (
-			Request  = *GetTokenReq
-			Params   = struct{}
-			Response = GetTokenRes
-		)
-		response, err = middleware.HookMiddleware[
-			Request,
-			Params,
-			Response,
-		](
-			m,
-			mreq,
-			nil,
-			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.GetToken(ctx, request)
-				return response, err
-			},
-		)
-	} else {
-		response, err = s.h.GetToken(ctx, request)
-	}
-	if err != nil {
-		defer recordError("Internal", err)
-		s.cfg.ErrorHandler(ctx, w, r, err)
-		return
-	}
-
-	if err := encodeGetTokenResponse(response, w, span); err != nil {
 		defer recordError("EncodeResponse", err)
 		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
 			s.cfg.ErrorHandler(ctx, w, r, err)
@@ -2046,49 +1375,15 @@ func (s *Server) handleGetVersionRequest(args [0]string, argsEscaped bool, w htt
 			ID:   "getVersion",
 		}
 	)
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			sctx, ok, err := s.securityBearerAuth(ctx, "GetVersion", r)
-			if err != nil {
-				err = &ogenerrors.SecurityError{
-					OperationContext: opErrContext,
-					Security:         "BearerAuth",
-					Err:              err,
-				}
-				defer recordError("Security:BearerAuth", err)
-				s.cfg.ErrorHandler(ctx, w, r, err)
-				return
-			}
-			if ok {
-				satisfied[0] |= 1 << 0
-				ctx = sctx
-			}
+	params, err := decodeGetVersionParams(args, argsEscaped, r)
+	if err != nil {
+		err = &ogenerrors.DecodeParamsError{
+			OperationContext: opErrContext,
+			Err:              err,
 		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			err = &ogenerrors.SecurityError{
-				OperationContext: opErrContext,
-				Err:              ogenerrors.ErrSecurityRequirementIsNotSatisfied,
-			}
-			defer recordError("Security", err)
-			s.cfg.ErrorHandler(ctx, w, r, err)
-			return
-		}
+		defer recordError("DecodeParams", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
 	}
 
 	var response GetVersionRes
@@ -2099,13 +1394,18 @@ func (s *Server) handleGetVersionRequest(args [0]string, argsEscaped bool, w htt
 			OperationSummary: "Get version",
 			OperationID:      "getVersion",
 			Body:             nil,
-			Params:           middleware.Parameters{},
-			Raw:              r,
+			Params: middleware.Parameters{
+				{
+					Name: "X-Auth-Token",
+					In:   "header",
+				}: params.XAuthToken,
+			},
+			Raw: r,
 		}
 
 		type (
 			Request  = struct{}
-			Params   = struct{}
+			Params   = GetVersionParams
 			Response = GetVersionRes
 		)
 		response, err = middleware.HookMiddleware[
@@ -2115,14 +1415,14 @@ func (s *Server) handleGetVersionRequest(args [0]string, argsEscaped bool, w htt
 		](
 			m,
 			mreq,
-			nil,
+			unpackGetVersionParams,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.GetVersion(ctx)
+				response, err = s.h.GetVersion(ctx, params)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.GetVersion(ctx)
+		response, err = s.h.GetVersion(ctx, params)
 	}
 	if err != nil {
 		defer recordError("Internal", err)

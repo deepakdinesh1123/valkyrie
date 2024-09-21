@@ -7,9 +7,9 @@ meta {
 get {
   url: http://localhost:8080/version/
   body: none
-  auth: bearer
+  auth: none
 }
 
-auth:bearer {
-  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ1c2VyIiwiZXhwIjoxNzI2NjcxMjk5LCJpYXQiOjE3MjY1ODQ4OTksImlzcyI6Im9kaW4ifQ.TWMCbXyhu8LkIlaIQUYJK8aBi9nvy6ZlPjq-tfCw9n4
+headers {
+  X-Auth-Token: {{USER_TOKEN}}
 }
