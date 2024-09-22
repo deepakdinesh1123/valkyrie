@@ -16,7 +16,6 @@ func TokenAuth() Middleware {
 			headerValue := r.Header.Get("X-Auth-Token")
 			log.Println(envConfig.ODIN_USER_TOKEN, envConfig.ODIN_ADMIN_TOKEN)
 			if envConfig.ODIN_USER_TOKEN == "" && envConfig.ODIN_ADMIN_TOKEN == "" {
-				log.Println("ODIN_USER_TOKEN and ODIN_ADMIN_TOKEN are not set")
 				h.ServeHTTP(w, r)
 				return
 			}
