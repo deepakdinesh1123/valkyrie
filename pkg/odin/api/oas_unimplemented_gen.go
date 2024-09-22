@@ -45,16 +45,7 @@ func (UnimplementedHandler) DeleteExecutionWorker(ctx context.Context, params De
 // Execute a script.
 //
 // POST /executions/execute/
-func (UnimplementedHandler) Execute(ctx context.Context, req *ExecutionRequest) (r ExecuteRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
-// GenerateUserToken implements generateUserToken operation.
-//
-// Generate user token.
-//
-// GET /user/token/
-func (UnimplementedHandler) GenerateUserToken(ctx context.Context) (r GenerateUserTokenRes, _ error) {
+func (UnimplementedHandler) Execute(ctx context.Context, req *ExecutionRequest, params ExecuteParams) (r ExecuteRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -81,7 +72,7 @@ func (UnimplementedHandler) GetAllExecutions(ctx context.Context, params GetAllE
 // Get execution config.
 //
 // GET /execution/config/
-func (UnimplementedHandler) GetExecutionConfig(ctx context.Context) (r GetExecutionConfigRes, _ error) {
+func (UnimplementedHandler) GetExecutionConfig(ctx context.Context, params GetExecutionConfigParams) (r GetExecutionConfigRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -121,20 +112,11 @@ func (UnimplementedHandler) GetExecutionsForJob(ctx context.Context, params GetE
 	return r, ht.ErrNotImplemented
 }
 
-// GetToken implements getToken operation.
-//
-// Get token.
-//
-// POST /admin/token/
-func (UnimplementedHandler) GetToken(ctx context.Context, req *GetTokenReq) (r GetTokenRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
 // GetVersion implements getVersion operation.
 //
 // Get version.
 //
 // GET /version/
-func (UnimplementedHandler) GetVersion(ctx context.Context) (r GetVersionRes, _ error) {
+func (UnimplementedHandler) GetVersion(ctx context.Context, params GetVersionParams) (r GetVersionRes, _ error) {
 	return r, ht.ErrNotImplemented
 }

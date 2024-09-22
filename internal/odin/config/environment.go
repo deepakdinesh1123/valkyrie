@@ -43,9 +43,8 @@ type EnvConfig struct {
 	ODIN_SYSTEM_PROVIDER_BASE_DIR string `mapstructure:"ODIN_SYSTEM_PROVIDER_BASE_DIR"` // represents the base directory for the system provider.
 	ODIN_SYSTEM_PROVIDER_CLEAN_UP bool   `mapstructure:"ODIN_SYSTEM_PROVIDER_CLEAN_UP"` // represents whether to clean up direcories created by the system provider.
 
-	ODIN_SECRET_KEY string `mapstructure:"ODIN_SECRET_KEY"` // represents the secret key for the server.
-	ODIN_USER_NAME  string `mapstructure:"ODIN_USER_NAME"`  // represents the user name for the server.
-	ODIN_USER_PASS  string `mapstructure:"ODIN_USER_PASS"`  // represents the user password for the server.
+	ODIN_USER_TOKEN  string `mapstructure:"ODIN_USER_TOKEN"`  // represents the secret key for the server.
+	ODIN_ADMIN_TOKEN string `mapstructure:"ODIN_ADMIN_TOKEN"` // represents the admin token for the server.
 
 	USER_HOME_DIR string
 }
@@ -83,9 +82,6 @@ func GetEnvConfig() (*EnvConfig, error) {
 
 	viper.SetDefault("ODIN_SYSTEM_PROVIDER_BASE_DIR", filepath.Join(os.TempDir(), "valkyrie"))
 	viper.SetDefault("ODIN_SYSTEM_PROVIDER_CLEAN_UP", true)
-
-	viper.SetDefault("ODIN_USER_NAME", "admin")
-	viper.SetDefault("ODIN_USER_PASS", "admin")
 
 	viper.SetDefault("ODIN_JOB_PRUNE_FREQ", 1)
 

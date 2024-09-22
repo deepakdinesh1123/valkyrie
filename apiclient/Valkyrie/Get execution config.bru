@@ -5,7 +5,11 @@ meta {
 }
 
 get {
-  url: http://localhost:8080/execution/config/
+  url: http://{{BASE_URL}}/execution/config/
   body: none
-  auth: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: zpka_7ca1bc39cc9845b2921ababf8fafa211_450fa02f
 }

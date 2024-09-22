@@ -6,20 +6,6 @@ import (
 	"time"
 )
 
-type BearerAuth struct {
-	Token string
-}
-
-// GetToken returns the value of Token.
-func (s *BearerAuth) GetToken() string {
-	return s.Token
-}
-
-// SetToken sets the value of Token.
-func (s *BearerAuth) SetToken(val string) {
-	s.Token = val
-}
-
 type CancelExecutionJobBadRequest Error
 
 func (*CancelExecutionJobBadRequest) cancelExecutionJobRes() {}
@@ -75,6 +61,11 @@ func (*DeleteExecutionJobOK) deleteExecutionJobRes() {}
 type DeleteExecutionWorkerBadRequest Error
 
 func (*DeleteExecutionWorkerBadRequest) deleteExecutionWorkerRes() {}
+
+// DeleteExecutionWorkerForbidden is response for DeleteExecutionWorker operation.
+type DeleteExecutionWorkerForbidden struct{}
+
+func (*DeleteExecutionWorkerForbidden) deleteExecutionWorkerRes() {}
 
 type DeleteExecutionWorkerInternalServerError Error
 
@@ -841,37 +832,14 @@ func (s *ExecutionWorker) SetUpdatedAt(val OptDateTime) {
 
 type Flake string
 
-type GenerateUserTokenBadRequest Error
-
-func (*GenerateUserTokenBadRequest) generateUserTokenRes() {}
-
-type GenerateUserTokenForbidden Error
-
-func (*GenerateUserTokenForbidden) generateUserTokenRes() {}
-
-type GenerateUserTokenInternalServerError Error
-
-func (*GenerateUserTokenInternalServerError) generateUserTokenRes() {}
-
-type GenerateUserTokenOK struct {
-	Token string `json:"token"`
-}
-
-// GetToken returns the value of Token.
-func (s *GenerateUserTokenOK) GetToken() string {
-	return s.Token
-}
-
-// SetToken sets the value of Token.
-func (s *GenerateUserTokenOK) SetToken(val string) {
-	s.Token = val
-}
-
-func (*GenerateUserTokenOK) generateUserTokenRes() {}
-
 type GetAllExecutionJobsBadRequest Error
 
 func (*GetAllExecutionJobsBadRequest) getAllExecutionJobsRes() {}
+
+// GetAllExecutionJobsForbidden is response for GetAllExecutionJobs operation.
+type GetAllExecutionJobsForbidden struct{}
+
+func (*GetAllExecutionJobsForbidden) getAllExecutionJobsRes() {}
 
 type GetAllExecutionJobsInternalServerError Error
 
@@ -907,6 +875,11 @@ func (*GetAllExecutionJobsOK) getAllExecutionJobsRes() {}
 type GetAllExecutionsBadRequest Error
 
 func (*GetAllExecutionsBadRequest) getAllExecutionsRes() {}
+
+// GetAllExecutionsForbidden is response for GetAllExecutions operation.
+type GetAllExecutionsForbidden struct{}
+
+func (*GetAllExecutionsForbidden) getAllExecutionsRes() {}
 
 type GetAllExecutionsInternalServerError Error
 
@@ -973,6 +946,11 @@ func (*GetExecutionResultByIdNotFound) getExecutionResultByIdRes() {}
 type GetExecutionWorkersBadRequest Error
 
 func (*GetExecutionWorkersBadRequest) getExecutionWorkersRes() {}
+
+// GetExecutionWorkersForbidden is response for GetExecutionWorkers operation.
+type GetExecutionWorkersForbidden struct{}
+
+func (*GetExecutionWorkersForbidden) getExecutionWorkersRes() {}
 
 type GetExecutionWorkersInternalServerError Error
 
@@ -1044,59 +1022,6 @@ func (s *GetExecutionsForJobOK) SetPagination(val PaginationResponse) {
 }
 
 func (*GetExecutionsForJobOK) getExecutionsForJobRes() {}
-
-type GetTokenForbidden Error
-
-func (*GetTokenForbidden) getTokenRes() {}
-
-type GetTokenInternalServerError Error
-
-func (*GetTokenInternalServerError) getTokenRes() {}
-
-type GetTokenOK struct {
-	Token string `json:"token"`
-}
-
-// GetToken returns the value of Token.
-func (s *GetTokenOK) GetToken() string {
-	return s.Token
-}
-
-// SetToken sets the value of Token.
-func (s *GetTokenOK) SetToken(val string) {
-	s.Token = val
-}
-
-func (*GetTokenOK) getTokenRes() {}
-
-type GetTokenReq struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-// GetUsername returns the value of Username.
-func (s *GetTokenReq) GetUsername() string {
-	return s.Username
-}
-
-// GetPassword returns the value of Password.
-func (s *GetTokenReq) GetPassword() string {
-	return s.Password
-}
-
-// SetUsername sets the value of Username.
-func (s *GetTokenReq) SetUsername(val string) {
-	s.Username = val
-}
-
-// SetPassword sets the value of Password.
-func (s *GetTokenReq) SetPassword(val string) {
-	s.Password = val
-}
-
-type GetTokenUnauthorized Error
-
-func (*GetTokenUnauthorized) getTokenRes() {}
 
 type GetVersionOK struct {
 	Version string `json:"version"`

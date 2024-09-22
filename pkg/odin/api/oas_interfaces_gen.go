@@ -17,10 +17,6 @@ type ExecuteRes interface {
 	executeRes()
 }
 
-type GenerateUserTokenRes interface {
-	generateUserTokenRes()
-}
-
 type GetAllExecutionJobsRes interface {
 	getAllExecutionJobsRes()
 }
@@ -47,10 +43,6 @@ type GetExecutionWorkersRes interface {
 
 type GetExecutionsForJobRes interface {
 	getExecutionsForJobRes()
-}
-
-type GetTokenRes interface {
-	getTokenRes()
 }
 
 type GetVersionRes interface {
