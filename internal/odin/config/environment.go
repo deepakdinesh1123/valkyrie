@@ -38,6 +38,8 @@ type EnvConfig struct {
 	ODIN_EXPORT_LOGS        string `mapstructure:"ODIN_EXPORT_LOGS"`
 	ODIN_ENVIRONMENT        string `mapstructure:"ODIN_ENVIRONMENT"` // represents the environment for the server (e.g. dev, staging, prod).
 
+	ODIN_NIX_STORE string `mapstructure:"ODIN_NIX_STORE"` // represents the Nix store directory.
+
 	ODIN_JOB_PRUNE_FREQ int // represents the job prune frequency in hours.
 
 	ODIN_SYSTEM_PROVIDER_BASE_DIR string `mapstructure:"ODIN_SYSTEM_PROVIDER_BASE_DIR"` // represents the base directory for the system provider.

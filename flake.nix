@@ -25,14 +25,13 @@
         devDependencies = with pkgs; [ 
           sqlc 
           go-migrate 
-          go_1_22  
-          pkg-config ] ++ docsDependencies ++ lib.optionals stdenv.isLinux [ 
+          go_1_22
+          gnumake
+          pkg-config ] ++ lib.optionals stdenv.isLinux [ 
             gpgme 
             libgpg-error 
             libassuan
             btrfs-progs
-            podman
-            qemu
           ] ;
 
         packages = {

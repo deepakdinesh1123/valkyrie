@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -14,6 +15,7 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/pkg/namesgenerator"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/mount"
 )
 
 func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, job db.Job) {
@@ -37,6 +39,14 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	defer cancel()
 
 	defer wg.Done()
+
+	tempDir := os.TempDir()
+
+	err := d.overlayStore(tempDir)
+	if err != nil {
+		d.logger.Err(err).Msg("Failed to overlay store")
+		return
+	}
 	containerName := namesgenerator.GetRandomName(0)
 	resp, err := d.client.ContainerCreate(
 		ctx,
@@ -47,6 +57,13 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 		},
 		&container.HostConfig{
 			AutoRemove: true,
+			Mounts: []mount.Mount{
+				{
+					Type:   mount.TypeBind,
+					Source: filepath.Join(tempDir, "merged"),
+					Target: "/nix",
+				},
+			},
 		},
 		nil,
 		nil,
@@ -58,6 +75,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to update job")
 		}
+		d.cleanup(tempDir)
 		return
 	}
 	err = d.client.ContainerStart(ctx, resp.ID, container.StartOptions{})
@@ -67,6 +85,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to update job")
 		}
+		d.cleanup(tempDir)
 		return
 	}
 
@@ -76,10 +95,11 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to update job")
 		}
+		d.cleanup(tempDir)
 		return
 	}
 
-	err = d.writeFiles(ctx, containerName, job)
+	err = d.writeFiles(ctx, containerName, tempDir, job)
 	if err != nil {
 		d.logger.Err(err).Msg("Failed to write files")
 		d.client.ContainerKill(ctx, containerName, "SIGKILL")
@@ -87,6 +107,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to update job")
 		}
+		d.cleanup(tempDir)
 		return
 	}
 
@@ -150,6 +171,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 				if err != nil {
 					d.logger.Err(err).Msg("Failed to send sigint signal")
 				}
+				d.cleanup(tempDir)
 				return
 			}
 		case <-ctx.Done():
@@ -161,6 +183,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 				if err != nil {
 					d.logger.Err(err).Msg("Failed to send sigint signal")
 				}
+				d.cleanup(tempDir)
 				return
 			default:
 				d.logger.Info().Msg("Context error killing process")
@@ -168,6 +191,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 				if err != nil {
 					d.logger.Err(err).Msg("Failed to send kill signal")
 				}
+				d.cleanup(tempDir)
 				return
 			}
 		case <-done:
@@ -176,12 +200,13 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			if err != nil {
 				d.logger.Err(err).Msg("Failed to send sigint signal to container")
 			}
+			d.cleanup(tempDir)
 			return
 		}
 	}
 }
 
-func (d *DockerProvider) writeFiles(ctx context.Context, containerName string, job db.Job) error {
+func (d *DockerProvider) writeFiles(ctx context.Context, containerName string, tempDir string, job db.Job) error {
 	execReq, err := d.queries.GetExecRequest(ctx, job.ExecRequestID.Int32)
 	if err != nil {
 		return err
@@ -191,7 +216,7 @@ func (d *DockerProvider) writeFiles(ctx context.Context, containerName string, j
 		execReq.Path: execReq.Code,
 	}
 
-	tarFilePath, err := createTarArchive(files)
+	tarFilePath, err := createTarArchive(files, tempDir)
 	if err != nil {
 		return err
 	}
@@ -212,8 +237,8 @@ func (d *DockerProvider) writeFiles(ctx context.Context, containerName string, j
 	return nil
 }
 
-func createTarArchive(files map[string]string) (string, error) {
-	tarFilePath := filepath.Join(os.TempDir(), fmt.Sprintf("%d.tar", time.Now().UnixNano()))
+func createTarArchive(files map[string]string, dir string) (string, error) {
+	tarFilePath := filepath.Join(dir, fmt.Sprintf("%d.tar", time.Now().UnixNano()))
 	tarFile, err := os.Create(tarFilePath)
 	if err != nil {
 		return "", err
@@ -238,6 +263,36 @@ func createTarArchive(files map[string]string) (string, error) {
 	return tarFilePath, nil
 }
 
+func (d *DockerProvider) overlayStore(dir string) error {
+	upperStore := filepath.Join(dir, "upper")
+	mergedStore := filepath.Join(dir, "merged")
+	workDir := filepath.Join(dir, "work")
+	err := os.Mkdir(upperStore, 0755)
+	if err != nil {
+		return err
+	}
+	err = os.Mkdir(mergedStore, 0755)
+	if err != nil {
+		return err
+	}
+	err = os.Mkdir(workDir, 0755)
+	if err != nil {
+		return err
+	}
+
+	cmd := exec.Command("mount", "-t", "overlay", "overlay",
+		"-o", fmt.Sprintf("lowerdir=%s", d.envConfig.ODIN_NIX_STORE),
+		"-o", fmt.Sprintf("upperdir=%s", upperStore),
+		"-o", fmt.Sprintf("workdir=%s", workDir),
+		mergedStore,
+	)
+
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (d *DockerProvider) updateJob(ctx context.Context, job *db.Job, startTime time.Time, message string, success bool) error {
 	retry := true
 	if job.Retries.Int32+1 >= job.MaxRetries.Int32 || success {
@@ -251,6 +306,19 @@ func (d *DockerProvider) updateJob(ctx context.Context, job *db.Job, startTime t
 		Retry:     retry,
 		WorkerId:  d.workerId,
 	}); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d *DockerProvider) cleanup(dir string) error {
+	cmd := exec.Command("umount", filepath.Join(dir, "merged"))
+	if err := cmd.Run(); err != nil {
+		d.logger.Err(err).Msg("Failed to umount merged")
+		return err
+	}
+	err := os.RemoveAll(dir)
+	if err != nil {
 		return err
 	}
 	return nil
