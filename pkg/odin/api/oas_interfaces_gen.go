@@ -25,6 +25,10 @@ type GetAllExecutionsRes interface {
 	getAllExecutionsRes()
 }
 
+type GetAllLanguagesRes interface {
+	getAllLanguagesRes()
+}
+
 type GetExecutionConfigRes interface {
 	getExecutionConfigRes()
 }

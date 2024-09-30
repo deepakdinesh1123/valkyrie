@@ -2,10 +2,9 @@ package pgembed
 
 import (
 	embeddedpostgres "github.com/fergusstrange/embedded-postgres"
-	"github.com/rs/zerolog"
 )
 
-func Start(pg_user string, pg_password string, pg_port uint32, pg_db string, dataPath string, logger *zerolog.Logger) (*embeddedpostgres.EmbeddedPostgres, error) {
+func Start(pg_user string, pg_password string, pg_port uint32, pg_db string, dataPath string) (*embeddedpostgres.EmbeddedPostgres, error) {
 	pg := embeddedpostgres.NewDatabase(
 		embeddedpostgres.DefaultConfig().
 			Username(pg_user).
@@ -16,7 +15,6 @@ func Start(pg_user string, pg_password string, pg_port uint32, pg_db string, dat
 	)
 	err := pg.Start()
 	if err != nil {
-		logger.Err(err).Msg("Failed to start Postgres")
 		return nil, err
 	}
 	return pg, nil

@@ -2,6 +2,8 @@ post:
   summary: Execute a script
   description: Execute a script
   operationId: execute
+  parameters:
+    - $ref: ../components/parameters/AuthHeader.yml
   requestBody:
     required: true
     content:
@@ -16,10 +18,15 @@ post:
           schema:
             type: object
             required:
-              - execution_id
+              - jobId
+              - events
             properties:
-              execution_id:
+              jobId:
+                type: integer
+                format: int64
+              events:
                 type: string
+                format: url
     '400':
       description: Bad Request
       content:

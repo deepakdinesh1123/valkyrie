@@ -11,7 +11,6 @@ import (
 
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
-	"github.com/deepakdinesh1123/valkyrie/internal/odin/models"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
 	"github.com/rs/zerolog"
 )
@@ -33,62 +32,40 @@ func NewExecutionService(queries db.Store, envConfig *config.EnvConfig, logger *
 	}
 }
 
-func (s *ExecutionService) prepareExecutionRequest(req *api.ExecutionRequest) (*models.ExecutionRequest, error) {
+func (s *ExecutionService) prepareExecutionRequest(req *api.ExecutionRequest) (*ExecutionRequest, error) {
+	execReq := ExecutionRequest{}
 	if req.Timeout.Value > 180 {
 		return nil, &ExecutionServiceError{
 			Type:    "timeout",
 			Message: "Timeout cannot be more than 180 seconds",
 		}
 	}
-	scriptName := fmt.Sprintf("main.%s", config.LANGUAGE_EXTENSION[req.Language])
-	if req.Environment.Value.Type == "Flake" {
-		return &models.ExecutionRequest{
-			Environment: string(req.Environment.Value.Flake),
-			File: models.File{
-				Name:    scriptName,
-				Content: req.Code,
-			},
-		}, nil
-	} else if req.Environment.Value.Type == "ExecutionEnvironmentSpec" {
-		flake, err := s.convertExecSpecToFlake(req)
-		if err != nil {
-			return nil, &ExecutionServiceError{
-				Type:    "flake",
-				Message: err.Error(),
-			}
+	if config.Languages[req.Language] == nil {
+		return nil, &ExecutionServiceError{
+			Type:    "language",
+			Message: "Language not supported",
 		}
-		return &models.ExecutionRequest{
-			Environment: flake,
-			File: models.File{
-				Name:    scriptName,
-				Content: req.Code,
-			},
-			Args: req.Environment.Value.ExecutionEnvironmentSpec.Args.Value,
-		}, nil
-	} else if !req.Environment.Set {
-		flake, err := s.convertExecSpecToFlake(req)
-		if err != nil {
-			return nil, &ExecutionServiceError{
-				Type:    "flake",
-				Message: err.Error(),
-			}
+	}
+	execReq.Language = config.Languages[req.Language]["nixPackageName"]
+	scriptName := fmt.Sprintf("main.%s", config.Languages[req.Language]["extension"])
+	execReq.File = File{
+		Name:    scriptName,
+		Content: req.Code,
+	}
+	execReq.Args = req.Environment.Value.Args.Value
+
+	flake, err := s.convertExecSpecToFlake(execReq)
+	if err != nil {
+		return nil, &ExecutionServiceError{
+			Type:    "flake",
+			Message: err.Error(),
 		}
-		return &models.ExecutionRequest{
-			Environment: flake,
-			File: models.File{
-				Name:    scriptName,
-				Content: req.Code,
-			},
-			Args: req.Environment.Value.ExecutionEnvironmentSpec.Args.Value,
-		}, nil
 	}
-	return nil, &ExecutionServiceError{
-		Type:    "environment",
-		Message: "invalid environment type",
-	}
+	execReq.Flake = flake
+	return &execReq, nil
 }
 
-func (s *ExecutionService) convertExecSpecToFlake(execSpec *api.ExecutionRequest) (string, error) {
+func (s *ExecutionService) convertExecSpecToFlake(execSpec ExecutionRequest) (string, error) {
 	tmplF, err := flakes.ReadFile(fmt.Sprintf("templates/%s.tmpl", execSpec.Language))
 	if err != nil {
 		return "", &ExecutionServiceError{
@@ -106,7 +83,7 @@ func (s *ExecutionService) convertExecSpecToFlake(execSpec *api.ExecutionRequest
 		}
 	}
 
-	err = tmpl.Execute(&res, execSpec.Environment.Value.ExecutionEnvironmentSpec)
+	err = tmpl.Execute(&res, execSpec)
 	if err != nil {
 		s.logger.Err(err).Msg("failed to execute template")
 		return "", &ExecutionServiceError{
@@ -124,7 +101,7 @@ func (s *ExecutionService) AddJob(ctx context.Context, req *api.ExecutionRequest
 	}
 	var jobParams db.AddJobTxParams
 	jobParams.Code = execReq.File.Content
-	jobParams.Flake = execReq.Environment
+	jobParams.Flake = execReq.Flake
 	jobParams.ProgrammingLanguage = req.Language
 	jobParams.MaxRetries = req.MaxRetries.Value
 	jobParams.Path = execReq.File.Name

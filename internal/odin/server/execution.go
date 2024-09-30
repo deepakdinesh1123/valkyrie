@@ -299,24 +299,6 @@ func (s *OdinServer) GetAllExecutionJobs(ctx context.Context, params api.GetAllE
 	return &resp, nil
 }
 
-func (s *OdinServer) GetExecutionConfig(ctx context.Context, params api.GetExecutionConfigParams) (api.GetExecutionConfigRes, error) {
-	user := ctx.Value(config.UserKey).(string)
-
-	if user != "admin" {
-		return &api.GetExecutionConfigForbidden{}, nil
-	}
-
-	return &api.ExecutionConfig{
-		ODINWORKERPROVIDER:    s.envConfig.ODIN_WORKER_PROVIDER,
-		ODINWORKERCONCURRENCY: int32(s.envConfig.ODIN_WORKER_CONCURRENCY),
-		ODINWORKERBUFFERSIZE:  int32(s.envConfig.ODIN_WORKER_BUFFER_SIZE),
-		ODINWORKERTASKTIMEOUT: s.envConfig.ODIN_WORKER_TASK_TIMEOUT,
-		ODINWORKERPOLLFREQ:    s.envConfig.ODIN_WORKER_POLL_FREQ,
-		ODINWORKERRUNTIME:     s.envConfig.ODIN_WORKER_RUNTIME,
-		ODINLOGLEVEL:          s.envConfig.ODIN_LOG_LEVEL,
-	}, nil
-}
-
 func (s *OdinServer) GetExecutionWorkers(ctx context.Context, params api.GetExecutionWorkersParams) (api.GetExecutionWorkersRes, error) {
 	workersDB, err := s.queries.GetAllWorkers(ctx, db.GetAllWorkersParams{
 		Limit:  params.PageSize.Value,

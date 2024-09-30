@@ -1,11 +1,14 @@
-openapi: '3.0.2'
+openapi: 3.0.2
 info:
   title: API Title
-  version: '0.0.1'
+  version: 0.0.1
+  license:
+    name: MIT
+    url: https://github.com/deepakdinesh1123/valkyrie/blob/main/LICENSE
 servers:
-  - url: http://localhost:8080/api/v1
+  - url: http://usevalkyrie.odin.org/api/v1
 paths:
-  /executions/execute/:
+  /executions/execute:
     post:
       summary: Execute a script
       description: Execute a script
@@ -47,7 +50,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /jobs/execution/:
+  /jobs/execution:
     get:
       summary: Get all execution jobs
       description: Get all execution jobs
@@ -79,15 +82,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden
-  /executions/:
+  /executions:
     get:
       summary: Get all executions
       description: Get all executions
@@ -119,15 +122,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden
-  /jobs/{JobId}/executions/:
+  /jobs/{JobId}/executions:
     get:
       summary: Get executions of given job
       description: Get executions of given job
@@ -173,7 +176,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /executions/{execId}/:
+  /executions/{execId}:
     get:
       summary: Get execution result by id
       description: Get execution result by id
@@ -207,7 +210,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /executions/jobs/{JobId}/:
+  /executions/jobs/{JobId}:
     get:
       summary: Get execution job
       description: Get execution job
@@ -300,10 +303,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        '404':
-          description: Execution job not found
         '403':
           description: Forbidden
+        '404':
+          description: Execution job not found
         '500':
           description: Internal Server Error
           content:
@@ -342,15 +345,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden
-  /executions/workers/{workerId}/:
+  /executions/workers/{workerId}:
     delete:
       summary: Delete execution worker
       description: Delete execution worker
@@ -387,6 +390,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
         '404':
           description: Execution worker not found
         '500':
@@ -395,9 +400,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden
-  /version/:
+  /version:
     get:
       summary: Get version
       description: Get version
@@ -422,7 +425,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /execution/config/:
+  /execution/config:
     get:
       summary: Get execution config
       description: Get execution config
@@ -436,16 +439,63 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExecutionConfig'
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /languages:
+    get:
+      summary: Get all languages
+      description: Get all languages
+      operationId: getAllLanguages
+      parameters:
+        - $ref: '#/components/parameters/PageNumber'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - languages
+                  - pagination
+                properties:
+                  languages:
+                    type: array
+                    items:
+                      type: string
+                  pagination:
+                    $ref: '#/components/schemas/PaginationResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '403':
           description: Forbidden
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 components:
   parameters:
+    AuthHeader:
+      name: X-Auth-Token
+      in: header
+      description: Authentication token
+      required: false
+      schema:
+        type: string
     PageNumber:
       name: page
       in: query
@@ -464,13 +514,6 @@ components:
         type: integer
         format: int32
         default: 20
-    AuthHeader:
-      name: X-Auth-Token
-      in: header
-      description: Authentication token
-      required: false
-      schema:
-        type: string
   schemas:
     EnvironmentVariable:
       type: object
@@ -478,13 +521,6 @@ components:
         key:
           type: string
         value:
-          type: string
-    Script:
-      type: object
-      properties:
-        name:
-          type: string
-        script:
           type: string
     ExecutionEnvironmentSpec:
       type: object
@@ -503,24 +539,6 @@ components:
             type: string
         args:
           type: string
-    ProgrammingLanguage:
-      type: object
-      required:
-        - name
-      properties:
-        name:
-          type: string
-        version:
-          type: string
-    File:
-      type: object
-      required:
-        - content
-      properties:
-        name:
-          type: string
-        content:
-          type: string
     ExecutionRequest:
       type: object
       required:
@@ -528,13 +546,7 @@ components:
         - language
       properties:
         environment:
-          oneOf:
-            - $ref: '#/components/schemas/Flake'
-            - $ref: '#/components/schemas/ExecutionEnvironmentSpec'
-        config:
-          oneOf:
-            - $ref: '#/components/schemas/DockerExecutionConfig'
-            - $ref: '#/components/schemas/PodmanExecutionConfig'
+          $ref: '#/components/schemas/ExecutionEnvironmentSpec'
         code:
           type: string
         language:
@@ -547,48 +559,6 @@ components:
           type: integer
           format: int32
           default: -1
-        priority:
-          type: integer
-          format: int4
-    DockerExecutionConfig:
-      type: object
-      properties:
-        containerConfig:
-          type: object
-          properties:
-            image:
-              type: string
-        HostConfig:
-          type: object
-          properties:
-            Resources:
-              type: object
-              properties:
-                Memory:
-                  type: integer
-                NanoCPUs:
-                  type: integer
-            Runtime:
-              type: string
-    PodmanExecutionConfig:
-      type: object
-      properties:
-        ContainerBasicConfig:
-          type: object
-          properties:
-            OCIRuntime:
-              type: string
-        ContainerStorageConfig:
-          type: object
-          properties:
-            Image:
-              type: string
-            ImageOS:
-              type: string
-            ImageArch:
-              type: string
-            ImageVariant:
-              type: string
     Error:
       type: object
       required:
@@ -620,6 +590,31 @@ components:
         updated_at:
           type: string
           format: date-time
+    PaginationResponse:
+      type: object
+      required:
+        - total
+        - limit
+        - offset
+      properties:
+        total:
+          type: integer
+          format: int64
+          description: Represents the total number of items.
+        pages:
+          type: integer
+          format: int32
+          description: Represents the total number of pages.
+        page:
+          type: integer
+          format: int32
+          description: Represents the current page.
+        limit:
+          type: integer
+          format: int32
+          description: Represents the number of items per page.
+        next:
+          type: string
     ExecutionResult:
       allOf:
         - $ref: '#/components/schemas/Job'
@@ -652,26 +647,6 @@ components:
               type: string
             nix_logs:
               type: string
-    Flake:
-      type: string
-    ExecutionStatus:
-      type: object
-      required:
-        - id
-        - status
-        - created_at
-      properties:
-        id:
-          type: integer
-          format: int64
-        status:
-          type: string
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
     ExecutionWorker:
       type: object
       required:
@@ -733,30 +708,3 @@ components:
         ODIN_SYSTEM_PROVIDER_CLEAN_UP:
           type: boolean
           description: Represents whether to clean up directories created by the system provider.
-    PaginationResponse:
-      type: object
-      required:
-        - total
-        - limit
-        - offset
-      properties:
-        total:
-          type: integer
-          format: int64
-          description: Represents the total number of items.
-        pages:
-          type: integer
-          format: int32
-          description: Represents the total number of pages.
-        page:
-          type: integer
-          format: int32
-          description: Represents the current page.
-        limit:
-          type: integer
-          format: int32
-          description: Represents the number of items per page.
-        next:
-          type: string
-
-        

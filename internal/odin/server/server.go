@@ -54,7 +54,12 @@ func NewServer(ctx context.Context, envConfig *config.EnvConfig, standalone bool
 		otelShutdown:     otelShutdown,
 		prop:             prop,
 	}
-	srv, err := api.NewServer(odinServer, api.WithTracerProvider(tp), api.WithMeterProvider(mp))
+	srv, err := api.NewServer(
+		odinServer,
+		api.WithTracerProvider(tp),
+		api.WithMeterProvider(mp),
+		api.WithPathPrefix("/api"),
+	)
 	if err != nil {
 		return nil, err
 	}

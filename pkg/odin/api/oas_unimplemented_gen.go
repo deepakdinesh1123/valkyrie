@@ -17,7 +17,7 @@ var _ Handler = UnimplementedHandler{}
 //
 // Cancel Execution Job.
 //
-// PUT /executions/jobs/{JobId}/
+// PUT /executions/jobs/{JobId}
 func (UnimplementedHandler) CancelExecutionJob(ctx context.Context, params CancelExecutionJobParams) (r CancelExecutionJobRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
@@ -26,7 +26,7 @@ func (UnimplementedHandler) CancelExecutionJob(ctx context.Context, params Cance
 //
 // Delete execution job.
 //
-// DELETE /executions/jobs/{JobId}/
+// DELETE /executions/jobs/{JobId}
 func (UnimplementedHandler) DeleteExecutionJob(ctx context.Context, params DeleteExecutionJobParams) (r DeleteExecutionJobRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
@@ -35,7 +35,7 @@ func (UnimplementedHandler) DeleteExecutionJob(ctx context.Context, params Delet
 //
 // Delete execution worker.
 //
-// DELETE /executions/workers/{workerId}/
+// DELETE /executions/workers/{workerId}
 func (UnimplementedHandler) DeleteExecutionWorker(ctx context.Context, params DeleteExecutionWorkerParams) (r DeleteExecutionWorkerRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
@@ -44,7 +44,7 @@ func (UnimplementedHandler) DeleteExecutionWorker(ctx context.Context, params De
 //
 // Execute a script.
 //
-// POST /executions/execute/
+// POST /executions/execute
 func (UnimplementedHandler) Execute(ctx context.Context, req *ExecutionRequest, params ExecuteParams) (r ExecuteRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
@@ -53,7 +53,7 @@ func (UnimplementedHandler) Execute(ctx context.Context, req *ExecutionRequest, 
 //
 // Get all execution jobs.
 //
-// GET /jobs/execution/
+// GET /jobs/execution
 func (UnimplementedHandler) GetAllExecutionJobs(ctx context.Context, params GetAllExecutionJobsParams) (r GetAllExecutionJobsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
@@ -62,8 +62,17 @@ func (UnimplementedHandler) GetAllExecutionJobs(ctx context.Context, params GetA
 //
 // Get all executions.
 //
-// GET /executions/
+// GET /executions
 func (UnimplementedHandler) GetAllExecutions(ctx context.Context, params GetAllExecutionsParams) (r GetAllExecutionsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetAllLanguages implements getAllLanguages operation.
+//
+// Get all languages.
+//
+// GET /languages
+func (UnimplementedHandler) GetAllLanguages(ctx context.Context, params GetAllLanguagesParams) (r GetAllLanguagesRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -71,7 +80,7 @@ func (UnimplementedHandler) GetAllExecutions(ctx context.Context, params GetAllE
 //
 // Get execution config.
 //
-// GET /execution/config/
+// GET /execution/config
 func (UnimplementedHandler) GetExecutionConfig(ctx context.Context, params GetExecutionConfigParams) (r GetExecutionConfigRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
@@ -80,7 +89,7 @@ func (UnimplementedHandler) GetExecutionConfig(ctx context.Context, params GetEx
 //
 // Get execution job.
 //
-// GET /executions/jobs/{JobId}/
+// GET /executions/jobs/{JobId}
 func (UnimplementedHandler) GetExecutionJobById(ctx context.Context, params GetExecutionJobByIdParams) (r GetExecutionJobByIdRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
@@ -89,7 +98,7 @@ func (UnimplementedHandler) GetExecutionJobById(ctx context.Context, params GetE
 //
 // Get execution result by id.
 //
-// GET /executions/{execId}/
+// GET /executions/{execId}
 func (UnimplementedHandler) GetExecutionResultById(ctx context.Context, params GetExecutionResultByIdParams) (r GetExecutionResultByIdRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
@@ -107,7 +116,7 @@ func (UnimplementedHandler) GetExecutionWorkers(ctx context.Context, params GetE
 //
 // Get executions of given job.
 //
-// GET /jobs/{JobId}/executions/
+// GET /jobs/{JobId}/executions
 func (UnimplementedHandler) GetExecutionsForJob(ctx context.Context, params GetExecutionsForJobParams) (r GetExecutionsForJobRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
@@ -116,7 +125,7 @@ func (UnimplementedHandler) GetExecutionsForJob(ctx context.Context, params GetE
 //
 // Get version.
 //
-// GET /version/
+// GET /version
 func (UnimplementedHandler) GetVersion(ctx context.Context, params GetVersionParams) (r GetVersionRes, _ error) {
 	return r, ht.ErrNotImplemented
 }

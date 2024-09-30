@@ -24,12 +24,12 @@ import (
 //
 // Cancel Execution Job.
 //
-// PUT /executions/jobs/{JobId}/
+// PUT /executions/jobs/{JobId}
 func (s *Server) handleCancelExecutionJobRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("cancelExecutionJob"),
 		semconv.HTTPRequestMethodKey.String("PUT"),
-		semconv.HTTPRouteKey.String("/executions/jobs/{JobId}/"),
+		semconv.HTTPRouteKey.String("/executions/jobs/{JobId}"),
 	}
 
 	// Start a span for this request.
@@ -140,12 +140,12 @@ func (s *Server) handleCancelExecutionJobRequest(args [1]string, argsEscaped boo
 //
 // Delete execution job.
 //
-// DELETE /executions/jobs/{JobId}/
+// DELETE /executions/jobs/{JobId}
 func (s *Server) handleDeleteExecutionJobRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("deleteExecutionJob"),
 		semconv.HTTPRequestMethodKey.String("DELETE"),
-		semconv.HTTPRouteKey.String("/executions/jobs/{JobId}/"),
+		semconv.HTTPRouteKey.String("/executions/jobs/{JobId}"),
 	}
 
 	// Start a span for this request.
@@ -256,12 +256,12 @@ func (s *Server) handleDeleteExecutionJobRequest(args [1]string, argsEscaped boo
 //
 // Delete execution worker.
 //
-// DELETE /executions/workers/{workerId}/
+// DELETE /executions/workers/{workerId}
 func (s *Server) handleDeleteExecutionWorkerRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("deleteExecutionWorker"),
 		semconv.HTTPRequestMethodKey.String("DELETE"),
-		semconv.HTTPRouteKey.String("/executions/workers/{workerId}/"),
+		semconv.HTTPRouteKey.String("/executions/workers/{workerId}"),
 	}
 
 	// Start a span for this request.
@@ -376,12 +376,12 @@ func (s *Server) handleDeleteExecutionWorkerRequest(args [1]string, argsEscaped 
 //
 // Execute a script.
 //
-// POST /executions/execute/
+// POST /executions/execute
 func (s *Server) handleExecuteRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("execute"),
 		semconv.HTTPRequestMethodKey.String("POST"),
-		semconv.HTTPRouteKey.String("/executions/execute/"),
+		semconv.HTTPRouteKey.String("/executions/execute"),
 	}
 
 	// Start a span for this request.
@@ -503,12 +503,12 @@ func (s *Server) handleExecuteRequest(args [0]string, argsEscaped bool, w http.R
 //
 // Get all execution jobs.
 //
-// GET /jobs/execution/
+// GET /jobs/execution
 func (s *Server) handleGetAllExecutionJobsRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getAllExecutionJobs"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/jobs/execution/"),
+		semconv.HTTPRouteKey.String("/jobs/execution"),
 	}
 
 	// Start a span for this request.
@@ -623,12 +623,12 @@ func (s *Server) handleGetAllExecutionJobsRequest(args [0]string, argsEscaped bo
 //
 // Get all executions.
 //
-// GET /executions/
+// GET /executions
 func (s *Server) handleGetAllExecutionsRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getAllExecutions"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/executions/"),
+		semconv.HTTPRouteKey.String("/executions"),
 	}
 
 	// Start a span for this request.
@@ -739,16 +739,136 @@ func (s *Server) handleGetAllExecutionsRequest(args [0]string, argsEscaped bool,
 	}
 }
 
+// handleGetAllLanguagesRequest handles getAllLanguages operation.
+//
+// Get all languages.
+//
+// GET /languages
+func (s *Server) handleGetAllLanguagesRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getAllLanguages"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/languages"),
+	}
+
+	// Start a span for this request.
+	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetAllLanguages",
+		trace.WithAttributes(otelAttrs...),
+		serverSpanKind,
+	)
+	defer span.End()
+
+	// Add Labeler to context.
+	labeler := &Labeler{attrs: otelAttrs}
+	ctx = contextWithLabeler(ctx, labeler)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		elapsedDuration := time.Since(startTime)
+		attrOpt := metric.WithAttributeSet(labeler.AttributeSet())
+
+		// Increment request counter.
+		s.requests.Add(ctx, 1, attrOpt)
+
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		s.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), attrOpt)
+	}()
+
+	var (
+		recordError = func(stage string, err error) {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			s.errors.Add(ctx, 1, metric.WithAttributeSet(labeler.AttributeSet()))
+		}
+		err          error
+		opErrContext = ogenerrors.OperationContext{
+			Name: "GetAllLanguages",
+			ID:   "getAllLanguages",
+		}
+	)
+	params, err := decodeGetAllLanguagesParams(args, argsEscaped, r)
+	if err != nil {
+		err = &ogenerrors.DecodeParamsError{
+			OperationContext: opErrContext,
+			Err:              err,
+		}
+		defer recordError("DecodeParams", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+
+	var response GetAllLanguagesRes
+	if m := s.cfg.Middleware; m != nil {
+		mreq := middleware.Request{
+			Context:          ctx,
+			OperationName:    "GetAllLanguages",
+			OperationSummary: "Get all languages",
+			OperationID:      "getAllLanguages",
+			Body:             nil,
+			Params: middleware.Parameters{
+				{
+					Name: "page",
+					In:   "query",
+				}: params.Page,
+				{
+					Name: "pageSize",
+					In:   "query",
+				}: params.PageSize,
+				{
+					Name: "X-Auth-Token",
+					In:   "header",
+				}: params.XAuthToken,
+			},
+			Raw: r,
+		}
+
+		type (
+			Request  = struct{}
+			Params   = GetAllLanguagesParams
+			Response = GetAllLanguagesRes
+		)
+		response, err = middleware.HookMiddleware[
+			Request,
+			Params,
+			Response,
+		](
+			m,
+			mreq,
+			unpackGetAllLanguagesParams,
+			func(ctx context.Context, request Request, params Params) (response Response, err error) {
+				response, err = s.h.GetAllLanguages(ctx, params)
+				return response, err
+			},
+		)
+	} else {
+		response, err = s.h.GetAllLanguages(ctx, params)
+	}
+	if err != nil {
+		defer recordError("Internal", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+
+	if err := encodeGetAllLanguagesResponse(response, w, span); err != nil {
+		defer recordError("EncodeResponse", err)
+		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
+			s.cfg.ErrorHandler(ctx, w, r, err)
+		}
+		return
+	}
+}
+
 // handleGetExecutionConfigRequest handles getExecutionConfig operation.
 //
 // Get execution config.
 //
-// GET /execution/config/
+// GET /execution/config
 func (s *Server) handleGetExecutionConfigRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getExecutionConfig"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/execution/config/"),
+		semconv.HTTPRouteKey.String("/execution/config"),
 	}
 
 	// Start a span for this request.
@@ -855,12 +975,12 @@ func (s *Server) handleGetExecutionConfigRequest(args [0]string, argsEscaped boo
 //
 // Get execution job.
 //
-// GET /executions/jobs/{JobId}/
+// GET /executions/jobs/{JobId}
 func (s *Server) handleGetExecutionJobByIdRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getExecutionJobById"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/executions/jobs/{JobId}/"),
+		semconv.HTTPRouteKey.String("/executions/jobs/{JobId}"),
 	}
 
 	// Start a span for this request.
@@ -971,12 +1091,12 @@ func (s *Server) handleGetExecutionJobByIdRequest(args [1]string, argsEscaped bo
 //
 // Get execution result by id.
 //
-// GET /executions/{execId}/
+// GET /executions/{execId}
 func (s *Server) handleGetExecutionResultByIdRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getExecutionResultById"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/executions/{execId}/"),
+		semconv.HTTPRouteKey.String("/executions/{execId}"),
 	}
 
 	// Start a span for this request.
@@ -1207,12 +1327,12 @@ func (s *Server) handleGetExecutionWorkersRequest(args [0]string, argsEscaped bo
 //
 // Get executions of given job.
 //
-// GET /jobs/{JobId}/executions/
+// GET /jobs/{JobId}/executions
 func (s *Server) handleGetExecutionsForJobRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getExecutionsForJob"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/jobs/{JobId}/executions/"),
+		semconv.HTTPRouteKey.String("/jobs/{JobId}/executions"),
 	}
 
 	// Start a span for this request.
@@ -1331,12 +1451,12 @@ func (s *Server) handleGetExecutionsForJobRequest(args [1]string, argsEscaped bo
 //
 // Get version.
 //
-// GET /version/
+// GET /version
 func (s *Server) handleGetVersionRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getVersion"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/version/"),
+		semconv.HTTPRouteKey.String("/version"),
 	}
 
 	// Start a span for this request.

@@ -12,7 +12,7 @@
 buildGoModule rec {
   pname = "odin";
   version = "0.0.1";
-  vendorHash = "sha256-WO08d65qux1CD9r6+E8uduSz8gMDDgKMo1di+E0sK4k=";
+  vendorHash = "sha256-uYNlb7O/XproPpD+NKAP2eqcVJik7u2xnXrmqbWPKB0=";
   
   src = ../../..;
   

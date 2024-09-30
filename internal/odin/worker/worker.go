@@ -11,7 +11,6 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/concurrency"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
-	"github.com/deepakdinesh1123/valkyrie/internal/odin/models"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/provider"
 	"github.com/deepakdinesh1123/valkyrie/internal/telemetry"
 	"github.com/deepakdinesh1123/valkyrie/pkg/namesgenerator"
@@ -40,6 +39,11 @@ type Worker struct {
 		MemUsed   uint64
 		Timestamp time.Time
 	}
+}
+
+type WorkerInfo struct {
+	ID   int
+	Name string
 }
 
 func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, newWorker bool, standalone bool, logger *zerolog.Logger) (*Worker, error) {
@@ -221,7 +225,7 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 }
 
 func writeWorkerInfo(infoFile string, worker *Worker) error {
-	wrkrInfo := models.WorkerInfo{
+	wrkrInfo := WorkerInfo{
 		ID:   worker.ID,
 		Name: worker.Name,
 	}
@@ -249,7 +253,7 @@ func deleteWorkerInfo(infoFile string) error {
 	return nil
 }
 
-func readWorkerInfo(infoFile string, logger *zerolog.Logger) (*models.WorkerInfo, error) {
+func readWorkerInfo(infoFile string, logger *zerolog.Logger) (*WorkerInfo, error) {
 	if _, err := os.Stat(infoFile); err != nil {
 		if os.IsNotExist(err) {
 			return nil, &WorkerInfoNotFoundError{}
@@ -263,7 +267,7 @@ func readWorkerInfo(infoFile string, logger *zerolog.Logger) (*models.WorkerInfo
 	if err != nil {
 		return nil, err
 	}
-	var wrkrInfo models.WorkerInfo
+	var wrkrInfo WorkerInfo
 	err = json.Unmarshal(workerInfoBytes, &wrkrInfo)
 	if err != nil {
 		return nil, err

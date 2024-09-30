@@ -1,0 +1,21 @@
+get:
+  summary: Get execution config
+  description: Get execution config
+  operationId: getExecutionConfig
+  parameters:
+    - $ref: ../components/parameters/AuthHeader.yml
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/ExecutionConfig.yml
+    '403':
+      description: Forbidden
+    '500':
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml

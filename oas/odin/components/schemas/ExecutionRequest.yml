@@ -1,9 +1,19 @@
 type: object
 required:
-  - environment
-  - file
+  - code
+  - language
 properties:
   environment:
+    $ref: ./ExecutionEnvironmentSpec.yml
+  code:
     type: string
-  file:
-    $ref: ./File.yml
+  language:
+    type: string
+  max_retries:
+    type: integer
+    format: int4
+    default: 5
+  timeout:
+    type: integer
+    format: int32
+    default: -1

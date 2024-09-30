@@ -73,9 +73,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					break
 				}
 				switch elem[0] {
-				case '/': // Prefix: "/config/"
+				case '/': // Prefix: "/config"
 					origElem := elem
-					if l := len("/config/"); len(elem) >= l && elem[0:l] == "/config/" {
+					if l := len("/config"); len(elem) >= l && elem[0:l] == "/config" {
 						elem = elem[l:]
 					} else {
 						break
@@ -94,9 +94,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					}
 
 					elem = origElem
-				case 's': // Prefix: "s/"
+				case 's': // Prefix: "s"
 					origElem := elem
-					if l := len("s/"); len(elem) >= l && elem[0:l] == "s/" {
+					if l := len("s"); len(elem) >= l && elem[0:l] == "s" {
 						elem = elem[l:]
 					} else {
 						break
@@ -113,55 +113,51 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 						return
 					}
 					switch elem[0] {
-					case 'e': // Prefix: "execute/"
+					case '/': // Prefix: "/"
 						origElem := elem
-						if l := len("execute/"); len(elem) >= l && elem[0:l] == "execute/" {
+						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
 							elem = elem[l:]
 						} else {
 							break
 						}
-
-						if len(elem) == 0 {
-							// Leaf node.
-							switch r.Method {
-							case "POST":
-								s.handleExecuteRequest([0]string{}, elemIsEscaped, w, r)
-							default:
-								s.notAllowed(w, r, "POST")
-							}
-
-							return
-						}
-
-						elem = origElem
-					case 'j': // Prefix: "jobs/"
-						origElem := elem
-						if l := len("jobs/"); len(elem) >= l && elem[0:l] == "jobs/" {
-							elem = elem[l:]
-						} else {
-							break
-						}
-
-						// Param: "JobId"
-						// Match until "/"
-						idx := strings.IndexByte(elem, '/')
-						if idx < 0 {
-							idx = len(elem)
-						}
-						args[0] = elem[:idx]
-						elem = elem[idx:]
 
 						if len(elem) == 0 {
 							break
 						}
 						switch elem[0] {
-						case '/': // Prefix: "/"
+						case 'e': // Prefix: "execute"
 							origElem := elem
-							if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+							if l := len("execute"); len(elem) >= l && elem[0:l] == "execute" {
 								elem = elem[l:]
 							} else {
 								break
 							}
+
+							if len(elem) == 0 {
+								// Leaf node.
+								switch r.Method {
+								case "POST":
+									s.handleExecuteRequest([0]string{}, elemIsEscaped, w, r)
+								default:
+									s.notAllowed(w, r, "POST")
+								}
+
+								return
+							}
+
+							elem = origElem
+						case 'j': // Prefix: "jobs/"
+							origElem := elem
+							if l := len("jobs/"); len(elem) >= l && elem[0:l] == "jobs/" {
+								elem = elem[l:]
+							} else {
+								break
+							}
+
+							// Param: "JobId"
+							// Leaf parameter
+							args[0] = elem
+							elem = ""
 
 							if len(elem) == 0 {
 								// Leaf node.
@@ -186,47 +182,23 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 							}
 
 							elem = origElem
-						}
-
-						elem = origElem
-					case 'w': // Prefix: "workers"
-						origElem := elem
-						if l := len("workers"); len(elem) >= l && elem[0:l] == "workers" {
-							elem = elem[l:]
-						} else {
-							break
-						}
-
-						if len(elem) == 0 {
-							switch r.Method {
-							case "GET":
-								s.handleGetExecutionWorkersRequest([0]string{}, elemIsEscaped, w, r)
-							default:
-								s.notAllowed(w, r, "GET")
-							}
-
-							return
-						}
-						switch elem[0] {
-						case '/': // Prefix: "/"
+						case 'w': // Prefix: "workers"
 							origElem := elem
-							if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+							if l := len("workers"); len(elem) >= l && elem[0:l] == "workers" {
 								elem = elem[l:]
 							} else {
 								break
 							}
 
-							// Param: "workerId"
-							// Match until "/"
-							idx := strings.IndexByte(elem, '/')
-							if idx < 0 {
-								idx = len(elem)
-							}
-							args[0] = elem[:idx]
-							elem = elem[idx:]
-
 							if len(elem) == 0 {
-								break
+								switch r.Method {
+								case "GET":
+									s.handleGetExecutionWorkersRequest([0]string{}, elemIsEscaped, w, r)
+								default:
+									s.notAllowed(w, r, "GET")
+								}
+
+								return
 							}
 							switch elem[0] {
 							case '/': // Prefix: "/"
@@ -236,6 +208,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 								} else {
 									break
 								}
+
+								// Param: "workerId"
+								// Leaf parameter
+								args[0] = elem
+								elem = ""
 
 								if len(elem) == 0 {
 									// Leaf node.
@@ -256,29 +233,10 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 							elem = origElem
 						}
-
-						elem = origElem
-					}
-					// Param: "execId"
-					// Match until "/"
-					idx := strings.IndexByte(elem, '/')
-					if idx < 0 {
-						idx = len(elem)
-					}
-					args[0] = elem[:idx]
-					elem = elem[idx:]
-
-					if len(elem) == 0 {
-						break
-					}
-					switch elem[0] {
-					case '/': // Prefix: "/"
-						origElem := elem
-						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
-							elem = elem[l:]
-						} else {
-							break
-						}
+						// Param: "execId"
+						// Leaf parameter
+						args[0] = elem
+						elem = ""
 
 						if len(elem) == 0 {
 							// Leaf node.
@@ -313,9 +271,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					break
 				}
 				switch elem[0] {
-				case 'e': // Prefix: "execution/"
+				case 'e': // Prefix: "execution"
 					origElem := elem
-					if l := len("execution/"); len(elem) >= l && elem[0:l] == "execution/" {
+					if l := len("execution"); len(elem) >= l && elem[0:l] == "execution" {
 						elem = elem[l:]
 					} else {
 						break
@@ -348,9 +306,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					break
 				}
 				switch elem[0] {
-				case '/': // Prefix: "/executions/"
+				case '/': // Prefix: "/executions"
 					origElem := elem
-					if l := len("/executions/"); len(elem) >= l && elem[0:l] == "/executions/" {
+					if l := len("/executions"); len(elem) >= l && elem[0:l] == "/executions" {
 						elem = elem[l:]
 					} else {
 						break
@@ -374,9 +332,30 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				}
 
 				elem = origElem
-			case 'v': // Prefix: "version/"
+			case 'l': // Prefix: "languages"
 				origElem := elem
-				if l := len("version/"); len(elem) >= l && elem[0:l] == "version/" {
+				if l := len("languages"); len(elem) >= l && elem[0:l] == "languages" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					// Leaf node.
+					switch r.Method {
+					case "GET":
+						s.handleGetAllLanguagesRequest([0]string{}, elemIsEscaped, w, r)
+					default:
+						s.notAllowed(w, r, "GET")
+					}
+
+					return
+				}
+
+				elem = origElem
+			case 'v': // Prefix: "version"
+				origElem := elem
+				if l := len("version"); len(elem) >= l && elem[0:l] == "version" {
 					elem = elem[l:]
 				} else {
 					break
@@ -502,9 +481,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					break
 				}
 				switch elem[0] {
-				case '/': // Prefix: "/config/"
+				case '/': // Prefix: "/config"
 					origElem := elem
-					if l := len("/config/"); len(elem) >= l && elem[0:l] == "/config/" {
+					if l := len("/config"); len(elem) >= l && elem[0:l] == "/config" {
 						elem = elem[l:]
 					} else {
 						break
@@ -517,7 +496,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							r.name = "GetExecutionConfig"
 							r.summary = "Get execution config"
 							r.operationID = "getExecutionConfig"
-							r.pathPattern = "/execution/config/"
+							r.pathPattern = "/execution/config"
 							r.args = args
 							r.count = 0
 							return r, true
@@ -527,9 +506,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					}
 
 					elem = origElem
-				case 's': // Prefix: "s/"
+				case 's': // Prefix: "s"
 					origElem := elem
-					if l := len("s/"); len(elem) >= l && elem[0:l] == "s/" {
+					if l := len("s"); len(elem) >= l && elem[0:l] == "s" {
 						elem = elem[l:]
 					} else {
 						break
@@ -541,7 +520,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							r.name = "GetAllExecutions"
 							r.summary = "Get all executions"
 							r.operationID = "getAllExecutions"
-							r.pathPattern = "/executions/"
+							r.pathPattern = "/executions"
 							r.args = args
 							r.count = 0
 							return r, true
@@ -550,55 +529,21 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						}
 					}
 					switch elem[0] {
-					case 'e': // Prefix: "execute/"
+					case '/': // Prefix: "/"
 						origElem := elem
-						if l := len("execute/"); len(elem) >= l && elem[0:l] == "execute/" {
+						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
 							elem = elem[l:]
 						} else {
 							break
 						}
-
-						if len(elem) == 0 {
-							// Leaf node.
-							switch method {
-							case "POST":
-								r.name = "Execute"
-								r.summary = "Execute a script"
-								r.operationID = "execute"
-								r.pathPattern = "/executions/execute/"
-								r.args = args
-								r.count = 0
-								return r, true
-							default:
-								return
-							}
-						}
-
-						elem = origElem
-					case 'j': // Prefix: "jobs/"
-						origElem := elem
-						if l := len("jobs/"); len(elem) >= l && elem[0:l] == "jobs/" {
-							elem = elem[l:]
-						} else {
-							break
-						}
-
-						// Param: "JobId"
-						// Match until "/"
-						idx := strings.IndexByte(elem, '/')
-						if idx < 0 {
-							idx = len(elem)
-						}
-						args[0] = elem[:idx]
-						elem = elem[idx:]
 
 						if len(elem) == 0 {
 							break
 						}
 						switch elem[0] {
-						case '/': // Prefix: "/"
+						case 'e': // Prefix: "execute"
 							origElem := elem
-							if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+							if l := len("execute"); len(elem) >= l && elem[0:l] == "execute" {
 								elem = elem[l:]
 							} else {
 								break
@@ -607,11 +552,41 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							if len(elem) == 0 {
 								// Leaf node.
 								switch method {
+								case "POST":
+									r.name = "Execute"
+									r.summary = "Execute a script"
+									r.operationID = "execute"
+									r.pathPattern = "/executions/execute"
+									r.args = args
+									r.count = 0
+									return r, true
+								default:
+									return
+								}
+							}
+
+							elem = origElem
+						case 'j': // Prefix: "jobs/"
+							origElem := elem
+							if l := len("jobs/"); len(elem) >= l && elem[0:l] == "jobs/" {
+								elem = elem[l:]
+							} else {
+								break
+							}
+
+							// Param: "JobId"
+							// Leaf parameter
+							args[0] = elem
+							elem = ""
+
+							if len(elem) == 0 {
+								// Leaf node.
+								switch method {
 								case "DELETE":
 									r.name = "DeleteExecutionJob"
 									r.summary = "Delete execution job"
 									r.operationID = "deleteExecutionJob"
-									r.pathPattern = "/executions/jobs/{JobId}/"
+									r.pathPattern = "/executions/jobs/{JobId}"
 									r.args = args
 									r.count = 1
 									return r, true
@@ -619,7 +594,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									r.name = "GetExecutionJobById"
 									r.summary = "Get execution job"
 									r.operationID = "getExecutionJobById"
-									r.pathPattern = "/executions/jobs/{JobId}/"
+									r.pathPattern = "/executions/jobs/{JobId}"
 									r.args = args
 									r.count = 1
 									return r, true
@@ -627,7 +602,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									r.name = "CancelExecutionJob"
 									r.summary = "Cancel Execution Job"
 									r.operationID = "cancelExecutionJob"
-									r.pathPattern = "/executions/jobs/{JobId}/"
+									r.pathPattern = "/executions/jobs/{JobId}"
 									r.args = args
 									r.count = 1
 									return r, true
@@ -637,51 +612,27 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							}
 
 							elem = origElem
-						}
-
-						elem = origElem
-					case 'w': // Prefix: "workers"
-						origElem := elem
-						if l := len("workers"); len(elem) >= l && elem[0:l] == "workers" {
-							elem = elem[l:]
-						} else {
-							break
-						}
-
-						if len(elem) == 0 {
-							switch method {
-							case "GET":
-								r.name = "GetExecutionWorkers"
-								r.summary = "Get all execution workers"
-								r.operationID = "getExecutionWorkers"
-								r.pathPattern = "/executions/workers"
-								r.args = args
-								r.count = 0
-								return r, true
-							default:
-								return
-							}
-						}
-						switch elem[0] {
-						case '/': // Prefix: "/"
+						case 'w': // Prefix: "workers"
 							origElem := elem
-							if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+							if l := len("workers"); len(elem) >= l && elem[0:l] == "workers" {
 								elem = elem[l:]
 							} else {
 								break
 							}
 
-							// Param: "workerId"
-							// Match until "/"
-							idx := strings.IndexByte(elem, '/')
-							if idx < 0 {
-								idx = len(elem)
-							}
-							args[0] = elem[:idx]
-							elem = elem[idx:]
-
 							if len(elem) == 0 {
-								break
+								switch method {
+								case "GET":
+									r.name = "GetExecutionWorkers"
+									r.summary = "Get all execution workers"
+									r.operationID = "getExecutionWorkers"
+									r.pathPattern = "/executions/workers"
+									r.args = args
+									r.count = 0
+									return r, true
+								default:
+									return
+								}
 							}
 							switch elem[0] {
 							case '/': // Prefix: "/"
@@ -692,6 +643,11 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									break
 								}
 
+								// Param: "workerId"
+								// Leaf parameter
+								args[0] = elem
+								elem = ""
+
 								if len(elem) == 0 {
 									// Leaf node.
 									switch method {
@@ -699,7 +655,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 										r.name = "DeleteExecutionWorker"
 										r.summary = "Delete execution worker"
 										r.operationID = "deleteExecutionWorker"
-										r.pathPattern = "/executions/workers/{workerId}/"
+										r.pathPattern = "/executions/workers/{workerId}"
 										r.args = args
 										r.count = 1
 										return r, true
@@ -713,29 +669,10 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 
 							elem = origElem
 						}
-
-						elem = origElem
-					}
-					// Param: "execId"
-					// Match until "/"
-					idx := strings.IndexByte(elem, '/')
-					if idx < 0 {
-						idx = len(elem)
-					}
-					args[0] = elem[:idx]
-					elem = elem[idx:]
-
-					if len(elem) == 0 {
-						break
-					}
-					switch elem[0] {
-					case '/': // Prefix: "/"
-						origElem := elem
-						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
-							elem = elem[l:]
-						} else {
-							break
-						}
+						// Param: "execId"
+						// Leaf parameter
+						args[0] = elem
+						elem = ""
 
 						if len(elem) == 0 {
 							// Leaf node.
@@ -744,7 +681,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.name = "GetExecutionResultById"
 								r.summary = "Get execution result by id"
 								r.operationID = "getExecutionResultById"
-								r.pathPattern = "/executions/{execId}/"
+								r.pathPattern = "/executions/{execId}"
 								r.args = args
 								r.count = 1
 								return r, true
@@ -772,9 +709,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					break
 				}
 				switch elem[0] {
-				case 'e': // Prefix: "execution/"
+				case 'e': // Prefix: "execution"
 					origElem := elem
-					if l := len("execution/"); len(elem) >= l && elem[0:l] == "execution/" {
+					if l := len("execution"); len(elem) >= l && elem[0:l] == "execution" {
 						elem = elem[l:]
 					} else {
 						break
@@ -787,7 +724,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							r.name = "GetAllExecutionJobs"
 							r.summary = "Get all execution jobs"
 							r.operationID = "getAllExecutionJobs"
-							r.pathPattern = "/jobs/execution/"
+							r.pathPattern = "/jobs/execution"
 							r.args = args
 							r.count = 0
 							return r, true
@@ -811,9 +748,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					break
 				}
 				switch elem[0] {
-				case '/': // Prefix: "/executions/"
+				case '/': // Prefix: "/executions"
 					origElem := elem
-					if l := len("/executions/"); len(elem) >= l && elem[0:l] == "/executions/" {
+					if l := len("/executions"); len(elem) >= l && elem[0:l] == "/executions" {
 						elem = elem[l:]
 					} else {
 						break
@@ -826,7 +763,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							r.name = "GetExecutionsForJob"
 							r.summary = "Get executions of given job"
 							r.operationID = "getExecutionsForJob"
-							r.pathPattern = "/jobs/{JobId}/executions/"
+							r.pathPattern = "/jobs/{JobId}/executions"
 							r.args = args
 							r.count = 1
 							return r, true
@@ -839,9 +776,34 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 				}
 
 				elem = origElem
-			case 'v': // Prefix: "version/"
+			case 'l': // Prefix: "languages"
 				origElem := elem
-				if l := len("version/"); len(elem) >= l && elem[0:l] == "version/" {
+				if l := len("languages"); len(elem) >= l && elem[0:l] == "languages" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					// Leaf node.
+					switch method {
+					case "GET":
+						r.name = "GetAllLanguages"
+						r.summary = "Get all languages"
+						r.operationID = "getAllLanguages"
+						r.pathPattern = "/languages"
+						r.args = args
+						r.count = 0
+						return r, true
+					default:
+						return
+					}
+				}
+
+				elem = origElem
+			case 'v': // Prefix: "version"
+				origElem := elem
+				if l := len("version"); len(elem) >= l && elem[0:l] == "version" {
 					elem = elem[l:]
 				} else {
 					break
@@ -854,7 +816,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						r.name = "GetVersion"
 						r.summary = "Get version"
 						r.operationID = "getVersion"
-						r.pathPattern = "/version/"
+						r.pathPattern = "/version"
 						r.args = args
 						r.count = 0
 						return r, true

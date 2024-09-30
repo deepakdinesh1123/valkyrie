@@ -7,6 +7,7 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 type LogOptsFunc func(*LogConfig)
@@ -65,11 +66,13 @@ func GetLogger(config *LogConfig) *zerolog.Logger {
 	case "console":
 		logOut = zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339}
 	case "file":
-		file, err := os.OpenFile("valkyrie.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-		if err != nil {
-			return nil
+		logOut = &lumberjack.Logger{
+			Filename:   "valkyrie.log",
+			MaxSize:    500, // megabytes
+			MaxBackups: 3,
+			MaxAge:     28,   //days
+			Compress:   true, // disabled by default
 		}
-		logOut = file
 	}
 	logger := zerolog.New(logOut).
 		Level(zerolog.TraceLevel).

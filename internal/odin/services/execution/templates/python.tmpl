@@ -16,7 +16,7 @@
           geri = pkgs.writeShellApplication {
             name = "geri";
             runtimeInputs = with pkgs; [
-              (python3.withPackages (python-pkgs: [
+              ({{.Language}}.withPackages (python-pkgs: [
                 {{ range .LanguageDependencies }}
                 python-pkgs.{{.}}
                 {{ end }}

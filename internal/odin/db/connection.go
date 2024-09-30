@@ -70,9 +70,8 @@ func GetDBConnection(ctx context.Context, envConfig *config.EnvConfig, logger *z
 		var err error
 		pge, err = pgembed.Start(
 			envConfig.POSTGRES_USER, envConfig.POSTGRES_PASSWORD, envConfig.POSTGRES_PORT,
-			envConfig.POSTGRES_DB, pgDataPath, logger)
+			envConfig.POSTGRES_DB, pgDataPath)
 		if err != nil {
-			logger.Err(err).Msg("Failed to start Postgres")
 			return nil, err
 		}
 	}
@@ -84,7 +83,6 @@ func GetDBConnection(ctx context.Context, envConfig *config.EnvConfig, logger *z
 
 	connPool, err := pgxpool.NewWithConfig(ctx, config.PgxConfig(POSTGRES_URL, dbOpts.tp, logger))
 	if err != nil {
-		logger.Err(err).Msg("Failed to create connection pool")
 		return nil, err
 	}
 
@@ -119,12 +117,10 @@ func GetDBConnection(ctx context.Context, envConfig *config.EnvConfig, logger *z
 func applyMigrationsFunc(postgresUrl string, logger *zerolog.Logger) error {
 	d, err := iofs.New(migrationsFS, "migrations")
 	if err != nil {
-		logger.Err(err).Msg("Failed to create migrations")
 		return err
 	}
 	m, err := migrate.NewWithSourceInstance("migrations", d, postgresUrl)
 	if err != nil {
-		logger.Err(err).Msg("Failed to create migrations instance")
 		return err
 	}
 
@@ -133,7 +129,6 @@ func applyMigrationsFunc(postgresUrl string, logger *zerolog.Logger) error {
 			logger.Info().Msg("No new migrations to apply")
 			return nil
 		}
-		logger.Err(err).Msg("Failed to apply migrations")
 		return err
 	}
 

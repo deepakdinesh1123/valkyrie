@@ -43,3 +43,17 @@ oapi-gen:
 .PHONY: start-observability
 start-observability:
 	@docker compose up valkyrie-otel-collector jaeger prometheus -d
+
+.PHONY: build-docker-image
+build-docker-image:
+	docker build \
+		-t valkyrie:latest \
+		--build-arg HOST_UID=$(shell id -u) \
+		--build-arg HOST_GID=$(shell id -g) \
+		--build-arg HOST_USER=$(shell whoami) \
+		--build-arg HOST_GROUP=$(shell whoami) \
+		-f build/platforms/ubuntu.dockerfile .
+
+.PHONY: bundle-api-spec
+bundle-api-spec:
+	redocly bundle oas/odin/openapi.yml -o oas/odin-schema.yml

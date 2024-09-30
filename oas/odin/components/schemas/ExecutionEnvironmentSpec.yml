@@ -4,13 +4,13 @@ properties:
     type: array
     items:
       $ref: ./EnvironmentVariable.yml
-  packages:
+  languageDependencies:
     type: array
     items:
       type: string
-  enterShell:
-    type: string
-  scripts:
+  systemDependencies:
     type: array
     items:
-      $ref: ./Script.yml
+      type: string
+  args:
+    type: string

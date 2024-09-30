@@ -25,7 +25,9 @@ type EnvConfig struct {
 	ODIN_WORKER_BUFFER_SIZE  int    `mapstructure:"ODIN_WORKER_BUFFER_SIZE"`  // represents the buffer size for the worker.
 	ODIN_WORKER_TASK_TIMEOUT int    `mapstructure:"ODIN_WORKER_TASK_TIMEOUT"` // represents the task timeout.
 	ODIN_WORKER_POLL_FREQ    int    `mapstructure:"ODIN_WORKER_POLL_FREQ"`    // represents the polling frequency for the worker in seconds.
-	ODIN_WORKER_RUNTIME      string `mapstructure:"ODIN_WORKER_RUNTIME"`      // represents the runtime for the worker in seconds.
+	ODIN_WORKER_RUNTIME      string `mapstructure:"ODIN_WORKER_RUNTIME"`      // represents the default runtime for the worker containers (e.g. runc, crun).
+	ODIN_WORKER_PODMAN_IMAGE string `mapstructure:"ODIN_WORKER_PODMAN_IMAGE"` // represents the default image for the podman worker containers.
+	ODIN_WORKER_DOCKER_IMAGE string `mapstructure:"ODIN_WORKER_DOCKER_IMAGE"` // represents the default image for the docker worker containers.
 
 	ODIN_LOG_LEVEL string `mapstructure:"ODIN_LOG_LEVEL"`
 
@@ -40,7 +42,7 @@ type EnvConfig struct {
 
 	ODIN_NIX_STORE string `mapstructure:"ODIN_NIX_STORE"` // represents the Nix store directory.
 
-	ODIN_JOB_PRUNE_FREQ int // represents the job prune frequency in hours.
+	ODIN_JOB_PRUNE_FREQ int `mapstructure:"ODIN_JOB_PRUNE_FREQ"` // represents the job prune frequency in hours.
 
 	ODIN_SYSTEM_PROVIDER_BASE_DIR string `mapstructure:"ODIN_SYSTEM_PROVIDER_BASE_DIR"` // represents the base directory for the system provider.
 	ODIN_SYSTEM_PROVIDER_CLEAN_UP bool   `mapstructure:"ODIN_SYSTEM_PROVIDER_CLEAN_UP"` // represents whether to clean up direcories created by the system provider.

@@ -2,14 +2,31 @@ openapi: 3.0.2
 info:
   title: API Title
   version: 0.0.1
+  license:
+    name: MIT
+    url: https://github.com/deepakdinesh1123/valkyrie/blob/main/LICENSE
 servers:
-  - url: http://localhost:8080/api/v1
+  - url: http://usevalkyrie.odin.org/api/
 paths:
-  /execution/execute/:
-    $ref: paths/execution_execute_.yml
-  /execition/{execution_id}/:
-    $ref: paths/execition_{execution_id}_.yml
-  /execution/:
-    $ref: paths/execution_.yml
-  /execution/results/:
-    $ref: paths/execution_results_.yml
+  /executions/execute:
+    $ref: paths/executions_execute.yml
+  /jobs/execution:
+    $ref: paths/jobs_execution.yml
+  /executions:
+    $ref: paths/executions.yml
+  /jobs/{JobId}/executions:
+    $ref: paths/jobs_{JobId}_executions.yml
+  /executions/{execId}:
+    $ref: paths/executions_{execId}.yml
+  /executions/jobs/{JobId}:
+    $ref: paths/executions_jobs_{JobId}.yml
+  /executions/workers:
+    $ref: paths/executions_workers.yml
+  /executions/workers/{workerId}:
+    $ref: paths/executions_workers_{workerId}.yml
+  /version:
+    $ref: paths/version.yml
+  /execution/config:
+    $ref: paths/execution_config.yml
+  /languages:
+    $ref: paths/languages.yml

@@ -435,309 +435,6 @@ func (s *DeleteExecutionWorkerOK) UnmarshalJSON(data []byte) error {
 }
 
 // Encode implements json.Marshaler.
-func (s *DockerExecutionConfig) Encode(e *jx.Encoder) {
-	e.ObjStart()
-	s.encodeFields(e)
-	e.ObjEnd()
-}
-
-// encodeFields encodes fields.
-func (s *DockerExecutionConfig) encodeFields(e *jx.Encoder) {
-	{
-		if s.ContainerConfig.Set {
-			e.FieldStart("containerConfig")
-			s.ContainerConfig.Encode(e)
-		}
-	}
-	{
-		if s.HostConfig.Set {
-			e.FieldStart("HostConfig")
-			s.HostConfig.Encode(e)
-		}
-	}
-}
-
-var jsonFieldsNameOfDockerExecutionConfig = [2]string{
-	0: "containerConfig",
-	1: "HostConfig",
-}
-
-// Decode decodes DockerExecutionConfig from json.
-func (s *DockerExecutionConfig) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode DockerExecutionConfig to nil")
-	}
-
-	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
-		switch string(k) {
-		case "containerConfig":
-			if err := func() error {
-				s.ContainerConfig.Reset()
-				if err := s.ContainerConfig.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"containerConfig\"")
-			}
-		case "HostConfig":
-			if err := func() error {
-				s.HostConfig.Reset()
-				if err := s.HostConfig.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"HostConfig\"")
-			}
-		default:
-			return d.Skip()
-		}
-		return nil
-	}); err != nil {
-		return errors.Wrap(err, "decode DockerExecutionConfig")
-	}
-
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s *DockerExecutionConfig) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *DockerExecutionConfig) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode implements json.Marshaler.
-func (s *DockerExecutionConfigContainerConfig) Encode(e *jx.Encoder) {
-	e.ObjStart()
-	s.encodeFields(e)
-	e.ObjEnd()
-}
-
-// encodeFields encodes fields.
-func (s *DockerExecutionConfigContainerConfig) encodeFields(e *jx.Encoder) {
-	{
-		if s.Image.Set {
-			e.FieldStart("image")
-			s.Image.Encode(e)
-		}
-	}
-}
-
-var jsonFieldsNameOfDockerExecutionConfigContainerConfig = [1]string{
-	0: "image",
-}
-
-// Decode decodes DockerExecutionConfigContainerConfig from json.
-func (s *DockerExecutionConfigContainerConfig) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode DockerExecutionConfigContainerConfig to nil")
-	}
-
-	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
-		switch string(k) {
-		case "image":
-			if err := func() error {
-				s.Image.Reset()
-				if err := s.Image.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"image\"")
-			}
-		default:
-			return d.Skip()
-		}
-		return nil
-	}); err != nil {
-		return errors.Wrap(err, "decode DockerExecutionConfigContainerConfig")
-	}
-
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s *DockerExecutionConfigContainerConfig) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *DockerExecutionConfigContainerConfig) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode implements json.Marshaler.
-func (s *DockerExecutionConfigHostConfig) Encode(e *jx.Encoder) {
-	e.ObjStart()
-	s.encodeFields(e)
-	e.ObjEnd()
-}
-
-// encodeFields encodes fields.
-func (s *DockerExecutionConfigHostConfig) encodeFields(e *jx.Encoder) {
-	{
-		if s.Resources.Set {
-			e.FieldStart("Resources")
-			s.Resources.Encode(e)
-		}
-	}
-	{
-		if s.Runtime.Set {
-			e.FieldStart("Runtime")
-			s.Runtime.Encode(e)
-		}
-	}
-}
-
-var jsonFieldsNameOfDockerExecutionConfigHostConfig = [2]string{
-	0: "Resources",
-	1: "Runtime",
-}
-
-// Decode decodes DockerExecutionConfigHostConfig from json.
-func (s *DockerExecutionConfigHostConfig) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode DockerExecutionConfigHostConfig to nil")
-	}
-
-	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
-		switch string(k) {
-		case "Resources":
-			if err := func() error {
-				s.Resources.Reset()
-				if err := s.Resources.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"Resources\"")
-			}
-		case "Runtime":
-			if err := func() error {
-				s.Runtime.Reset()
-				if err := s.Runtime.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"Runtime\"")
-			}
-		default:
-			return d.Skip()
-		}
-		return nil
-	}); err != nil {
-		return errors.Wrap(err, "decode DockerExecutionConfigHostConfig")
-	}
-
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s *DockerExecutionConfigHostConfig) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *DockerExecutionConfigHostConfig) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode implements json.Marshaler.
-func (s *DockerExecutionConfigHostConfigResources) Encode(e *jx.Encoder) {
-	e.ObjStart()
-	s.encodeFields(e)
-	e.ObjEnd()
-}
-
-// encodeFields encodes fields.
-func (s *DockerExecutionConfigHostConfigResources) encodeFields(e *jx.Encoder) {
-	{
-		if s.Memory.Set {
-			e.FieldStart("Memory")
-			s.Memory.Encode(e)
-		}
-	}
-	{
-		if s.NanoCPUs.Set {
-			e.FieldStart("NanoCPUs")
-			s.NanoCPUs.Encode(e)
-		}
-	}
-}
-
-var jsonFieldsNameOfDockerExecutionConfigHostConfigResources = [2]string{
-	0: "Memory",
-	1: "NanoCPUs",
-}
-
-// Decode decodes DockerExecutionConfigHostConfigResources from json.
-func (s *DockerExecutionConfigHostConfigResources) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode DockerExecutionConfigHostConfigResources to nil")
-	}
-
-	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
-		switch string(k) {
-		case "Memory":
-			if err := func() error {
-				s.Memory.Reset()
-				if err := s.Memory.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"Memory\"")
-			}
-		case "NanoCPUs":
-			if err := func() error {
-				s.NanoCPUs.Reset()
-				if err := s.NanoCPUs.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"NanoCPUs\"")
-			}
-		default:
-			return d.Skip()
-		}
-		return nil
-	}); err != nil {
-		return errors.Wrap(err, "decode DockerExecutionConfigHostConfigResources")
-	}
-
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s *DockerExecutionConfigHostConfigResources) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *DockerExecutionConfigHostConfigResources) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode implements json.Marshaler.
 func (s *EnvironmentVariable) Encode(e *jx.Encoder) {
 	e.ObjStart()
 	s.encodeFields(e)
@@ -1502,12 +1199,6 @@ func (s *ExecutionRequest) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
-		if s.Config.Set {
-			e.FieldStart("config")
-			s.Config.Encode(e)
-		}
-	}
-	{
 		e.FieldStart("code")
 		e.Str(s.Code)
 	}
@@ -1527,22 +1218,14 @@ func (s *ExecutionRequest) encodeFields(e *jx.Encoder) {
 			s.Timeout.Encode(e)
 		}
 	}
-	{
-		if s.Priority.Set {
-			e.FieldStart("priority")
-			s.Priority.Encode(e)
-		}
-	}
 }
 
-var jsonFieldsNameOfExecutionRequest = [7]string{
+var jsonFieldsNameOfExecutionRequest = [5]string{
 	0: "environment",
-	1: "config",
-	2: "code",
-	3: "language",
-	4: "max_retries",
-	5: "timeout",
-	6: "priority",
+	1: "code",
+	2: "language",
+	3: "max_retries",
+	4: "timeout",
 }
 
 // Decode decodes ExecutionRequest from json.
@@ -1565,18 +1248,8 @@ func (s *ExecutionRequest) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"environment\"")
 			}
-		case "config":
-			if err := func() error {
-				s.Config.Reset()
-				if err := s.Config.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"config\"")
-			}
 		case "code":
-			requiredBitSet[0] |= 1 << 2
+			requiredBitSet[0] |= 1 << 1
 			if err := func() error {
 				v, err := d.Str()
 				s.Code = string(v)
@@ -1588,7 +1261,7 @@ func (s *ExecutionRequest) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"code\"")
 			}
 		case "language":
-			requiredBitSet[0] |= 1 << 3
+			requiredBitSet[0] |= 1 << 2
 			if err := func() error {
 				v, err := d.Str()
 				s.Language = string(v)
@@ -1619,16 +1292,6 @@ func (s *ExecutionRequest) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"timeout\"")
 			}
-		case "priority":
-			if err := func() error {
-				s.Priority.Reset()
-				if err := s.Priority.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"priority\"")
-			}
 		default:
 			return d.Skip()
 		}
@@ -1639,7 +1302,7 @@ func (s *ExecutionRequest) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00001100,
+		0b00000110,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -1681,154 +1344,6 @@ func (s *ExecutionRequest) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *ExecutionRequest) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode encodes ExecutionRequestConfig as json.
-func (s ExecutionRequestConfig) Encode(e *jx.Encoder) {
-	switch s.Type {
-	case DockerExecutionConfigExecutionRequestConfig:
-		s.DockerExecutionConfig.Encode(e)
-	case PodmanExecutionConfigExecutionRequestConfig:
-		s.PodmanExecutionConfig.Encode(e)
-	}
-}
-
-func (s ExecutionRequestConfig) encodeFields(e *jx.Encoder) {
-	switch s.Type {
-	case DockerExecutionConfigExecutionRequestConfig:
-		s.DockerExecutionConfig.encodeFields(e)
-	case PodmanExecutionConfigExecutionRequestConfig:
-		s.PodmanExecutionConfig.encodeFields(e)
-	}
-}
-
-// Decode decodes ExecutionRequestConfig from json.
-func (s *ExecutionRequestConfig) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode ExecutionRequestConfig to nil")
-	}
-	// Sum type fields.
-	if typ := d.Next(); typ != jx.Object {
-		return errors.Errorf("unexpected json type %q", typ)
-	}
-
-	var found bool
-	if err := d.Capture(func(d *jx.Decoder) error {
-		return d.ObjBytes(func(d *jx.Decoder, key []byte) error {
-			switch string(key) {
-			case "containerConfig":
-				match := DockerExecutionConfigExecutionRequestConfig
-				if found && s.Type != match {
-					s.Type = ""
-					return errors.Errorf("multiple oneOf matches: (%v, %v)", s.Type, match)
-				}
-				found = true
-				s.Type = match
-			case "HostConfig":
-				match := DockerExecutionConfigExecutionRequestConfig
-				if found && s.Type != match {
-					s.Type = ""
-					return errors.Errorf("multiple oneOf matches: (%v, %v)", s.Type, match)
-				}
-				found = true
-				s.Type = match
-			case "ContainerBasicConfig":
-				match := PodmanExecutionConfigExecutionRequestConfig
-				if found && s.Type != match {
-					s.Type = ""
-					return errors.Errorf("multiple oneOf matches: (%v, %v)", s.Type, match)
-				}
-				found = true
-				s.Type = match
-			case "ContainerStorageConfig":
-				match := PodmanExecutionConfigExecutionRequestConfig
-				if found && s.Type != match {
-					s.Type = ""
-					return errors.Errorf("multiple oneOf matches: (%v, %v)", s.Type, match)
-				}
-				found = true
-				s.Type = match
-			}
-			return d.Skip()
-		})
-	}); err != nil {
-		return errors.Wrap(err, "capture")
-	}
-	if !found {
-		return errors.New("unable to detect sum type variant")
-	}
-	switch s.Type {
-	case DockerExecutionConfigExecutionRequestConfig:
-		if err := s.DockerExecutionConfig.Decode(d); err != nil {
-			return err
-		}
-	case PodmanExecutionConfigExecutionRequestConfig:
-		if err := s.PodmanExecutionConfig.Decode(d); err != nil {
-			return err
-		}
-	default:
-		return errors.Errorf("inferred invalid type: %s", s.Type)
-	}
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s ExecutionRequestConfig) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *ExecutionRequestConfig) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode encodes ExecutionRequestEnvironment as json.
-func (s ExecutionRequestEnvironment) Encode(e *jx.Encoder) {
-	switch s.Type {
-	case FlakeExecutionRequestEnvironment:
-		s.Flake.Encode(e)
-	case ExecutionEnvironmentSpecExecutionRequestEnvironment:
-		s.ExecutionEnvironmentSpec.Encode(e)
-	}
-}
-
-// Decode decodes ExecutionRequestEnvironment from json.
-func (s *ExecutionRequestEnvironment) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode ExecutionRequestEnvironment to nil")
-	}
-	// Sum type type_discriminator.
-	switch t := d.Next(); t {
-	case jx.Object:
-		if err := s.ExecutionEnvironmentSpec.Decode(d); err != nil {
-			return err
-		}
-		s.Type = ExecutionEnvironmentSpecExecutionRequestEnvironment
-	case jx.String:
-		if err := s.Flake.Decode(d); err != nil {
-			return err
-		}
-		s.Type = FlakeExecutionRequestEnvironment
-	default:
-		return errors.Errorf("unexpected json type %q", t)
-	}
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s ExecutionRequestEnvironment) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *ExecutionRequestEnvironment) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -2264,46 +1779,6 @@ func (s *ExecutionWorker) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
-// Encode encodes Flake as json.
-func (s Flake) Encode(e *jx.Encoder) {
-	unwrapped := string(s)
-
-	e.Str(unwrapped)
-}
-
-// Decode decodes Flake from json.
-func (s *Flake) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode Flake to nil")
-	}
-	var unwrapped string
-	if err := func() error {
-		v, err := d.Str()
-		unwrapped = string(v)
-		if err != nil {
-			return err
-		}
-		return nil
-	}(); err != nil {
-		return errors.Wrap(err, "alias")
-	}
-	*s = Flake(unwrapped)
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s Flake) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *Flake) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
 // Encode encodes GetAllExecutionJobsBadRequest as json.
 func (s *GetAllExecutionJobsBadRequest) Encode(e *jx.Encoder) {
 	unwrapped := (*Error)(s)
@@ -2694,6 +2169,205 @@ func (s *GetAllExecutionsOK) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *GetAllExecutionsOK) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes GetAllLanguagesBadRequest as json.
+func (s *GetAllLanguagesBadRequest) Encode(e *jx.Encoder) {
+	unwrapped := (*Error)(s)
+
+	unwrapped.Encode(e)
+}
+
+// Decode decodes GetAllLanguagesBadRequest from json.
+func (s *GetAllLanguagesBadRequest) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode GetAllLanguagesBadRequest to nil")
+	}
+	var unwrapped Error
+	if err := func() error {
+		if err := unwrapped.Decode(d); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		return errors.Wrap(err, "alias")
+	}
+	*s = GetAllLanguagesBadRequest(unwrapped)
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *GetAllLanguagesBadRequest) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *GetAllLanguagesBadRequest) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes GetAllLanguagesInternalServerError as json.
+func (s *GetAllLanguagesInternalServerError) Encode(e *jx.Encoder) {
+	unwrapped := (*Error)(s)
+
+	unwrapped.Encode(e)
+}
+
+// Decode decodes GetAllLanguagesInternalServerError from json.
+func (s *GetAllLanguagesInternalServerError) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode GetAllLanguagesInternalServerError to nil")
+	}
+	var unwrapped Error
+	if err := func() error {
+		if err := unwrapped.Decode(d); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		return errors.Wrap(err, "alias")
+	}
+	*s = GetAllLanguagesInternalServerError(unwrapped)
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *GetAllLanguagesInternalServerError) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *GetAllLanguagesInternalServerError) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s *GetAllLanguagesOK) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *GetAllLanguagesOK) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("languages")
+		e.ArrStart()
+		for _, elem := range s.Languages {
+			e.Str(elem)
+		}
+		e.ArrEnd()
+	}
+	{
+		e.FieldStart("pagination")
+		s.Pagination.Encode(e)
+	}
+}
+
+var jsonFieldsNameOfGetAllLanguagesOK = [2]string{
+	0: "languages",
+	1: "pagination",
+}
+
+// Decode decodes GetAllLanguagesOK from json.
+func (s *GetAllLanguagesOK) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode GetAllLanguagesOK to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "languages":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				s.Languages = make([]string, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem string
+					v, err := d.Str()
+					elem = string(v)
+					if err != nil {
+						return err
+					}
+					s.Languages = append(s.Languages, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"languages\"")
+			}
+		case "pagination":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				if err := s.Pagination.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"pagination\"")
+			}
+		default:
+			return d.Skip()
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode GetAllLanguagesOK")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00000011,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfGetAllLanguagesOK) {
+					name = jsonFieldsNameOfGetAllLanguagesOK[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *GetAllLanguagesOK) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *GetAllLanguagesOK) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -3591,18 +3265,18 @@ func (s *OptDateTime) UnmarshalJSON(data []byte) error {
 	return s.Decode(d, json.DecodeDateTime)
 }
 
-// Encode encodes DockerExecutionConfigContainerConfig as json.
-func (o OptDockerExecutionConfigContainerConfig) Encode(e *jx.Encoder) {
+// Encode encodes ExecutionEnvironmentSpec as json.
+func (o OptExecutionEnvironmentSpec) Encode(e *jx.Encoder) {
 	if !o.Set {
 		return
 	}
 	o.Value.Encode(e)
 }
 
-// Decode decodes DockerExecutionConfigContainerConfig from json.
-func (o *OptDockerExecutionConfigContainerConfig) Decode(d *jx.Decoder) error {
+// Decode decodes ExecutionEnvironmentSpec from json.
+func (o *OptExecutionEnvironmentSpec) Decode(d *jx.Decoder) error {
 	if o == nil {
-		return errors.New("invalid: unable to decode OptDockerExecutionConfigContainerConfig to nil")
+		return errors.New("invalid: unable to decode OptExecutionEnvironmentSpec to nil")
 	}
 	o.Set = true
 	if err := o.Value.Decode(d); err != nil {
@@ -3612,146 +3286,14 @@ func (o *OptDockerExecutionConfigContainerConfig) Decode(d *jx.Decoder) error {
 }
 
 // MarshalJSON implements stdjson.Marshaler.
-func (s OptDockerExecutionConfigContainerConfig) MarshalJSON() ([]byte, error) {
+func (s OptExecutionEnvironmentSpec) MarshalJSON() ([]byte, error) {
 	e := jx.Encoder{}
 	s.Encode(&e)
 	return e.Bytes(), nil
 }
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *OptDockerExecutionConfigContainerConfig) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode encodes DockerExecutionConfigHostConfig as json.
-func (o OptDockerExecutionConfigHostConfig) Encode(e *jx.Encoder) {
-	if !o.Set {
-		return
-	}
-	o.Value.Encode(e)
-}
-
-// Decode decodes DockerExecutionConfigHostConfig from json.
-func (o *OptDockerExecutionConfigHostConfig) Decode(d *jx.Decoder) error {
-	if o == nil {
-		return errors.New("invalid: unable to decode OptDockerExecutionConfigHostConfig to nil")
-	}
-	o.Set = true
-	if err := o.Value.Decode(d); err != nil {
-		return err
-	}
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s OptDockerExecutionConfigHostConfig) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *OptDockerExecutionConfigHostConfig) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode encodes DockerExecutionConfigHostConfigResources as json.
-func (o OptDockerExecutionConfigHostConfigResources) Encode(e *jx.Encoder) {
-	if !o.Set {
-		return
-	}
-	o.Value.Encode(e)
-}
-
-// Decode decodes DockerExecutionConfigHostConfigResources from json.
-func (o *OptDockerExecutionConfigHostConfigResources) Decode(d *jx.Decoder) error {
-	if o == nil {
-		return errors.New("invalid: unable to decode OptDockerExecutionConfigHostConfigResources to nil")
-	}
-	o.Set = true
-	if err := o.Value.Decode(d); err != nil {
-		return err
-	}
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s OptDockerExecutionConfigHostConfigResources) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *OptDockerExecutionConfigHostConfigResources) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode encodes ExecutionRequestConfig as json.
-func (o OptExecutionRequestConfig) Encode(e *jx.Encoder) {
-	if !o.Set {
-		return
-	}
-	o.Value.Encode(e)
-}
-
-// Decode decodes ExecutionRequestConfig from json.
-func (o *OptExecutionRequestConfig) Decode(d *jx.Decoder) error {
-	if o == nil {
-		return errors.New("invalid: unable to decode OptExecutionRequestConfig to nil")
-	}
-	o.Set = true
-	if err := o.Value.Decode(d); err != nil {
-		return err
-	}
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s OptExecutionRequestConfig) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *OptExecutionRequestConfig) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode encodes ExecutionRequestEnvironment as json.
-func (o OptExecutionRequestEnvironment) Encode(e *jx.Encoder) {
-	if !o.Set {
-		return
-	}
-	o.Value.Encode(e)
-}
-
-// Decode decodes ExecutionRequestEnvironment from json.
-func (o *OptExecutionRequestEnvironment) Decode(d *jx.Decoder) error {
-	if o == nil {
-		return errors.New("invalid: unable to decode OptExecutionRequestEnvironment to nil")
-	}
-	o.Set = true
-	if err := o.Value.Decode(d); err != nil {
-		return err
-	}
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s OptExecutionRequestEnvironment) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *OptExecutionRequestEnvironment) UnmarshalJSON(data []byte) error {
+func (s *OptExecutionEnvironmentSpec) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -3822,72 +3364,6 @@ func (s OptInt32) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *OptInt32) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode encodes PodmanExecutionConfigContainerBasicConfig as json.
-func (o OptPodmanExecutionConfigContainerBasicConfig) Encode(e *jx.Encoder) {
-	if !o.Set {
-		return
-	}
-	o.Value.Encode(e)
-}
-
-// Decode decodes PodmanExecutionConfigContainerBasicConfig from json.
-func (o *OptPodmanExecutionConfigContainerBasicConfig) Decode(d *jx.Decoder) error {
-	if o == nil {
-		return errors.New("invalid: unable to decode OptPodmanExecutionConfigContainerBasicConfig to nil")
-	}
-	o.Set = true
-	if err := o.Value.Decode(d); err != nil {
-		return err
-	}
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s OptPodmanExecutionConfigContainerBasicConfig) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *OptPodmanExecutionConfigContainerBasicConfig) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode encodes PodmanExecutionConfigContainerStorageConfig as json.
-func (o OptPodmanExecutionConfigContainerStorageConfig) Encode(e *jx.Encoder) {
-	if !o.Set {
-		return
-	}
-	o.Value.Encode(e)
-}
-
-// Decode decodes PodmanExecutionConfigContainerStorageConfig from json.
-func (o *OptPodmanExecutionConfigContainerStorageConfig) Decode(d *jx.Decoder) error {
-	if o == nil {
-		return errors.New("invalid: unable to decode OptPodmanExecutionConfigContainerStorageConfig to nil")
-	}
-	o.Set = true
-	if err := o.Value.Decode(d); err != nil {
-		return err
-	}
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s OptPodmanExecutionConfigContainerStorageConfig) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *OptPodmanExecutionConfigContainerStorageConfig) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -4087,263 +3563,6 @@ func (s *PaginationResponse) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *PaginationResponse) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode implements json.Marshaler.
-func (s *PodmanExecutionConfig) Encode(e *jx.Encoder) {
-	e.ObjStart()
-	s.encodeFields(e)
-	e.ObjEnd()
-}
-
-// encodeFields encodes fields.
-func (s *PodmanExecutionConfig) encodeFields(e *jx.Encoder) {
-	{
-		if s.ContainerBasicConfig.Set {
-			e.FieldStart("ContainerBasicConfig")
-			s.ContainerBasicConfig.Encode(e)
-		}
-	}
-	{
-		if s.ContainerStorageConfig.Set {
-			e.FieldStart("ContainerStorageConfig")
-			s.ContainerStorageConfig.Encode(e)
-		}
-	}
-}
-
-var jsonFieldsNameOfPodmanExecutionConfig = [2]string{
-	0: "ContainerBasicConfig",
-	1: "ContainerStorageConfig",
-}
-
-// Decode decodes PodmanExecutionConfig from json.
-func (s *PodmanExecutionConfig) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode PodmanExecutionConfig to nil")
-	}
-
-	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
-		switch string(k) {
-		case "ContainerBasicConfig":
-			if err := func() error {
-				s.ContainerBasicConfig.Reset()
-				if err := s.ContainerBasicConfig.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"ContainerBasicConfig\"")
-			}
-		case "ContainerStorageConfig":
-			if err := func() error {
-				s.ContainerStorageConfig.Reset()
-				if err := s.ContainerStorageConfig.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"ContainerStorageConfig\"")
-			}
-		default:
-			return d.Skip()
-		}
-		return nil
-	}); err != nil {
-		return errors.Wrap(err, "decode PodmanExecutionConfig")
-	}
-
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s *PodmanExecutionConfig) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *PodmanExecutionConfig) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode implements json.Marshaler.
-func (s *PodmanExecutionConfigContainerBasicConfig) Encode(e *jx.Encoder) {
-	e.ObjStart()
-	s.encodeFields(e)
-	e.ObjEnd()
-}
-
-// encodeFields encodes fields.
-func (s *PodmanExecutionConfigContainerBasicConfig) encodeFields(e *jx.Encoder) {
-	{
-		if s.OCIRuntime.Set {
-			e.FieldStart("OCIRuntime")
-			s.OCIRuntime.Encode(e)
-		}
-	}
-}
-
-var jsonFieldsNameOfPodmanExecutionConfigContainerBasicConfig = [1]string{
-	0: "OCIRuntime",
-}
-
-// Decode decodes PodmanExecutionConfigContainerBasicConfig from json.
-func (s *PodmanExecutionConfigContainerBasicConfig) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode PodmanExecutionConfigContainerBasicConfig to nil")
-	}
-
-	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
-		switch string(k) {
-		case "OCIRuntime":
-			if err := func() error {
-				s.OCIRuntime.Reset()
-				if err := s.OCIRuntime.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"OCIRuntime\"")
-			}
-		default:
-			return d.Skip()
-		}
-		return nil
-	}); err != nil {
-		return errors.Wrap(err, "decode PodmanExecutionConfigContainerBasicConfig")
-	}
-
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s *PodmanExecutionConfigContainerBasicConfig) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *PodmanExecutionConfigContainerBasicConfig) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode implements json.Marshaler.
-func (s *PodmanExecutionConfigContainerStorageConfig) Encode(e *jx.Encoder) {
-	e.ObjStart()
-	s.encodeFields(e)
-	e.ObjEnd()
-}
-
-// encodeFields encodes fields.
-func (s *PodmanExecutionConfigContainerStorageConfig) encodeFields(e *jx.Encoder) {
-	{
-		if s.Image.Set {
-			e.FieldStart("Image")
-			s.Image.Encode(e)
-		}
-	}
-	{
-		if s.ImageOS.Set {
-			e.FieldStart("ImageOS")
-			s.ImageOS.Encode(e)
-		}
-	}
-	{
-		if s.ImageArch.Set {
-			e.FieldStart("ImageArch")
-			s.ImageArch.Encode(e)
-		}
-	}
-	{
-		if s.ImageVariant.Set {
-			e.FieldStart("ImageVariant")
-			s.ImageVariant.Encode(e)
-		}
-	}
-}
-
-var jsonFieldsNameOfPodmanExecutionConfigContainerStorageConfig = [4]string{
-	0: "Image",
-	1: "ImageOS",
-	2: "ImageArch",
-	3: "ImageVariant",
-}
-
-// Decode decodes PodmanExecutionConfigContainerStorageConfig from json.
-func (s *PodmanExecutionConfigContainerStorageConfig) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode PodmanExecutionConfigContainerStorageConfig to nil")
-	}
-
-	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
-		switch string(k) {
-		case "Image":
-			if err := func() error {
-				s.Image.Reset()
-				if err := s.Image.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"Image\"")
-			}
-		case "ImageOS":
-			if err := func() error {
-				s.ImageOS.Reset()
-				if err := s.ImageOS.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"ImageOS\"")
-			}
-		case "ImageArch":
-			if err := func() error {
-				s.ImageArch.Reset()
-				if err := s.ImageArch.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"ImageArch\"")
-			}
-		case "ImageVariant":
-			if err := func() error {
-				s.ImageVariant.Reset()
-				if err := s.ImageVariant.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"ImageVariant\"")
-			}
-		default:
-			return d.Skip()
-		}
-		return nil
-	}); err != nil {
-		return errors.Wrap(err, "decode PodmanExecutionConfigContainerStorageConfig")
-	}
-
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s *PodmanExecutionConfigContainerStorageConfig) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *PodmanExecutionConfigContainerStorageConfig) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
