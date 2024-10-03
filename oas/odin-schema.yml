@@ -453,8 +453,6 @@ paths:
       description: Get all languages
       operationId: getAllLanguages
       parameters:
-        - $ref: '#/components/parameters/PageNumber'
-        - $ref: '#/components/parameters/PageSize'
         - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
@@ -465,28 +463,13 @@ paths:
                 type: object
                 required:
                   - languages
-                  - pagination
                 properties:
                   languages:
                     type: array
                     items:
                       type: string
-                  pagination:
-                    $ref: '#/components/schemas/PaginationResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
         '403':
           description: Forbidden
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
 components:
   parameters:
     AuthHeader:

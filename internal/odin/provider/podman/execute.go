@@ -5,6 +5,7 @@ package podman
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -37,11 +38,16 @@ func (p *PodmanProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 
 	// A temporary directory on the host machine to create the overlay store
 	// This directory also contains a zip of the code and the flake.nix
-	prepDir := os.TempDir()
+	prepDir := filepath.Join(os.TempDir(), fmt.Sprintf("odin-%d", time.Now().UnixNano()))
+	if err := os.MkdirAll(prepDir, 0755); err != nil {
+		p.logger.Err(err).Msg("Failed to create temp dir")
+		return
+	}
 
 	err := common.OverlayStore(prepDir, p.envConfig.ODIN_NIX_STORE)
 	if err != nil {
 		p.logger.Err(err).Msg("Failed to overlay store")
+		common.Cleanup(prepDir)
 		return
 	}
 
@@ -115,7 +121,7 @@ func (p *PodmanProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			ExecConfig: container.ExecOptions{
 				AttachStderr: true,
 				AttachStdout: true,
-				WorkingDir:   "~/odin",
+				WorkingDir:   "/odin",
 				Cmd:          []string{"nix", "run"},
 			},
 		})
@@ -236,7 +242,7 @@ func (p *PodmanProvider) writeFiles(ctx context.Context, containerName string, p
 	defer tarFile.Close()
 	defer os.Remove(tarFilePath)
 
-	copyF, err := containers.CopyFromArchive(p.conn, containerName, "/home/valnix/odin/", tarFile)
+	copyF, err := containers.CopyFromArchive(p.conn, containerName, "/odin", tarFile)
 	if err != nil {
 		p.logger.Err(err).Msg("Failed to copy files to container")
 		return err

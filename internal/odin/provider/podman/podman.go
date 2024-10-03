@@ -9,24 +9,26 @@ import (
 	"github.com/containers/podman/v5/pkg/bindings"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/provider/common"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
 type PodmanProvider struct {
-	queries db.Store
+	queries   db.Store
 	conn      context.Context
 	envConfig *config.EnvConfig
-	workerId int32
+	workerId  int32
 	logger    *zerolog.Logger
 	tp        trace.TracerProvider
 	mp        metric.MeterProvider
+	user      string
 }
 
 func NewPodmanProvider(env *config.EnvConfig, queries db.Store, workerId int32, tp trace.TracerProvider, mp metric.MeterProvider, logger *zerolog.Logger) (*PodmanProvider, error) {
 	sock_dir := os.Getenv("XDG_RUNTIME_DIR")
-    socket := "unix:" + sock_dir + "/podman/podman.sock"
+	socket := "unix:" + sock_dir + "/podman/podman.sock"
 	logger.Info().Str("Socket", socket).Msg("Connecting to podman")
 	conn, err := bindings.NewConnection(context.Background(), socket)
 	if err != nil {
@@ -34,6 +36,11 @@ func NewPodmanProvider(env *config.EnvConfig, queries db.Store, workerId int32, 
 		return nil, err
 	}
 	logger.Info().Msg("Successfully connected to podman")
+
+	user, err := common.GetUserInfo()
+	if err != nil {
+		return nil, err
+	}
 	return &PodmanProvider{
 		queries:   queries,
 		envConfig: env,
@@ -42,5 +49,6 @@ func NewPodmanProvider(env *config.EnvConfig, queries db.Store, workerId int32, 
 		workerId:  workerId,
 		tp:        tp,
 		mp:        mp,
+		user:      user.Username,
 	}, nil
 }

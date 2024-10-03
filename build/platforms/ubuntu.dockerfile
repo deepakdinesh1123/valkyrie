@@ -8,14 +8,20 @@ ARG HOST_USER
 ARG HOST_GROUP
 
 RUN apt update && \
-    apt install -y adduser xz-utils curl
+    apt install -y adduser xz-utils curl ca-certificates git
 
 RUN groupadd -o -g $HOST_GID -r $HOST_GROUP && \
     adduser --uid $HOST_UID --gid $HOST_GID --disabled-password --gecos "" $HOST_USER
 
 RUN mkdir /etc/nix && echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
 USER $HOST_USER
-COPY hack/nix_setup.sh ~/nix_setup.sh
-RUN mkdir ~/odin
+RUN mkdir ~/odin && chown $HOST_USER:$HOST_GROUP ~/odin
+COPY hack/nix_setup.sh /home/$HOST_USER/nix_setup.sh
+COPY hack/nix_run.sh /home/$HOST_USER/nix_run.sh  
 
-CMD [ "bash", "~/nix_setup.sh" ]
+WORKDIR /home/$HOST_USER/
+RUN git clone https://github.com/nixos/nixpkgs.git
+RUN cd nixpkgs && git checkout release-24.05
+
+ENV PATH="/home/$HOST_USER/.nix-profile/bin/:$PATH"
+CMD [ "/bin/bash", "nix_setup.sh" ]

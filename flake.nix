@@ -15,17 +15,17 @@
 
         docsDependencies = with pkgs; [ python312Packages.mkdocs-material redocly ];
         devDependencies = with pkgs; [ 
-          sqlc 
+          # sqlc 
           go-migrate 
           go_1_22
-          gnumake
-          caddy
-          pkg-config ] ++ docsDependencies ++ lib.optionals stdenv.isLinux [ 
+          # gnumake
+          # caddy
+          pkg-config ] ++ lib.optionals stdenv.isLinux [ 
             gpgme 
             libgpg-error 
             libassuan
             btrfs-progs
-          ] ;
+          ];
 
         packages = {
           odin = pkgs.callPackage ./build/package/nix/odin.nix { inherit pkgs; };

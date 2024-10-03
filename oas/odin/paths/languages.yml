@@ -3,8 +3,6 @@ get:
   description: Get all languages
   operationId: getAllLanguages
   parameters:
-    - $ref: ../components/parameters/PageNumber.yml
-    - $ref: ../components/parameters/PageSize.yml
     - $ref: ../components/parameters/AuthHeader.yml
   responses:
     '200':
@@ -15,25 +13,10 @@ get:
             type: object
             required:
               - languages
-              - pagination
             properties:
               languages:
                 type: array
                 items:
                   type: string
-              pagination:
-                $ref: ../components/schemas/PaginationResponse.yml
-    '400':
-      description: Bad Request
-      content:
-        application/json:
-          schema:
-            $ref: ../components/schemas/Error.yml
     '403':
       description: Forbidden
-    '500':
-      description: Internal Server Error
-      content:
-        application/json:
-          schema:
-            $ref: ../components/schemas/Error.yml

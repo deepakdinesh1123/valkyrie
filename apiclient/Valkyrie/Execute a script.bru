@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: http://{{BASE_URL}}/executions/execute/
+  url: {{BASE_URL}}/api/executions/execute
   body: json
   auth: bearer
 }
@@ -17,7 +17,7 @@ auth:bearer {
 body:json {
   {
     
-    "code": "from time import sleep\n\nfor i in range(1):\n    sleep(1)\n    print(\"Hello\")",
-    "language": "python"
+    "code": "print('hello world')",
+    "language": "python-3.10"
   }
 }

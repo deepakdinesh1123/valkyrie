@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-echo  export PATH="$PATH:/nix/store/2nhrwv91g6ycpyxvhmvc0xs8p92wp4bk-nix-2.24.9/bin" >> ~/.bashrc
-# nix-channel --add https://nixos.org/channels/nixpkgs-unstable
-# nix-channel --update
+set -e
+
+NIX_BIN=/nix/store/2nhrwv91g6ycpyxvhmvc0xs8p92wp4bk-nix-2.24.9/bin
+nix registry add flake:nixpkgs git+file://~/nixpkgs
+echo "setup done" >> ~/status.txt
 sleep infinity

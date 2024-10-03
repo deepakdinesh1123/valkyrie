@@ -9,6 +9,7 @@ type ExecutionRequest struct {
 	ExecutionID          string   `json:"execution_id"`
 	Flake                string   `json:"flake"`
 	File                 File     `json:"file"`
+	LangNixPkg           string   `json:"lang_nix_pkg"`
 	Language             string   `json:"language"`
 	LanguageDependencies []string `json:"language_dependencies"`
 	SystemDependencies   []string `json:"system_dependencies"`

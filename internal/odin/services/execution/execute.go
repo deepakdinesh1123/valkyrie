@@ -46,7 +46,8 @@ func (s *ExecutionService) prepareExecutionRequest(req *api.ExecutionRequest) (*
 			Message: "Language not supported",
 		}
 	}
-	execReq.Language = config.Languages[req.Language]["nixPackageName"]
+	execReq.Language = req.Language
+	execReq.LangNixPkg = config.Languages[req.Language]["nixPackageName"]
 	scriptName := fmt.Sprintf("main.%s", config.Languages[req.Language]["extension"])
 	execReq.File = File{
 		Name:    scriptName,
@@ -66,7 +67,9 @@ func (s *ExecutionService) prepareExecutionRequest(req *api.ExecutionRequest) (*
 }
 
 func (s *ExecutionService) convertExecSpecToFlake(execSpec ExecutionRequest) (string, error) {
-	tmplF, err := flakes.ReadFile(fmt.Sprintf("templates/%s.tmpl", execSpec.Language))
+	tmplName := config.Languages[execSpec.Language]["template"]
+	s.logger.Info().Str("language", execSpec.Language).Str("template", tmplName).Msg("converting exec spec to flake")
+	tmplF, err := flakes.ReadFile(fmt.Sprintf("templates/%s", tmplName))
 	if err != nil {
 		return "", &ExecutionServiceError{
 			Type:    "template",

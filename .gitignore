@@ -49,3 +49,5 @@ go.work.sum
 .env
 
 *.log
+
+odinb

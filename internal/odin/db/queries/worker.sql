@@ -3,6 +3,7 @@ create table workers (
     name text not null unique,
     created_at timestamptz not null default now(),
     last_heartbeat timestamptz
+    status text not null check (status in ('active', 'inactive')) default 'active'
 );
 
 -- name: CreateWorker :one
