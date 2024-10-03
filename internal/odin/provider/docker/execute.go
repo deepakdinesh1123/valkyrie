@@ -52,7 +52,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	err := common.OverlayStore(prepDir, d.envConfig.ODIN_NIX_STORE)
 	if err != nil {
 		d.logger.Err(err).Msg("Failed to overlay store")
-		common.Cleanup(prepDir)
+		// common.Cleanup(prepDir)
 		return
 	}
 	containerName := namesgenerator.GetRandomName(0)
@@ -64,7 +64,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			StopSignal:  "SIGKILL",
 		},
 		&container.HostConfig{
-			// AutoRemove: true,
+			AutoRemove: true,
 			Mounts: []mount.Mount{
 				{
 					Type:   mount.TypeBind,
@@ -83,7 +83,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to update job")
 		}
-		common.Cleanup(prepDir)
+		// common.Cleanup(prepDir)
 		return
 	}
 	err = d.client.ContainerStart(ctx, resp.ID, container.StartOptions{})
@@ -93,7 +93,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to update job")
 		}
-		common.Cleanup(prepDir)
+		// common.Cleanup(prepDir)
 		return
 	}
 
@@ -104,7 +104,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to update job")
 		}
-		common.Cleanup(prepDir)
+		// common.Cleanup(prepDir)
 		common.KillContainer(contInfo.State.Pid)
 		return
 	}
@@ -117,7 +117,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			if err != nil {
 				d.logger.Err(err).Msg("Failed to update job")
 			}
-			common.Cleanup(prepDir)
+			// common.Cleanup(prepDir)
 			common.KillContainer(contInfo.State.Pid)
 			return
 		}
@@ -135,7 +135,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to update job")
 		}
-		common.Cleanup(prepDir)
+		// common.Cleanup(prepDir)
 		common.KillContainer(contInfo.State.Pid)
 		return
 	}
@@ -149,7 +149,8 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			container.ExecOptions{
 				AttachStderr: true,
 				AttachStdout: true,
-				Cmd:          []string{"/bin/bash", "nix_run.sh"},
+				WorkingDir:   filepath.Join("/home", d.user, "/odin"),
+				Cmd:          []string{"nix", "run"},
 			},
 		)
 		if err != nil {

@@ -26,7 +26,7 @@ start-observability:
 
 .PHONY: build-docker-image
 build-docker-image:
-	docker build \
+	sudo docker build \
 		-t odin:latest \
 		--build-arg HOST_UID=$(shell id -u) \
 		--build-arg HOST_GID=$(shell id -g) \

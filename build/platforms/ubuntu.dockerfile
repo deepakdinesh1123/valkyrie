@@ -17,11 +17,9 @@ RUN mkdir /etc/nix && echo "experimental-features = nix-command flakes" >> /etc/
 USER $HOST_USER
 RUN mkdir ~/odin && chown $HOST_USER:$HOST_GROUP ~/odin
 COPY hack/nix_setup.sh /home/$HOST_USER/nix_setup.sh
-COPY hack/nix_run.sh /home/$HOST_USER/nix_run.sh  
 
 WORKDIR /home/$HOST_USER/
-RUN git clone https://github.com/nixos/nixpkgs.git
-RUN cd nixpkgs && git checkout release-24.05
+RUN git clone --depth 1 https://github.com/NixOS/nixpkgs.git --tag 24.05 --single-branch
 
 ENV PATH="/home/$HOST_USER/.nix-profile/bin/:$PATH"
 CMD [ "/bin/bash", "nix_setup.sh" ]
