@@ -62,13 +62,21 @@ func (s *ExecutionService) prepareExecutionRequest(req *api.ExecutionRequest) (*
 			Message: err.Error(),
 		}
 	}
+
+	nixScript, err := s.convertExecSpecToNixScript(execReq)
+	if err != nil {
+		return nil, &ExecutionServiceError{
+			Type:    "nix script",
+			Message: err.Error(),
+		}
+	}
 	execReq.Flake = flake
+	execReq.NixScript = nixScript
 	return &execReq, nil
 }
 
 func (s *ExecutionService) convertExecSpecToFlake(execSpec ExecutionRequest) (string, error) {
-	tmplName := config.Languages[execSpec.Language]["template"]
-	s.logger.Info().Str("language", execSpec.Language).Str("template", tmplName).Msg("converting exec spec to flake")
+	tmplName := config.Languages[execSpec.Language]["flake_template"]
 	tmplF, err := flakes.ReadFile(fmt.Sprintf("templates/%s", tmplName))
 	if err != nil {
 		return "", &ExecutionServiceError{
@@ -97,6 +105,36 @@ func (s *ExecutionService) convertExecSpecToFlake(execSpec ExecutionRequest) (st
 	return res.String(), nil
 }
 
+func (s *ExecutionService) convertExecSpecToNixScript(execSpec ExecutionRequest) (string, error) {
+	tmplName := config.Languages[execSpec.Language]["script_template"]
+	tmplF, err := flakes.ReadFile(fmt.Sprintf("templates/%s", tmplName))
+	if err != nil {
+		return "", &ExecutionServiceError{
+			Type:    "template",
+			Message: "failed to get template",
+		}
+	}
+	var res bytes.Buffer
+	tmpl, err := template.New(string("nix_script")).Parse(string(tmplF))
+	if err != nil {
+		s.logger.Err(err).Msg("failed to parse template")
+		return "", &ExecutionServiceError{
+			Type:    "template",
+			Message: "failed to parse template",
+		}
+	}
+
+	err = tmpl.Execute(&res, execSpec)
+	if err != nil {
+		s.logger.Err(err).Msg("failed to execute template")
+		return "", &ExecutionServiceError{
+			Type:    "template",
+			Message: "failed to execute template",
+		}
+	}
+	return res.String(), nil
+}
+
 func (s *ExecutionService) AddJob(ctx context.Context, req *api.ExecutionRequest) (int64, error) {
 	execReq, err := s.prepareExecutionRequest(req)
 	if err != nil {
@@ -105,12 +143,13 @@ func (s *ExecutionService) AddJob(ctx context.Context, req *api.ExecutionRequest
 	var jobParams db.AddJobTxParams
 	jobParams.Code = execReq.File.Content
 	jobParams.Flake = execReq.Flake
+	jobParams.NixScript = execReq.NixScript
 	jobParams.ProgrammingLanguage = req.Language
 	jobParams.MaxRetries = req.MaxRetries.Value
 	jobParams.Path = execReq.File.Name
 	jobParams.Timeout = req.Timeout.Value
 
-	hash := calculateHash(jobParams.Code, jobParams.ProgrammingLanguage, jobParams.Flake, jobParams.Path)
+	hash := calculateHash(jobParams.Code, jobParams.ProgrammingLanguage, jobParams.Flake, jobParams.NixScript, jobParams.Path)
 	jobParams.Hash = hash
 
 	job, err := s.queries.AddJobTx(ctx, jobParams)
@@ -121,11 +160,12 @@ func (s *ExecutionService) AddJob(ctx context.Context, req *api.ExecutionRequest
 	return int64(job.JobID), nil
 }
 
-func calculateHash(code string, language string, flake string, path string) string {
+func calculateHash(code string, language string, flake string, nix_script string, path string) string {
 	hashInstance := sha256.New()
 	hashInstance.Write([]byte(code))
 	hashInstance.Write([]byte(language))
 	hashInstance.Write([]byte(flake))
 	hashInstance.Write([]byte(path))
+	hashInstance.Write([]byte(nix_script))
 	return hex.EncodeToString(hashInstance.Sum(nil))
 }

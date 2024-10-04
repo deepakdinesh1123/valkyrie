@@ -15,10 +15,9 @@
 
         docsDependencies = with pkgs; [ python312Packages.mkdocs-material redocly ];
         devDependencies = with pkgs; [ 
-          # sqlc 
+          sqlc 
           go-migrate 
           go_1_22
-          # gnumake
           # caddy
           pkg-config ] ++ lib.optionals stdenv.isLinux [ 
             gpgme 

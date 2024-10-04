@@ -8,6 +8,7 @@ type File struct {
 type ExecutionRequest struct {
 	ExecutionID          string   `json:"execution_id"`
 	Flake                string   `json:"flake"`
+	NixScript            string   `json:"nix_script"`
 	File                 File     `json:"file"`
 	LangNixPkg           string   `json:"lang_nix_pkg"`
 	Language             string   `json:"language"`

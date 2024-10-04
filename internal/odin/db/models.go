@@ -14,6 +14,7 @@ type ExecRequest struct {
 	Code                string      `db:"code" json:"code"`
 	Path                string      `db:"path" json:"path"`
 	Flake               string      `db:"flake" json:"flake"`
+	NixScript           string      `db:"nix_script" json:"nix_script"`
 	Args                pgtype.Text `db:"args" json:"args"`
 	ProgrammingLanguage pgtype.Text `db:"programming_language" json:"programming_language"`
 }

@@ -2,10 +2,11 @@ package config
 
 var Languages map[string]map[string]string = map[string]map[string]string{
 	"python-3.10": {
-		"nixPackageName": "python310",
-		"version":        "3.10",
-		"extension":      "py",
-		"template":       "python.tmpl",
+		"nixPackageName":  "python310",
+		"version":         "3.10",
+		"extension":       "py",
+		"flake_template":  "python/python.flake.tmpl",
+		"script_template": "python/python.script.tmpl",
 	},
 	"rust": {
 		"nixPackageName": "rust",

@@ -63,7 +63,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			StopSignal:  "SIGKILL",
 		},
 		&container.HostConfig{
-			AutoRemove: true,
+			// AutoRemove: true,
 			Binds: []string{
 				fmt.Sprintf("%s:/nix", filepath.Join(prepDir, "merged")),
 			},
@@ -110,7 +110,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			break
 		}
 		if contInfo.State != nil {
-			status :=  contInfo.State.Status
+			status := contInfo.State.Status
 			if status == "removing" || status == "dead" || status == "exited" {
 				d.logger.Info().Msg("Contaner exited")
 				return
@@ -139,7 +139,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			container.ExecOptions{
 				AttachStderr: true,
 				AttachStdout: true,
-				Cmd:          []string{"bash", "nix_run.sh"},
+				Cmd:          []string{"/bin/bash", "nix_run.sh"},
 			},
 		)
 		if err != nil {
@@ -191,8 +191,8 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			switch tctx.Err() {
 			case context.DeadlineExceeded:
 				d.logger.Info().Msg("Context deadline exceeded wating for process to exit")
-				common.Cleanup(prepDir)
-				common.KillContainer(contPID)
+				// common.Cleanup(prepDir)
+				// common.KillContainer(contPID)
 				return
 			}
 		case <-ctx.Done():
@@ -200,19 +200,19 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			case context.Canceled:
 				d.logger.Info().Msg("Context canceled, waiting for processes to finish")
 				<-done
-				common.Cleanup(prepDir)
-				common.KillContainer(contPID)
+				// common.Cleanup(prepDir)
+				// common.KillContainer(contPID)
 				return
 			default:
 				d.logger.Info().Msg("Context error killing process")
-				common.Cleanup(prepDir)
-				common.KillContainer(contPID)
+				// common.Cleanup(prepDir)
+				// common.KillContainer(contPID)
 				return
 			}
 		case <-done:
 			d.logger.Info().Msg("Process exited")
-			common.Cleanup(prepDir)
-			common.KillContainer(contPID)
+			// common.Cleanup(prepDir)
+			// common.KillContainer(contPID)
 			return
 		}
 	}
@@ -224,7 +224,7 @@ func (d *DockerProvider) writeFiles(ctx context.Context, containerName string, p
 		return err
 	}
 	files := map[string]string{
-		"flake.nix":  execReq.Flake,
+		"exec.sh":    execReq.NixScript,
 		execReq.Path: execReq.Code,
 	}
 
@@ -240,14 +240,12 @@ func (d *DockerProvider) writeFiles(ctx context.Context, containerName string, p
 		return err
 	}
 	defer tarFile.Close()
-
-	d.logger.Info().Str("container", containerName).Str("path", filepath.Join("/home", d.user, "/odin")).Msg("Copying files to container")
 	err = d.client.CopyToContainer(
 		ctx,
 		containerName,
 		filepath.Join("/home", d.user, "/odin"),
 		tarFile,
-		container.CopyToContainerOptions{AllowOverwriteDirWithFile: true},
+		container.CopyToContainerOptions{AllowOverwriteDirWithFile: true, CopyUIDGID: true},
 	)
 	if err != nil {
 		d.logger.Err(err).Msg("Failed to copy files to container")

@@ -11,6 +11,7 @@ import (
 type AddJobTxParams struct {
 	Code                string
 	Flake               string
+	NixScript           string
 	Hash                string
 	Args                string
 	Path                string
@@ -35,6 +36,7 @@ func (s *SQLStore) AddJobTx(ctx context.Context, arg AddJobTxParams) (AddJobTxRe
 				execId, err = s.InsertExecRequest(ctx, InsertExecRequestParams{
 					Code:                arg.Code,
 					Flake:               arg.Flake,
+					NixScript:           arg.NixScript,
 					Hash:                arg.Hash,
 					Args:                pgtype.Text{String: arg.Args, Valid: true},
 					ProgrammingLanguage: pgtype.Text{String: arg.ProgrammingLanguage, Valid: true},

@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
-export PATH="~/.nix-profile/bin/:$PATH"
-cd ~/odin
-nix run
+set -e
+
+source ~/.bashrc
+sed -i "1a #! nix-shell -I nixpkgs=$HOME/24.05" ~/odin/exec.sh
+chmod +x ~/odin/exec.sh
+exec ~/odin/exec.sh
