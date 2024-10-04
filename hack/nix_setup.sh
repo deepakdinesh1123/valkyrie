@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-set -e
 
 echo "https://nixos.org/channels/nixpkgs-unstable nixpkgs" >> .nix-channels
 
@@ -12,6 +11,10 @@ ln -s ~/.local/state/nix/profiles/profiles-1-link ~/.local/state/nix/profiles/pr
 
 mkdir ~/.nix-defexpr
 ln -s ~.local/state/nix/profiles/channels ~/.nix-defexpr/channels
-nix registry add flake:nixpkgs git+file:///$HOME/nixpkgs
+
+ln -s /nix/store/ak09zx2rza4x0c4fjn9zyjnr4nck9h1b-user-environment ~/.nix-profile
+
+export PATH="~/.nix-profile/bin/:$PATH"
+nix registry add flake:nixpkgs git+file://$HOME/24.05
 echo "setup done" >> ~/status.txt
 sleep infinity

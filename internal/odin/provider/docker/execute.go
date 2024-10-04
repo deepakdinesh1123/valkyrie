@@ -13,9 +13,7 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/provider/common"
 	"github.com/deepakdinesh1123/valkyrie/pkg/namesgenerator"
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/mount"
 )
 
 func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, job db.Job) {
@@ -43,7 +41,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 
 	// A temporary directory on the host machine to create the overlay store
 	// This directory also contains a zip of the code and the flake.nix
-	prepDir := filepath.Join(os.TempDir(), fmt.Sprintf("odin-%d", time.Now().UnixNano()))
+	prepDir := filepath.Join(filepath.Join("/home", d.user, ".odin", ""), fmt.Sprintf("odin-%d", time.Now().UnixNano()))
 	if err := os.MkdirAll(prepDir, 0755); err != nil {
 		d.logger.Err(err).Msg("Failed to create temp dir")
 		return
@@ -52,10 +50,11 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	err := common.OverlayStore(prepDir, d.envConfig.ODIN_NIX_STORE)
 	if err != nil {
 		d.logger.Err(err).Msg("Failed to overlay store")
-		// common.Cleanup(prepDir)
+		common.Cleanup(prepDir)
 		return
 	}
 	containerName := namesgenerator.GetRandomName(0)
+	d.logger.Info().Str("path", filepath.Join(prepDir, "merged")).Msg("merged store is in")
 	resp, err := d.client.ContainerCreate(
 		ctx,
 		&container.Config{
@@ -65,12 +64,8 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 		},
 		&container.HostConfig{
 			AutoRemove: true,
-			Mounts: []mount.Mount{
-				{
-					Type:   mount.TypeBind,
-					Source: filepath.Join(prepDir, "merged"),
-					Target: "/nix",
-				},
+			Binds: []string{
+				fmt.Sprintf("%s:/nix", filepath.Join(prepDir, "merged")),
 			},
 		},
 		nil,
@@ -83,7 +78,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to update job")
 		}
-		// common.Cleanup(prepDir)
+		common.Cleanup(prepDir)
 		return
 	}
 	err = d.client.ContainerStart(ctx, resp.ID, container.StartOptions{})
@@ -93,19 +88,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to update job")
 		}
-		// common.Cleanup(prepDir)
-		return
-	}
-
-	var contInfo types.ContainerJSON
-	if contInfo, err := d.client.ContainerInspect(ctx, resp.ID); err != nil {
-		d.logger.Err(err).Msg("Failed to inspect container")
-		err := d.updateJob(ctx, &job, start, err.Error(), false)
-		if err != nil {
-			d.logger.Err(err).Msg("Failed to update job")
-		}
-		// common.Cleanup(prepDir)
-		common.KillContainer(contInfo.State.Pid)
+		common.Cleanup(prepDir)
 		return
 	}
 
@@ -117,14 +100,21 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			if err != nil {
 				d.logger.Err(err).Msg("Failed to update job")
 			}
-			// common.Cleanup(prepDir)
-			common.KillContainer(contInfo.State.Pid)
+			common.Cleanup(prepDir)
+			// common.KillContainer(contInfo.State.Pid) TODO: Handle killing container
 			return
 		}
 		if contInfo.State != nil && contInfo.State.Running {
 			d.logger.Debug().Msg("Container is running")
 			contPID = contInfo.State.Pid
 			break
+		}
+		if contInfo.State != nil {
+			status :=  contInfo.State.Status
+			if status == "removing" || status == "dead" || status == "exited" {
+				d.logger.Info().Msg("Contaner exited")
+				return
+			}
 		}
 	}
 
@@ -135,8 +125,8 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to update job")
 		}
-		// common.Cleanup(prepDir)
-		common.KillContainer(contInfo.State.Pid)
+		common.Cleanup(prepDir)
+		common.KillContainer(contPID)
 		return
 	}
 
@@ -149,8 +139,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			container.ExecOptions{
 				AttachStderr: true,
 				AttachStdout: true,
-				WorkingDir:   filepath.Join("/home", d.user, "/odin"),
-				Cmd:          []string{"nix", "run"},
+				Cmd:          []string{"bash", "nix_run.sh"},
 			},
 		)
 		if err != nil {
@@ -202,7 +191,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			switch tctx.Err() {
 			case context.DeadlineExceeded:
 				d.logger.Info().Msg("Context deadline exceeded wating for process to exit")
-				// common.Cleanup(prepDir)
+				common.Cleanup(prepDir)
 				common.KillContainer(contPID)
 				return
 			}
@@ -211,19 +200,19 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			case context.Canceled:
 				d.logger.Info().Msg("Context canceled, waiting for processes to finish")
 				<-done
-				// common.Cleanup(prepDir)
+				common.Cleanup(prepDir)
 				common.KillContainer(contPID)
 				return
 			default:
 				d.logger.Info().Msg("Context error killing process")
-				// common.Cleanup(prepDir)
+				common.Cleanup(prepDir)
 				common.KillContainer(contPID)
 				return
 			}
 		case <-done:
 			d.logger.Info().Msg("Process exited")
-			// common.Cleanup(prepDir)
-			common.KillContainer(contInfo.State.Pid)
+			common.Cleanup(prepDir)
+			common.KillContainer(contPID)
 			return
 		}
 	}
