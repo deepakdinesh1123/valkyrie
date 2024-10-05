@@ -22,4 +22,5 @@ RUN git clone --depth 1 https://github.com/NixOS/nixpkgs.git --tag 24.05 --singl
 
 COPY hack/nix_setup.sh /home/$HOST_USER/nix_setup.sh
 COPY hack/nix_run.sh /home/$HOST_USER/nix_run.sh
+
 CMD [ "/bin/bash", "nix_setup.sh" ]

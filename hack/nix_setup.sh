@@ -13,9 +13,9 @@ ln -s ~.local/state/nix/profiles/channels ~/.nix-defexpr/channels
 
 ln -s /nix/store/ak09zx2rza4x0c4fjn9zyjnr4nck9h1b-user-environment ~/.nix-profile
 
-export PATH="~/.nix-profile/bin/:$PATH"
-echo export PATH="~/.nix-profile/bin/:$PATH" >> ~/.bashrc
-source ~/.bashrc
+echo PATH="$PATH:~/.nix-profile/bin" >> ~/.profile
+echo export PATH="$PATH:~/.nix-profile/bin" >> ~/.bashrc
+source ~/.profile
 
 nix registry add flake:nixpkgs git+file://$HOME/24.05
 nix-channel --add https://nixos.org/channels/nixos-24.05 nixpkgs

@@ -54,7 +54,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 		return
 	}
 	containerName := namesgenerator.GetRandomName(0)
-	d.logger.Info().Str("path", filepath.Join(prepDir, "merged")).Msg("merged store is in")
+
 	resp, err := d.client.ContainerCreate(
 		ctx,
 		&container.Config{
@@ -63,7 +63,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			StopSignal:  "SIGKILL",
 		},
 		&container.HostConfig{
-			// AutoRemove: true,
+			AutoRemove: true,
 			Binds: []string{
 				fmt.Sprintf("%s:/nix", filepath.Join(prepDir, "merged")),
 			},
@@ -105,14 +105,12 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			return
 		}
 		if contInfo.State != nil && contInfo.State.Running {
-			d.logger.Debug().Msg("Container is running")
 			contPID = contInfo.State.Pid
 			break
 		}
 		if contInfo.State != nil {
 			status := contInfo.State.Status
 			if status == "removing" || status == "dead" || status == "exited" {
-				d.logger.Info().Msg("Contaner exited")
 				return
 			}
 		}
@@ -139,7 +137,8 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			container.ExecOptions{
 				AttachStderr: true,
 				AttachStdout: true,
-				Cmd:          []string{"/bin/bash", "nix_run.sh"},
+				Cmd:          []string{"bash", "./nix_run.sh"},
+				User:         d.user,
 			},
 		)
 		if err != nil {
@@ -151,7 +150,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			done <- true
 			return
 		}
-		d.logger.Info().Msg("Exec created")
+
 		hijResp, err := d.client.ContainerExecAttach(ctx, resp.ID, container.ExecAttachOptions{})
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to attach exec")
@@ -162,7 +161,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			done <- true
 			return
 		}
-		d.logger.Debug().Msg("Attached to exec")
+
 		var out []byte
 		if hijResp.Reader != nil {
 			out, err = io.ReadAll(hijResp.Reader)
@@ -191,8 +190,8 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			switch tctx.Err() {
 			case context.DeadlineExceeded:
 				d.logger.Info().Msg("Context deadline exceeded wating for process to exit")
-				// common.Cleanup(prepDir)
-				// common.KillContainer(contPID)
+				common.Cleanup(prepDir)
+				common.KillContainer(contPID)
 				return
 			}
 		case <-ctx.Done():
@@ -200,19 +199,19 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			case context.Canceled:
 				d.logger.Info().Msg("Context canceled, waiting for processes to finish")
 				<-done
-				// common.Cleanup(prepDir)
-				// common.KillContainer(contPID)
+				common.Cleanup(prepDir)
+				common.KillContainer(contPID)
 				return
 			default:
 				d.logger.Info().Msg("Context error killing process")
-				// common.Cleanup(prepDir)
-				// common.KillContainer(contPID)
+				common.Cleanup(prepDir)
+				common.KillContainer(contPID)
 				return
 			}
 		case <-done:
 			d.logger.Info().Msg("Process exited")
-			// common.Cleanup(prepDir)
-			// common.KillContainer(contPID)
+			common.Cleanup(prepDir)
+			common.KillContainer(contPID)
 			return
 		}
 	}
