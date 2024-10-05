@@ -65,7 +65,7 @@ func (q *Queries) FetchJob(ctx context.Context, workerID pgtype.Int4) (Job, erro
 }
 
 const getAllExecutions = `-- name: GetAllExecutions :many
-select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, success, id, hash, code, path, flake, args, programming_language from executions
+select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, success, id, hash, code, path, flake, nix_script, args, programming_language from executions
 inner join exec_request on executions.exec_request_id = exec_request.id
 order by started_at desc
 limit $1 offset $2
@@ -92,6 +92,7 @@ type GetAllExecutionsRow struct {
 	Code                string             `db:"code" json:"code"`
 	Path                string             `db:"path" json:"path"`
 	Flake               string             `db:"flake" json:"flake"`
+	NixScript           string             `db:"nix_script" json:"nix_script"`
 	Args                pgtype.Text        `db:"args" json:"args"`
 	ProgrammingLanguage pgtype.Text        `db:"programming_language" json:"programming_language"`
 }
@@ -121,6 +122,7 @@ func (q *Queries) GetAllExecutions(ctx context.Context, arg GetAllExecutionsPara
 			&i.Code,
 			&i.Path,
 			&i.Flake,
+			&i.NixScript,
 			&i.Args,
 			&i.ProgrammingLanguage,
 		); err != nil {
@@ -135,7 +137,7 @@ func (q *Queries) GetAllExecutions(ctx context.Context, arg GetAllExecutionsPara
 }
 
 const getAllJobs = `-- name: GetAllJobs :many
-select job_id, created_at, updated_at, time_out, started_at, exec_request_id, current_state, retries, max_retries, worker_id, id, hash, code, path, flake, args, programming_language from jobs
+select job_id, created_at, updated_at, time_out, started_at, exec_request_id, current_state, retries, max_retries, worker_id, id, hash, code, path, flake, nix_script, args, programming_language from jobs
 inner join exec_request on jobs.exec_request_id = exec_request.id
 order by jobs.job_id
 limit $1 offset $2
@@ -162,6 +164,7 @@ type GetAllJobsRow struct {
 	Code                string             `db:"code" json:"code"`
 	Path                string             `db:"path" json:"path"`
 	Flake               string             `db:"flake" json:"flake"`
+	NixScript           string             `db:"nix_script" json:"nix_script"`
 	Args                pgtype.Text        `db:"args" json:"args"`
 	ProgrammingLanguage pgtype.Text        `db:"programming_language" json:"programming_language"`
 }
@@ -191,6 +194,7 @@ func (q *Queries) GetAllJobs(ctx context.Context, arg GetAllJobsParams) ([]GetAl
 			&i.Code,
 			&i.Path,
 			&i.Flake,
+			&i.NixScript,
 			&i.Args,
 			&i.ProgrammingLanguage,
 		); err != nil {
@@ -205,7 +209,7 @@ func (q *Queries) GetAllJobs(ctx context.Context, arg GetAllJobsParams) ([]GetAl
 }
 
 const getExecution = `-- name: GetExecution :one
-select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, success, id, hash, code, path, flake, args, programming_language from executions
+select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, success, id, hash, code, path, flake, nix_script, args, programming_language from executions
 inner join exec_request on executions.exec_request_id = exec_request.id
 where executions.exec_id = $1
 `
@@ -226,6 +230,7 @@ type GetExecutionRow struct {
 	Code                string             `db:"code" json:"code"`
 	Path                string             `db:"path" json:"path"`
 	Flake               string             `db:"flake" json:"flake"`
+	NixScript           string             `db:"nix_script" json:"nix_script"`
 	Args                pgtype.Text        `db:"args" json:"args"`
 	ProgrammingLanguage pgtype.Text        `db:"programming_language" json:"programming_language"`
 }
@@ -249,6 +254,7 @@ func (q *Queries) GetExecution(ctx context.Context, execID int64) (GetExecutionR
 		&i.Code,
 		&i.Path,
 		&i.Flake,
+		&i.NixScript,
 		&i.Args,
 		&i.ProgrammingLanguage,
 	)
@@ -256,7 +262,7 @@ func (q *Queries) GetExecution(ctx context.Context, execID int64) (GetExecutionR
 }
 
 const getExecutionsForJob = `-- name: GetExecutionsForJob :many
-select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, success, id, hash, code, path, flake, args, programming_language from executions
+select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, success, id, hash, code, path, flake, nix_script, args, programming_language from executions
 inner join exec_request on executions.exec_request_id = exec_request.id
 where executions.job_id = $1
 order by finished_at desc
@@ -285,6 +291,7 @@ type GetExecutionsForJobRow struct {
 	Code                string             `db:"code" json:"code"`
 	Path                string             `db:"path" json:"path"`
 	Flake               string             `db:"flake" json:"flake"`
+	NixScript           string             `db:"nix_script" json:"nix_script"`
 	Args                pgtype.Text        `db:"args" json:"args"`
 	ProgrammingLanguage pgtype.Text        `db:"programming_language" json:"programming_language"`
 }
@@ -314,6 +321,7 @@ func (q *Queries) GetExecutionsForJob(ctx context.Context, arg GetExecutionsForJ
 			&i.Code,
 			&i.Path,
 			&i.Flake,
+			&i.NixScript,
 			&i.Args,
 			&i.ProgrammingLanguage,
 		); err != nil {
@@ -328,7 +336,7 @@ func (q *Queries) GetExecutionsForJob(ctx context.Context, arg GetExecutionsForJ
 }
 
 const getJob = `-- name: GetJob :one
-select job_id, created_at, updated_at, time_out, started_at, exec_request_id, current_state, retries, max_retries, worker_id, id, hash, code, path, flake, args, programming_language from jobs inner join exec_request on jobs.exec_request_id = exec_request.id where jobs.job_id = $1
+select job_id, created_at, updated_at, time_out, started_at, exec_request_id, current_state, retries, max_retries, worker_id, id, hash, code, path, flake, nix_script, args, programming_language from jobs inner join exec_request on jobs.exec_request_id = exec_request.id where jobs.job_id = $1
 `
 
 type GetJobRow struct {
@@ -347,6 +355,7 @@ type GetJobRow struct {
 	Code                string             `db:"code" json:"code"`
 	Path                string             `db:"path" json:"path"`
 	Flake               string             `db:"flake" json:"flake"`
+	NixScript           string             `db:"nix_script" json:"nix_script"`
 	Args                pgtype.Text        `db:"args" json:"args"`
 	ProgrammingLanguage pgtype.Text        `db:"programming_language" json:"programming_language"`
 }
@@ -370,6 +379,7 @@ func (q *Queries) GetJob(ctx context.Context, jobID int64) (GetJobRow, error) {
 		&i.Code,
 		&i.Path,
 		&i.Flake,
+		&i.NixScript,
 		&i.Args,
 		&i.ProgrammingLanguage,
 	)

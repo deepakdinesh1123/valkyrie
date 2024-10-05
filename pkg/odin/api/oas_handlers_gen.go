@@ -808,14 +808,6 @@ func (s *Server) handleGetAllLanguagesRequest(args [0]string, argsEscaped bool, 
 			Body:             nil,
 			Params: middleware.Parameters{
 				{
-					Name: "page",
-					In:   "query",
-				}: params.Page,
-				{
-					Name: "pageSize",
-					In:   "query",
-				}: params.PageSize,
-				{
 					Name: "X-Auth-Token",
 					In:   "header",
 				}: params.XAuthToken,

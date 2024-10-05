@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -94,7 +95,7 @@ func GetEnvConfig() (*EnvConfig, error) {
 	// Read configuration from file
 	err := viper.ReadInConfig()
 	if err != nil {
-		return nil, err
+		log.Default().Println(".env file not found proceeding with defaults")
 	}
 
 	// Unmarshal configuration into EnvConfig struct

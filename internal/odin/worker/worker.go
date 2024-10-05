@@ -193,8 +193,8 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 			}
 		case <-fetchJobTicker.C:
 			w.updateStats()
-			if w.WorkerStats.CPUUsage > 75 || w.WorkerStats.MemUsed > 75 {
-				w.logger.Info().Float64("CPU Usage", w.WorkerStats.CPUUsage).Uint64("Memory Used", w.WorkerStats.MemUsed).Msg("Worker: high usage")
+			if w.WorkerStats.CPUUsage > 75 {
+				w.logger.Info().Float64("CPU Usage", w.WorkerStats.CPUUsage).Msg("Worker: high usage")
 				continue
 			}
 			if swg.Count() >= w.envConfig.ODIN_WORKER_CONCURRENCY {

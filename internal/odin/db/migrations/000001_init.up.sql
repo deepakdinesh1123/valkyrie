@@ -29,6 +29,7 @@ create table exec_request (
     code text not null,
     path text not null,
     flake text not null,
+    nix_script text not null,
     args varchar(1024),
     programming_language text
 );

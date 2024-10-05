@@ -10,9 +10,9 @@ create table exec_request (
 
 -- name: InsertExecRequest :one
 insert into exec_request
-    (hash, code, path, flake, args, programming_language)
+    (hash, code, path, flake, args, programming_language, nix_script)
 values
-    ($1, $2, $3, $4, $5, $6)
+    ($1, $2, $3, $4, $5, $6, $7)
 returning id;
 
 -- name: GetExecRequest :one

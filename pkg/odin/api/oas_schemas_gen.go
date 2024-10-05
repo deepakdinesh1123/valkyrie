@@ -662,22 +662,13 @@ func (s *GetAllExecutionsOK) SetPagination(val PaginationResponse) {
 
 func (*GetAllExecutionsOK) getAllExecutionsRes() {}
 
-type GetAllLanguagesBadRequest Error
-
-func (*GetAllLanguagesBadRequest) getAllLanguagesRes() {}
-
 // GetAllLanguagesForbidden is response for GetAllLanguages operation.
 type GetAllLanguagesForbidden struct{}
 
 func (*GetAllLanguagesForbidden) getAllLanguagesRes() {}
 
-type GetAllLanguagesInternalServerError Error
-
-func (*GetAllLanguagesInternalServerError) getAllLanguagesRes() {}
-
 type GetAllLanguagesOK struct {
-	Languages  []string           `json:"languages"`
-	Pagination PaginationResponse `json:"pagination"`
+	Languages []string `json:"languages"`
 }
 
 // GetLanguages returns the value of Languages.
@@ -685,19 +676,9 @@ func (s *GetAllLanguagesOK) GetLanguages() []string {
 	return s.Languages
 }
 
-// GetPagination returns the value of Pagination.
-func (s *GetAllLanguagesOK) GetPagination() PaginationResponse {
-	return s.Pagination
-}
-
 // SetLanguages sets the value of Languages.
 func (s *GetAllLanguagesOK) SetLanguages(val []string) {
 	s.Languages = val
-}
-
-// SetPagination sets the value of Pagination.
-func (s *GetAllLanguagesOK) SetPagination(val PaginationResponse) {
-	s.Pagination = val
 }
 
 func (*GetAllLanguagesOK) getAllLanguagesRes() {}
