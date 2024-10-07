@@ -21,7 +21,8 @@ type EnvConfig struct {
 	ODIN_SERVER_HOST string `mapstructure:"ODIN_SERVER_HOST"` // represents the host on which the Odin server will listen.
 	ODIN_SERVER_PORT string `mapstructure:"ODIN_SERVER_PORT"` // represents the port on which the Odin server will listen.
 
-	ODIN_WORKER_PROVIDER     string `mapstructure:"ODIN_WORKER_PROVIDER"`     // represents the worker provider.
+	ODIN_CONTAINER_ENGINE    string `mapstructure:"ODIN_CONTAINER_ENGINE"`    // represents the container engine used to execute code.
+	ODIN_WORKER_EXECUTOR     string `mapstructure:"ODIN_WORKER_EXECUTOR"`     // represents the worker provider.
 	ODIN_WORKER_CONCURRENCY  int32  `mapstructure:"ODIN_WORKER_CONCURRENCY"`  // represents the concurrency level for the worker.
 	ODIN_WORKER_BUFFER_SIZE  int    `mapstructure:"ODIN_WORKER_BUFFER_SIZE"`  // represents the buffer size for the worker.
 	ODIN_WORKER_TASK_TIMEOUT int    `mapstructure:"ODIN_WORKER_TASK_TIMEOUT"` // represents the task timeout.
@@ -45,8 +46,8 @@ type EnvConfig struct {
 
 	ODIN_JOB_PRUNE_FREQ int `mapstructure:"ODIN_JOB_PRUNE_FREQ"` // represents the job prune frequency in hours.
 
-	ODIN_SYSTEM_PROVIDER_BASE_DIR string `mapstructure:"ODIN_SYSTEM_PROVIDER_BASE_DIR"` // represents the base directory for the system provider.
-	ODIN_SYSTEM_PROVIDER_CLEAN_UP bool   `mapstructure:"ODIN_SYSTEM_PROVIDER_CLEAN_UP"` // represents whether to clean up direcories created by the system provider.
+	ODIN_SYSTEM_EXECUTOR_BASE_DIR string `mapstructure:"ODIN_SYSTEM_PROVIDER_BASE_DIR"` // represents the base directory for the system provider.
+	ODIN_SYSTEM_EXECUTOR_CLEAN_UP bool   `mapstructure:"ODIN_SYSTEM_PROVIDER_CLEAN_UP"` // represents whether to clean up direcories created by the system provider.
 
 	ODIN_USER_TOKEN  string `mapstructure:"ODIN_USER_TOKEN"`  // represents the secret key for the server.
 	ODIN_ADMIN_TOKEN string `mapstructure:"ODIN_ADMIN_TOKEN"` // represents the admin token for the server.
@@ -72,7 +73,8 @@ func GetEnvConfig() (*EnvConfig, error) {
 	viper.SetDefault("ODIN_SERVER_HOST", "0.0.0.0")
 	viper.SetDefault("ODIN_SERVER_PORT", "8080")
 
-	viper.SetDefault("ODIN_WORKER_PROVIDER", "system")
+	viper.SetDefault("ODIN_CONTAINER_ENGINE", "docker")
+	viper.SetDefault("ODIN_WORKER_EXECUTOR", "system")
 	viper.SetDefault("ODIN_WORKER_CONCURRENCY", 10)
 	viper.SetDefault("ODIN_WORKER_BUFFER_SIZE", 100)
 	viper.SetDefault("ODIN_WORKER_TASK_TIMEOUT", 30)
@@ -85,8 +87,8 @@ func GetEnvConfig() (*EnvConfig, error) {
 	viper.SetDefault("ODIN_ENVIRONMENT", "dev")
 	viper.SetDefault("ODIN_EXPORT_LOGS", "console")
 
-	viper.SetDefault("ODIN_SYSTEM_PROVIDER_BASE_DIR", filepath.Join(os.TempDir(), "valkyrie"))
-	viper.SetDefault("ODIN_SYSTEM_PROVIDER_CLEAN_UP", true)
+	viper.SetDefault("ODIN_SYSTEM_EXECUTOR_BASE_DIR", filepath.Join(os.TempDir(), "valkyrie"))
+	viper.SetDefault("ODIN_SYSTEM_EXECUTOR_CLEAN_UP", true)
 
 	viper.SetDefault("ODIN_JOB_PRUNE_FREQ", 1)
 

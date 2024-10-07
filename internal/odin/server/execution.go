@@ -438,7 +438,7 @@ func (s *OdinServer) GetExecutionConfig(ctx context.Context, params api.GetExecu
 	}
 
 	return &api.ExecutionConfig{
-		ODINWORKERPROVIDER:    s.envConfig.ODIN_WORKER_PROVIDER,
+		ODINWORKERPROVIDER:    s.envConfig.ODIN_CONTAINER_ENGINE,
 		ODINWORKERCONCURRENCY: int32(s.envConfig.ODIN_WORKER_CONCURRENCY),
 		ODINWORKERBUFFERSIZE:  int32(s.envConfig.ODIN_WORKER_BUFFER_SIZE),
 		ODINWORKERTASKTIMEOUT: s.envConfig.ODIN_WORKER_TASK_TIMEOUT,

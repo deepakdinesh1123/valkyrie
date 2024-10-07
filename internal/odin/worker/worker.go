@@ -11,7 +11,7 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/concurrency"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
-	"github.com/deepakdinesh1123/valkyrie/internal/odin/provider"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/executor"
 	"github.com/deepakdinesh1123/valkyrie/internal/telemetry"
 	"github.com/deepakdinesh1123/valkyrie/pkg/namesgenerator"
 	"github.com/gofrs/flock"
@@ -26,7 +26,7 @@ type Worker struct {
 	Name         string
 	queries      db.Store
 	envConfig    *config.EnvConfig
-	provider     provider.Provider
+	exectr       executor.Executor
 	logger       *zerolog.Logger
 	tp           trace.TracerProvider
 	mp           metric.MeterProvider
@@ -102,11 +102,11 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 			logger.Err(err).Msg("Failed to get worker")
 		}
 	}
-	prvdr, err := provider.GetProvider(ctx, queries, int32(wrkr.ID), tp, mp, envConfig, logger)
+	exectr, err := executor.GetExecutor(ctx, queries, int32(wrkr.ID), tp, mp, envConfig, logger)
 	if err != nil {
 		return nil, err
 	}
-	wrkr.provider = prvdr
+	wrkr.exectr = exectr
 	logger.Info().Msgf("Starting worker %d with name %s", wrkr.ID, wrkr.Name)
 
 	err = writeWorkerInfo(envConfig.ODIN_WORKER_INFO_FILE, wrkr)
@@ -217,7 +217,7 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 			w.logger.Info().Msgf("Worker: fetched job %d", res.Job.JobID)
 			swg.Add(1)
 			span.AddEvent("Executing job")
-			go w.provider.Execute(tracerCtx, &swg, res.Job)
+			go w.exectr.Execute(tracerCtx, &swg, res.Job)
 		case <-heartBeatTicker.C:
 			w.queries.UpdateHeartbeat(ctx, int32(w.ID))
 		}

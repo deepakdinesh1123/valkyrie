@@ -12,7 +12,7 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 )
 
-func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, job db.Job) {
+func (s *SystemExecutor) Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, job db.Job) {
 	tracer := s.tp.Tracer("Execute")
 	_, span := tracer.Start(ctx, "Execute")
 	defer span.End()
@@ -21,7 +21,7 @@ func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 
 	start := time.Now()
 	defer wg.Done()
-	dir := filepath.Join(s.envConfig.ODIN_SYSTEM_PROVIDER_BASE_DIR, job.CreatedAt.Time.Format("20060102150405"))
+	dir := filepath.Join(s.envConfig.ODIN_SYSTEM_EXECUTOR_BASE_DIR, job.CreatedAt.Time.Format("20060102150405"))
 	s.logger.Info().Str("dir", dir).Msg("Executing job")
 	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
 		s.logger.Err(err).Msg("Failed to create directory")
@@ -138,7 +138,7 @@ func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	}
 }
 
-func (s *SystemProvider) writeFiles(ctx context.Context, dir string, job db.Job) error {
+func (s *SystemExecutor) writeFiles(ctx context.Context, dir string, job db.Job) error {
 	execReq, err := s.queries.GetExecRequest(ctx, job.ExecRequestID.Int32)
 	if err != nil {
 		return err
@@ -156,8 +156,8 @@ func (s *SystemProvider) writeFiles(ctx context.Context, dir string, job db.Job)
 	return nil
 }
 
-func (s *SystemProvider) updateJob(ctx context.Context, job *db.Job, startTime time.Time, message string, success bool) error {
-	dir := filepath.Join(s.envConfig.ODIN_SYSTEM_PROVIDER_BASE_DIR, job.CreatedAt.Time.Format("20060102150405"))
+func (s *SystemExecutor) updateJob(ctx context.Context, job *db.Job, startTime time.Time, message string, success bool) error {
+	dir := filepath.Join(s.envConfig.ODIN_SYSTEM_EXECUTOR_BASE_DIR, job.CreatedAt.Time.Format("20060102150405"))
 	out, err := os.ReadFile(filepath.Join(dir, "output.txt"))
 	if err != nil {
 		return err

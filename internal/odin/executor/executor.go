@@ -1,4 +1,4 @@
-package provider
+package executor
 
 import (
 	"context"
@@ -7,6 +7,6 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 )
 
-type Provider interface {
+type Executor interface {
 	Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, execReq db.Job)
 }

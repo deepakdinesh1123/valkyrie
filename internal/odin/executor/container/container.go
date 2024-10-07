@@ -1,18 +1,23 @@
-package docker
+package container
 
 import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
-	"github.com/deepakdinesh1123/valkyrie/internal/odin/provider/common"
-	"github.com/docker/docker/client"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/executor/common"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
-type DockerProvider struct {
+type Container struct {
+	Name         string
+	ID           string
+	PID          int
+	OverlayStore string
+}
+
+type ContainerProvider struct {
 	queries   db.Store
-	client    *client.Client
 	envConfig *config.EnvConfig
 	workerId  int32
 	logger    *zerolog.Logger
@@ -21,17 +26,12 @@ type DockerProvider struct {
 	user      string
 }
 
-func NewDockerProvider(env *config.EnvConfig, queries db.Store, workerId int32, tp trace.TracerProvider, mp metric.MeterProvider, logger *zerolog.Logger) (*DockerProvider, error) {
-	client, err := newClient()
-	if err != nil {
-		return nil, err
-	}
+func NewContainerExecutor(env *config.EnvConfig, queries db.Store, workerId int32, tp trace.TracerProvider, mp metric.MeterProvider, logger *zerolog.Logger) (*ContainerProvider, error) {
 	user, err := common.GetUserInfo()
 	if err != nil {
 		return nil, err
 	}
-	return &DockerProvider{
-		client:    client,
+	return &ContainerProvider{
 		envConfig: env,
 		logger:    logger,
 		queries:   queries,

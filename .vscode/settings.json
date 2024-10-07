@@ -10,5 +10,5 @@
     "editor.detectIndentation": false,
     "editor.tabSize": 2
   },
-  "go.buildTags": "linux_all",
+  // "go.buildTags": "sys",
 }
