@@ -1,15 +1,45 @@
-package common
+package container
 
 import (
+	"archive/tar"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"time"
+
+	"github.com/deepakdinesh1123/valkyrie/internal/user"
 )
 
+func CreateTarArchive(files map[string]string, dir string) (string, error) {
+	tarFilePath := filepath.Join(dir, fmt.Sprintf("%d.tar", time.Now().UnixNano()))
+	tarFile, err := os.Create(tarFilePath)
+	if err != nil {
+		return "", err
+	}
+	defer tarFile.Close()
+
+	tw := tar.NewWriter(tarFile)
+	defer tw.Close()
+
+	for name, content := range files {
+		if err := tw.WriteHeader(&tar.Header{
+			Name: name,
+			Size: int64(len(content)),
+			Mode: 0744,
+		}); err != nil {
+			return "", err
+		}
+		if _, err := tw.Write([]byte(content)); err != nil {
+			return "", err
+		}
+	}
+	return tarFilePath, nil
+}
+
 func OverlayStore(dir string, odinNixStore string) error {
-	userInfo, err := GetUserInfo()
+	userInfo, err := user.GetUserInfo()
 	if err != nil {
 		return fmt.Errorf("failed to get user name: %w", err)
 	}
@@ -79,6 +109,10 @@ func OverlayStore(dir string, odinNixStore string) error {
 }
 
 func Cleanup(dir string) error {
+	_, err := os.Stat(dir)
+	if os.IsNotExist(err) {
+		return nil // Directory does not exist
+	}
 	cmd := exec.Command("umount", filepath.Join(dir, "merged"))
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to unmount overlay: %w", err)

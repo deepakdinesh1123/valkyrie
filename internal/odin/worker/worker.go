@@ -183,6 +183,7 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 			swg.Wait()
 			err := ctx.Err()
 			fetchJobTicker.Stop()
+			w.exectr.Cleanup()
 			switch err {
 			case context.Canceled:
 				w.logger.Info().Msg("Worker: context canceled")
@@ -208,6 +209,7 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 					continue
 				case context.Canceled:
 					w.logger.Info().Msg("Worker: context canceled")
+					w.exectr.Cleanup()
 					return nil
 				default:
 					w.logger.Err(err).Msgf("Worker: failed to fetch job")

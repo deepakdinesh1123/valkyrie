@@ -9,6 +9,5 @@
   "[gotmpl]": {
     "editor.detectIndentation": false,
     "editor.tabSize": 2
-  },
-  // "go.buildTags": "sys",
+  }
 }

@@ -21,7 +21,7 @@ func GetExecutor(ctx context.Context, queries db.Store, workerId int32, tp trace
 	var err error
 	switch envConfig.ODIN_WORKER_EXECUTOR {
 	case "container":
-		Executor, err = container.NewContainerExecutor(envConfig, queries, workerId, tp, mp, logger)
+		Executor, err = container.NewContainerExecutor(ctx, envConfig, queries, workerId, tp, mp, logger)
 		if err != nil {
 			return nil, err
 		}
@@ -32,7 +32,7 @@ func GetExecutor(ctx context.Context, queries db.Store, workerId int32, tp trace
 				return nil, fmt.Errorf("failed to create system Executor base directory")
 			}
 		}
-		Executor, err = system.NewSystemExecutor(envConfig, queries, workerId, tp, mp, logger)
+		Executor, err = system.NewSystemExecutor(ctx, envConfig, queries, workerId, tp, mp, logger)
 		if err != nil {
 			return nil, fmt.Errorf("error while creating Executor")
 		}

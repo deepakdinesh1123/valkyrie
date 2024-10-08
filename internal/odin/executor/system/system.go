@@ -1,6 +1,8 @@
 package system
 
 import (
+	"context"
+
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/rs/zerolog"
@@ -17,7 +19,7 @@ type SystemExecutor struct {
 	workerId  int32
 }
 
-func NewSystemExecutor(envConfig *config.EnvConfig, queries db.Store, workerId int32, tp trace.TracerProvider, mp metric.MeterProvider, logger *zerolog.Logger) (*SystemExecutor, error) {
+func NewSystemExecutor(ctx context.Context, envConfig *config.EnvConfig, queries db.Store, workerId int32, tp trace.TracerProvider, mp metric.MeterProvider, logger *zerolog.Logger) (*SystemExecutor, error) {
 	return &SystemExecutor{
 		envConfig: envConfig,
 		queries:   queries,

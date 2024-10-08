@@ -20,9 +20,8 @@ source ~/.profile
 # not required since we moved to using script
 # nix registry add flake:nixpkgs git+file://$HOME/24.05
 
-# nix-channel --add https://nixos.org/channels/nixos-24.05 nixpkgs
-# nix-channel --update
+nix-channel --add https://nixos.org/channels/nixos-24.05 nixpkgs
+nix-channel --update
 
-echo  "https://nixos.org/channels/nixos-24.05 nixpkgs" >> ~/.nix-channels
 echo "setup done" >> ~/status.txt
 sleep infinity

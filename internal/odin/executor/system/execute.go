@@ -184,3 +184,5 @@ func (s *SystemExecutor) updateJob(ctx context.Context, job *db.Job, startTime t
 	}
 	return nil
 }
+
+func (s *SystemExecutor) Cleanup() {}

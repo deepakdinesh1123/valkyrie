@@ -46,4 +46,4 @@ build-podman-image:
 
 .PHONY: odin
 odin:
-	go build -o odinb -tags $(TAG) cmd/odin/main.go
+	go build -o odinb cmd/odin/main.go

@@ -7,7 +7,7 @@ import (
 	"fmt"
 )
 
-func GetContainerClient(ctx context.Context, cp *ContainerProvider) (ContainerClient, error) {
+func GetContainerClient(ctx context.Context, cp *ContainerExecutor) (ContainerClient, error) {
 	switch cp.envConfig.ODIN_CONTAINER_ENGINE {
 	case "docker":
 		return nil, fmt.Errorf("docker engine not supported")

@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux && !(docker || podman)
 
 package container
 
@@ -7,22 +7,22 @@ import (
 	"fmt"
 )
 
-func GetContainerClient(ctx context.Context, cp *ContainerProvider) (ContainerClient, error) {
+func GetContainerClient(ctx context.Context, cp *ContainerExecutor) (ContainerClient, error) {
 	switch cp.envConfig.ODIN_CONTAINER_ENGINE {
 	case "docker":
-		client, err := GetDockerClient(cp)
+		containerClient, err := GetDockerProvider(cp)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create docker client")
+			return nil, fmt.Errorf("failed to create docker containerClient")
 		}
-		return client, nil
+		return containerClient, nil
 	case " podman":
-		client, err := GetPodmanClient(cp)
+		containerClient, err := GetPodmanClient(cp)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create podman client")
+			return nil, fmt.Errorf("failed to create podman containerClient")
 		}
-		return client, nil
+		return containerClient, nil
 	case "default":
-		return nil, fmt.Errorf("invalid client")
+		return nil, fmt.Errorf("invalid containerClient")
 	}
 	return nil, nil
 }

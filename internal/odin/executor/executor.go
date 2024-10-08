@@ -9,4 +9,5 @@ import (
 
 type Executor interface {
 	Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, execReq db.Job)
+	Cleanup()
 }
