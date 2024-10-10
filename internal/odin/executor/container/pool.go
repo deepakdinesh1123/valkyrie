@@ -49,7 +49,7 @@ func constructor(ctx context.Context) (Container, error) {
 			StopSignal:  "SIGKILL",
 		},
 			&container.HostConfig{
-				// AutoRemove: true,
+				AutoRemove: true,
 				Binds: []string{
 					fmt.Sprintf("%s:/nix", filepath.Join(prepDir, "merged")),
 				},
@@ -85,13 +85,13 @@ func constructor(ctx context.Context) (Container, error) {
 		s.StopTimeout = &stopTimeout
 		stopSignal := syscall.SIGKILL
 		s.StopSignal = &stopSignal
-		s.OCIRuntime = envConfig.ODIN_WORKER_RUNTIME
+		s.OCIRuntime = "crun"
 
 		s.ContainerStorageConfig.Mounts = append(s.ContainerStorageConfig.Mounts, spec.Mount{
 			Destination: "/nix",
 			Type:        "bind",
 			Source:      filepath.Join(prepDir, "merged"),
-			Options:     []string{"U", "true"},
+			Options:     []string{"U"},
 		})
 
 		containerRemove := true
@@ -102,14 +102,17 @@ func constructor(ctx context.Context) (Container, error) {
 		if err != nil {
 			return Container{}, err
 		}
+		fmt.Println("Container created")
 		err = containers.Start(connection, pdContainer.ID, nil)
 		if err != nil {
 			return Container{}, err
 		}
+		fmt.Println("Container started")
 		contInfo, err := containers.Inspect(connection, pdContainer.ID, nil)
 		if err != nil {
 			return Container{}, err
 		}
+		fmt.Println("Container inspected")
 		cont.Name = contInfo.Name
 		cont.PID = contInfo.State.Pid
 	}
@@ -118,8 +121,8 @@ func constructor(ctx context.Context) (Container, error) {
 }
 
 func destructor(cont Container) {
-	// Cleanup(cont.HostPrepDir)
-	// KillContainer(cont.PID)
+	Cleanup(cont.HostPrepDir)
+	KillContainer(cont.PID)
 }
 
 func NewContainerPool(ctx context.Context, initPoolSize int32, maxPoolSize int32) (*puddle.Pool[Container], error) {

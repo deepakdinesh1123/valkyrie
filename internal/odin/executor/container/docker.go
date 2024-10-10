@@ -83,7 +83,15 @@ func (d *DockerProvider) WriteFiles(ctx context.Context, containerID string, pre
 }
 
 func (d *DockerProvider) GetContainer(ctx context.Context) (*puddle.Resource[Container], error) {
-	return d.ContainerExecutor.pool.Acquire(ctx)
+	cont, err := d.ContainerExecutor.pool.Acquire(ctx)
+	if err != nil {
+		return nil, err
+	}
+	err = d.pool.CreateResource(ctx)
+	if err != nil {
+		d.logger.Debug().Msg("Container pool might be full")
+	}
+	return cont, nil
 }
 
 func (d *DockerProvider) Execute(ctx context.Context, containerID string, command []string) (bool, string, error) {
@@ -131,11 +139,10 @@ func (d *DockerProvider) Execute(ctx context.Context, containerID string, comman
 		case <-ctx.Done():
 			switch ctx.Err() {
 			case context.DeadlineExceeded:
-				// containerStopTimeout := 0
-				// d.client.ContainerStop(ctx, containerID, container.StopOptions{
-				// 	Timeout: &containerStopTimeout,
-				// })
-
+				containerStopTimeout := 0
+				d.client.ContainerStop(ctx, containerID, container.StopOptions{
+					Timeout: &containerStopTimeout,
+				})
 				reader, err := d.client.ContainerLogs(context.TODO(), containerID, container.LogsOptions{
 					ShowStdout: true,
 					ShowStderr: true,
@@ -158,21 +165,3 @@ func (d *DockerProvider) Execute(ctx context.Context, containerID string, comman
 		}
 	}
 }
-
-// func (d *DockerProvider) ReadContainerLogs(ctx context.Context, containerID string) (string, error) {
-// 	reader, err := d.client.ContainerLogs(context.TODO(), containerID, container.LogsOptions{
-// 		ShowStdout: true,
-// 		ShowStderr: true,
-// 		Follow:     false,
-// 		Tail:       "all",
-// 	})
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	var out []byte
-// 	out, err = io.ReadAll(reader)
-// 	if err != nil {
-// 		return "", nil
-// 	}
-// 	return string(out), nil
-// }

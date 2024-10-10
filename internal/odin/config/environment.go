@@ -98,6 +98,9 @@ func GetEnvConfig() (*EnvConfig, error) {
 
 		viper.SetDefault("ODIN_LOG_LEVEL", "info")
 
+		viper.SetDefault("ODIN_WORKER_DOCKER_IMAGE", "odin")
+		viper.SetDefault("ODIN_WORKER_PODMAN_IMAGE", "odin")
+
 		// Read configuration from file
 		_ = viper.ReadInConfig()
 

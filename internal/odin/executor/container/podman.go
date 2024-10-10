@@ -37,9 +37,9 @@ func GetPodmanClient(cp *ContainerExecutor) (*PodmanClient, error) {
 
 func getPodmanConnection() context.Context {
 	getPodmanConnectionOnce.Do(func() {
-		sock_dir := os.Getenv("XDG_RUNTIME_DIR")
-		socket := "unix:" + sock_dir + "/podman/podman.sock"
-		pc, err := bindings.NewConnection(context.Background(), socket)
+		// sock_dir := os.Getenv("XDG_RUNTIME_DIR")
+		// socket := "unix:" + sock_dir + "/podman/podman.sock"
+		pc, err := bindings.NewConnection(context.Background(), "unix:/run/podman/podman.sock")
 		if err != nil {
 			return
 		}
@@ -82,7 +82,15 @@ func (p *PodmanClient) WriteFiles(ctx context.Context, containerID string, prepD
 }
 
 func (p *PodmanClient) GetContainer(ctx context.Context) (*puddle.Resource[Container], error) {
-	return p.ContainerExecutor.pool.Acquire(ctx)
+	cont, err := p.ContainerExecutor.pool.Acquire(ctx)
+	if err != nil {
+		return nil, err
+	}
+	err = p.pool.CreateResource(ctx)
+	if err != nil {
+		p.logger.Debug().Msg("Container pool might be full")
+	}
+	return cont, nil
 }
 
 func (p *PodmanClient) Execute(ctx context.Context, containerID string, command []string) (bool, string, error) {
@@ -124,14 +132,21 @@ func (p *PodmanClient) Execute(ctx context.Context, containerID string, command 
 			success <- false
 			return
 		}
-		outputC := make(chan string)
 
 		// copying output in a separate goroutine, so that printing doesn't remain blocked forever
 		go func() {
-			_, _ = io.Copy(&output, r)
-			outputC <- output.String()
+			for {
+				if r == nil {
+					return
+				}
+				_, err = io.Copy(&output, r)
+				if err != nil {
+					return
+				}
+			}
 		}()
 		w.Close()
+		r.Close()
 		done <- true
 	}()
 	for {
