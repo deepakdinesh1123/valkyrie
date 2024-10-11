@@ -26,6 +26,7 @@
           sqlc 
           go-migrate 
           go_1_22  
+          postgresql_16
           pkg-config ] ++ docsDependencies ++ lib.optionals stdenv.isLinux [ 
             gpgme 
             libgpg-error 

@@ -48,6 +48,18 @@ type EnvConfig struct {
 	ODIN_USER_PASS  string `mapstructure:"ODIN_USER_PASS"`  // represents the user password for the server.
 
 	USER_HOME_DIR string
+
+	// Packages generation database
+	NIXOS_VERSION      string `mapstructure:"NIXOS_VERSION"`      // represents the NixOS version to use.
+	DATABASE_HOST      string `mapstructure:"DATABASE_HOST"`      // represents the database host.
+	DATABASE_PORT      string `mapstructure:"DATABASE_PORT"`      // represents the database port.
+	DATABASE_PASSWORD  string `mapstructure:"DATABASE_PASSWORD"`  // represents the database password.
+	DATABASE_SSL_MODE  string `mapstructure:"DATABASE_SSL_MODE"`  // represents the SSL mode for connecting to PostgreSQL.
+	DATABASE_CONTAINER string `mapstructure:"DATABASE_CONTAINER"` // represents the database container name.
+	DATABASE_USER      string `mapstructure:"DATABASE_USER"`      // represents the database user.
+	DATABASE_NAME      string `mapstructure:"DATABASE_NAME"`      // represents the database name.
+	DUMP_PATH          string `mapstructure:"DUMP_PATH"`          // represents the path for dumps inside the container.
+	LOCAL_DUMP_PATH    string `mapstructure:"LOCAL_DUMP_PATH"`    // represents the local path for dumps.
 }
 
 // EnvConfig holds the configuration settings for the application.
@@ -90,6 +102,16 @@ func GetEnvConfig() (*EnvConfig, error) {
 	viper.SetDefault("ODIN_JOB_PRUNE_FREQ", 1)
 
 	viper.SetDefault("ODIN_LOG_LEVEL", "info")
+
+	viper.SetDefault("NIXOS_VERSION", "24.05")
+	viper.SetDefault("DATABASE_HOST", "localhost")
+	viper.SetDefault("DATABASE_PORT", "5433")
+	viper.SetDefault("DATABASE_SSL_MODE", "disable")
+	viper.SetDefault("DATABASE_CONTAINER", "nixos-packages-db")
+	viper.SetDefault("DATABASE_USER", "thors")
+	viper.SetDefault("DATABASE_NAME", "nixos_packages")
+	viper.SetDefault("DUMP_PATH", "/dumps")
+	viper.SetDefault("LOCAL_DUMP_PATH", "./dumps")
 
 	// Read configuration from file
 	err := viper.ReadInConfig()
