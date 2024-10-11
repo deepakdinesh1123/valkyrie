@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"sync"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
@@ -71,7 +70,7 @@ func (d *DockerProvider) WriteFiles(ctx context.Context, containerID string, pre
 	err = d.client.CopyToContainer(
 		ctx,
 		containerID,
-		filepath.Join("/home", d.user, "/odin"),
+		"/home/odnix/odin",
 		tarFile,
 		container.CopyToContainerOptions{AllowOverwriteDirWithFile: true, CopyUIDGID: true},
 	)

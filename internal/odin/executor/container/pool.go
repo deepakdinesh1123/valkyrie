@@ -3,10 +3,8 @@ package container
 import (
 	"context"
 	"fmt"
-	"os"
 	"path/filepath"
 	"syscall"
-	"time"
 
 	"github.com/containers/podman/v5/pkg/bindings/containers"
 	"github.com/containers/podman/v5/pkg/specgen"
@@ -20,22 +18,6 @@ func constructor(ctx context.Context) (Container, error) {
 	envConfig, _ := config.GetEnvConfig()
 
 	var cont Container
-
-	prepDir := filepath.Join(envConfig.USER_HOME_DIR, ".odin_store", fmt.Sprintf("odin-%d", time.Now().UnixNano()))
-	if _, err := os.Stat(prepDir); err != nil {
-		if os.IsNotExist(err) {
-			err := os.MkdirAll(prepDir, 0744)
-			if err != nil {
-				return Container{}, fmt.Errorf("Could not create the prep dirctory")
-			}
-		}
-	}
-	cont.HostPrepDir = prepDir
-	err := OverlayStore(prepDir, envConfig.ODIN_NIX_STORE)
-	if err != nil {
-		Cleanup(prepDir)
-		return Container{}, err
-	}
 
 	switch envConfig.ODIN_CONTAINER_ENGINE {
 	case "docker":
@@ -51,7 +33,7 @@ func constructor(ctx context.Context) (Container, error) {
 			&container.HostConfig{
 				AutoRemove: true,
 				Binds: []string{
-					fmt.Sprintf("%s:/nix", filepath.Join(prepDir, "merged")),
+					fmt.Sprintf("%s:/home/odnix/.nix-portable", filepath.Join(envConfig.USER_HOME_DIR, ".nix-portable")),
 				},
 			},
 			nil,
@@ -88,9 +70,9 @@ func constructor(ctx context.Context) (Container, error) {
 		s.OCIRuntime = "crun"
 
 		s.ContainerStorageConfig.Mounts = append(s.ContainerStorageConfig.Mounts, spec.Mount{
-			Destination: "/nix",
+			Destination: "/home/odnix/.nix-portable",
 			Type:        "bind",
-			Source:      filepath.Join(prepDir, "merged"),
+			Source:      filepath.Join(envConfig.USER_HOME_DIR, "merged"),
 			Options:     []string{"U"},
 		})
 

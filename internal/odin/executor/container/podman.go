@@ -70,7 +70,7 @@ func (p *PodmanClient) WriteFiles(ctx context.Context, containerID string, prepD
 	defer tarFile.Close()
 	defer os.Remove(tarFilePath)
 
-	copyF, err := containers.CopyFromArchive(p.connection, containerID, "/odin", tarFile)
+	copyF, err := containers.CopyFromArchive(p.connection, containerID, "/home/odnix/odin", tarFile)
 	if err != nil {
 		return fmt.Errorf("Failed to copy files to container")
 	}
@@ -105,8 +105,8 @@ func (p *PodmanClient) Execute(ctx context.Context, containerID string, command 
 			ExecConfig: container.ExecOptions{
 				AttachStderr: true,
 				AttachStdout: true,
-				WorkingDir:   "/odin",
-				Cmd:          []string{"nix", "run"},
+				WorkingDir:   "/home/odnix/odin",
+				Cmd:          []string{"nix", "develop"},
 			},
 		})
 		if err != nil {

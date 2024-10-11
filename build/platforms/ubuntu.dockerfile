@@ -1,26 +1,19 @@
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-ARG HOST_UID
-ARG HOST_GID
-ARG HOST_USER
-ARG HOST_GROUP
-
 RUN apt update && \
-    apt install -y adduser xz-utils curl ca-certificates git vim
+    apt install -y adduser xz-utils curl ca-certificates git vim sudo
+RUN groupadd -o -g 1024 -r odnix && \
+    adduser --uid 1024 --gid 1024 --disabled-password --gecos "" odnix && \
+    echo 'odnix ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
 
-RUN groupadd -o -g $HOST_GID -r $HOST_GROUP && \
-    adduser --uid $HOST_UID --gid $HOST_GID --disabled-password --gecos "" $HOST_USER
+USER odnix
 
-RUN mkdir /etc/nix && echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
-USER $HOST_USER
-RUN mkdir ~/odin && chown $HOST_USER:$HOST_GROUP ~/odin
+WORKDIR /home/odnix/
+RUN curl -L https://github.com/DavHau/nix-portable/releases/latest/download/nix-portable-$(uname -m) > ./nix-portable &&  \
+    chmod +x ./nix-portable
+RUN mkdir odin
+ENV NP_GIT=/usr/bin/git
 
-WORKDIR /home/$HOST_USER/
-# RUN git clone --depth 1 https://github.com/NixOS/nixpkgs.git --tag 24.05 --single-branch
-
-COPY hack/nix_setup.sh /home/$HOST_USER/nix_setup.sh
-COPY hack/nix_run.sh /home/$HOST_USER/nix_run.sh
-
-CMD [ "/bin/bash", "nix_setup.sh" ]
+CMD ["/bin/bash", "-c", "sleep infinity"]
