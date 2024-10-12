@@ -1,6 +1,8 @@
 package system
 
 import (
+	"context"
+
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/rs/zerolog"
@@ -8,7 +10,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-type SystemProvider struct {
+type SystemExecutor struct {
 	envConfig *config.EnvConfig
 	queries   db.Store
 	logger    *zerolog.Logger
@@ -17,8 +19,8 @@ type SystemProvider struct {
 	workerId  int32
 }
 
-func NewSystemProvider(envConfig *config.EnvConfig, queries db.Store, workerId int32, tp trace.TracerProvider, mp metric.MeterProvider, logger *zerolog.Logger) (*SystemProvider, error) {
-	return &SystemProvider{
+func NewSystemExecutor(ctx context.Context, envConfig *config.EnvConfig, queries db.Store, workerId int32, tp trace.TracerProvider, mp metric.MeterProvider, logger *zerolog.Logger) (*SystemExecutor, error) {
+	return &SystemExecutor{
 		envConfig: envConfig,
 		queries:   queries,
 		workerId:  workerId,

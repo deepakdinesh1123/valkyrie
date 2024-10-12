@@ -2,10 +2,11 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
+	"sync"
 
+	"github.com/deepakdinesh1123/valkyrie/internal/user"
 	"github.com/spf13/viper"
 )
 
@@ -21,9 +22,10 @@ type EnvConfig struct {
 	ODIN_SERVER_HOST string `mapstructure:"ODIN_SERVER_HOST"` // represents the host on which the Odin server will listen.
 	ODIN_SERVER_PORT string `mapstructure:"ODIN_SERVER_PORT"` // represents the port on which the Odin server will listen.
 
-	ODIN_WORKER_PROVIDER     string `mapstructure:"ODIN_WORKER_PROVIDER"`     // represents the worker provider.
+	ODIN_CONTAINER_ENGINE    string `mapstructure:"ODIN_CONTAINER_ENGINE"`    // represents the container engine used to execute code.
+	ODIN_WORKER_EXECUTOR     string `mapstructure:"ODIN_WORKER_EXECUTOR"`     // represents the worker provider.
 	ODIN_WORKER_CONCURRENCY  int32  `mapstructure:"ODIN_WORKER_CONCURRENCY"`  // represents the concurrency level for the worker.
-	ODIN_WORKER_BUFFER_SIZE  int    `mapstructure:"ODIN_WORKER_BUFFER_SIZE"`  // represents the buffer size for the worker.
+	ODIN_HOT_CONTAINER       int    `mapstructure:"ODIN_HOT_CONTAINER"`       // represents the buffer size for the worker.
 	ODIN_WORKER_TASK_TIMEOUT int    `mapstructure:"ODIN_WORKER_TASK_TIMEOUT"` // represents the task timeout.
 	ODIN_WORKER_POLL_FREQ    int    `mapstructure:"ODIN_WORKER_POLL_FREQ"`    // represents the polling frequency for the worker in seconds.
 	ODIN_WORKER_RUNTIME      string `mapstructure:"ODIN_WORKER_RUNTIME"`      // represents the default runtime for the worker containers (e.g. runc, crun).
@@ -33,7 +35,6 @@ type EnvConfig struct {
 	ODIN_LOG_LEVEL string `mapstructure:"ODIN_LOG_LEVEL"`
 
 	ODIN_INFO_DIR           string
-	ODIN_WORKER_DIR         string
 	ODIN_WORKER_INFO_FILE   string
 	ODIN_ENABLE_TELEMETRY   bool   `mapstructure:"ODIN_ENABLE_TELEMETRY"` // represents whether to enable OpenTelemetry for the server.
 	ODIN_OTLP_ENDPOINT      string `mapstructure:"ODIN_OTLP_ENDPOINT"`    // represents the OpenTelemetry collector endpoint.
@@ -45,8 +46,8 @@ type EnvConfig struct {
 
 	ODIN_JOB_PRUNE_FREQ int `mapstructure:"ODIN_JOB_PRUNE_FREQ"` // represents the job prune frequency in hours.
 
-	ODIN_SYSTEM_PROVIDER_BASE_DIR string `mapstructure:"ODIN_SYSTEM_PROVIDER_BASE_DIR"` // represents the base directory for the system provider.
-	ODIN_SYSTEM_PROVIDER_CLEAN_UP bool   `mapstructure:"ODIN_SYSTEM_PROVIDER_CLEAN_UP"` // represents whether to clean up direcories created by the system provider.
+	ODIN_SYSTEM_EXECUTOR_BASE_DIR string `mapstructure:"ODIN_SYSTEM_PROVIDER_BASE_DIR"` // represents the base directory for the system provider.
+	ODIN_SYSTEM_EXECUTOR_CLEAN_UP bool   `mapstructure:"ODIN_SYSTEM_PROVIDER_CLEAN_UP"` // represents whether to clean up direcories created by the system provider.
 
 	ODIN_USER_TOKEN  string `mapstructure:"ODIN_USER_TOKEN"`  // represents the secret key for the server.
 	ODIN_ADMIN_TOKEN string `mapstructure:"ODIN_ADMIN_TOKEN"` // represents the admin token for the server.
@@ -56,62 +57,78 @@ type EnvConfig struct {
 
 // EnvConfig holds the configuration settings for the application.
 
+var envConfig *EnvConfig
+var getEnvConfigOnce sync.Once
+
 func GetEnvConfig() (*EnvConfig, error) {
-	viper.SetConfigType("env")
-	viper.AddConfigPath(".")
-	viper.SetConfigName(".env")
-	viper.AutomaticEnv()
+	getEnvConfigOnce.Do(func() {
+		viper.SetConfigType("env")
+		viper.AddConfigPath(".")
+		viper.SetConfigName(".env")
+		viper.AutomaticEnv()
 
-	viper.SetDefault("POSTGRES_HOST", "localhost")
-	viper.SetDefault("POSTGRES_PORT", 5432)
-	viper.SetDefault("POSTGRES_USER", "thors")
-	viper.SetDefault("POSTGRES_PASSWORD", "thorkell")
-	viper.SetDefault("POSTGRES_DB", "valkyrie")
-	viper.SetDefault("POSTGRES_SSL_MODE", "disable")
+		viper.SetDefault("POSTGRES_HOST", "localhost")
+		viper.SetDefault("POSTGRES_PORT", 5432)
+		viper.SetDefault("POSTGRES_USER", "thors")
+		viper.SetDefault("POSTGRES_PASSWORD", "thorkell")
+		viper.SetDefault("POSTGRES_DB", "valkyrie")
+		viper.SetDefault("POSTGRES_SSL_MODE", "disable")
 
-	viper.SetDefault("ODIN_SERVER_HOST", "0.0.0.0")
-	viper.SetDefault("ODIN_SERVER_PORT", "8080")
+		viper.SetDefault("ODIN_SERVER_HOST", "0.0.0.0")
+		viper.SetDefault("ODIN_SERVER_PORT", "8080")
 
-	viper.SetDefault("ODIN_WORKER_PROVIDER", "system")
-	viper.SetDefault("ODIN_WORKER_CONCURRENCY", 10)
-	viper.SetDefault("ODIN_WORKER_BUFFER_SIZE", 100)
-	viper.SetDefault("ODIN_WORKER_TASK_TIMEOUT", 30)
-	viper.SetDefault("ODIN_WORKER_POLL_FREQ", 1)
-	viper.SetDefault("ODIN_WORKER_RUNTIME", "runc")
+		viper.SetDefault("ODIN_CONTAINER_ENGINE", "docker")
+		viper.SetDefault("ODIN_WORKER_EXECUTOR", "system")
+		viper.SetDefault("ODIN_WORKER_CONCURRENCY", 10)
+		viper.SetDefault("ODIN_HOT_CONTAINER", 5)
+		viper.SetDefault("ODIN_WORKER_TASK_TIMEOUT", 30)
+		viper.SetDefault("ODIN_WORKER_POLL_FREQ", 1)
+		viper.SetDefault("ODIN_WORKER_RUNTIME", "runc")
 
-	viper.SetDefault("ODIN_ENABLE_TELEMETRY", false)
-	viper.SetDefault("ODIN_OTLP_ENDPOINT", "localhost:4317")
-	viper.SetDefault("ODIN_OTEL_RESOURCE_NAME", "Odin")
-	viper.SetDefault("ODIN_ENVIRONMENT", "dev")
-	viper.SetDefault("ODIN_EXPORT_LOGS", "console")
+		viper.SetDefault("ODIN_ENABLE_TELEMETRY", false)
+		viper.SetDefault("ODIN_OTLP_ENDPOINT", "localhost:4317")
+		viper.SetDefault("ODIN_OTEL_RESOURCE_NAME", "Odin")
+		viper.SetDefault("ODIN_ENVIRONMENT", "dev")
+		viper.SetDefault("ODIN_EXPORT_LOGS", "console")
 
-	viper.SetDefault("ODIN_SYSTEM_PROVIDER_BASE_DIR", filepath.Join(os.TempDir(), "valkyrie"))
-	viper.SetDefault("ODIN_SYSTEM_PROVIDER_CLEAN_UP", true)
+		viper.SetDefault("ODIN_SYSTEM_EXECUTOR_BASE_DIR", filepath.Join(os.TempDir(), "valkyrie"))
+		viper.SetDefault("ODIN_SYSTEM_EXECUTOR_CLEAN_UP", true)
 
-	viper.SetDefault("ODIN_JOB_PRUNE_FREQ", 1)
+		viper.SetDefault("ODIN_JOB_PRUNE_FREQ", 1)
 
-	viper.SetDefault("ODIN_LOG_LEVEL", "info")
+		viper.SetDefault("ODIN_LOG_LEVEL", "info")
 
-	// Read configuration from file
-	err := viper.ReadInConfig()
-	if err != nil {
-		log.Default().Println(".env file not found proceeding with defaults")
+		viper.SetDefault("ODIN_WORKER_DOCKER_IMAGE", "odin")
+		viper.SetDefault("ODIN_WORKER_PODMAN_IMAGE", "odin")
+
+		// Read configuration from file
+		_ = viper.ReadInConfig()
+
+		// Unmarshal configuration into EnvConfig struct
+		err := viper.Unmarshal(&envConfig)
+		if err != nil {
+			return
+		}
+
+		usr, err := user.GetUserInfo()
+		if err != nil {
+			return
+		}
+
+		if usr != nil {
+			envConfig.USER_HOME_DIR = filepath.Join("/home", usr.Name)
+		} else {
+			home_dir, err := os.UserHomeDir()
+			if err != nil {
+
+			}
+			envConfig.USER_HOME_DIR = home_dir
+		}
+		envConfig.ODIN_INFO_DIR = filepath.Join(envConfig.USER_HOME_DIR, ".odin_info")
+		envConfig.ODIN_WORKER_INFO_FILE = filepath.Join(envConfig.ODIN_INFO_DIR, "worker.json")
+	})
+	if envConfig != nil {
+		return envConfig, nil
 	}
-
-	// Unmarshal configuration into EnvConfig struct
-	var EnvConfig EnvConfig
-	err = viper.Unmarshal(&EnvConfig)
-	if err != nil {
-		return nil, err
-	}
-
-	EnvConfig.USER_HOME_DIR, err = os.UserHomeDir()
-	if err != nil {
-		return nil, err
-	}
-
-	EnvConfig.ODIN_INFO_DIR = fmt.Sprintf("%s/%s", EnvConfig.USER_HOME_DIR, ".odin")
-	EnvConfig.ODIN_WORKER_DIR = fmt.Sprintf("%s/%s", EnvConfig.ODIN_INFO_DIR, "worker")
-	EnvConfig.ODIN_WORKER_INFO_FILE = fmt.Sprintf("%s/%s", EnvConfig.ODIN_WORKER_DIR, "worker-info.json")
-	return &EnvConfig, nil
+	return nil, fmt.Errorf(" could not get env config")
 }

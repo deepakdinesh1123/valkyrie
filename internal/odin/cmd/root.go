@@ -41,7 +41,7 @@ func init() {
 }
 
 func createDirs(envConfig *config.EnvConfig) error {
-	dirs := []string{envConfig.ODIN_INFO_DIR, envConfig.ODIN_WORKER_DIR}
+	dirs := []string{envConfig.ODIN_INFO_DIR}
 	for _, dir := range dirs {
 		if _, err := os.Stat(dir); os.IsNotExist(err) {
 			if err := os.MkdirAll(dir, 0755); err != nil {

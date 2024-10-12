@@ -1,6 +1,7 @@
 package logs
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"time"
@@ -15,6 +16,7 @@ type LogOptsFunc func(*LogConfig)
 type LogConfig struct {
 	level  string
 	export string
+	source string
 }
 
 func NewLogConfig(opts ...LogOptsFunc) *LogConfig {
@@ -38,6 +40,12 @@ func WithLevel(level string) LogOptsFunc {
 func WithExport(export string) LogOptsFunc {
 	return func(config *LogConfig) {
 		config.export = export
+	}
+}
+
+func WithSource(source string) LogOptsFunc {
+	return func(config *LogConfig) {
+		config.source = source
 	}
 }
 
@@ -67,7 +75,7 @@ func GetLogger(config *LogConfig) *zerolog.Logger {
 		logOut = zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339}
 	case "file":
 		logOut = &lumberjack.Logger{
-			Filename:   "valkyrie.log",
+			Filename:   fmt.Sprintf("valkyrie_%s.log", config.source),
 			MaxSize:    500, // megabytes
 			MaxBackups: 3,
 			MaxAge:     28,   //days
