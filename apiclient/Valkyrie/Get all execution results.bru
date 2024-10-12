@@ -5,7 +5,11 @@ meta {
 }
 
 get {
-  url: http://localhost:8080/executions/results/
+  url: http://localhost:8080/jobs/execution/
   body: none
-  auth: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ1c2VyIiwiZXhwIjoxNzI2NTQ1NTQ1LCJpYXQiOjE3MjY0NTkxNDUsImlzcyI6Im9kaW4ifQ.dcm8ZACk56TSFBGpBCzwAhhGuC6zmnoTLaMVCyucA6E
 }

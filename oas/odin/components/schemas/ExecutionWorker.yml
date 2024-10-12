@@ -1,0 +1,20 @@
+type: object
+required:
+  - id
+  - name
+  - status
+  - created_at
+properties:
+  id:
+    type: integer
+    format: int32
+  name:
+    type: string
+  created_at:
+    type: string
+    format: date-time
+  status:
+    type: string
+  updated_at:
+    type: string
+    format: date-time

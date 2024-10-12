@@ -1,0 +1,102 @@
+get:
+  summary: Get execution job
+  description: Get execution job
+  operationId: getExecutionJobById
+  parameters:
+    - name: JobId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    - $ref: ../components/parameters/AuthHeader.yml
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Job.yml
+    '400':
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml
+    '404':
+      description: Execution job not found
+    '500':
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml
+put:
+  summary: Cancel Execution Job
+  description: Cancel Execution Job
+  operationId: cancelExecutionJob
+  parameters:
+    - name: JobId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    - $ref: ../components/parameters/AuthHeader.yml
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - message
+            properties:
+              message:
+                type: string
+    '400':
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml
+    '403':
+      description: Forbidden
+    '500':
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml
+delete:
+  summary: Delete execution job
+  description: Delete execution job
+  operationId: deleteExecutionJob
+  parameters:
+    - name: JobId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    - $ref: ../components/parameters/AuthHeader.yml
+  responses:
+    '200':
+      description: OK
+    '400':
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml
+    '403':
+      description: Forbidden
+    '404':
+      description: Execution job not found
+    '500':
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml

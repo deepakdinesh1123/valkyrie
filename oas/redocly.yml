@@ -1,0 +1,6 @@
+extends:
+  - recommended
+rules:
+  no-unused-components: error
+  operation-4xx-response: off
+  security-defined: off

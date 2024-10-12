@@ -1,7 +1,6 @@
 package docker
 
 import (
-	"archive/tar"
 	"context"
 	"fmt"
 	"io"
@@ -12,25 +11,62 @@ import (
 
 	"github.com/deepakdinesh1123/valkyrie/internal/concurrency"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/provider/common"
 	"github.com/deepakdinesh1123/valkyrie/pkg/namesgenerator"
 	"github.com/docker/docker/api/types/container"
 )
 
 func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, job db.Job) {
+	var contPID int
 	start := time.Now()
-	tctx, cancel := context.WithTimeout(ctx, time.Duration(d.envConfig.ODIN_WORKER_TASK_TIMEOUT)*time.Second)
+	var timeout int
+	if job.TimeOut.Int32 > 0 { // By default, timeout is set to -1
+		timeout = int(job.TimeOut.Int32)
+	} else if job.TimeOut.Int32 == 0 {
+		timeout = 0
+	} else {
+		timeout = d.envConfig.ODIN_WORKER_TASK_TIMEOUT
+	}
+
+	var tctx context.Context
+	var cancel context.CancelFunc
+	if timeout > 0 {
+		tctx, cancel = context.WithTimeout(context.TODO(), time.Duration(timeout)*time.Second)
+	} else {
+		tctx, cancel = context.WithCancel(context.TODO())
+	}
 	defer cancel()
+
 	defer wg.Done()
+
+	// A temporary directory on the host machine to create the overlay store
+	// This directory also contains a zip of the code and the flake.nix
+	prepDir := filepath.Join(filepath.Join("/home", d.user, ".odin", ""), fmt.Sprintf("odin-%d", time.Now().UnixNano()))
+	if err := os.MkdirAll(prepDir, 0755); err != nil {
+		d.logger.Err(err).Msg("Failed to create temp dir")
+		return
+	}
+
+	err := common.OverlayStore(prepDir, d.envConfig.ODIN_NIX_STORE)
+	if err != nil {
+		d.logger.Err(err).Msg("Failed to overlay store")
+		common.Cleanup(prepDir)
+		return
+	}
 	containerName := namesgenerator.GetRandomName(0)
+
 	resp, err := d.client.ContainerCreate(
 		ctx,
 		&container.Config{
-			Image:       "alpinix",
+			Image:       d.envConfig.ODIN_WORKER_DOCKER_IMAGE,
 			StopTimeout: &d.envConfig.ODIN_WORKER_TASK_TIMEOUT,
-			StopSignal:  "SIGINT",
+			StopSignal:  "SIGKILL",
 		},
 		&container.HostConfig{
 			AutoRemove: true,
+			Binds: []string{
+				fmt.Sprintf("%s:/nix", filepath.Join(prepDir, "merged")),
+			},
 		},
 		nil,
 		nil,
@@ -42,6 +78,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to update job")
 		}
+		common.Cleanup(prepDir)
 		return
 	}
 	err = d.client.ContainerStart(ctx, resp.ID, container.StartOptions{})
@@ -51,26 +88,43 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to update job")
 		}
+		common.Cleanup(prepDir)
 		return
 	}
 
-	if _, err := d.client.ContainerInspect(ctx, resp.ID); err != nil {
-		d.logger.Err(err).Msg("Failed to inspect container")
-		err := d.updateJob(ctx, &job, start, err.Error(), false)
+	for {
+		contInfo, err := d.client.ContainerInspect(ctx, containerName)
 		if err != nil {
-			d.logger.Err(err).Msg("Failed to update job")
+			d.logger.Err(err).Msg("Failed to inspect container")
+			err := d.updateJob(ctx, &job, start, err.Error(), false)
+			if err != nil {
+				d.logger.Err(err).Msg("Failed to update job")
+			}
+			common.Cleanup(prepDir)
+			// common.KillContainer(contInfo.State.Pid) TODO: Handle killing container
+			return
 		}
-		return
+		if contInfo.State != nil && contInfo.State.Running {
+			contPID = contInfo.State.Pid
+			break
+		}
+		if contInfo.State != nil {
+			status := contInfo.State.Status
+			if status == "removing" || status == "dead" || status == "exited" {
+				return
+			}
+		}
 	}
 
-	err = d.writeFiles(ctx, containerName, job)
+	err = d.writeFiles(ctx, containerName, prepDir, job)
 	if err != nil {
 		d.logger.Err(err).Msg("Failed to write files")
-		d.client.ContainerKill(ctx, containerName, "SIGKILL")
 		err := d.updateJob(ctx, &job, start, err.Error(), false)
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to update job")
 		}
+		common.Cleanup(prepDir)
+		common.KillContainer(contPID)
 		return
 	}
 
@@ -83,8 +137,8 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			container.ExecOptions{
 				AttachStderr: true,
 				AttachStdout: true,
-				WorkingDir:   "/home/valnix/odin",
-				Cmd:          []string{"nix", "run"},
+				Cmd:          []string{"bash", "./nix_run.sh"},
+				User:         d.user,
 			},
 		)
 		if err != nil {
@@ -96,6 +150,7 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			done <- true
 			return
 		}
+
 		hijResp, err := d.client.ContainerExecAttach(ctx, resp.ID, container.ExecAttachOptions{})
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to attach exec")
@@ -106,16 +161,21 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			done <- true
 			return
 		}
-		out, err := io.ReadAll(hijResp.Reader)
-		if err != nil {
-			d.logger.Err(err).Msg("Failed to read output")
-			err := d.updateJob(ctx, &job, start, err.Error(), false)
+
+		var out []byte
+		if hijResp.Reader != nil {
+			out, err = io.ReadAll(hijResp.Reader)
 			if err != nil {
-				d.logger.Err(err).Msg("Failed to update job")
+				d.logger.Err(err).Msg("Failed to read output")
+				err := d.updateJob(ctx, &job, start, err.Error(), false)
+				if err != nil {
+					d.logger.Err(err).Msg("Failed to update job")
+				}
+				done <- true
+				return
 			}
-			done <- true
-			return
 		}
+		d.logger.Debug().Msg("Output: " + string(out))
 		err = d.updateJob(ctx, &job, start, stripCtlAndExtFromUTF8(string(out)), true)
 		if err != nil {
 			d.logger.Err(err).Msg("Failed to update job")
@@ -130,10 +190,8 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			switch tctx.Err() {
 			case context.DeadlineExceeded:
 				d.logger.Info().Msg("Context deadline exceeded wating for process to exit")
-				err := d.client.ContainerKill(context.TODO(), containerName, "SIGKILL")
-				if err != nil {
-					d.logger.Err(err).Msg("Failed to send sigint signal")
-				}
+				common.Cleanup(prepDir)
+				common.KillContainer(contPID)
 				return
 			}
 		case <-ctx.Done():
@@ -141,41 +199,35 @@ func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			case context.Canceled:
 				d.logger.Info().Msg("Context canceled, waiting for processes to finish")
 				<-done
-				err := d.client.ContainerKill(context.TODO(), containerName, "SIGKILL")
-				if err != nil {
-					d.logger.Err(err).Msg("Failed to send sigint signal")
-				}
+				common.Cleanup(prepDir)
+				common.KillContainer(contPID)
 				return
 			default:
 				d.logger.Info().Msg("Context error killing process")
-				err := d.client.ContainerKill(context.TODO(), containerName, "SIGKILL")
-				if err != nil {
-					d.logger.Err(err).Msg("Failed to send kill signal")
-				}
+				common.Cleanup(prepDir)
+				common.KillContainer(contPID)
 				return
 			}
 		case <-done:
 			d.logger.Info().Msg("Process exited")
-			err := d.client.ContainerKill(ctx, containerName, "SIGKILL")
-			if err != nil {
-				d.logger.Err(err).Msg("Failed to send sigint signal to container")
-			}
+			common.Cleanup(prepDir)
+			common.KillContainer(contPID)
 			return
 		}
 	}
 }
 
-func (d *DockerProvider) writeFiles(ctx context.Context, containerName string, job db.Job) error {
+func (d *DockerProvider) writeFiles(ctx context.Context, containerName string, prepDir string, job db.Job) error {
 	execReq, err := d.queries.GetExecRequest(ctx, job.ExecRequestID.Int32)
 	if err != nil {
 		return err
 	}
 	files := map[string]string{
-		"flake.nix":  execReq.Flake,
+		"exec.sh":    execReq.NixScript,
 		execReq.Path: execReq.Code,
 	}
 
-	tarFilePath, err := createTarArchive(files)
+	tarFilePath, err := common.CreateTarArchive(files, prepDir)
 	if err != nil {
 		return err
 	}
@@ -187,39 +239,18 @@ func (d *DockerProvider) writeFiles(ctx context.Context, containerName string, j
 		return err
 	}
 	defer tarFile.Close()
-
-	err = d.client.CopyToContainer(ctx, containerName, "/home/valnix/odin/", tarFile, container.CopyToContainerOptions{})
+	err = d.client.CopyToContainer(
+		ctx,
+		containerName,
+		filepath.Join("/home", d.user, "/odin"),
+		tarFile,
+		container.CopyToContainerOptions{AllowOverwriteDirWithFile: true, CopyUIDGID: true},
+	)
 	if err != nil {
 		d.logger.Err(err).Msg("Failed to copy files to container")
 		return err
 	}
 	return nil
-}
-
-func createTarArchive(files map[string]string) (string, error) {
-	tarFilePath := filepath.Join(os.TempDir(), fmt.Sprintf("%d.tar", time.Now().UnixNano()))
-	tarFile, err := os.Create(tarFilePath)
-	if err != nil {
-		return "", err
-	}
-	defer tarFile.Close()
-
-	tw := tar.NewWriter(tarFile)
-	defer tw.Close()
-
-	for name, content := range files {
-		if err := tw.WriteHeader(&tar.Header{
-			Name: name,
-			Size: int64(len(content)),
-			Mode: 0744,
-		}); err != nil {
-			return "", err
-		}
-		if _, err := tw.Write([]byte(content)); err != nil {
-			return "", err
-		}
-	}
-	return tarFilePath, nil
 }
 
 func (d *DockerProvider) updateJob(ctx context.Context, job *db.Job, startTime time.Time, message string, success bool) error {

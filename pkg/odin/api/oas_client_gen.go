@@ -6,70 +6,101 @@ import (
 	"context"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/go-faster/errors"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/metric"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ogen-go/ogen/conv"
 	ht "github.com/ogen-go/ogen/http"
+	"github.com/ogen-go/ogen/otelogen"
 	"github.com/ogen-go/ogen/uri"
 )
 
 // Invoker invokes operations described by OpenAPI v3 specification.
 type Invoker interface {
-	// CancelJob invokes cancelJob operation.
+	// CancelExecutionJob invokes cancelExecutionJob operation.
 	//
-	// Cancel Job.
+	// Cancel Execution Job.
 	//
-	// PUT /executions/{JobId}/
-	CancelJob(ctx context.Context, params CancelJobParams) (CancelJobRes, error)
-	// DeleteJob invokes deleteJob operation.
+	// PUT /executions/jobs/{JobId}
+	CancelExecutionJob(ctx context.Context, params CancelExecutionJobParams) (CancelExecutionJobRes, error)
+	// DeleteExecutionJob invokes deleteExecutionJob operation.
 	//
-	// Delete job.
+	// Delete execution job.
 	//
-	// DELETE /executions/{JobId}/
-	DeleteJob(ctx context.Context, params DeleteJobParams) (DeleteJobRes, error)
+	// DELETE /executions/jobs/{JobId}
+	DeleteExecutionJob(ctx context.Context, params DeleteExecutionJobParams) (DeleteExecutionJobRes, error)
+	// DeleteExecutionWorker invokes deleteExecutionWorker operation.
+	//
+	// Delete execution worker.
+	//
+	// DELETE /executions/workers/{workerId}
+	DeleteExecutionWorker(ctx context.Context, params DeleteExecutionWorkerParams) (DeleteExecutionWorkerRes, error)
 	// Execute invokes execute operation.
 	//
 	// Execute a script.
 	//
-	// POST /executions/execute/
-	Execute(ctx context.Context, request *ExecutionRequest) (ExecuteRes, error)
-	// GetAllExecutionResults invokes getAllExecutionResults operation.
+	// POST /executions/execute
+	Execute(ctx context.Context, request *ExecutionRequest, params ExecuteParams) (ExecuteRes, error)
+	// GetAllExecutionJobs invokes getAllExecutionJobs operation.
 	//
-	// Get all execution results.
+	// Get all execution jobs.
 	//
-	// GET /executions/results/
-	GetAllExecutionResults(ctx context.Context, params GetAllExecutionResultsParams) (GetAllExecutionResultsRes, error)
+	// GET /jobs/execution
+	GetAllExecutionJobs(ctx context.Context, params GetAllExecutionJobsParams) (GetAllExecutionJobsRes, error)
 	// GetAllExecutions invokes getAllExecutions operation.
 	//
 	// Get all executions.
 	//
-	// GET /executions/
+	// GET /executions
 	GetAllExecutions(ctx context.Context, params GetAllExecutionsParams) (GetAllExecutionsRes, error)
+	// GetAllLanguages invokes getAllLanguages operation.
+	//
+	// Get all languages.
+	//
+	// GET /languages
+	GetAllLanguages(ctx context.Context, params GetAllLanguagesParams) (GetAllLanguagesRes, error)
 	// GetExecutionConfig invokes getExecutionConfig operation.
 	//
 	// Get execution config.
 	//
-	// GET /execution/config/
-	GetExecutionConfig(ctx context.Context) (GetExecutionConfigRes, error)
-	// GetExecutionResultsById invokes getExecutionResultsById operation.
+	// GET /execution/config
+	GetExecutionConfig(ctx context.Context, params GetExecutionConfigParams) (GetExecutionConfigRes, error)
+	// GetExecutionJobById invokes getExecutionJobById operation.
 	//
-	// Get execution result.
+	// Get execution job.
 	//
-	// GET /executions/{JobId}/
-	GetExecutionResultsById(ctx context.Context, params GetExecutionResultsByIdParams) (GetExecutionResultsByIdRes, error)
+	// GET /executions/jobs/{JobId}
+	GetExecutionJobById(ctx context.Context, params GetExecutionJobByIdParams) (GetExecutionJobByIdRes, error)
+	// GetExecutionResultById invokes getExecutionResultById operation.
+	//
+	// Get execution result by id.
+	//
+	// GET /executions/{execId}
+	GetExecutionResultById(ctx context.Context, params GetExecutionResultByIdParams) (GetExecutionResultByIdRes, error)
 	// GetExecutionWorkers invokes getExecutionWorkers operation.
 	//
 	// Get all execution workers.
 	//
 	// GET /executions/workers
 	GetExecutionWorkers(ctx context.Context, params GetExecutionWorkersParams) (GetExecutionWorkersRes, error)
+	// GetExecutionsForJob invokes getExecutionsForJob operation.
+	//
+	// Get executions of given job.
+	//
+	// GET /jobs/{JobId}/executions
+	GetExecutionsForJob(ctx context.Context, params GetExecutionsForJobParams) (GetExecutionsForJobRes, error)
 	// GetVersion invokes getVersion operation.
 	//
 	// Get version.
 	//
-	// GET /version/
-	GetVersion(ctx context.Context) (GetVersionRes, error)
+	// GET /version
+	GetVersion(ctx context.Context, params GetVersionParams) (GetVersionRes, error)
 }
 
 // Client implements OAS client.
@@ -120,21 +151,54 @@ func (c *Client) requestURL(ctx context.Context) *url.URL {
 	return u
 }
 
-// CancelJob invokes cancelJob operation.
+// CancelExecutionJob invokes cancelExecutionJob operation.
 //
-// Cancel Job.
+// Cancel Execution Job.
 //
-// PUT /executions/{JobId}/
-func (c *Client) CancelJob(ctx context.Context, params CancelJobParams) (CancelJobRes, error) {
-	res, err := c.sendCancelJob(ctx, params)
+// PUT /executions/jobs/{JobId}
+func (c *Client) CancelExecutionJob(ctx context.Context, params CancelExecutionJobParams) (CancelExecutionJobRes, error) {
+	res, err := c.sendCancelExecutionJob(ctx, params)
 	return res, err
 }
 
-func (c *Client) sendCancelJob(ctx context.Context, params CancelJobParams) (res CancelJobRes, err error) {
+func (c *Client) sendCancelExecutionJob(ctx context.Context, params CancelExecutionJobParams) (res CancelExecutionJobRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("cancelExecutionJob"),
+		semconv.HTTPRequestMethodKey.String("PUT"),
+		semconv.HTTPRouteKey.String("/executions/jobs/{JobId}"),
+	}
 
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "CancelExecutionJob",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [3]string
-	pathParts[0] = "/executions/"
+	var pathParts [2]string
+	pathParts[0] = "/executions/jobs/"
 	{
 		// Encode "JobId" parameter.
 		e := uri.NewPathEncoder(uri.PathEncoderConfig{
@@ -153,21 +217,40 @@ func (c *Client) sendCancelJob(ctx context.Context, params CancelJobParams) (res
 		}
 		pathParts[1] = encoded
 	}
-	pathParts[2] = "/"
 	uri.AddPathParts(u, pathParts[:]...)
 
+	stage = "EncodeRequest"
 	r, err := ht.NewRequest(ctx, "PUT", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
 	}
 
+	stage = "EncodeHeaderParams"
+	h := uri.NewHeaderEncoder(r.Header)
+	{
+		cfg := uri.HeaderParameterEncodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.XAuthToken.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode header")
+		}
+	}
+
+	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
 		return res, errors.Wrap(err, "do request")
 	}
 	defer resp.Body.Close()
 
-	result, err := decodeCancelJobResponse(resp)
+	stage = "DecodeResponse"
+	result, err := decodeCancelExecutionJobResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -175,21 +258,54 @@ func (c *Client) sendCancelJob(ctx context.Context, params CancelJobParams) (res
 	return result, nil
 }
 
-// DeleteJob invokes deleteJob operation.
+// DeleteExecutionJob invokes deleteExecutionJob operation.
 //
-// Delete job.
+// Delete execution job.
 //
-// DELETE /executions/{JobId}/
-func (c *Client) DeleteJob(ctx context.Context, params DeleteJobParams) (DeleteJobRes, error) {
-	res, err := c.sendDeleteJob(ctx, params)
+// DELETE /executions/jobs/{JobId}
+func (c *Client) DeleteExecutionJob(ctx context.Context, params DeleteExecutionJobParams) (DeleteExecutionJobRes, error) {
+	res, err := c.sendDeleteExecutionJob(ctx, params)
 	return res, err
 }
 
-func (c *Client) sendDeleteJob(ctx context.Context, params DeleteJobParams) (res DeleteJobRes, err error) {
+func (c *Client) sendDeleteExecutionJob(ctx context.Context, params DeleteExecutionJobParams) (res DeleteExecutionJobRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("deleteExecutionJob"),
+		semconv.HTTPRequestMethodKey.String("DELETE"),
+		semconv.HTTPRouteKey.String("/executions/jobs/{JobId}"),
+	}
 
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "DeleteExecutionJob",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [3]string
-	pathParts[0] = "/executions/"
+	var pathParts [2]string
+	pathParts[0] = "/executions/jobs/"
 	{
 		// Encode "JobId" parameter.
 		e := uri.NewPathEncoder(uri.PathEncoderConfig{
@@ -208,21 +324,168 @@ func (c *Client) sendDeleteJob(ctx context.Context, params DeleteJobParams) (res
 		}
 		pathParts[1] = encoded
 	}
-	pathParts[2] = "/"
 	uri.AddPathParts(u, pathParts[:]...)
 
+	stage = "EncodeRequest"
 	r, err := ht.NewRequest(ctx, "DELETE", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
 	}
 
+	stage = "EncodeHeaderParams"
+	h := uri.NewHeaderEncoder(r.Header)
+	{
+		cfg := uri.HeaderParameterEncodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.XAuthToken.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode header")
+		}
+	}
+
+	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
 		return res, errors.Wrap(err, "do request")
 	}
 	defer resp.Body.Close()
 
-	result, err := decodeDeleteJobResponse(resp)
+	stage = "DecodeResponse"
+	result, err := decodeDeleteExecutionJobResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// DeleteExecutionWorker invokes deleteExecutionWorker operation.
+//
+// Delete execution worker.
+//
+// DELETE /executions/workers/{workerId}
+func (c *Client) DeleteExecutionWorker(ctx context.Context, params DeleteExecutionWorkerParams) (DeleteExecutionWorkerRes, error) {
+	res, err := c.sendDeleteExecutionWorker(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendDeleteExecutionWorker(ctx context.Context, params DeleteExecutionWorkerParams) (res DeleteExecutionWorkerRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("deleteExecutionWorker"),
+		semconv.HTTPRequestMethodKey.String("DELETE"),
+		semconv.HTTPRouteKey.String("/executions/workers/{workerId}"),
+	}
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "DeleteExecutionWorker",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [2]string
+	pathParts[0] = "/executions/workers/"
+	{
+		// Encode "workerId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "workerId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			return e.EncodeValue(conv.Int64ToString(params.WorkerId))
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeQueryParams"
+	q := uri.NewQueryEncoder()
+	{
+		// Encode "force" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "force",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.Force.Get(); ok {
+				return e.EncodeValue(conv.BoolToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	u.RawQuery = q.Values().Encode()
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "DELETE", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	stage = "EncodeHeaderParams"
+	h := uri.NewHeaderEncoder(r.Header)
+	{
+		cfg := uri.HeaderParameterEncodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.XAuthToken.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode header")
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodeDeleteExecutionWorkerResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -234,19 +497,53 @@ func (c *Client) sendDeleteJob(ctx context.Context, params DeleteJobParams) (res
 //
 // Execute a script.
 //
-// POST /executions/execute/
-func (c *Client) Execute(ctx context.Context, request *ExecutionRequest) (ExecuteRes, error) {
-	res, err := c.sendExecute(ctx, request)
+// POST /executions/execute
+func (c *Client) Execute(ctx context.Context, request *ExecutionRequest, params ExecuteParams) (ExecuteRes, error) {
+	res, err := c.sendExecute(ctx, request, params)
 	return res, err
 }
 
-func (c *Client) sendExecute(ctx context.Context, request *ExecutionRequest) (res ExecuteRes, err error) {
+func (c *Client) sendExecute(ctx context.Context, request *ExecutionRequest, params ExecuteParams) (res ExecuteRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("execute"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/executions/execute"),
+	}
 
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "Execute",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
-	pathParts[0] = "/executions/execute/"
+	pathParts[0] = "/executions/execute"
 	uri.AddPathParts(u, pathParts[:]...)
 
+	stage = "EncodeRequest"
 	r, err := ht.NewRequest(ctx, "POST", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
@@ -255,12 +552,31 @@ func (c *Client) sendExecute(ctx context.Context, request *ExecutionRequest) (re
 		return res, errors.Wrap(err, "encode request")
 	}
 
+	stage = "EncodeHeaderParams"
+	h := uri.NewHeaderEncoder(r.Header)
+	{
+		cfg := uri.HeaderParameterEncodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.XAuthToken.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode header")
+		}
+	}
+
+	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
 		return res, errors.Wrap(err, "do request")
 	}
 	defer resp.Body.Close()
 
+	stage = "DecodeResponse"
 	result, err := decodeExecuteResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
@@ -269,23 +585,57 @@ func (c *Client) sendExecute(ctx context.Context, request *ExecutionRequest) (re
 	return result, nil
 }
 
-// GetAllExecutionResults invokes getAllExecutionResults operation.
+// GetAllExecutionJobs invokes getAllExecutionJobs operation.
 //
-// Get all execution results.
+// Get all execution jobs.
 //
-// GET /executions/results/
-func (c *Client) GetAllExecutionResults(ctx context.Context, params GetAllExecutionResultsParams) (GetAllExecutionResultsRes, error) {
-	res, err := c.sendGetAllExecutionResults(ctx, params)
+// GET /jobs/execution
+func (c *Client) GetAllExecutionJobs(ctx context.Context, params GetAllExecutionJobsParams) (GetAllExecutionJobsRes, error) {
+	res, err := c.sendGetAllExecutionJobs(ctx, params)
 	return res, err
 }
 
-func (c *Client) sendGetAllExecutionResults(ctx context.Context, params GetAllExecutionResultsParams) (res GetAllExecutionResultsRes, err error) {
+func (c *Client) sendGetAllExecutionJobs(ctx context.Context, params GetAllExecutionJobsParams) (res GetAllExecutionJobsRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getAllExecutionJobs"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/jobs/execution"),
+	}
 
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "GetAllExecutionJobs",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
-	pathParts[0] = "/executions/results/"
+	pathParts[0] = "/jobs/execution"
 	uri.AddPathParts(u, pathParts[:]...)
 
+	stage = "EncodeQueryParams"
 	q := uri.NewQueryEncoder()
 	{
 		// Encode "page" parameter.
@@ -323,18 +673,38 @@ func (c *Client) sendGetAllExecutionResults(ctx context.Context, params GetAllEx
 	}
 	u.RawQuery = q.Values().Encode()
 
+	stage = "EncodeRequest"
 	r, err := ht.NewRequest(ctx, "GET", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
 	}
 
+	stage = "EncodeHeaderParams"
+	h := uri.NewHeaderEncoder(r.Header)
+	{
+		cfg := uri.HeaderParameterEncodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.XAuthToken.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode header")
+		}
+	}
+
+	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
 		return res, errors.Wrap(err, "do request")
 	}
 	defer resp.Body.Close()
 
-	result, err := decodeGetAllExecutionResultsResponse(resp)
+	stage = "DecodeResponse"
+	result, err := decodeGetAllExecutionJobsResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -346,19 +716,53 @@ func (c *Client) sendGetAllExecutionResults(ctx context.Context, params GetAllEx
 //
 // Get all executions.
 //
-// GET /executions/
+// GET /executions
 func (c *Client) GetAllExecutions(ctx context.Context, params GetAllExecutionsParams) (GetAllExecutionsRes, error) {
 	res, err := c.sendGetAllExecutions(ctx, params)
 	return res, err
 }
 
 func (c *Client) sendGetAllExecutions(ctx context.Context, params GetAllExecutionsParams) (res GetAllExecutionsRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getAllExecutions"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/executions"),
+	}
 
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "GetAllExecutions",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
-	pathParts[0] = "/executions/"
+	pathParts[0] = "/executions"
 	uri.AddPathParts(u, pathParts[:]...)
 
+	stage = "EncodeQueryParams"
 	q := uri.NewQueryEncoder()
 	{
 		// Encode "page" parameter.
@@ -396,18 +800,127 @@ func (c *Client) sendGetAllExecutions(ctx context.Context, params GetAllExecutio
 	}
 	u.RawQuery = q.Values().Encode()
 
+	stage = "EncodeRequest"
 	r, err := ht.NewRequest(ctx, "GET", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
 	}
 
+	stage = "EncodeHeaderParams"
+	h := uri.NewHeaderEncoder(r.Header)
+	{
+		cfg := uri.HeaderParameterEncodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.XAuthToken.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode header")
+		}
+	}
+
+	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
 		return res, errors.Wrap(err, "do request")
 	}
 	defer resp.Body.Close()
 
+	stage = "DecodeResponse"
 	result, err := decodeGetAllExecutionsResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// GetAllLanguages invokes getAllLanguages operation.
+//
+// Get all languages.
+//
+// GET /languages
+func (c *Client) GetAllLanguages(ctx context.Context, params GetAllLanguagesParams) (GetAllLanguagesRes, error) {
+	res, err := c.sendGetAllLanguages(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendGetAllLanguages(ctx context.Context, params GetAllLanguagesParams) (res GetAllLanguagesRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getAllLanguages"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/languages"),
+	}
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "GetAllLanguages",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/languages"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	stage = "EncodeHeaderParams"
+	h := uri.NewHeaderEncoder(r.Header)
+	{
+		cfg := uri.HeaderParameterEncodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.XAuthToken.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode header")
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodeGetAllLanguagesResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -419,30 +932,83 @@ func (c *Client) sendGetAllExecutions(ctx context.Context, params GetAllExecutio
 //
 // Get execution config.
 //
-// GET /execution/config/
-func (c *Client) GetExecutionConfig(ctx context.Context) (GetExecutionConfigRes, error) {
-	res, err := c.sendGetExecutionConfig(ctx)
+// GET /execution/config
+func (c *Client) GetExecutionConfig(ctx context.Context, params GetExecutionConfigParams) (GetExecutionConfigRes, error) {
+	res, err := c.sendGetExecutionConfig(ctx, params)
 	return res, err
 }
 
-func (c *Client) sendGetExecutionConfig(ctx context.Context) (res GetExecutionConfigRes, err error) {
+func (c *Client) sendGetExecutionConfig(ctx context.Context, params GetExecutionConfigParams) (res GetExecutionConfigRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getExecutionConfig"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/execution/config"),
+	}
 
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "GetExecutionConfig",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
-	pathParts[0] = "/execution/config/"
+	pathParts[0] = "/execution/config"
 	uri.AddPathParts(u, pathParts[:]...)
 
+	stage = "EncodeRequest"
 	r, err := ht.NewRequest(ctx, "GET", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
 	}
 
+	stage = "EncodeHeaderParams"
+	h := uri.NewHeaderEncoder(r.Header)
+	{
+		cfg := uri.HeaderParameterEncodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.XAuthToken.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode header")
+		}
+	}
+
+	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
 		return res, errors.Wrap(err, "do request")
 	}
 	defer resp.Body.Close()
 
+	stage = "DecodeResponse"
 	result, err := decodeGetExecutionConfigResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
@@ -451,21 +1017,54 @@ func (c *Client) sendGetExecutionConfig(ctx context.Context) (res GetExecutionCo
 	return result, nil
 }
 
-// GetExecutionResultsById invokes getExecutionResultsById operation.
+// GetExecutionJobById invokes getExecutionJobById operation.
 //
-// Get execution result.
+// Get execution job.
 //
-// GET /executions/{JobId}/
-func (c *Client) GetExecutionResultsById(ctx context.Context, params GetExecutionResultsByIdParams) (GetExecutionResultsByIdRes, error) {
-	res, err := c.sendGetExecutionResultsById(ctx, params)
+// GET /executions/jobs/{JobId}
+func (c *Client) GetExecutionJobById(ctx context.Context, params GetExecutionJobByIdParams) (GetExecutionJobByIdRes, error) {
+	res, err := c.sendGetExecutionJobById(ctx, params)
 	return res, err
 }
 
-func (c *Client) sendGetExecutionResultsById(ctx context.Context, params GetExecutionResultsByIdParams) (res GetExecutionResultsByIdRes, err error) {
+func (c *Client) sendGetExecutionJobById(ctx context.Context, params GetExecutionJobByIdParams) (res GetExecutionJobByIdRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getExecutionJobById"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/executions/jobs/{JobId}"),
+	}
 
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "GetExecutionJobById",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [3]string
-	pathParts[0] = "/executions/"
+	var pathParts [2]string
+	pathParts[0] = "/executions/jobs/"
 	{
 		// Encode "JobId" parameter.
 		e := uri.NewPathEncoder(uri.PathEncoderConfig{
@@ -484,58 +1083,147 @@ func (c *Client) sendGetExecutionResultsById(ctx context.Context, params GetExec
 		}
 		pathParts[1] = encoded
 	}
-	pathParts[2] = "/"
 	uri.AddPathParts(u, pathParts[:]...)
 
-	q := uri.NewQueryEncoder()
-	{
-		// Encode "page" parameter.
-		cfg := uri.QueryParameterEncodingConfig{
-			Name:    "page",
-			Style:   uri.QueryStyleForm,
-			Explode: true,
-		}
-
-		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.Page.Get(); ok {
-				return e.EncodeValue(conv.Int32ToString(val))
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode query")
-		}
-	}
-	{
-		// Encode "pageSize" parameter.
-		cfg := uri.QueryParameterEncodingConfig{
-			Name:    "pageSize",
-			Style:   uri.QueryStyleForm,
-			Explode: true,
-		}
-
-		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.PageSize.Get(); ok {
-				return e.EncodeValue(conv.Int32ToString(val))
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode query")
-		}
-	}
-	u.RawQuery = q.Values().Encode()
-
+	stage = "EncodeRequest"
 	r, err := ht.NewRequest(ctx, "GET", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
 	}
 
+	stage = "EncodeHeaderParams"
+	h := uri.NewHeaderEncoder(r.Header)
+	{
+		cfg := uri.HeaderParameterEncodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.XAuthToken.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode header")
+		}
+	}
+
+	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
 		return res, errors.Wrap(err, "do request")
 	}
 	defer resp.Body.Close()
 
-	result, err := decodeGetExecutionResultsByIdResponse(resp)
+	stage = "DecodeResponse"
+	result, err := decodeGetExecutionJobByIdResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// GetExecutionResultById invokes getExecutionResultById operation.
+//
+// Get execution result by id.
+//
+// GET /executions/{execId}
+func (c *Client) GetExecutionResultById(ctx context.Context, params GetExecutionResultByIdParams) (GetExecutionResultByIdRes, error) {
+	res, err := c.sendGetExecutionResultById(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendGetExecutionResultById(ctx context.Context, params GetExecutionResultByIdParams) (res GetExecutionResultByIdRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getExecutionResultById"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/executions/{execId}"),
+	}
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "GetExecutionResultById",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [2]string
+	pathParts[0] = "/executions/"
+	{
+		// Encode "execId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "execId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			return e.EncodeValue(conv.Int64ToString(params.ExecId))
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	stage = "EncodeHeaderParams"
+	h := uri.NewHeaderEncoder(r.Header)
+	{
+		cfg := uri.HeaderParameterEncodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.XAuthToken.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode header")
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodeGetExecutionResultByIdResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -554,12 +1242,46 @@ func (c *Client) GetExecutionWorkers(ctx context.Context, params GetExecutionWor
 }
 
 func (c *Client) sendGetExecutionWorkers(ctx context.Context, params GetExecutionWorkersParams) (res GetExecutionWorkersRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getExecutionWorkers"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/executions/workers"),
+	}
 
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "GetExecutionWorkers",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
 	pathParts[0] = "/executions/workers"
 	uri.AddPathParts(u, pathParts[:]...)
 
+	stage = "EncodeQueryParams"
 	q := uri.NewQueryEncoder()
 	{
 		// Encode "page" parameter.
@@ -597,18 +1319,184 @@ func (c *Client) sendGetExecutionWorkers(ctx context.Context, params GetExecutio
 	}
 	u.RawQuery = q.Values().Encode()
 
+	stage = "EncodeRequest"
 	r, err := ht.NewRequest(ctx, "GET", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
 	}
 
+	stage = "EncodeHeaderParams"
+	h := uri.NewHeaderEncoder(r.Header)
+	{
+		cfg := uri.HeaderParameterEncodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.XAuthToken.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode header")
+		}
+	}
+
+	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
 		return res, errors.Wrap(err, "do request")
 	}
 	defer resp.Body.Close()
 
+	stage = "DecodeResponse"
 	result, err := decodeGetExecutionWorkersResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// GetExecutionsForJob invokes getExecutionsForJob operation.
+//
+// Get executions of given job.
+//
+// GET /jobs/{JobId}/executions
+func (c *Client) GetExecutionsForJob(ctx context.Context, params GetExecutionsForJobParams) (GetExecutionsForJobRes, error) {
+	res, err := c.sendGetExecutionsForJob(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendGetExecutionsForJob(ctx context.Context, params GetExecutionsForJobParams) (res GetExecutionsForJobRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getExecutionsForJob"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/jobs/{JobId}/executions"),
+	}
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "GetExecutionsForJob",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [3]string
+	pathParts[0] = "/jobs/"
+	{
+		// Encode "JobId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "JobId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			return e.EncodeValue(conv.Int64ToString(params.JobId))
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/executions"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeQueryParams"
+	q := uri.NewQueryEncoder()
+	{
+		// Encode "page" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "page",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.Page.Get(); ok {
+				return e.EncodeValue(conv.Int32ToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	{
+		// Encode "pageSize" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "pageSize",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.PageSize.Get(); ok {
+				return e.EncodeValue(conv.Int32ToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	u.RawQuery = q.Values().Encode()
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	stage = "EncodeHeaderParams"
+	h := uri.NewHeaderEncoder(r.Header)
+	{
+		cfg := uri.HeaderParameterEncodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.XAuthToken.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode header")
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodeGetExecutionsForJobResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -620,30 +1508,83 @@ func (c *Client) sendGetExecutionWorkers(ctx context.Context, params GetExecutio
 //
 // Get version.
 //
-// GET /version/
-func (c *Client) GetVersion(ctx context.Context) (GetVersionRes, error) {
-	res, err := c.sendGetVersion(ctx)
+// GET /version
+func (c *Client) GetVersion(ctx context.Context, params GetVersionParams) (GetVersionRes, error) {
+	res, err := c.sendGetVersion(ctx, params)
 	return res, err
 }
 
-func (c *Client) sendGetVersion(ctx context.Context) (res GetVersionRes, err error) {
+func (c *Client) sendGetVersion(ctx context.Context, params GetVersionParams) (res GetVersionRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getVersion"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/version"),
+	}
 
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "GetVersion",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
-	pathParts[0] = "/version/"
+	pathParts[0] = "/version"
 	uri.AddPathParts(u, pathParts[:]...)
 
+	stage = "EncodeRequest"
 	r, err := ht.NewRequest(ctx, "GET", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
 	}
 
+	stage = "EncodeHeaderParams"
+	h := uri.NewHeaderEncoder(r.Header)
+	{
+		cfg := uri.HeaderParameterEncodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.XAuthToken.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode header")
+		}
+	}
+
+	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
 		return res, errors.Wrap(err, "do request")
 	}
 	defer resp.Body.Close()
 
+	stage = "DecodeResponse"
 	result, err := decodeGetVersionResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")

@@ -8,20 +8,20 @@ import (
 	"github.com/ogen-go/ogen/validate"
 )
 
-func (s *GetAllExecutionResultsOK) Validate() error {
+func (s *GetAllExecutionJobsOK) Validate() error {
 	if s == nil {
 		return validate.ErrNilPointer
 	}
 
 	var failures []validate.FieldError
 	if err := func() error {
-		if s.Executions == nil {
+		if s.Jobs == nil {
 			return errors.New("nil is invalid value")
 		}
 		return nil
 	}(); err != nil {
 		failures = append(failures, validate.FieldError{
-			Name:  "executions",
+			Name:  "jobs",
 			Error: err,
 		})
 	}
@@ -54,20 +54,20 @@ func (s *GetAllExecutionsOK) Validate() error {
 	return nil
 }
 
-func (s *GetExecutionResultsByIdOK) Validate() error {
+func (s *GetAllLanguagesOK) Validate() error {
 	if s == nil {
 		return validate.ErrNilPointer
 	}
 
 	var failures []validate.FieldError
 	if err := func() error {
-		if s.Executions == nil {
+		if s.Languages == nil {
 			return errors.New("nil is invalid value")
 		}
 		return nil
 	}(); err != nil {
 		failures = append(failures, validate.FieldError{
-			Name:  "executions",
+			Name:  "languages",
 			Error: err,
 		})
 	}
@@ -91,6 +91,29 @@ func (s *GetExecutionWorkersOK) Validate() error {
 	}(); err != nil {
 		failures = append(failures, validate.FieldError{
 			Name:  "workers",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s *GetExecutionsForJobOK) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
+	var failures []validate.FieldError
+	if err := func() error {
+		if s.Executions == nil {
+			return errors.New("nil is invalid value")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "executions",
 			Error: err,
 		})
 	}

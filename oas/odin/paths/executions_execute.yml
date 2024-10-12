@@ -1,0 +1,41 @@
+post:
+  summary: Execute a script
+  description: Execute a script
+  operationId: execute
+  parameters:
+    - $ref: ../components/parameters/AuthHeader.yml
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../components/schemas/ExecutionRequest.yml
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - jobId
+              - events
+            properties:
+              jobId:
+                type: integer
+                format: int64
+              events:
+                type: string
+                format: url
+    '400':
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml
+    '500':
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml

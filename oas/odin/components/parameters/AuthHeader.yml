@@ -1,0 +1,6 @@
+name: X-Auth-Token
+in: header
+description: Authentication token
+required: false
+schema:
+  type: string

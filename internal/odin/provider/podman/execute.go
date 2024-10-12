@@ -3,7 +3,6 @@
 package podman
 
 import (
-	"archive/tar"
 	"bytes"
 	"context"
 	"fmt"
@@ -13,23 +12,58 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/containers/podman/v5/libpod/define"
 	"github.com/containers/podman/v5/pkg/api/handlers"
 	"github.com/containers/podman/v5/pkg/bindings/containers"
 	"github.com/containers/podman/v5/pkg/specgen"
 	"github.com/deepakdinesh1123/valkyrie/internal/concurrency"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/provider/common"
 	"github.com/deepakdinesh1123/valkyrie/pkg/namesgenerator"
 	"github.com/docker/docker/api/types/container"
-	"github.com/jackc/pgx/v5/pgtype"
+	spec "github.com/opencontainers/runtime-spec/specs-go"
 )
 
-func (p *PodmanProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, execReq db.Jobqueue) {
-	tctx, cancel := context.WithTimeout(ctx, time.Duration(p.envConfig.ODIN_WORKER_TASK_TIMEOUT)*time.Second)
+func (p *PodmanProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, job db.Job) {
+	start := time.Now()
+
+	var timeout int
+	if job.TimeOut.Int32 > 0 { // By default, timeout is set to -1
+		timeout = int(job.TimeOut.Int32)
+	} else if job.TimeOut.Int32 == 0 {
+		timeout = 0
+	} else {
+		timeout = p.envConfig.ODIN_WORKER_TASK_TIMEOUT
+	}
+
+	// A temporary directory on the host machine to create the overlay store
+	// This directory also contains a zip of the code and the flake.nix
+	prepDir := filepath.Join(os.TempDir(), fmt.Sprintf("odin-%d", time.Now().UnixNano()))
+	if err := os.MkdirAll(prepDir, 0755); err != nil {
+		p.logger.Err(err).Msg("Failed to create temp dir")
+		return
+	}
+
+	err := common.OverlayStore(prepDir, p.envConfig.ODIN_NIX_STORE)
+	if err != nil {
+		p.logger.Err(err).Msg("Failed to overlay store")
+		common.Cleanup(prepDir)
+		return
+	}
+
+	var tctx context.Context
+	var cancel context.CancelFunc
+	if timeout > 0 {
+		tctx, cancel = context.WithTimeout(context.TODO(), time.Duration(timeout)*time.Second)
+	} else {
+		tctx, cancel = context.WithCancel(context.TODO())
+	}
 	defer cancel()
+
 	defer wg.Done()
 	containerName := namesgenerator.GetRandomName(0)
 	s := specgen.NewSpecGenerator(
-		"docker.io/library/deepakdinesh1123/nix:alpine_amd64",
+		p.envConfig.ODIN_WORKER_PODMAN_IMAGE,
 		false,
 	)
 	s.Name = containerName
@@ -41,6 +75,12 @@ func (p *PodmanProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	s.StopSignal = &stopSignal
 
 	s.OCIRuntime = p.envConfig.ODIN_WORKER_RUNTIME
+	s.ContainerStorageConfig.Mounts = append(s.ContainerStorageConfig.Mounts, spec.Mount{
+		Destination: "/nix",
+		Type:        "bind",
+		Source:      filepath.Join(prepDir, "merged"),
+		Options:     []string{"U", "true"},
+	})
 
 	containerRemove := false
 	s.Remove = &containerRemove
@@ -48,7 +88,7 @@ func (p *PodmanProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	cont, err := containers.CreateWithSpec(p.conn, s, nil)
 	if err != nil {
 		p.logger.Err(err)
-		p.updateJob(ctx, execReq.ID, err.Error())
+		p.updateJob(ctx, &job, start, err.Error(), "", false)
 	}
 	p.logger.Info().Str("Container ID", cont.ID).Msg("Container created")
 
@@ -58,17 +98,18 @@ func (p *PodmanProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	}
 	p.logger.Info().Msg("Container started")
 
-	if _, err := containers.Inspect(p.conn, cont.ID, nil); err != nil {
+	var contInfo *define.InspectContainerData
+	if contInfo, err = containers.Inspect(p.conn, cont.ID, nil); err != nil {
 		p.logger.Err(err).Msg("Failed to inspect container")
-		p.updateJob(ctx, execReq.ID, err.Error())
+		p.updateJob(ctx, &job, start, err.Error(), "", false)
 		return
 	}
 
-	err = p.writeFiles(ctx, containerName, execReq)
+	err = p.writeFiles(ctx, containerName, prepDir, job)
 	if err != nil {
 		p.logger.Err(err).Msg("Failed to write files")
-		containers.Kill(p.conn, string(execReq.ID), nil)
-		p.updateJob(ctx, execReq.ID, err.Error())
+		containers.Kill(p.conn, string(job.JobID), nil)
+		p.updateJob(ctx, &job, start, err.Error(), "", false)
 		return
 	}
 
@@ -76,17 +117,17 @@ func (p *PodmanProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 
 	done := make(chan bool, 1)
 	go func() {
-		execId, err := containers.ExecCreate(p.conn, string(execReq.ID), &handlers.ExecCreateConfig{
+		execId, err := containers.ExecCreate(p.conn, cont.ID, &handlers.ExecCreateConfig{
 			ExecConfig: container.ExecOptions{
 				AttachStderr: true,
 				AttachStdout: true,
-				WorkingDir:   "/home/valnix/odin",
+				WorkingDir:   "/odin",
 				Cmd:          []string{"nix", "run"},
 			},
 		})
 		if err != nil {
 			p.logger.Err(err).Msg("Failed to create exec")
-			p.updateJob(ctx, execReq.ID, err.Error())
+			p.updateJob(ctx, &job, start, err.Error(), "", false)
 			done <- true
 			return
 		}
@@ -101,7 +142,7 @@ func (p *PodmanProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 		err = containers.ExecStartAndAttach(p.conn, execId, execOpts)
 		if err != nil {
 			p.logger.Err(err).Msg("Failed to start exec")
-			p.updateJob(ctx, execReq.ID, err.Error())
+			p.updateJob(ctx, &job, start, err.Error(), "", false)
 			done <- true
 			return
 		}
@@ -114,7 +155,7 @@ func (p *PodmanProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			outputC <- output.String()
 		}()
 		w.Close()
-		p.updateJob(ctx, execReq.ID, <-outputC)
+		p.updateJob(ctx, &job, start, "Completed", <-outputC, true)
 		done <- true
 	}()
 
@@ -124,10 +165,8 @@ func (p *PodmanProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			switch tctx.Err() {
 			case context.DeadlineExceeded:
 				p.logger.Info().Msg("Context deadline exceeded wating for process to exit")
-				err := containers.Kill(p.conn, cont.ID, new(containers.KillOptions).WithSignal("SIGINT"))
-				if err != nil {
-					p.logger.Err(err).Msg("Failed to send sigint signal")
-				}
+				common.Cleanup(prepDir)
+				common.KillContainer(contInfo.State.Pid)
 				return
 			}
 		case <-ctx.Done():
@@ -151,7 +190,6 @@ func (p *PodmanProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			}
 		case <-done:
 			p.logger.Info().Msg("Process exited")
-			<-done
 			err := containers.Kill(p.conn, cont.ID, new(containers.KillOptions).WithSignal("SIGKILL"))
 			if err != nil {
 				p.logger.Err(err).Msg("Failed to send sigkill signal")
@@ -162,28 +200,39 @@ func (p *PodmanProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 
 }
 
-func (p *PodmanProvider) updateJob(ctx context.Context, jobID int64, message string) error {
-	if _, err := p.queries.UpdateJob(ctx, db.UpdateJobParams{
-		ID:   jobID,
-		Logs: pgtype.Text{String: message, Valid: true},
+func (p *PodmanProvider) updateJob(ctx context.Context, job *db.Job, startTime time.Time, message string, logs string, success bool) error {
+	p.logger.Info().Bool("Success", success).Str("Message", message).Str("Logs", logs).Msg("Updating job result")
+	retry := true
+	if job.Retries.Int32+1 >= job.MaxRetries.Int32 || success {
+		retry = false
+	}
+	if _, err := p.queries.UpdateJobResultTx(ctx, db.UpdateJobResultTxParams{
+		StartTime: startTime,
+		Job:       *job,
+		Message:   message,
+		Success:   success,
+		Retry:     retry,
+		WorkerId:  p.workerId,
 	}); err != nil {
 		return err
 	}
-
 	return nil
 }
 
-func (p *PodmanProvider) writeFiles(ctx context.Context, containerName string, execReq db.Jobqueue) error {
-	files := map[string]string{
-		"flake.nix":               execReq.Flake.String,
-		execReq.ScriptPath.String: execReq.Script.String,
-	}
-
-	tarFilePath, err := createTarArchive(files)
+func (p *PodmanProvider) writeFiles(ctx context.Context, containerName string, prepDir string, job db.Job) error {
+	execReq, err := p.queries.GetExecRequest(ctx, job.ExecRequestID.Int32)
 	if err != nil {
 		return err
 	}
-	defer os.Remove(tarFilePath)
+	files := map[string]string{
+		"flake.nix":  execReq.Flake,
+		execReq.Path: execReq.Code,
+	}
+
+	tarFilePath, err := common.CreateTarArchive(files, prepDir)
+	if err != nil {
+		return err
+	}
 
 	tarFile, err := os.Open(tarFilePath)
 	if err != nil {
@@ -191,8 +240,9 @@ func (p *PodmanProvider) writeFiles(ctx context.Context, containerName string, e
 		return err
 	}
 	defer tarFile.Close()
+	defer os.Remove(tarFilePath)
 
-	copyF, err := containers.CopyFromArchive(p.conn, containerName, "/home/valnix/odin/", tarFile)
+	copyF, err := containers.CopyFromArchive(p.conn, containerName, "/odin", tarFile)
 	if err != nil {
 		p.logger.Err(err).Msg("Failed to copy files to container")
 		return err
@@ -203,30 +253,4 @@ func (p *PodmanProvider) writeFiles(ctx context.Context, containerName string, e
 		return err
 	}
 	return nil
-}
-
-func createTarArchive(files map[string]string) (string, error) {
-	tarFilePath := filepath.Join(os.TempDir(), fmt.Sprintf("%d.tar", time.Now().UnixNano()))
-	tarFile, err := os.Create(tarFilePath)
-	if err != nil {
-		return "", err
-	}
-	defer tarFile.Close()
-
-	tw := tar.NewWriter(tarFile)
-	defer tw.Close()
-
-	for name, content := range files {
-		if err := tw.WriteHeader(&tar.Header{
-			Name: name,
-			Size: int64(len(content)),
-			Mode: 0744,
-		}); err != nil {
-			return "", err
-		}
-		if _, err := tw.Write([]byte(content)); err != nil {
-			return "", err
-		}
-	}
-	return tarFilePath, nil
 }

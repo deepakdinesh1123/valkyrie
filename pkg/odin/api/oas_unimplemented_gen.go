@@ -13,21 +13,30 @@ type UnimplementedHandler struct{}
 
 var _ Handler = UnimplementedHandler{}
 
-// CancelJob implements cancelJob operation.
+// CancelExecutionJob implements cancelExecutionJob operation.
 //
-// Cancel Job.
+// Cancel Execution Job.
 //
-// PUT /executions/{JobId}/
-func (UnimplementedHandler) CancelJob(ctx context.Context, params CancelJobParams) (r CancelJobRes, _ error) {
+// PUT /executions/jobs/{JobId}
+func (UnimplementedHandler) CancelExecutionJob(ctx context.Context, params CancelExecutionJobParams) (r CancelExecutionJobRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
-// DeleteJob implements deleteJob operation.
+// DeleteExecutionJob implements deleteExecutionJob operation.
 //
-// Delete job.
+// Delete execution job.
 //
-// DELETE /executions/{JobId}/
-func (UnimplementedHandler) DeleteJob(ctx context.Context, params DeleteJobParams) (r DeleteJobRes, _ error) {
+// DELETE /executions/jobs/{JobId}
+func (UnimplementedHandler) DeleteExecutionJob(ctx context.Context, params DeleteExecutionJobParams) (r DeleteExecutionJobRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// DeleteExecutionWorker implements deleteExecutionWorker operation.
+//
+// Delete execution worker.
+//
+// DELETE /executions/workers/{workerId}
+func (UnimplementedHandler) DeleteExecutionWorker(ctx context.Context, params DeleteExecutionWorkerParams) (r DeleteExecutionWorkerRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -35,17 +44,17 @@ func (UnimplementedHandler) DeleteJob(ctx context.Context, params DeleteJobParam
 //
 // Execute a script.
 //
-// POST /executions/execute/
-func (UnimplementedHandler) Execute(ctx context.Context, req *ExecutionRequest) (r ExecuteRes, _ error) {
+// POST /executions/execute
+func (UnimplementedHandler) Execute(ctx context.Context, req *ExecutionRequest, params ExecuteParams) (r ExecuteRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
-// GetAllExecutionResults implements getAllExecutionResults operation.
+// GetAllExecutionJobs implements getAllExecutionJobs operation.
 //
-// Get all execution results.
+// Get all execution jobs.
 //
-// GET /executions/results/
-func (UnimplementedHandler) GetAllExecutionResults(ctx context.Context, params GetAllExecutionResultsParams) (r GetAllExecutionResultsRes, _ error) {
+// GET /jobs/execution
+func (UnimplementedHandler) GetAllExecutionJobs(ctx context.Context, params GetAllExecutionJobsParams) (r GetAllExecutionJobsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -53,8 +62,17 @@ func (UnimplementedHandler) GetAllExecutionResults(ctx context.Context, params G
 //
 // Get all executions.
 //
-// GET /executions/
+// GET /executions
 func (UnimplementedHandler) GetAllExecutions(ctx context.Context, params GetAllExecutionsParams) (r GetAllExecutionsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetAllLanguages implements getAllLanguages operation.
+//
+// Get all languages.
+//
+// GET /languages
+func (UnimplementedHandler) GetAllLanguages(ctx context.Context, params GetAllLanguagesParams) (r GetAllLanguagesRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -62,17 +80,26 @@ func (UnimplementedHandler) GetAllExecutions(ctx context.Context, params GetAllE
 //
 // Get execution config.
 //
-// GET /execution/config/
-func (UnimplementedHandler) GetExecutionConfig(ctx context.Context) (r GetExecutionConfigRes, _ error) {
+// GET /execution/config
+func (UnimplementedHandler) GetExecutionConfig(ctx context.Context, params GetExecutionConfigParams) (r GetExecutionConfigRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
-// GetExecutionResultsById implements getExecutionResultsById operation.
+// GetExecutionJobById implements getExecutionJobById operation.
 //
-// Get execution result.
+// Get execution job.
 //
-// GET /executions/{JobId}/
-func (UnimplementedHandler) GetExecutionResultsById(ctx context.Context, params GetExecutionResultsByIdParams) (r GetExecutionResultsByIdRes, _ error) {
+// GET /executions/jobs/{JobId}
+func (UnimplementedHandler) GetExecutionJobById(ctx context.Context, params GetExecutionJobByIdParams) (r GetExecutionJobByIdRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetExecutionResultById implements getExecutionResultById operation.
+//
+// Get execution result by id.
+//
+// GET /executions/{execId}
+func (UnimplementedHandler) GetExecutionResultById(ctx context.Context, params GetExecutionResultByIdParams) (r GetExecutionResultByIdRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -85,11 +112,20 @@ func (UnimplementedHandler) GetExecutionWorkers(ctx context.Context, params GetE
 	return r, ht.ErrNotImplemented
 }
 
+// GetExecutionsForJob implements getExecutionsForJob operation.
+//
+// Get executions of given job.
+//
+// GET /jobs/{JobId}/executions
+func (UnimplementedHandler) GetExecutionsForJob(ctx context.Context, params GetExecutionsForJobParams) (r GetExecutionsForJobRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetVersion implements getVersion operation.
 //
 // Get version.
 //
-// GET /version/
-func (UnimplementedHandler) GetVersion(ctx context.Context) (r GetVersionRes, _ error) {
+// GET /version
+func (UnimplementedHandler) GetVersion(ctx context.Context, params GetVersionParams) (r GetVersionRes, _ error) {
 	return r, ht.ErrNotImplemented
 }

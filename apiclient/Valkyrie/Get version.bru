@@ -5,7 +5,11 @@ meta {
 }
 
 get {
-  url: http://localhost:8080/version/
+  url: http://{{BASE_URL}}/version/
   body: none
   auth: none
+}
+
+headers {
+  X-Auth-Token: {{USER_TOKEN}}
 }

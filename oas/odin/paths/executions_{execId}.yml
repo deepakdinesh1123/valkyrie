@@ -1,0 +1,33 @@
+get:
+  summary: Get execution result by id
+  description: Get execution result by id
+  operationId: getExecutionResultById
+  parameters:
+    - name: execId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    - $ref: ../components/parameters/AuthHeader.yml
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/ExecutionResult.yml
+    '400':
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml
+    '404':
+      description: Execution result not found
+    '500':
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml

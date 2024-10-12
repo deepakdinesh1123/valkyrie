@@ -60,7 +60,22 @@ func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	}
 	defer errFile.Close()
 
-	tctx, cancel := context.WithTimeout(context.TODO(), time.Duration(s.envConfig.ODIN_WORKER_TASK_TIMEOUT)*time.Second)
+	var timeout int
+	if job.TimeOut.Int32 > 0 { // By default, timeout is set to -1
+		timeout = int(job.TimeOut.Int32)
+	} else if job.TimeOut.Int32 == 0 {
+		timeout = 0
+	} else {
+		timeout = s.envConfig.ODIN_WORKER_TASK_TIMEOUT
+	}
+
+	var tctx context.Context
+	var cancel context.CancelFunc
+	if timeout > 0 {
+		tctx, cancel = context.WithTimeout(context.TODO(), time.Duration(timeout)*time.Second)
+	} else {
+		tctx, cancel = context.WithCancel(context.TODO())
+	}
 	defer cancel()
 
 	execCmd := exec.CommandContext(tctx, "nix", "run")
@@ -105,7 +120,7 @@ func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			case context.Canceled:
 				s.logger.Info().Msg("context canceled wating for process to exit")
 				<-done
-				s.updateExecutionDetails(context.TODO(), dir, start, job)
+				s.updateJob(context.TODO(), &job, start, "", true)
 				return
 			default:
 				s.logger.Info().Msg("context error killing process")
@@ -113,25 +128,13 @@ func (s *SystemProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 				if err != nil {
 					s.logger.Err(err).Msg("Failed to send kill signal")
 				}
-				s.updateExecutionDetails(context.TODO(), dir, start, job)
+				s.updateJob(context.TODO(), &job, start, "", false)
 				return
 			}
 		case <-done:
-			s.updateExecutionDetails(context.TODO(), dir, start, job)
+			s.updateJob(context.TODO(), &job, start, "", true)
 			return
 		}
-	}
-}
-
-func (s *SystemProvider) updateExecutionDetails(ctx context.Context, dir string, startTime time.Time, job db.Job) {
-	out, err := os.ReadFile(filepath.Join(dir, "output.txt"))
-	if err != nil {
-		s.logger.Err(err).Msg("Failed to read output file")
-		return
-	}
-	err = s.updateJob(ctx, &job, startTime, string(out), true)
-	if err != nil {
-		s.logger.Err(err).Msg("Failed to update job")
 	}
 }
 
@@ -154,6 +157,15 @@ func (s *SystemProvider) writeFiles(ctx context.Context, dir string, job db.Job)
 }
 
 func (s *SystemProvider) updateJob(ctx context.Context, job *db.Job, startTime time.Time, message string, success bool) error {
+	dir := filepath.Join(s.envConfig.ODIN_SYSTEM_PROVIDER_BASE_DIR, job.CreatedAt.Time.Format("20060102150405"))
+	out, err := os.ReadFile(filepath.Join(dir, "output.txt"))
+	if err != nil {
+		return err
+	}
+	stderr, err := os.ReadFile(filepath.Join(dir, "error.txt"))
+	if err != nil {
+		return err
+	}
 	retry := true
 	if job.Retries.Int32+1 >= job.MaxRetries.Int32 || success {
 		retry = false
@@ -165,6 +177,8 @@ func (s *SystemProvider) updateJob(ctx context.Context, job *db.Job, startTime t
 		Success:   success,
 		WorkerId:  s.workerId,
 		Retry:     retry,
+		ExecLogs:  string(out),
+		NixLogs:   string(stderr),
 	}); err != nil {
 		return err
 	}

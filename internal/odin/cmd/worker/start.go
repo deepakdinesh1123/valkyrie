@@ -7,6 +7,8 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/deepakdinesh1123/valkyrie/internal/logs"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/worker"
@@ -22,14 +24,16 @@ var WorkerStartCmd = &cobra.Command{
 	Short: "Start worker",
 	Long:  `Start worker`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		logLevel := cmd.Flag("log-level").Value.String()
-		logger := logs.GetLogger(logLevel)
-		logger.Info().Msg("Starting worker")
 		envConfig, err := config.GetEnvConfig()
 		if err != nil {
-			logger.Err(err).Msg("Failed to get environment config")
+			log.Err(err).Msg("Failed to get environment config")
 			return err
 		}
+
+		logLevel := cmd.Flag("log-level").Value.String()
+		config := logs.NewLogConfig(logs.WithLevel(logLevel), logs.WithExport(envConfig.ODIN_EXPORT_LOGS))
+		logger := logs.GetLogger(config)
+		logger.Info().Msg("Starting worker")
 		ctx, cancel := context.WithCancel(cmd.Context())
 		sigChan := make(chan os.Signal, 1)
 

@@ -8,60 +8,84 @@ import (
 
 // Handler handles operations described by OpenAPI v3 specification.
 type Handler interface {
-	// CancelJob implements cancelJob operation.
+	// CancelExecutionJob implements cancelExecutionJob operation.
 	//
-	// Cancel Job.
+	// Cancel Execution Job.
 	//
-	// PUT /executions/{JobId}/
-	CancelJob(ctx context.Context, params CancelJobParams) (CancelJobRes, error)
-	// DeleteJob implements deleteJob operation.
+	// PUT /executions/jobs/{JobId}
+	CancelExecutionJob(ctx context.Context, params CancelExecutionJobParams) (CancelExecutionJobRes, error)
+	// DeleteExecutionJob implements deleteExecutionJob operation.
 	//
-	// Delete job.
+	// Delete execution job.
 	//
-	// DELETE /executions/{JobId}/
-	DeleteJob(ctx context.Context, params DeleteJobParams) (DeleteJobRes, error)
+	// DELETE /executions/jobs/{JobId}
+	DeleteExecutionJob(ctx context.Context, params DeleteExecutionJobParams) (DeleteExecutionJobRes, error)
+	// DeleteExecutionWorker implements deleteExecutionWorker operation.
+	//
+	// Delete execution worker.
+	//
+	// DELETE /executions/workers/{workerId}
+	DeleteExecutionWorker(ctx context.Context, params DeleteExecutionWorkerParams) (DeleteExecutionWorkerRes, error)
 	// Execute implements execute operation.
 	//
 	// Execute a script.
 	//
-	// POST /executions/execute/
-	Execute(ctx context.Context, req *ExecutionRequest) (ExecuteRes, error)
-	// GetAllExecutionResults implements getAllExecutionResults operation.
+	// POST /executions/execute
+	Execute(ctx context.Context, req *ExecutionRequest, params ExecuteParams) (ExecuteRes, error)
+	// GetAllExecutionJobs implements getAllExecutionJobs operation.
 	//
-	// Get all execution results.
+	// Get all execution jobs.
 	//
-	// GET /executions/results/
-	GetAllExecutionResults(ctx context.Context, params GetAllExecutionResultsParams) (GetAllExecutionResultsRes, error)
+	// GET /jobs/execution
+	GetAllExecutionJobs(ctx context.Context, params GetAllExecutionJobsParams) (GetAllExecutionJobsRes, error)
 	// GetAllExecutions implements getAllExecutions operation.
 	//
 	// Get all executions.
 	//
-	// GET /executions/
+	// GET /executions
 	GetAllExecutions(ctx context.Context, params GetAllExecutionsParams) (GetAllExecutionsRes, error)
+	// GetAllLanguages implements getAllLanguages operation.
+	//
+	// Get all languages.
+	//
+	// GET /languages
+	GetAllLanguages(ctx context.Context, params GetAllLanguagesParams) (GetAllLanguagesRes, error)
 	// GetExecutionConfig implements getExecutionConfig operation.
 	//
 	// Get execution config.
 	//
-	// GET /execution/config/
-	GetExecutionConfig(ctx context.Context) (GetExecutionConfigRes, error)
-	// GetExecutionResultsById implements getExecutionResultsById operation.
+	// GET /execution/config
+	GetExecutionConfig(ctx context.Context, params GetExecutionConfigParams) (GetExecutionConfigRes, error)
+	// GetExecutionJobById implements getExecutionJobById operation.
 	//
-	// Get execution result.
+	// Get execution job.
 	//
-	// GET /executions/{JobId}/
-	GetExecutionResultsById(ctx context.Context, params GetExecutionResultsByIdParams) (GetExecutionResultsByIdRes, error)
+	// GET /executions/jobs/{JobId}
+	GetExecutionJobById(ctx context.Context, params GetExecutionJobByIdParams) (GetExecutionJobByIdRes, error)
+	// GetExecutionResultById implements getExecutionResultById operation.
+	//
+	// Get execution result by id.
+	//
+	// GET /executions/{execId}
+	GetExecutionResultById(ctx context.Context, params GetExecutionResultByIdParams) (GetExecutionResultByIdRes, error)
 	// GetExecutionWorkers implements getExecutionWorkers operation.
 	//
 	// Get all execution workers.
 	//
 	// GET /executions/workers
 	GetExecutionWorkers(ctx context.Context, params GetExecutionWorkersParams) (GetExecutionWorkersRes, error)
+	// GetExecutionsForJob implements getExecutionsForJob operation.
+	//
+	// Get executions of given job.
+	//
+	// GET /jobs/{JobId}/executions
+	GetExecutionsForJob(ctx context.Context, params GetExecutionsForJobParams) (GetExecutionsForJobRes, error)
 	// GetVersion implements getVersion operation.
 	//
 	// Get version.
 	//
-	// GET /version/
-	GetVersion(ctx context.Context) (GetVersionRes, error)
+	// GET /version
+	GetVersion(ctx context.Context, params GetVersionParams) (GetVersionRes, error)
 }
 
 // Server implements http server based on OpenAPI v3 specification and

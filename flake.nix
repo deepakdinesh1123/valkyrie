@@ -14,33 +14,26 @@
       rec {
 
         docsDependencies = with pkgs; [ python312Packages.mkdocs-material redocly ];
-        k8sDependencies = with pkgs; [ 
-          skaffold 
-          k3d 
-          skaffold 
-          kubectl 
-          kubectx 
-          kubens 
-          helm ];
         devDependencies = with pkgs; [ 
           sqlc 
           go-migrate 
-          go_1_22  
-          pkg-config ] ++ docsDependencies ++ lib.optionals stdenv.isLinux [ 
+          go_1_22
+          # caddy
+          pkg-config ] ++ lib.optionals stdenv.isLinux [ 
             gpgme 
             libgpg-error 
-            libassuanbtrfs-progs 
-          ] ;
+            libassuan
+            btrfs-progs
+          ];
 
         packages = {
           odin = pkgs.callPackage ./build/package/nix/odin.nix { inherit pkgs; };
-          nardump = pkgs.callPackage ./build/package/nix/nardump.nix { inherit pkgs; };
         };
 		    defaultPackage = packages.odin;
 
         devShells = {
           default = pkgs.mkShell {
-            buildInputs = devDependencies ++ docsDependencies;
+            buildInputs = devDependencies;
           };
         };
     }

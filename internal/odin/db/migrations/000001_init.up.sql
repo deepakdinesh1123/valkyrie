@@ -13,7 +13,8 @@ create table job_types (
 create table workers (
     id int primary key,
     name text not null unique,
-    created_at timestamptz not null default now()
+    created_at timestamptz not null default now(),
+    last_heartbeat timestamptz
 );
 
 create sequence workers_id_seq as int cycle owned by workers.id;
@@ -28,28 +29,35 @@ create table exec_request (
     code text not null,
     path text not null,
     flake text not null,
+    nix_script text not null,
     args varchar(1024),
     programming_language text
 );
 
 create table jobs (
-    id bigint primary key default nextval('jobs_id_seq'),
+    job_id bigint primary key default nextval('jobs_id_seq'),
     created_at timestamptz not null  default now(),
     updated_at timestamptz,
+    time_out int,
+    started_at timestamptz,
     exec_request_id int references exec_request on delete set null,
-    status TEXT NOT NULL CHECK (status IN ('pending', 'scheduled', 'completed', 'failed', 'cancelled')) DEFAULT 'pending',
+    current_state TEXT NOT NULL CHECK (current_state IN ('pending', 'scheduled', 'completed', 'failed', 'cancelled')) DEFAULT 'pending',
     retries int default 0,
-    max_retries int default 5
+    max_retries int default 5,
+    worker_id int references workers on delete set null
 );
 
-create sequence job_runs_id_seq as bigint;
+create sequence executions_id_seq as bigint;
 
-create table job_runs (
-    id bigint primary key default nextval('job_runs_id_seq'),
-    job_id bigint not null references jobs on delete set null,
-    worker_id int not null references workers on delete set null,
+create table executions (
+    exec_id bigint primary key default nextval('executions_id_seq'),
+    job_id bigint references jobs on delete set null,
+    worker_id int references workers on delete set null,
     started_at timestamptz not null,
     finished_at timestamptz not null,
+    created_at timestamptz not null default now(),
     exec_request_id int references exec_request on delete set null,
-    logs text not null
+    exec_logs text not null,
+    nix_logs text,
+    success boolean
 );

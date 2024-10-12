@@ -14,13 +14,10 @@ import (
 	"github.com/ogen-go/ogen/validate"
 )
 
-func decodeCancelJobResponse(resp *http.Response) (res CancelJobRes, _ error) {
+func decodeCancelExecutionJobResponse(resp *http.Response) (res CancelExecutionJobRes, _ error) {
 	switch resp.StatusCode {
 	case 200:
 		// Code 200.
-		return &CancelJobOK{}, nil
-	case 400:
-		// Code 400.
 		ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
 		if err != nil {
 			return res, errors.Wrap(err, "parse media type")
@@ -33,7 +30,7 @@ func decodeCancelJobResponse(resp *http.Response) (res CancelJobRes, _ error) {
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response CancelJobBadRequest
+			var response CancelExecutionJobOK
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -54,6 +51,44 @@ func decodeCancelJobResponse(resp *http.Response) (res CancelJobRes, _ error) {
 		default:
 			return res, validate.InvalidContentType(ct)
 		}
+	case 400:
+		// Code 400.
+		ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+		if err != nil {
+			return res, errors.Wrap(err, "parse media type")
+		}
+		switch {
+		case ct == "application/json":
+			buf, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return res, err
+			}
+			d := jx.DecodeBytes(buf)
+
+			var response CancelExecutionJobBadRequest
+			if err := func() error {
+				if err := response.Decode(d); err != nil {
+					return err
+				}
+				if err := d.Skip(); err != io.EOF {
+					return errors.New("unexpected trailing data")
+				}
+				return nil
+			}(); err != nil {
+				err = &ogenerrors.DecodeBodyError{
+					ContentType: ct,
+					Body:        buf,
+					Err:         err,
+				}
+				return res, err
+			}
+			return &response, nil
+		default:
+			return res, validate.InvalidContentType(ct)
+		}
+	case 403:
+		// Code 403.
+		return &CancelExecutionJobForbidden{}, nil
 	case 500:
 		// Code 500.
 		ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
@@ -68,7 +103,7 @@ func decodeCancelJobResponse(resp *http.Response) (res CancelJobRes, _ error) {
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response CancelJobInternalServerError
+			var response CancelExecutionJobInternalServerError
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -93,11 +128,11 @@ func decodeCancelJobResponse(resp *http.Response) (res CancelJobRes, _ error) {
 	return res, validate.UnexpectedStatusCode(resp.StatusCode)
 }
 
-func decodeDeleteJobResponse(resp *http.Response) (res DeleteJobRes, _ error) {
+func decodeDeleteExecutionJobResponse(resp *http.Response) (res DeleteExecutionJobRes, _ error) {
 	switch resp.StatusCode {
 	case 200:
 		// Code 200.
-		return &DeleteJobOK{}, nil
+		return &DeleteExecutionJobOK{}, nil
 	case 400:
 		// Code 400.
 		ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
@@ -112,7 +147,7 @@ func decodeDeleteJobResponse(resp *http.Response) (res DeleteJobRes, _ error) {
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response DeleteJobBadRequest
+			var response DeleteExecutionJobBadRequest
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -133,9 +168,12 @@ func decodeDeleteJobResponse(resp *http.Response) (res DeleteJobRes, _ error) {
 		default:
 			return res, validate.InvalidContentType(ct)
 		}
+	case 403:
+		// Code 403.
+		return &DeleteExecutionJobForbidden{}, nil
 	case 404:
 		// Code 404.
-		return &DeleteJobNotFound{}, nil
+		return &DeleteExecutionJobNotFound{}, nil
 	case 500:
 		// Code 500.
 		ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
@@ -150,7 +188,124 @@ func decodeDeleteJobResponse(resp *http.Response) (res DeleteJobRes, _ error) {
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response DeleteJobInternalServerError
+			var response DeleteExecutionJobInternalServerError
+			if err := func() error {
+				if err := response.Decode(d); err != nil {
+					return err
+				}
+				if err := d.Skip(); err != io.EOF {
+					return errors.New("unexpected trailing data")
+				}
+				return nil
+			}(); err != nil {
+				err = &ogenerrors.DecodeBodyError{
+					ContentType: ct,
+					Body:        buf,
+					Err:         err,
+				}
+				return res, err
+			}
+			return &response, nil
+		default:
+			return res, validate.InvalidContentType(ct)
+		}
+	}
+	return res, validate.UnexpectedStatusCode(resp.StatusCode)
+}
+
+func decodeDeleteExecutionWorkerResponse(resp *http.Response) (res DeleteExecutionWorkerRes, _ error) {
+	switch resp.StatusCode {
+	case 200:
+		// Code 200.
+		ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+		if err != nil {
+			return res, errors.Wrap(err, "parse media type")
+		}
+		switch {
+		case ct == "application/json":
+			buf, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return res, err
+			}
+			d := jx.DecodeBytes(buf)
+
+			var response DeleteExecutionWorkerOK
+			if err := func() error {
+				if err := response.Decode(d); err != nil {
+					return err
+				}
+				if err := d.Skip(); err != io.EOF {
+					return errors.New("unexpected trailing data")
+				}
+				return nil
+			}(); err != nil {
+				err = &ogenerrors.DecodeBodyError{
+					ContentType: ct,
+					Body:        buf,
+					Err:         err,
+				}
+				return res, err
+			}
+			return &response, nil
+		default:
+			return res, validate.InvalidContentType(ct)
+		}
+	case 400:
+		// Code 400.
+		ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+		if err != nil {
+			return res, errors.Wrap(err, "parse media type")
+		}
+		switch {
+		case ct == "application/json":
+			buf, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return res, err
+			}
+			d := jx.DecodeBytes(buf)
+
+			var response DeleteExecutionWorkerBadRequest
+			if err := func() error {
+				if err := response.Decode(d); err != nil {
+					return err
+				}
+				if err := d.Skip(); err != io.EOF {
+					return errors.New("unexpected trailing data")
+				}
+				return nil
+			}(); err != nil {
+				err = &ogenerrors.DecodeBodyError{
+					ContentType: ct,
+					Body:        buf,
+					Err:         err,
+				}
+				return res, err
+			}
+			return &response, nil
+		default:
+			return res, validate.InvalidContentType(ct)
+		}
+	case 403:
+		// Code 403.
+		return &DeleteExecutionWorkerForbidden{}, nil
+	case 404:
+		// Code 404.
+		return &DeleteExecutionWorkerNotFound{}, nil
+	case 500:
+		// Code 500.
+		ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+		if err != nil {
+			return res, errors.Wrap(err, "parse media type")
+		}
+		switch {
+		case ct == "application/json":
+			buf, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return res, err
+			}
+			d := jx.DecodeBytes(buf)
+
+			var response DeleteExecutionWorkerInternalServerError
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -286,7 +441,7 @@ func decodeExecuteResponse(resp *http.Response) (res ExecuteRes, _ error) {
 	return res, validate.UnexpectedStatusCode(resp.StatusCode)
 }
 
-func decodeGetAllExecutionResultsResponse(resp *http.Response) (res GetAllExecutionResultsRes, _ error) {
+func decodeGetAllExecutionJobsResponse(resp *http.Response) (res GetAllExecutionJobsRes, _ error) {
 	switch resp.StatusCode {
 	case 200:
 		// Code 200.
@@ -302,7 +457,7 @@ func decodeGetAllExecutionResultsResponse(resp *http.Response) (res GetAllExecut
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response GetAllExecutionResultsOK
+			var response GetAllExecutionJobsOK
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -346,7 +501,7 @@ func decodeGetAllExecutionResultsResponse(resp *http.Response) (res GetAllExecut
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response GetAllExecutionResultsBadRequest
+			var response GetAllExecutionJobsBadRequest
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -367,6 +522,9 @@ func decodeGetAllExecutionResultsResponse(resp *http.Response) (res GetAllExecut
 		default:
 			return res, validate.InvalidContentType(ct)
 		}
+	case 403:
+		// Code 403.
+		return &GetAllExecutionJobsForbidden{}, nil
 	case 500:
 		// Code 500.
 		ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
@@ -381,7 +539,7 @@ func decodeGetAllExecutionResultsResponse(resp *http.Response) (res GetAllExecut
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response GetAllExecutionResultsInternalServerError
+			var response GetAllExecutionJobsInternalServerError
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -487,6 +645,9 @@ func decodeGetAllExecutionsResponse(resp *http.Response) (res GetAllExecutionsRe
 		default:
 			return res, validate.InvalidContentType(ct)
 		}
+	case 403:
+		// Code 403.
+		return &GetAllExecutionsForbidden{}, nil
 	case 500:
 		// Code 500.
 		ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
@@ -522,6 +683,59 @@ func decodeGetAllExecutionsResponse(resp *http.Response) (res GetAllExecutionsRe
 		default:
 			return res, validate.InvalidContentType(ct)
 		}
+	}
+	return res, validate.UnexpectedStatusCode(resp.StatusCode)
+}
+
+func decodeGetAllLanguagesResponse(resp *http.Response) (res GetAllLanguagesRes, _ error) {
+	switch resp.StatusCode {
+	case 200:
+		// Code 200.
+		ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+		if err != nil {
+			return res, errors.Wrap(err, "parse media type")
+		}
+		switch {
+		case ct == "application/json":
+			buf, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return res, err
+			}
+			d := jx.DecodeBytes(buf)
+
+			var response GetAllLanguagesOK
+			if err := func() error {
+				if err := response.Decode(d); err != nil {
+					return err
+				}
+				if err := d.Skip(); err != io.EOF {
+					return errors.New("unexpected trailing data")
+				}
+				return nil
+			}(); err != nil {
+				err = &ogenerrors.DecodeBodyError{
+					ContentType: ct,
+					Body:        buf,
+					Err:         err,
+				}
+				return res, err
+			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
+			}
+			return &response, nil
+		default:
+			return res, validate.InvalidContentType(ct)
+		}
+	case 403:
+		// Code 403.
+		return &GetAllLanguagesForbidden{}, nil
 	}
 	return res, validate.UnexpectedStatusCode(resp.StatusCode)
 }
@@ -563,6 +777,9 @@ func decodeGetExecutionConfigResponse(resp *http.Response) (res GetExecutionConf
 		default:
 			return res, validate.InvalidContentType(ct)
 		}
+	case 403:
+		// Code 403.
+		return &GetExecutionConfigForbidden{}, nil
 	case 500:
 		// Code 500.
 		ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
@@ -602,7 +819,7 @@ func decodeGetExecutionConfigResponse(resp *http.Response) (res GetExecutionConf
 	return res, validate.UnexpectedStatusCode(resp.StatusCode)
 }
 
-func decodeGetExecutionResultsByIdResponse(resp *http.Response) (res GetExecutionResultsByIdRes, _ error) {
+func decodeGetExecutionJobByIdResponse(resp *http.Response) (res GetExecutionJobByIdRes, _ error) {
 	switch resp.StatusCode {
 	case 200:
 		// Code 200.
@@ -618,7 +835,7 @@ func decodeGetExecutionResultsByIdResponse(resp *http.Response) (res GetExecutio
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response GetExecutionResultsByIdOK
+			var response Job
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -634,15 +851,6 @@ func decodeGetExecutionResultsByIdResponse(resp *http.Response) (res GetExecutio
 					Err:         err,
 				}
 				return res, err
-			}
-			// Validate response.
-			if err := func() error {
-				if err := response.Validate(); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return res, errors.Wrap(err, "validate")
 			}
 			return &response, nil
 		default:
@@ -662,7 +870,7 @@ func decodeGetExecutionResultsByIdResponse(resp *http.Response) (res GetExecutio
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response GetExecutionResultsByIdBadRequest
+			var response GetExecutionJobByIdBadRequest
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -685,7 +893,7 @@ func decodeGetExecutionResultsByIdResponse(resp *http.Response) (res GetExecutio
 		}
 	case 404:
 		// Code 404.
-		return &GetExecutionResultsByIdNotFound{}, nil
+		return &GetExecutionJobByIdNotFound{}, nil
 	case 500:
 		// Code 500.
 		ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
@@ -700,7 +908,121 @@ func decodeGetExecutionResultsByIdResponse(resp *http.Response) (res GetExecutio
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response GetExecutionResultsByIdInternalServerError
+			var response GetExecutionJobByIdInternalServerError
+			if err := func() error {
+				if err := response.Decode(d); err != nil {
+					return err
+				}
+				if err := d.Skip(); err != io.EOF {
+					return errors.New("unexpected trailing data")
+				}
+				return nil
+			}(); err != nil {
+				err = &ogenerrors.DecodeBodyError{
+					ContentType: ct,
+					Body:        buf,
+					Err:         err,
+				}
+				return res, err
+			}
+			return &response, nil
+		default:
+			return res, validate.InvalidContentType(ct)
+		}
+	}
+	return res, validate.UnexpectedStatusCode(resp.StatusCode)
+}
+
+func decodeGetExecutionResultByIdResponse(resp *http.Response) (res GetExecutionResultByIdRes, _ error) {
+	switch resp.StatusCode {
+	case 200:
+		// Code 200.
+		ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+		if err != nil {
+			return res, errors.Wrap(err, "parse media type")
+		}
+		switch {
+		case ct == "application/json":
+			buf, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return res, err
+			}
+			d := jx.DecodeBytes(buf)
+
+			var response ExecutionResult
+			if err := func() error {
+				if err := response.Decode(d); err != nil {
+					return err
+				}
+				if err := d.Skip(); err != io.EOF {
+					return errors.New("unexpected trailing data")
+				}
+				return nil
+			}(); err != nil {
+				err = &ogenerrors.DecodeBodyError{
+					ContentType: ct,
+					Body:        buf,
+					Err:         err,
+				}
+				return res, err
+			}
+			return &response, nil
+		default:
+			return res, validate.InvalidContentType(ct)
+		}
+	case 400:
+		// Code 400.
+		ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+		if err != nil {
+			return res, errors.Wrap(err, "parse media type")
+		}
+		switch {
+		case ct == "application/json":
+			buf, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return res, err
+			}
+			d := jx.DecodeBytes(buf)
+
+			var response GetExecutionResultByIdBadRequest
+			if err := func() error {
+				if err := response.Decode(d); err != nil {
+					return err
+				}
+				if err := d.Skip(); err != io.EOF {
+					return errors.New("unexpected trailing data")
+				}
+				return nil
+			}(); err != nil {
+				err = &ogenerrors.DecodeBodyError{
+					ContentType: ct,
+					Body:        buf,
+					Err:         err,
+				}
+				return res, err
+			}
+			return &response, nil
+		default:
+			return res, validate.InvalidContentType(ct)
+		}
+	case 404:
+		// Code 404.
+		return &GetExecutionResultByIdNotFound{}, nil
+	case 500:
+		// Code 500.
+		ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+		if err != nil {
+			return res, errors.Wrap(err, "parse media type")
+		}
+		switch {
+		case ct == "application/json":
+			buf, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return res, err
+			}
+			d := jx.DecodeBytes(buf)
+
+			var response GetExecutionResultByIdInternalServerError
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -806,6 +1128,9 @@ func decodeGetExecutionWorkersResponse(resp *http.Response) (res GetExecutionWor
 		default:
 			return res, validate.InvalidContentType(ct)
 		}
+	case 403:
+		// Code 403.
+		return &GetExecutionWorkersForbidden{}, nil
 	case 500:
 		// Code 500.
 		ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
@@ -821,6 +1146,129 @@ func decodeGetExecutionWorkersResponse(resp *http.Response) (res GetExecutionWor
 			d := jx.DecodeBytes(buf)
 
 			var response GetExecutionWorkersInternalServerError
+			if err := func() error {
+				if err := response.Decode(d); err != nil {
+					return err
+				}
+				if err := d.Skip(); err != io.EOF {
+					return errors.New("unexpected trailing data")
+				}
+				return nil
+			}(); err != nil {
+				err = &ogenerrors.DecodeBodyError{
+					ContentType: ct,
+					Body:        buf,
+					Err:         err,
+				}
+				return res, err
+			}
+			return &response, nil
+		default:
+			return res, validate.InvalidContentType(ct)
+		}
+	}
+	return res, validate.UnexpectedStatusCode(resp.StatusCode)
+}
+
+func decodeGetExecutionsForJobResponse(resp *http.Response) (res GetExecutionsForJobRes, _ error) {
+	switch resp.StatusCode {
+	case 200:
+		// Code 200.
+		ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+		if err != nil {
+			return res, errors.Wrap(err, "parse media type")
+		}
+		switch {
+		case ct == "application/json":
+			buf, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return res, err
+			}
+			d := jx.DecodeBytes(buf)
+
+			var response GetExecutionsForJobOK
+			if err := func() error {
+				if err := response.Decode(d); err != nil {
+					return err
+				}
+				if err := d.Skip(); err != io.EOF {
+					return errors.New("unexpected trailing data")
+				}
+				return nil
+			}(); err != nil {
+				err = &ogenerrors.DecodeBodyError{
+					ContentType: ct,
+					Body:        buf,
+					Err:         err,
+				}
+				return res, err
+			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
+			}
+			return &response, nil
+		default:
+			return res, validate.InvalidContentType(ct)
+		}
+	case 400:
+		// Code 400.
+		ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+		if err != nil {
+			return res, errors.Wrap(err, "parse media type")
+		}
+		switch {
+		case ct == "application/json":
+			buf, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return res, err
+			}
+			d := jx.DecodeBytes(buf)
+
+			var response GetExecutionsForJobBadRequest
+			if err := func() error {
+				if err := response.Decode(d); err != nil {
+					return err
+				}
+				if err := d.Skip(); err != io.EOF {
+					return errors.New("unexpected trailing data")
+				}
+				return nil
+			}(); err != nil {
+				err = &ogenerrors.DecodeBodyError{
+					ContentType: ct,
+					Body:        buf,
+					Err:         err,
+				}
+				return res, err
+			}
+			return &response, nil
+		default:
+			return res, validate.InvalidContentType(ct)
+		}
+	case 404:
+		// Code 404.
+		return &GetExecutionsForJobNotFound{}, nil
+	case 500:
+		// Code 500.
+		ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+		if err != nil {
+			return res, errors.Wrap(err, "parse media type")
+		}
+		switch {
+		case ct == "application/json":
+			buf, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return res, err
+			}
+			d := jx.DecodeBytes(buf)
+
+			var response GetExecutionsForJobInternalServerError
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err

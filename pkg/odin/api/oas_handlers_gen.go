@@ -5,32 +5,70 @@ package api
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/go-faster/errors"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/metric"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
+	"go.opentelemetry.io/otel/trace"
 
 	ht "github.com/ogen-go/ogen/http"
 	"github.com/ogen-go/ogen/middleware"
 	"github.com/ogen-go/ogen/ogenerrors"
+	"github.com/ogen-go/ogen/otelogen"
 )
 
-func recordError(string, error) {}
+// handleCancelExecutionJobRequest handles cancelExecutionJob operation.
+//
+// Cancel Execution Job.
+//
+// PUT /executions/jobs/{JobId}
+func (s *Server) handleCancelExecutionJobRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("cancelExecutionJob"),
+		semconv.HTTPRequestMethodKey.String("PUT"),
+		semconv.HTTPRouteKey.String("/executions/jobs/{JobId}"),
+	}
 
-// handleCancelJobRequest handles cancelJob operation.
-//
-// Cancel Job.
-//
-// PUT /executions/{JobId}/
-func (s *Server) handleCancelJobRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	// Start a span for this request.
+	ctx, span := s.cfg.Tracer.Start(r.Context(), "CancelExecutionJob",
+		trace.WithAttributes(otelAttrs...),
+		serverSpanKind,
+	)
+	defer span.End()
+
+	// Add Labeler to context.
+	labeler := &Labeler{attrs: otelAttrs}
+	ctx = contextWithLabeler(ctx, labeler)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		elapsedDuration := time.Since(startTime)
+		attrOpt := metric.WithAttributeSet(labeler.AttributeSet())
+
+		// Increment request counter.
+		s.requests.Add(ctx, 1, attrOpt)
+
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		s.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), attrOpt)
+	}()
 
 	var (
+		recordError = func(stage string, err error) {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			s.errors.Add(ctx, 1, metric.WithAttributeSet(labeler.AttributeSet()))
+		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "CancelJob",
-			ID:   "cancelJob",
+			Name: "CancelExecutionJob",
+			ID:   "cancelExecutionJob",
 		}
 	)
-	params, err := decodeCancelJobParams(args, argsEscaped, r)
+	params, err := decodeCancelExecutionJobParams(args, argsEscaped, r)
 	if err != nil {
 		err = &ogenerrors.DecodeParamsError{
 			OperationContext: opErrContext,
@@ -41,27 +79,31 @@ func (s *Server) handleCancelJobRequest(args [1]string, argsEscaped bool, w http
 		return
 	}
 
-	var response CancelJobRes
+	var response CancelExecutionJobRes
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "CancelJob",
-			OperationSummary: "Cancel Job",
-			OperationID:      "cancelJob",
+			OperationName:    "CancelExecutionJob",
+			OperationSummary: "Cancel Execution Job",
+			OperationID:      "cancelExecutionJob",
 			Body:             nil,
 			Params: middleware.Parameters{
 				{
 					Name: "JobId",
 					In:   "path",
 				}: params.JobId,
+				{
+					Name: "X-Auth-Token",
+					In:   "header",
+				}: params.XAuthToken,
 			},
 			Raw: r,
 		}
 
 		type (
 			Request  = struct{}
-			Params   = CancelJobParams
-			Response = CancelJobRes
+			Params   = CancelExecutionJobParams
+			Response = CancelExecutionJobRes
 		)
 		response, err = middleware.HookMiddleware[
 			Request,
@@ -70,14 +112,14 @@ func (s *Server) handleCancelJobRequest(args [1]string, argsEscaped bool, w http
 		](
 			m,
 			mreq,
-			unpackCancelJobParams,
+			unpackCancelExecutionJobParams,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.CancelJob(ctx, params)
+				response, err = s.h.CancelExecutionJob(ctx, params)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.CancelJob(ctx, params)
+		response, err = s.h.CancelExecutionJob(ctx, params)
 	}
 	if err != nil {
 		defer recordError("Internal", err)
@@ -85,7 +127,7 @@ func (s *Server) handleCancelJobRequest(args [1]string, argsEscaped bool, w http
 		return
 	}
 
-	if err := encodeCancelJobResponse(response, w); err != nil {
+	if err := encodeCancelExecutionJobResponse(response, w, span); err != nil {
 		defer recordError("EncodeResponse", err)
 		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
 			s.cfg.ErrorHandler(ctx, w, r, err)
@@ -94,22 +136,55 @@ func (s *Server) handleCancelJobRequest(args [1]string, argsEscaped bool, w http
 	}
 }
 
-// handleDeleteJobRequest handles deleteJob operation.
+// handleDeleteExecutionJobRequest handles deleteExecutionJob operation.
 //
-// Delete job.
+// Delete execution job.
 //
-// DELETE /executions/{JobId}/
-func (s *Server) handleDeleteJobRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+// DELETE /executions/jobs/{JobId}
+func (s *Server) handleDeleteExecutionJobRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("deleteExecutionJob"),
+		semconv.HTTPRequestMethodKey.String("DELETE"),
+		semconv.HTTPRouteKey.String("/executions/jobs/{JobId}"),
+	}
+
+	// Start a span for this request.
+	ctx, span := s.cfg.Tracer.Start(r.Context(), "DeleteExecutionJob",
+		trace.WithAttributes(otelAttrs...),
+		serverSpanKind,
+	)
+	defer span.End()
+
+	// Add Labeler to context.
+	labeler := &Labeler{attrs: otelAttrs}
+	ctx = contextWithLabeler(ctx, labeler)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		elapsedDuration := time.Since(startTime)
+		attrOpt := metric.WithAttributeSet(labeler.AttributeSet())
+
+		// Increment request counter.
+		s.requests.Add(ctx, 1, attrOpt)
+
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		s.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), attrOpt)
+	}()
 
 	var (
+		recordError = func(stage string, err error) {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			s.errors.Add(ctx, 1, metric.WithAttributeSet(labeler.AttributeSet()))
+		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "DeleteJob",
-			ID:   "deleteJob",
+			Name: "DeleteExecutionJob",
+			ID:   "deleteExecutionJob",
 		}
 	)
-	params, err := decodeDeleteJobParams(args, argsEscaped, r)
+	params, err := decodeDeleteExecutionJobParams(args, argsEscaped, r)
 	if err != nil {
 		err = &ogenerrors.DecodeParamsError{
 			OperationContext: opErrContext,
@@ -120,27 +195,31 @@ func (s *Server) handleDeleteJobRequest(args [1]string, argsEscaped bool, w http
 		return
 	}
 
-	var response DeleteJobRes
+	var response DeleteExecutionJobRes
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "DeleteJob",
-			OperationSummary: "Delete job",
-			OperationID:      "deleteJob",
+			OperationName:    "DeleteExecutionJob",
+			OperationSummary: "Delete execution job",
+			OperationID:      "deleteExecutionJob",
 			Body:             nil,
 			Params: middleware.Parameters{
 				{
 					Name: "JobId",
 					In:   "path",
 				}: params.JobId,
+				{
+					Name: "X-Auth-Token",
+					In:   "header",
+				}: params.XAuthToken,
 			},
 			Raw: r,
 		}
 
 		type (
 			Request  = struct{}
-			Params   = DeleteJobParams
-			Response = DeleteJobRes
+			Params   = DeleteExecutionJobParams
+			Response = DeleteExecutionJobRes
 		)
 		response, err = middleware.HookMiddleware[
 			Request,
@@ -149,14 +228,14 @@ func (s *Server) handleDeleteJobRequest(args [1]string, argsEscaped bool, w http
 		](
 			m,
 			mreq,
-			unpackDeleteJobParams,
+			unpackDeleteExecutionJobParams,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.DeleteJob(ctx, params)
+				response, err = s.h.DeleteExecutionJob(ctx, params)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.DeleteJob(ctx, params)
+		response, err = s.h.DeleteExecutionJob(ctx, params)
 	}
 	if err != nil {
 		defer recordError("Internal", err)
@@ -164,7 +243,127 @@ func (s *Server) handleDeleteJobRequest(args [1]string, argsEscaped bool, w http
 		return
 	}
 
-	if err := encodeDeleteJobResponse(response, w); err != nil {
+	if err := encodeDeleteExecutionJobResponse(response, w, span); err != nil {
+		defer recordError("EncodeResponse", err)
+		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
+			s.cfg.ErrorHandler(ctx, w, r, err)
+		}
+		return
+	}
+}
+
+// handleDeleteExecutionWorkerRequest handles deleteExecutionWorker operation.
+//
+// Delete execution worker.
+//
+// DELETE /executions/workers/{workerId}
+func (s *Server) handleDeleteExecutionWorkerRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("deleteExecutionWorker"),
+		semconv.HTTPRequestMethodKey.String("DELETE"),
+		semconv.HTTPRouteKey.String("/executions/workers/{workerId}"),
+	}
+
+	// Start a span for this request.
+	ctx, span := s.cfg.Tracer.Start(r.Context(), "DeleteExecutionWorker",
+		trace.WithAttributes(otelAttrs...),
+		serverSpanKind,
+	)
+	defer span.End()
+
+	// Add Labeler to context.
+	labeler := &Labeler{attrs: otelAttrs}
+	ctx = contextWithLabeler(ctx, labeler)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		elapsedDuration := time.Since(startTime)
+		attrOpt := metric.WithAttributeSet(labeler.AttributeSet())
+
+		// Increment request counter.
+		s.requests.Add(ctx, 1, attrOpt)
+
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		s.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), attrOpt)
+	}()
+
+	var (
+		recordError = func(stage string, err error) {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			s.errors.Add(ctx, 1, metric.WithAttributeSet(labeler.AttributeSet()))
+		}
+		err          error
+		opErrContext = ogenerrors.OperationContext{
+			Name: "DeleteExecutionWorker",
+			ID:   "deleteExecutionWorker",
+		}
+	)
+	params, err := decodeDeleteExecutionWorkerParams(args, argsEscaped, r)
+	if err != nil {
+		err = &ogenerrors.DecodeParamsError{
+			OperationContext: opErrContext,
+			Err:              err,
+		}
+		defer recordError("DecodeParams", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+
+	var response DeleteExecutionWorkerRes
+	if m := s.cfg.Middleware; m != nil {
+		mreq := middleware.Request{
+			Context:          ctx,
+			OperationName:    "DeleteExecutionWorker",
+			OperationSummary: "Delete execution worker",
+			OperationID:      "deleteExecutionWorker",
+			Body:             nil,
+			Params: middleware.Parameters{
+				{
+					Name: "workerId",
+					In:   "path",
+				}: params.WorkerId,
+				{
+					Name: "force",
+					In:   "query",
+				}: params.Force,
+				{
+					Name: "X-Auth-Token",
+					In:   "header",
+				}: params.XAuthToken,
+			},
+			Raw: r,
+		}
+
+		type (
+			Request  = struct{}
+			Params   = DeleteExecutionWorkerParams
+			Response = DeleteExecutionWorkerRes
+		)
+		response, err = middleware.HookMiddleware[
+			Request,
+			Params,
+			Response,
+		](
+			m,
+			mreq,
+			unpackDeleteExecutionWorkerParams,
+			func(ctx context.Context, request Request, params Params) (response Response, err error) {
+				response, err = s.h.DeleteExecutionWorker(ctx, params)
+				return response, err
+			},
+		)
+	} else {
+		response, err = s.h.DeleteExecutionWorker(ctx, params)
+	}
+	if err != nil {
+		defer recordError("Internal", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+
+	if err := encodeDeleteExecutionWorkerResponse(response, w, span); err != nil {
 		defer recordError("EncodeResponse", err)
 		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
 			s.cfg.ErrorHandler(ctx, w, r, err)
@@ -177,17 +376,60 @@ func (s *Server) handleDeleteJobRequest(args [1]string, argsEscaped bool, w http
 //
 // Execute a script.
 //
-// POST /executions/execute/
+// POST /executions/execute
 func (s *Server) handleExecuteRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("execute"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/executions/execute"),
+	}
+
+	// Start a span for this request.
+	ctx, span := s.cfg.Tracer.Start(r.Context(), "Execute",
+		trace.WithAttributes(otelAttrs...),
+		serverSpanKind,
+	)
+	defer span.End()
+
+	// Add Labeler to context.
+	labeler := &Labeler{attrs: otelAttrs}
+	ctx = contextWithLabeler(ctx, labeler)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		elapsedDuration := time.Since(startTime)
+		attrOpt := metric.WithAttributeSet(labeler.AttributeSet())
+
+		// Increment request counter.
+		s.requests.Add(ctx, 1, attrOpt)
+
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		s.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), attrOpt)
+	}()
 
 	var (
+		recordError = func(stage string, err error) {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			s.errors.Add(ctx, 1, metric.WithAttributeSet(labeler.AttributeSet()))
+		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
 			Name: "Execute",
 			ID:   "execute",
 		}
 	)
+	params, err := decodeExecuteParams(args, argsEscaped, r)
+	if err != nil {
+		err = &ogenerrors.DecodeParamsError{
+			OperationContext: opErrContext,
+			Err:              err,
+		}
+		defer recordError("DecodeParams", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
 	request, close, err := s.decodeExecuteRequest(r)
 	if err != nil {
 		err = &ogenerrors.DecodeRequestError{
@@ -212,13 +454,18 @@ func (s *Server) handleExecuteRequest(args [0]string, argsEscaped bool, w http.R
 			OperationSummary: "Execute a script",
 			OperationID:      "execute",
 			Body:             request,
-			Params:           middleware.Parameters{},
-			Raw:              r,
+			Params: middleware.Parameters{
+				{
+					Name: "X-Auth-Token",
+					In:   "header",
+				}: params.XAuthToken,
+			},
+			Raw: r,
 		}
 
 		type (
 			Request  = *ExecutionRequest
-			Params   = struct{}
+			Params   = ExecuteParams
 			Response = ExecuteRes
 		)
 		response, err = middleware.HookMiddleware[
@@ -228,14 +475,14 @@ func (s *Server) handleExecuteRequest(args [0]string, argsEscaped bool, w http.R
 		](
 			m,
 			mreq,
-			nil,
+			unpackExecuteParams,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.Execute(ctx, request)
+				response, err = s.h.Execute(ctx, request, params)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.Execute(ctx, request)
+		response, err = s.h.Execute(ctx, request, params)
 	}
 	if err != nil {
 		defer recordError("Internal", err)
@@ -243,7 +490,7 @@ func (s *Server) handleExecuteRequest(args [0]string, argsEscaped bool, w http.R
 		return
 	}
 
-	if err := encodeExecuteResponse(response, w); err != nil {
+	if err := encodeExecuteResponse(response, w, span); err != nil {
 		defer recordError("EncodeResponse", err)
 		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
 			s.cfg.ErrorHandler(ctx, w, r, err)
@@ -252,22 +499,55 @@ func (s *Server) handleExecuteRequest(args [0]string, argsEscaped bool, w http.R
 	}
 }
 
-// handleGetAllExecutionResultsRequest handles getAllExecutionResults operation.
+// handleGetAllExecutionJobsRequest handles getAllExecutionJobs operation.
 //
-// Get all execution results.
+// Get all execution jobs.
 //
-// GET /executions/results/
-func (s *Server) handleGetAllExecutionResultsRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+// GET /jobs/execution
+func (s *Server) handleGetAllExecutionJobsRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getAllExecutionJobs"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/jobs/execution"),
+	}
+
+	// Start a span for this request.
+	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetAllExecutionJobs",
+		trace.WithAttributes(otelAttrs...),
+		serverSpanKind,
+	)
+	defer span.End()
+
+	// Add Labeler to context.
+	labeler := &Labeler{attrs: otelAttrs}
+	ctx = contextWithLabeler(ctx, labeler)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		elapsedDuration := time.Since(startTime)
+		attrOpt := metric.WithAttributeSet(labeler.AttributeSet())
+
+		// Increment request counter.
+		s.requests.Add(ctx, 1, attrOpt)
+
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		s.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), attrOpt)
+	}()
 
 	var (
+		recordError = func(stage string, err error) {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			s.errors.Add(ctx, 1, metric.WithAttributeSet(labeler.AttributeSet()))
+		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "GetAllExecutionResults",
-			ID:   "getAllExecutionResults",
+			Name: "GetAllExecutionJobs",
+			ID:   "getAllExecutionJobs",
 		}
 	)
-	params, err := decodeGetAllExecutionResultsParams(args, argsEscaped, r)
+	params, err := decodeGetAllExecutionJobsParams(args, argsEscaped, r)
 	if err != nil {
 		err = &ogenerrors.DecodeParamsError{
 			OperationContext: opErrContext,
@@ -278,13 +558,13 @@ func (s *Server) handleGetAllExecutionResultsRequest(args [0]string, argsEscaped
 		return
 	}
 
-	var response GetAllExecutionResultsRes
+	var response GetAllExecutionJobsRes
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "GetAllExecutionResults",
-			OperationSummary: "Get all execution results",
-			OperationID:      "getAllExecutionResults",
+			OperationName:    "GetAllExecutionJobs",
+			OperationSummary: "Get all execution jobs",
+			OperationID:      "getAllExecutionJobs",
 			Body:             nil,
 			Params: middleware.Parameters{
 				{
@@ -295,14 +575,18 @@ func (s *Server) handleGetAllExecutionResultsRequest(args [0]string, argsEscaped
 					Name: "pageSize",
 					In:   "query",
 				}: params.PageSize,
+				{
+					Name: "X-Auth-Token",
+					In:   "header",
+				}: params.XAuthToken,
 			},
 			Raw: r,
 		}
 
 		type (
 			Request  = struct{}
-			Params   = GetAllExecutionResultsParams
-			Response = GetAllExecutionResultsRes
+			Params   = GetAllExecutionJobsParams
+			Response = GetAllExecutionJobsRes
 		)
 		response, err = middleware.HookMiddleware[
 			Request,
@@ -311,14 +595,14 @@ func (s *Server) handleGetAllExecutionResultsRequest(args [0]string, argsEscaped
 		](
 			m,
 			mreq,
-			unpackGetAllExecutionResultsParams,
+			unpackGetAllExecutionJobsParams,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.GetAllExecutionResults(ctx, params)
+				response, err = s.h.GetAllExecutionJobs(ctx, params)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.GetAllExecutionResults(ctx, params)
+		response, err = s.h.GetAllExecutionJobs(ctx, params)
 	}
 	if err != nil {
 		defer recordError("Internal", err)
@@ -326,7 +610,7 @@ func (s *Server) handleGetAllExecutionResultsRequest(args [0]string, argsEscaped
 		return
 	}
 
-	if err := encodeGetAllExecutionResultsResponse(response, w); err != nil {
+	if err := encodeGetAllExecutionJobsResponse(response, w, span); err != nil {
 		defer recordError("EncodeResponse", err)
 		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
 			s.cfg.ErrorHandler(ctx, w, r, err)
@@ -339,11 +623,44 @@ func (s *Server) handleGetAllExecutionResultsRequest(args [0]string, argsEscaped
 //
 // Get all executions.
 //
-// GET /executions/
+// GET /executions
 func (s *Server) handleGetAllExecutionsRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getAllExecutions"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/executions"),
+	}
+
+	// Start a span for this request.
+	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetAllExecutions",
+		trace.WithAttributes(otelAttrs...),
+		serverSpanKind,
+	)
+	defer span.End()
+
+	// Add Labeler to context.
+	labeler := &Labeler{attrs: otelAttrs}
+	ctx = contextWithLabeler(ctx, labeler)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		elapsedDuration := time.Since(startTime)
+		attrOpt := metric.WithAttributeSet(labeler.AttributeSet())
+
+		// Increment request counter.
+		s.requests.Add(ctx, 1, attrOpt)
+
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		s.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), attrOpt)
+	}()
 
 	var (
+		recordError = func(stage string, err error) {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			s.errors.Add(ctx, 1, metric.WithAttributeSet(labeler.AttributeSet()))
+		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
 			Name: "GetAllExecutions",
@@ -378,6 +695,10 @@ func (s *Server) handleGetAllExecutionsRequest(args [0]string, argsEscaped bool,
 					Name: "pageSize",
 					In:   "query",
 				}: params.PageSize,
+				{
+					Name: "X-Auth-Token",
+					In:   "header",
+				}: params.XAuthToken,
 			},
 			Raw: r,
 		}
@@ -409,7 +730,119 @@ func (s *Server) handleGetAllExecutionsRequest(args [0]string, argsEscaped bool,
 		return
 	}
 
-	if err := encodeGetAllExecutionsResponse(response, w); err != nil {
+	if err := encodeGetAllExecutionsResponse(response, w, span); err != nil {
+		defer recordError("EncodeResponse", err)
+		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
+			s.cfg.ErrorHandler(ctx, w, r, err)
+		}
+		return
+	}
+}
+
+// handleGetAllLanguagesRequest handles getAllLanguages operation.
+//
+// Get all languages.
+//
+// GET /languages
+func (s *Server) handleGetAllLanguagesRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getAllLanguages"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/languages"),
+	}
+
+	// Start a span for this request.
+	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetAllLanguages",
+		trace.WithAttributes(otelAttrs...),
+		serverSpanKind,
+	)
+	defer span.End()
+
+	// Add Labeler to context.
+	labeler := &Labeler{attrs: otelAttrs}
+	ctx = contextWithLabeler(ctx, labeler)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		elapsedDuration := time.Since(startTime)
+		attrOpt := metric.WithAttributeSet(labeler.AttributeSet())
+
+		// Increment request counter.
+		s.requests.Add(ctx, 1, attrOpt)
+
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		s.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), attrOpt)
+	}()
+
+	var (
+		recordError = func(stage string, err error) {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			s.errors.Add(ctx, 1, metric.WithAttributeSet(labeler.AttributeSet()))
+		}
+		err          error
+		opErrContext = ogenerrors.OperationContext{
+			Name: "GetAllLanguages",
+			ID:   "getAllLanguages",
+		}
+	)
+	params, err := decodeGetAllLanguagesParams(args, argsEscaped, r)
+	if err != nil {
+		err = &ogenerrors.DecodeParamsError{
+			OperationContext: opErrContext,
+			Err:              err,
+		}
+		defer recordError("DecodeParams", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+
+	var response GetAllLanguagesRes
+	if m := s.cfg.Middleware; m != nil {
+		mreq := middleware.Request{
+			Context:          ctx,
+			OperationName:    "GetAllLanguages",
+			OperationSummary: "Get all languages",
+			OperationID:      "getAllLanguages",
+			Body:             nil,
+			Params: middleware.Parameters{
+				{
+					Name: "X-Auth-Token",
+					In:   "header",
+				}: params.XAuthToken,
+			},
+			Raw: r,
+		}
+
+		type (
+			Request  = struct{}
+			Params   = GetAllLanguagesParams
+			Response = GetAllLanguagesRes
+		)
+		response, err = middleware.HookMiddleware[
+			Request,
+			Params,
+			Response,
+		](
+			m,
+			mreq,
+			unpackGetAllLanguagesParams,
+			func(ctx context.Context, request Request, params Params) (response Response, err error) {
+				response, err = s.h.GetAllLanguages(ctx, params)
+				return response, err
+			},
+		)
+	} else {
+		response, err = s.h.GetAllLanguages(ctx, params)
+	}
+	if err != nil {
+		defer recordError("Internal", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+
+	if err := encodeGetAllLanguagesResponse(response, w, span); err != nil {
 		defer recordError("EncodeResponse", err)
 		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
 			s.cfg.ErrorHandler(ctx, w, r, err)
@@ -422,78 +855,51 @@ func (s *Server) handleGetAllExecutionsRequest(args [0]string, argsEscaped bool,
 //
 // Get execution config.
 //
-// GET /execution/config/
+// GET /execution/config
 func (s *Server) handleGetExecutionConfigRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getExecutionConfig"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/execution/config"),
+	}
 
-	var (
-		err error
+	// Start a span for this request.
+	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetExecutionConfig",
+		trace.WithAttributes(otelAttrs...),
+		serverSpanKind,
 	)
+	defer span.End()
 
-	var response GetExecutionConfigRes
-	if m := s.cfg.Middleware; m != nil {
-		mreq := middleware.Request{
-			Context:          ctx,
-			OperationName:    "GetExecutionConfig",
-			OperationSummary: "Get execution config",
-			OperationID:      "getExecutionConfig",
-			Body:             nil,
-			Params:           middleware.Parameters{},
-			Raw:              r,
-		}
+	// Add Labeler to context.
+	labeler := &Labeler{attrs: otelAttrs}
+	ctx = contextWithLabeler(ctx, labeler)
 
-		type (
-			Request  = struct{}
-			Params   = struct{}
-			Response = GetExecutionConfigRes
-		)
-		response, err = middleware.HookMiddleware[
-			Request,
-			Params,
-			Response,
-		](
-			m,
-			mreq,
-			nil,
-			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.GetExecutionConfig(ctx)
-				return response, err
-			},
-		)
-	} else {
-		response, err = s.h.GetExecutionConfig(ctx)
-	}
-	if err != nil {
-		defer recordError("Internal", err)
-		s.cfg.ErrorHandler(ctx, w, r, err)
-		return
-	}
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		elapsedDuration := time.Since(startTime)
+		attrOpt := metric.WithAttributeSet(labeler.AttributeSet())
 
-	if err := encodeGetExecutionConfigResponse(response, w); err != nil {
-		defer recordError("EncodeResponse", err)
-		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
-			s.cfg.ErrorHandler(ctx, w, r, err)
-		}
-		return
-	}
-}
+		// Increment request counter.
+		s.requests.Add(ctx, 1, attrOpt)
 
-// handleGetExecutionResultsByIdRequest handles getExecutionResultsById operation.
-//
-// Get execution result.
-//
-// GET /executions/{JobId}/
-func (s *Server) handleGetExecutionResultsByIdRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		s.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), attrOpt)
+	}()
 
 	var (
+		recordError = func(stage string, err error) {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			s.errors.Add(ctx, 1, metric.WithAttributeSet(labeler.AttributeSet()))
+		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "GetExecutionResultsById",
-			ID:   "getExecutionResultsById",
+			Name: "GetExecutionConfig",
+			ID:   "getExecutionConfig",
 		}
 	)
-	params, err := decodeGetExecutionResultsByIdParams(args, argsEscaped, r)
+	params, err := decodeGetExecutionConfigParams(args, argsEscaped, r)
 	if err != nil {
 		err = &ogenerrors.DecodeParamsError{
 			OperationContext: opErrContext,
@@ -504,35 +910,27 @@ func (s *Server) handleGetExecutionResultsByIdRequest(args [1]string, argsEscape
 		return
 	}
 
-	var response GetExecutionResultsByIdRes
+	var response GetExecutionConfigRes
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "GetExecutionResultsById",
-			OperationSummary: "Get execution result",
-			OperationID:      "getExecutionResultsById",
+			OperationName:    "GetExecutionConfig",
+			OperationSummary: "Get execution config",
+			OperationID:      "getExecutionConfig",
 			Body:             nil,
 			Params: middleware.Parameters{
 				{
-					Name: "JobId",
-					In:   "path",
-				}: params.JobId,
-				{
-					Name: "page",
-					In:   "query",
-				}: params.Page,
-				{
-					Name: "pageSize",
-					In:   "query",
-				}: params.PageSize,
+					Name: "X-Auth-Token",
+					In:   "header",
+				}: params.XAuthToken,
 			},
 			Raw: r,
 		}
 
 		type (
 			Request  = struct{}
-			Params   = GetExecutionResultsByIdParams
-			Response = GetExecutionResultsByIdRes
+			Params   = GetExecutionConfigParams
+			Response = GetExecutionConfigRes
 		)
 		response, err = middleware.HookMiddleware[
 			Request,
@@ -541,14 +939,14 @@ func (s *Server) handleGetExecutionResultsByIdRequest(args [1]string, argsEscape
 		](
 			m,
 			mreq,
-			unpackGetExecutionResultsByIdParams,
+			unpackGetExecutionConfigParams,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.GetExecutionResultsById(ctx, params)
+				response, err = s.h.GetExecutionConfig(ctx, params)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.GetExecutionResultsById(ctx, params)
+		response, err = s.h.GetExecutionConfig(ctx, params)
 	}
 	if err != nil {
 		defer recordError("Internal", err)
@@ -556,7 +954,239 @@ func (s *Server) handleGetExecutionResultsByIdRequest(args [1]string, argsEscape
 		return
 	}
 
-	if err := encodeGetExecutionResultsByIdResponse(response, w); err != nil {
+	if err := encodeGetExecutionConfigResponse(response, w, span); err != nil {
+		defer recordError("EncodeResponse", err)
+		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
+			s.cfg.ErrorHandler(ctx, w, r, err)
+		}
+		return
+	}
+}
+
+// handleGetExecutionJobByIdRequest handles getExecutionJobById operation.
+//
+// Get execution job.
+//
+// GET /executions/jobs/{JobId}
+func (s *Server) handleGetExecutionJobByIdRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getExecutionJobById"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/executions/jobs/{JobId}"),
+	}
+
+	// Start a span for this request.
+	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetExecutionJobById",
+		trace.WithAttributes(otelAttrs...),
+		serverSpanKind,
+	)
+	defer span.End()
+
+	// Add Labeler to context.
+	labeler := &Labeler{attrs: otelAttrs}
+	ctx = contextWithLabeler(ctx, labeler)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		elapsedDuration := time.Since(startTime)
+		attrOpt := metric.WithAttributeSet(labeler.AttributeSet())
+
+		// Increment request counter.
+		s.requests.Add(ctx, 1, attrOpt)
+
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		s.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), attrOpt)
+	}()
+
+	var (
+		recordError = func(stage string, err error) {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			s.errors.Add(ctx, 1, metric.WithAttributeSet(labeler.AttributeSet()))
+		}
+		err          error
+		opErrContext = ogenerrors.OperationContext{
+			Name: "GetExecutionJobById",
+			ID:   "getExecutionJobById",
+		}
+	)
+	params, err := decodeGetExecutionJobByIdParams(args, argsEscaped, r)
+	if err != nil {
+		err = &ogenerrors.DecodeParamsError{
+			OperationContext: opErrContext,
+			Err:              err,
+		}
+		defer recordError("DecodeParams", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+
+	var response GetExecutionJobByIdRes
+	if m := s.cfg.Middleware; m != nil {
+		mreq := middleware.Request{
+			Context:          ctx,
+			OperationName:    "GetExecutionJobById",
+			OperationSummary: "Get execution job",
+			OperationID:      "getExecutionJobById",
+			Body:             nil,
+			Params: middleware.Parameters{
+				{
+					Name: "JobId",
+					In:   "path",
+				}: params.JobId,
+				{
+					Name: "X-Auth-Token",
+					In:   "header",
+				}: params.XAuthToken,
+			},
+			Raw: r,
+		}
+
+		type (
+			Request  = struct{}
+			Params   = GetExecutionJobByIdParams
+			Response = GetExecutionJobByIdRes
+		)
+		response, err = middleware.HookMiddleware[
+			Request,
+			Params,
+			Response,
+		](
+			m,
+			mreq,
+			unpackGetExecutionJobByIdParams,
+			func(ctx context.Context, request Request, params Params) (response Response, err error) {
+				response, err = s.h.GetExecutionJobById(ctx, params)
+				return response, err
+			},
+		)
+	} else {
+		response, err = s.h.GetExecutionJobById(ctx, params)
+	}
+	if err != nil {
+		defer recordError("Internal", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+
+	if err := encodeGetExecutionJobByIdResponse(response, w, span); err != nil {
+		defer recordError("EncodeResponse", err)
+		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
+			s.cfg.ErrorHandler(ctx, w, r, err)
+		}
+		return
+	}
+}
+
+// handleGetExecutionResultByIdRequest handles getExecutionResultById operation.
+//
+// Get execution result by id.
+//
+// GET /executions/{execId}
+func (s *Server) handleGetExecutionResultByIdRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getExecutionResultById"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/executions/{execId}"),
+	}
+
+	// Start a span for this request.
+	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetExecutionResultById",
+		trace.WithAttributes(otelAttrs...),
+		serverSpanKind,
+	)
+	defer span.End()
+
+	// Add Labeler to context.
+	labeler := &Labeler{attrs: otelAttrs}
+	ctx = contextWithLabeler(ctx, labeler)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		elapsedDuration := time.Since(startTime)
+		attrOpt := metric.WithAttributeSet(labeler.AttributeSet())
+
+		// Increment request counter.
+		s.requests.Add(ctx, 1, attrOpt)
+
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		s.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), attrOpt)
+	}()
+
+	var (
+		recordError = func(stage string, err error) {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			s.errors.Add(ctx, 1, metric.WithAttributeSet(labeler.AttributeSet()))
+		}
+		err          error
+		opErrContext = ogenerrors.OperationContext{
+			Name: "GetExecutionResultById",
+			ID:   "getExecutionResultById",
+		}
+	)
+	params, err := decodeGetExecutionResultByIdParams(args, argsEscaped, r)
+	if err != nil {
+		err = &ogenerrors.DecodeParamsError{
+			OperationContext: opErrContext,
+			Err:              err,
+		}
+		defer recordError("DecodeParams", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+
+	var response GetExecutionResultByIdRes
+	if m := s.cfg.Middleware; m != nil {
+		mreq := middleware.Request{
+			Context:          ctx,
+			OperationName:    "GetExecutionResultById",
+			OperationSummary: "Get execution result by id",
+			OperationID:      "getExecutionResultById",
+			Body:             nil,
+			Params: middleware.Parameters{
+				{
+					Name: "execId",
+					In:   "path",
+				}: params.ExecId,
+				{
+					Name: "X-Auth-Token",
+					In:   "header",
+				}: params.XAuthToken,
+			},
+			Raw: r,
+		}
+
+		type (
+			Request  = struct{}
+			Params   = GetExecutionResultByIdParams
+			Response = GetExecutionResultByIdRes
+		)
+		response, err = middleware.HookMiddleware[
+			Request,
+			Params,
+			Response,
+		](
+			m,
+			mreq,
+			unpackGetExecutionResultByIdParams,
+			func(ctx context.Context, request Request, params Params) (response Response, err error) {
+				response, err = s.h.GetExecutionResultById(ctx, params)
+				return response, err
+			},
+		)
+	} else {
+		response, err = s.h.GetExecutionResultById(ctx, params)
+	}
+	if err != nil {
+		defer recordError("Internal", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+
+	if err := encodeGetExecutionResultByIdResponse(response, w, span); err != nil {
 		defer recordError("EncodeResponse", err)
 		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
 			s.cfg.ErrorHandler(ctx, w, r, err)
@@ -571,9 +1201,42 @@ func (s *Server) handleGetExecutionResultsByIdRequest(args [1]string, argsEscape
 //
 // GET /executions/workers
 func (s *Server) handleGetExecutionWorkersRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getExecutionWorkers"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/executions/workers"),
+	}
+
+	// Start a span for this request.
+	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetExecutionWorkers",
+		trace.WithAttributes(otelAttrs...),
+		serverSpanKind,
+	)
+	defer span.End()
+
+	// Add Labeler to context.
+	labeler := &Labeler{attrs: otelAttrs}
+	ctx = contextWithLabeler(ctx, labeler)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		elapsedDuration := time.Since(startTime)
+		attrOpt := metric.WithAttributeSet(labeler.AttributeSet())
+
+		// Increment request counter.
+		s.requests.Add(ctx, 1, attrOpt)
+
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		s.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), attrOpt)
+	}()
 
 	var (
+		recordError = func(stage string, err error) {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			s.errors.Add(ctx, 1, metric.WithAttributeSet(labeler.AttributeSet()))
+		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
 			Name: "GetExecutionWorkers",
@@ -608,6 +1271,10 @@ func (s *Server) handleGetExecutionWorkersRequest(args [0]string, argsEscaped bo
 					Name: "pageSize",
 					In:   "query",
 				}: params.PageSize,
+				{
+					Name: "X-Auth-Token",
+					In:   "header",
+				}: params.XAuthToken,
 			},
 			Raw: r,
 		}
@@ -639,7 +1306,131 @@ func (s *Server) handleGetExecutionWorkersRequest(args [0]string, argsEscaped bo
 		return
 	}
 
-	if err := encodeGetExecutionWorkersResponse(response, w); err != nil {
+	if err := encodeGetExecutionWorkersResponse(response, w, span); err != nil {
+		defer recordError("EncodeResponse", err)
+		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
+			s.cfg.ErrorHandler(ctx, w, r, err)
+		}
+		return
+	}
+}
+
+// handleGetExecutionsForJobRequest handles getExecutionsForJob operation.
+//
+// Get executions of given job.
+//
+// GET /jobs/{JobId}/executions
+func (s *Server) handleGetExecutionsForJobRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getExecutionsForJob"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/jobs/{JobId}/executions"),
+	}
+
+	// Start a span for this request.
+	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetExecutionsForJob",
+		trace.WithAttributes(otelAttrs...),
+		serverSpanKind,
+	)
+	defer span.End()
+
+	// Add Labeler to context.
+	labeler := &Labeler{attrs: otelAttrs}
+	ctx = contextWithLabeler(ctx, labeler)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		elapsedDuration := time.Since(startTime)
+		attrOpt := metric.WithAttributeSet(labeler.AttributeSet())
+
+		// Increment request counter.
+		s.requests.Add(ctx, 1, attrOpt)
+
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		s.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), attrOpt)
+	}()
+
+	var (
+		recordError = func(stage string, err error) {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			s.errors.Add(ctx, 1, metric.WithAttributeSet(labeler.AttributeSet()))
+		}
+		err          error
+		opErrContext = ogenerrors.OperationContext{
+			Name: "GetExecutionsForJob",
+			ID:   "getExecutionsForJob",
+		}
+	)
+	params, err := decodeGetExecutionsForJobParams(args, argsEscaped, r)
+	if err != nil {
+		err = &ogenerrors.DecodeParamsError{
+			OperationContext: opErrContext,
+			Err:              err,
+		}
+		defer recordError("DecodeParams", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+
+	var response GetExecutionsForJobRes
+	if m := s.cfg.Middleware; m != nil {
+		mreq := middleware.Request{
+			Context:          ctx,
+			OperationName:    "GetExecutionsForJob",
+			OperationSummary: "Get executions of given job",
+			OperationID:      "getExecutionsForJob",
+			Body:             nil,
+			Params: middleware.Parameters{
+				{
+					Name: "JobId",
+					In:   "path",
+				}: params.JobId,
+				{
+					Name: "page",
+					In:   "query",
+				}: params.Page,
+				{
+					Name: "pageSize",
+					In:   "query",
+				}: params.PageSize,
+				{
+					Name: "X-Auth-Token",
+					In:   "header",
+				}: params.XAuthToken,
+			},
+			Raw: r,
+		}
+
+		type (
+			Request  = struct{}
+			Params   = GetExecutionsForJobParams
+			Response = GetExecutionsForJobRes
+		)
+		response, err = middleware.HookMiddleware[
+			Request,
+			Params,
+			Response,
+		](
+			m,
+			mreq,
+			unpackGetExecutionsForJobParams,
+			func(ctx context.Context, request Request, params Params) (response Response, err error) {
+				response, err = s.h.GetExecutionsForJob(ctx, params)
+				return response, err
+			},
+		)
+	} else {
+		response, err = s.h.GetExecutionsForJob(ctx, params)
+	}
+	if err != nil {
+		defer recordError("Internal", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+
+	if err := encodeGetExecutionsForJobResponse(response, w, span); err != nil {
 		defer recordError("EncodeResponse", err)
 		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
 			s.cfg.ErrorHandler(ctx, w, r, err)
@@ -652,13 +1443,60 @@ func (s *Server) handleGetExecutionWorkersRequest(args [0]string, argsEscaped bo
 //
 // Get version.
 //
-// GET /version/
+// GET /version
 func (s *Server) handleGetVersionRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getVersion"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/version"),
+	}
+
+	// Start a span for this request.
+	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetVersion",
+		trace.WithAttributes(otelAttrs...),
+		serverSpanKind,
+	)
+	defer span.End()
+
+	// Add Labeler to context.
+	labeler := &Labeler{attrs: otelAttrs}
+	ctx = contextWithLabeler(ctx, labeler)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		elapsedDuration := time.Since(startTime)
+		attrOpt := metric.WithAttributeSet(labeler.AttributeSet())
+
+		// Increment request counter.
+		s.requests.Add(ctx, 1, attrOpt)
+
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		s.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), attrOpt)
+	}()
 
 	var (
-		err error
+		recordError = func(stage string, err error) {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			s.errors.Add(ctx, 1, metric.WithAttributeSet(labeler.AttributeSet()))
+		}
+		err          error
+		opErrContext = ogenerrors.OperationContext{
+			Name: "GetVersion",
+			ID:   "getVersion",
+		}
 	)
+	params, err := decodeGetVersionParams(args, argsEscaped, r)
+	if err != nil {
+		err = &ogenerrors.DecodeParamsError{
+			OperationContext: opErrContext,
+			Err:              err,
+		}
+		defer recordError("DecodeParams", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
 
 	var response GetVersionRes
 	if m := s.cfg.Middleware; m != nil {
@@ -668,13 +1506,18 @@ func (s *Server) handleGetVersionRequest(args [0]string, argsEscaped bool, w htt
 			OperationSummary: "Get version",
 			OperationID:      "getVersion",
 			Body:             nil,
-			Params:           middleware.Parameters{},
-			Raw:              r,
+			Params: middleware.Parameters{
+				{
+					Name: "X-Auth-Token",
+					In:   "header",
+				}: params.XAuthToken,
+			},
+			Raw: r,
 		}
 
 		type (
 			Request  = struct{}
-			Params   = struct{}
+			Params   = GetVersionParams
 			Response = GetVersionRes
 		)
 		response, err = middleware.HookMiddleware[
@@ -684,14 +1527,14 @@ func (s *Server) handleGetVersionRequest(args [0]string, argsEscaped bool, w htt
 		](
 			m,
 			mreq,
-			nil,
+			unpackGetVersionParams,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.GetVersion(ctx)
+				response, err = s.h.GetVersion(ctx, params)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.GetVersion(ctx)
+		response, err = s.h.GetVersion(ctx, params)
 	}
 	if err != nil {
 		defer recordError("Internal", err)
@@ -699,7 +1542,7 @@ func (s *Server) handleGetVersionRequest(args [0]string, argsEscaped bool, w htt
 		return
 	}
 
-	if err := encodeGetVersionResponse(response, w); err != nil {
+	if err := encodeGetVersionResponse(response, w, span); err != nil {
 		defer recordError("EncodeResponse", err)
 		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
 			s.cfg.ErrorHandler(ctx, w, r, err)

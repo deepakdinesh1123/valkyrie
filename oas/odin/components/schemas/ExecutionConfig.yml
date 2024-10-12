@@ -1,0 +1,39 @@
+type: object
+required:
+  - ODIN_WORKER_PROVIDER
+  - ODIN_WORKER_CONCURRENCY
+  - ODIN_WORKER_BUFFER_SIZE
+  - ODIN_WORKER_TASK_TIMEOUT
+  - ODIN_WORKER_POLL_FREQ
+  - ODIN_WORKER_RUNTIME
+  - ODIN_LOG_LEVEL
+properties:
+  ODIN_WORKER_PROVIDER:
+    type: string
+    description: Represents the worker provider.
+  ODIN_WORKER_CONCURRENCY:
+    type: integer
+    format: int32
+    description: Represents the concurrency level for the worker.
+  ODIN_WORKER_BUFFER_SIZE:
+    type: integer
+    format: int32
+    description: Represents the buffer size for the worker.
+  ODIN_WORKER_TASK_TIMEOUT:
+    type: integer
+    description: Represents the task timeout.
+  ODIN_WORKER_POLL_FREQ:
+    type: integer
+    description: Represents the polling frequency for the worker in seconds.
+  ODIN_WORKER_RUNTIME:
+    type: string
+    description: Represents the runtime for the worker in seconds.
+  ODIN_LOG_LEVEL:
+    type: string
+    description: Represents the log level.
+  ODIN_SYSTEM_PROVIDER_BASE_DIR:
+    type: string
+    description: Represents the base directory for the system provider.
+  ODIN_SYSTEM_PROVIDER_CLEAN_UP:
+    type: boolean
+    description: Represents whether to clean up directories created by the system provider.

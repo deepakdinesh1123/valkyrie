@@ -1,0 +1,18 @@
+meta {
+  name: Generate Admin Token
+  type: http
+  seq: 13
+}
+
+post {
+  url: http://localhost:8080/admin/token/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "username": "admin",
+    "password": "admin"
+  }
+}

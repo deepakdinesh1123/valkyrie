@@ -1,15 +1,20 @@
-openapi: '3.0.2'
+openapi: 3.0.2
 info:
   title: API Title
-  version: '0.0.1'
+  version: 0.0.1
+  license:
+    name: MIT
+    url: https://github.com/deepakdinesh1123/valkyrie/blob/main/LICENSE
 servers:
-  - url: http://localhost:8080/api/v1
+  - url: http://usevalkyrie.odin.org/api/v1
 paths:
-  /executions/execute/:
+  /executions/execute:
     post:
       summary: Execute a script
       description: Execute a script
       operationId: execute
+      parameters:
+        - $ref: '#/components/parameters/AuthHeader'
       requestBody:
         required: true
         content:
@@ -24,11 +29,15 @@ paths:
               schema:
                 type: object
                 required:
-                  - executionId
+                  - jobId
+                  - events
                 properties:
-                  executionId:
+                  jobId:
                     type: integer
                     format: int64
+                  events:
+                    type: string
+                    format: url
         '400':
           description: Bad Request
           content:
@@ -41,7 +50,47 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /executions/:
+  /jobs/execution:
+    get:
+      summary: Get all execution jobs
+      description: Get all execution jobs
+      operationId: getAllExecutionJobs
+      parameters:
+        - $ref: '#/components/parameters/PageNumber'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - jobs
+                  - pagination
+                properties:
+                  jobs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Job'
+                  pagination:
+                    $ref: '#/components/schemas/PaginationResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /executions:
     get:
       summary: Get all executions
       description: Get all executions
@@ -49,43 +98,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/PageNumber'
         - $ref: '#/components/parameters/PageSize'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - executions
-                  - pagination
-                properties:
-                  executions:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Execution'
-                  pagination:
-                    $ref: '#/components/schemas/PaginationResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-  /executions/results/:
-    get:
-      summary: Get all execution results
-      description: Get all execution results
-      operationId: getAllExecutionResults
-      parameters:
-        - $ref: '#/components/parameters/PageNumber'
-        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
           description: OK
@@ -109,17 +122,19 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /executions/{JobId}/:
+  /jobs/{JobId}/executions:
     get:
-      summary: Get execution result
-      description: Get execution result
-      operationId: getExecutionResultsById
+      summary: Get executions of given job
+      description: Get executions of given job
+      operationId: getExecutionsForJob
       parameters:
         - name: JobId
           in: path
@@ -129,6 +144,7 @@ paths:
             format: int64
         - $ref: '#/components/parameters/PageNumber'
         - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
           description: OK
@@ -153,7 +169,75 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '404':
-          description: Execution not found
+          description: Execution job not found
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /executions/{execId}:
+    get:
+      summary: Get execution result by id
+      description: Get execution result by id
+      operationId: getExecutionResultById
+      parameters:
+        - name: execId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecutionResult'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Execution result not found
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /executions/jobs/{JobId}:
+    get:
+      summary: Get execution job
+      description: Get execution job
+      operationId: getExecutionJobById
+      parameters:
+        - name: JobId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Execution job not found
         '500':
           description: Internal Server Error
           content:
@@ -161,9 +245,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
     put:
-      summary: Cancel Job
-      description: Cancel Job
-      operationId: cancelJob
+      summary: Cancel Execution Job
+      description: Cancel Execution Job
+      operationId: cancelExecutionJob
       parameters:
         - name: JobId
           in: path
@@ -171,15 +255,27 @@ paths:
           schema:
             type: integer
             format: int64
+        - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
         '400':
           description: Bad Request
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
           content:
@@ -187,9 +283,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
     delete:
-      summary: Delete job
-      description: Delete job
-      operationId: deleteJob
+      summary: Delete execution job
+      description: Delete execution job
+      operationId: deleteExecutionJob
       parameters:
         - name: JobId
           in: path
@@ -197,6 +293,7 @@ paths:
           schema:
             type: integer
             format: int64
+        - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
           description: OK
@@ -206,8 +303,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
         '404':
-          description: Execution not found
+          description: Execution job not found
         '500':
           description: Internal Server Error
           content:
@@ -222,6 +321,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/PageNumber'
         - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
           description: OK
@@ -245,17 +345,68 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /version/:
+  /executions/workers/{workerId}:
+    delete:
+      summary: Delete execution worker
+      description: Delete execution worker
+      operationId: deleteExecutionWorker
+      parameters:
+        - name: workerId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: force
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+        '404':
+          description: Execution worker not found
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /version:
     get:
       summary: Get version
       description: Get version
       operationId: getVersion
+      parameters:
+        - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
           description: OK
@@ -274,11 +425,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /execution/config/:
+  /execution/config:
     get:
       summary: Get execution config
       description: Get execution config
       operationId: getExecutionConfig
+      parameters:
+        - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
           description: OK
@@ -286,14 +439,46 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExecutionConfig'
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /languages:
+    get:
+      summary: Get all languages
+      description: Get all languages
+      operationId: getAllLanguages
+      parameters:
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - languages
+                properties:
+                  languages:
+                    type: array
+                    items:
+                      type: string
+        '403':
+          description: Forbidden
 components:
   parameters:
+    AuthHeader:
+      name: X-Auth-Token
+      in: header
+      description: Authentication token
+      required: false
+      schema:
+        type: string
     PageNumber:
       name: page
       in: query
@@ -320,13 +505,6 @@ components:
           type: string
         value:
           type: string
-    Script:
-      type: object
-      properties:
-        name:
-          type: string
-        script:
-          type: string
     ExecutionEnvironmentSpec:
       type: object
       properties:
@@ -344,24 +522,6 @@ components:
             type: string
         args:
           type: string
-    ProgrammingLanguage:
-      type: object
-      required:
-        - name
-      properties:
-        name:
-          type: string
-        version:
-          type: string
-    File:
-      type: object
-      required:
-        - content
-      properties:
-        name:
-          type: string
-        content:
-          type: string
     ExecutionRequest:
       type: object
       required:
@@ -369,13 +529,7 @@ components:
         - language
       properties:
         environment:
-          oneOf:
-            - $ref: '#/components/schemas/Flake'
-            - $ref: '#/components/schemas/ExecutionEnvironmentSpec'
-        config:
-          oneOf:
-            - $ref: '#/components/schemas/DockerExecutionConfig'
-            - $ref: '#/components/schemas/PodmanExecutionConfig'
+          $ref: '#/components/schemas/ExecutionEnvironmentSpec'
         code:
           type: string
         language:
@@ -386,50 +540,8 @@ components:
           default: 5
         timeout:
           type: integer
-          format: int64
-          default: 0
-        priority:
-          type: integer
-          format: int4
-    DockerExecutionConfig:
-      type: object
-      properties:
-        containerConfig:
-          type: object
-          properties:
-            image:
-              type: string
-        HostConfig:
-          type: object
-          properties:
-            Resources:
-              type: object
-              properties:
-                Memory:
-                  type: integer
-                NanoCPUs:
-                  type: integer
-            Runtime:
-              type: string
-    PodmanExecutionConfig:
-      type: object
-      properties:
-        ContainerBasicConfig:
-          type: object
-          properties:
-            OCIRuntime:
-              type: string
-        ContainerStorageConfig:
-          type: object
-          properties:
-            Image:
-              type: string
-            ImageOS:
-              type: string
-            ImageArch:
-              type: string
-            ImageVariant:
-              type: string
+          format: int32
+          default: -1
     Error:
       type: object
       required:
@@ -437,15 +549,15 @@ components:
       properties:
         message:
           type: string
-    Execution:
+    Job:
       type: object
       required:
-        - executionId
+        - jobId
         - script
         - flake
         - created_at
       properties:
-        executionId:
+        jobId:
           type: integer
           format: int64
         script:
@@ -455,18 +567,53 @@ components:
         created_at:
           type: string
           format: date-time
+        started_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    PaginationResponse:
+      type: object
+      required:
+        - total
+        - limit
+        - offset
+      properties:
+        total:
+          type: integer
+          format: int64
+          description: Represents the total number of items.
+        pages:
+          type: integer
+          format: int32
+          description: Represents the total number of pages.
+        page:
+          type: integer
+          format: int32
+          description: Represents the current page.
+        limit:
+          type: integer
+          format: int32
+          description: Represents the number of items per page.
+        next:
+          type: string
     ExecutionResult:
       allOf:
-        - $ref: '#/components/schemas/Execution'
+        - $ref: '#/components/schemas/Job'
         - type: object
           required:
+            - execId
             - script
             - flake
             - args
             - started_at
             - finished_at
-            - logs
+            - exec_logs
           properties:
+            execId:
+              type: integer
+              format: int64
             script:
               type: string
             flake:
@@ -479,21 +626,10 @@ components:
             finished_at:
               type: string
               format: date-time
-            logs:
+            exec_logs:
               type: string
-    Flake:
-      type: string
-    ExecutionStatus:
-      type: object
-      required:
-        - id
-        - status
-      properties:
-        id:
-          type: integer
-          format: int64
-        status:
-          type: string
+            nix_logs:
+              type: string
     ExecutionWorker:
       type: object
       required:
@@ -512,6 +648,9 @@ components:
           format: date-time
         status:
           type: string
+        updated_at:
+          type: string
+          format: date-time
     ExecutionConfig:
       type: object
       required:
@@ -552,31 +691,3 @@ components:
         ODIN_SYSTEM_PROVIDER_CLEAN_UP:
           type: boolean
           description: Represents whether to clean up directories created by the system provider.
-    PaginationResponse:
-      type: object
-      required:
-        - total
-        - limit
-        - offset
-      properties:
-        total:
-          type: integer
-          format: int64
-          description: Represents the total number of items.
-        pages:
-          type: integer
-          format: int32
-          description: Represents the total number of pages.
-        page:
-          type: integer
-          format: int32
-          description: Represents the current page.
-        limit:
-          type: integer
-          format: int32
-          description: Represents the number of items per page.
-        next:
-          type: string
-        
-        
-        

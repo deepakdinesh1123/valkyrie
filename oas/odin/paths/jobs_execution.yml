@@ -1,0 +1,39 @@
+get:
+  summary: Get all execution jobs
+  description: Get all execution jobs
+  operationId: getAllExecutionJobs
+  parameters:
+    - $ref: ../components/parameters/PageNumber.yml
+    - $ref: ../components/parameters/PageSize.yml
+    - $ref: ../components/parameters/AuthHeader.yml
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - jobs
+              - pagination
+            properties:
+              jobs:
+                type: array
+                items:
+                  $ref: ../components/schemas/Job.yml
+              pagination:
+                $ref: ../components/schemas/PaginationResponse.yml
+    '400':
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml
+    '403':
+      description: Forbidden
+    '500':
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml

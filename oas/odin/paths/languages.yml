@@ -1,0 +1,22 @@
+get:
+  summary: Get all languages
+  description: Get all languages
+  operationId: getAllLanguages
+  parameters:
+    - $ref: ../components/parameters/AuthHeader.yml
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - languages
+            properties:
+              languages:
+                type: array
+                items:
+                  type: string
+    '403':
+      description: Forbidden

@@ -1,12 +1,31 @@
-type: object
-required:
-  - execution_id
-  - status
-  - result
-properties:
-  execution_id:
-    type: string
-  status:
-    type: string
-  result:
-    type: string
+allOf:
+  - $ref: ./Job.yml
+  - type: object
+    required:
+      - execId
+      - script
+      - flake
+      - args
+      - started_at
+      - finished_at
+      - exec_logs
+    properties:
+      execId:
+        type: integer
+        format: int64
+      script:
+        type: string
+      flake:
+        type: string
+      args:
+        type: string
+      started_at:
+        type: string
+        format: date-time
+      finished_at:
+        type: string
+        format: date-time
+      exec_logs:
+        type: string
+      nix_logs:
+        type: string
