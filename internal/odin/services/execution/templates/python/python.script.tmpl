@@ -1,7 +1,13 @@
 #!/usr/bin/env nix-shell
 #! nix-shell -i bash --pure
+{{ if eq (len .LanguageDependencies) 0 -}}
+#! nix-shell -p '{{.LangNixPkg}}'
+{{else -}}
 #! nix-shell -p '{{.LangNixPkg}}.withPackages( p: [ {{ range .LanguageDependencies }} p.{{.}} {{ end }} ] )'
-#! nix-shell -p {{ range .SystemDependencies}} {{.}} {{end}}
+{{end}}
+{{ if eq (len .SystemDependencies) 0 -}}
+{{else -}}
+#! nix-shell -p '{{ range .SystemDependencies -}} {{ . -}} {{ end -}}'
+{{end -}}
 
-# python main.py {{ if ne .Args "" }}{{ .Args }}{{ end }} >> output.txt 2>&1
-python main.py >> output.txt 2>&1
+python main.py {{ if ne .Args "" -}}{{ .Args -}}{{ end -}} >> output.txt 2>&1
