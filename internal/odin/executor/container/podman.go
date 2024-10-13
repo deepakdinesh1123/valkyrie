@@ -1,11 +1,11 @@
 package container
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 
 	"github.com/containers/podman/v5/pkg/api/handlers"
@@ -102,12 +102,15 @@ func (p *PodmanClient) GetContainer(ctx context.Context) (*puddle.Resource[Conta
 func (p *PodmanClient) Execute(ctx context.Context, containerID string, command []string) (bool, string, error) {
 	done := make(chan bool, 1)
 
+	var execId string
+	var err error
+
 	go func() {
 		defer func() {
 			done <- true
 		}()
 
-		execId, err := containers.ExecCreate(p.connection, containerID, &handlers.ExecCreateConfig{
+		execId, err = containers.ExecCreate(p.connection, containerID, &handlers.ExecCreateConfig{
 			ExecConfig: container.ExecOptions{
 				AttachStderr: true,
 				AttachStdout: true,
@@ -125,22 +128,22 @@ func (p *PodmanClient) Execute(ctx context.Context, containerID string, command 
 			return
 		}
 
-		select {
-		case <-ctx.Done():
-			p.logger.Info().Msg("Timelimit exceed")
-			return
-		default:
-			p.logger.Info().Msg("Inspecting")
-			execInfo, err := containers.ExecInspect(p.connection, execId, nil)
-			if err != nil {
-				p.logger.Err(err).Msg("Could not inspect exec")
+		for {
+			select {
+			case <-ctx.Done():
+				p.logger.Info().Msg("Timelimit exceed")
 				return
+			default:
+				execInfo, err := containers.ExecInspect(p.connection, execId, nil)
+				if err != nil {
+					p.logger.Err(err).Msg("Could not inspect exec")
+					return
+				}
+				if !execInfo.Running {
+					p.logger.Info().Int("Exit Code", execInfo.ExitCode).Msg("Execution process exit")
+					return
+				}
 			}
-			if !execInfo.Running {
-				p.logger.Info().Int("Exit Code", execInfo.ExitCode).Msg("Execution process exit")
-				return
-			}
-			p.logger.Info().Msg("Exec session running")
 		}
 	}()
 
@@ -148,61 +151,53 @@ func (p *PodmanClient) Execute(ctx context.Context, containerID string, command 
 	case <-ctx.Done():
 		switch ctx.Err() {
 		case context.DeadlineExceeded:
-			err := containers.Stop(
-				context.TODO(),
-				containerID,
-				(&containers.StopOptions{}).WithTimeout(0),
-			)
-			if err != nil {
-				return false, "", fmt.Errorf("Error stopping container")
+			p.logger.Info().Msg("Killing process")
+			if execId != "" {
+				err := containers.ExecRemove(
+					p.connection,
+					execId,
+					(&containers.ExecRemoveOptions{}).WithForce(true),
+				)
+				if err != nil {
+					return false, "", fmt.Errorf("error stopping container: %s", err)
+				}
 			}
-			out, err := p.ReadContainerLogs(containerID)
+			out, err := p.ReadExecLogs(containerID)
 			if err != nil {
-				return false, "", fmt.Errorf("Error reading output")
+				return false, "", fmt.Errorf("error reading output: %s", err)
 			}
-			return false, out, nil
+			return true, out, nil
 		case context.Canceled:
 			return false, "", nil
 		}
 	case <-done:
-		out, err := p.ReadContainerLogs(containerID)
+		out, err := p.ReadExecLogs(containerID)
 		return true, out, err
 	}
 	return false, "", nil
 }
 
-func (p *PodmanClient) ReadContainerLogs(containerID string) (string, error) {
+func (p *PodmanClient) ReadExecLogs(containerID string) (string, error) {
+	var execLogs bytes.Buffer
 
-	var logs []string
-
-	logsBuffer := 200
-
-	done := make(chan bool)
-	logout := make(chan string, logsBuffer)
-	logerr := make(chan string, logsBuffer)
-
-	logAppender := func() {
-		for {
-			select {
-			case msg := <-logout:
-				logs = append(logs, msg)
-			case msg := <-logerr:
-				logs = append(logs, msg)
-			case <-done:
-				return
-			}
-		}
-	}
-
-	go logAppender()
-
-	options := new(containers.LogOptions).WithFollow(false)
-
-	err := containers.Logs(p.connection, containerID, options, logout, logerr)
+	execId, err := containers.ExecCreate(p.connection, containerID, &handlers.ExecCreateConfig{
+		ExecConfig: container.ExecOptions{
+			AttachStderr: true,
+			AttachStdout: true,
+			Cmd:          []string{"bash", "-c", "cat ~/odin/output.txt"},
+		},
+	})
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("Could not create exec: %s", err)
 	}
-	done <- true
-
-	return strings.Join(logs, "\n"), nil
+	err = containers.ExecStartAndAttach(
+		p.connection,
+		execId,
+		(&containers.ExecStartAndAttachOptions{}).WithAttachOutput(true).WithOutputStream(&execLogs),
+	)
+	if err != nil {
+		return "", fmt.Errorf("Could not attach to exec")
+	}
+	p.logger.Info().Msg(execLogs.String())
+	return execLogs.String(), nil
 }

@@ -3,4 +3,5 @@
 #! nix-shell -p '{{.LangNixPkg}}.withPackages( p: [ {{ range .LanguageDependencies }} p.{{.}} {{ end }} ] )'
 #! nix-shell -p {{ range .SystemDependencies}} {{.}} {{end}}
 
-python main.py {{ if ne .Args "" }}{{ .Args }}{{ end }}
+# python main.py {{ if ne .Args "" }}{{ .Args }}{{ end }} >> output.txt 2>&1
+python main.py >> output.txt 2>&1
