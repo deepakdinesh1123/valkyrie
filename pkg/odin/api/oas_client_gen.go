@@ -17,7 +17,6 @@ import (
 
 	"github.com/ogen-go/ogen/conv"
 	ht "github.com/ogen-go/ogen/http"
-	"github.com/ogen-go/ogen/ogenerrors"
 	"github.com/ogen-go/ogen/otelogen"
 	"github.com/ogen-go/ogen/uri"
 )
@@ -28,61 +27,61 @@ type Invoker interface {
 	//
 	// Cancel Execution Job.
 	//
-	// PUT /executions/jobs/{JobId}/
+	// PUT /executions/jobs/{JobId}
 	CancelExecutionJob(ctx context.Context, params CancelExecutionJobParams) (CancelExecutionJobRes, error)
 	// DeleteExecutionJob invokes deleteExecutionJob operation.
 	//
 	// Delete execution job.
 	//
-	// DELETE /executions/jobs/{JobId}/
+	// DELETE /executions/jobs/{JobId}
 	DeleteExecutionJob(ctx context.Context, params DeleteExecutionJobParams) (DeleteExecutionJobRes, error)
 	// DeleteExecutionWorker invokes deleteExecutionWorker operation.
 	//
 	// Delete execution worker.
 	//
-	// DELETE /executions/workers/{workerId}/
+	// DELETE /executions/workers/{workerId}
 	DeleteExecutionWorker(ctx context.Context, params DeleteExecutionWorkerParams) (DeleteExecutionWorkerRes, error)
 	// Execute invokes execute operation.
 	//
 	// Execute a script.
 	//
-	// POST /executions/execute/
-	Execute(ctx context.Context, request *ExecutionRequest) (ExecuteRes, error)
-	// GenerateUserToken invokes generateUserToken operation.
-	//
-	// Generate user token.
-	//
-	// GET /user/token/
-	GenerateUserToken(ctx context.Context) (GenerateUserTokenRes, error)
+	// POST /executions/execute
+	Execute(ctx context.Context, request *ExecutionRequest, params ExecuteParams) (ExecuteRes, error)
 	// GetAllExecutionJobs invokes getAllExecutionJobs operation.
 	//
 	// Get all execution jobs.
 	//
-	// GET /jobs/execution/
+	// GET /jobs/execution
 	GetAllExecutionJobs(ctx context.Context, params GetAllExecutionJobsParams) (GetAllExecutionJobsRes, error)
 	// GetAllExecutions invokes getAllExecutions operation.
 	//
 	// Get all executions.
 	//
-	// GET /executions/
+	// GET /executions
 	GetAllExecutions(ctx context.Context, params GetAllExecutionsParams) (GetAllExecutionsRes, error)
+	// GetAllLanguages invokes getAllLanguages operation.
+	//
+	// Get all languages.
+	//
+	// GET /languages
+	GetAllLanguages(ctx context.Context, params GetAllLanguagesParams) (GetAllLanguagesRes, error)
 	// GetExecutionConfig invokes getExecutionConfig operation.
 	//
 	// Get execution config.
 	//
-	// GET /execution/config/
-	GetExecutionConfig(ctx context.Context) (GetExecutionConfigRes, error)
+	// GET /execution/config
+	GetExecutionConfig(ctx context.Context, params GetExecutionConfigParams) (GetExecutionConfigRes, error)
 	// GetExecutionJobById invokes getExecutionJobById operation.
 	//
 	// Get execution job.
 	//
-	// GET /executions/jobs/{JobId}/
+	// GET /executions/jobs/{JobId}
 	GetExecutionJobById(ctx context.Context, params GetExecutionJobByIdParams) (GetExecutionJobByIdRes, error)
 	// GetExecutionResultById invokes getExecutionResultById operation.
 	//
 	// Get execution result by id.
 	//
-	// GET /executions/{execId}/
+	// GET /executions/{execId}
 	GetExecutionResultById(ctx context.Context, params GetExecutionResultByIdParams) (GetExecutionResultByIdRes, error)
 	// GetExecutionWorkers invokes getExecutionWorkers operation.
 	//
@@ -94,38 +93,19 @@ type Invoker interface {
 	//
 	// Get executions of given job.
 	//
-	// GET /jobs/{JobId}/executions/
+	// GET /jobs/{JobId}/executions
 	GetExecutionsForJob(ctx context.Context, params GetExecutionsForJobParams) (GetExecutionsForJobRes, error)
-	// GetSystemPackages invokes getSystemPackages operation.
-	//
-	// Retrieve a list of all system packages.
-	//
-	// GET /packages/system/
-	GetSystemPackages(ctx context.Context) (*Package, error)
-	// GetToken invokes getToken operation.
-	//
-	// Get token.
-	//
-	// POST /admin/token/
-	GetToken(ctx context.Context, request *GetTokenReq) (GetTokenRes, error)
 	// GetVersion invokes getVersion operation.
 	//
 	// Get version.
 	//
-	// GET /version/
-	GetVersion(ctx context.Context) (GetVersionRes, error)
-	// SearchPackages invokes searchPackages operation.
-	//
-	// Search for packages by language and package name.
-	//
-	// GET /search/
-	SearchPackages(ctx context.Context, params SearchPackagesParams) (SearchPackagesRes, error)
+	// GET /version
+	GetVersion(ctx context.Context, params GetVersionParams) (GetVersionRes, error)
 }
 
 // Client implements OAS client.
 type Client struct {
 	serverURL *url.URL
-	sec       SecuritySource
 	baseClient
 }
 
@@ -139,7 +119,7 @@ func trimTrailingSlashes(u *url.URL) {
 }
 
 // NewClient initializes new Client defined by OAS.
-func NewClient(serverURL string, sec SecuritySource, opts ...ClientOption) (*Client, error) {
+func NewClient(serverURL string, opts ...ClientOption) (*Client, error) {
 	u, err := url.Parse(serverURL)
 	if err != nil {
 		return nil, err
@@ -152,7 +132,6 @@ func NewClient(serverURL string, sec SecuritySource, opts ...ClientOption) (*Cli
 	}
 	return &Client{
 		serverURL:  u,
-		sec:        sec,
 		baseClient: c,
 	}, nil
 }
@@ -176,7 +155,7 @@ func (c *Client) requestURL(ctx context.Context) *url.URL {
 //
 // Cancel Execution Job.
 //
-// PUT /executions/jobs/{JobId}/
+// PUT /executions/jobs/{JobId}
 func (c *Client) CancelExecutionJob(ctx context.Context, params CancelExecutionJobParams) (CancelExecutionJobRes, error) {
 	res, err := c.sendCancelExecutionJob(ctx, params)
 	return res, err
@@ -186,7 +165,7 @@ func (c *Client) sendCancelExecutionJob(ctx context.Context, params CancelExecut
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("cancelExecutionJob"),
 		semconv.HTTPRequestMethodKey.String("PUT"),
-		semconv.HTTPRouteKey.String("/executions/jobs/{JobId}/"),
+		semconv.HTTPRouteKey.String("/executions/jobs/{JobId}"),
 	}
 
 	// Run stopwatch.
@@ -218,7 +197,7 @@ func (c *Client) sendCancelExecutionJob(ctx context.Context, params CancelExecut
 
 	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [3]string
+	var pathParts [2]string
 	pathParts[0] = "/executions/jobs/"
 	{
 		// Encode "JobId" parameter.
@@ -238,7 +217,6 @@ func (c *Client) sendCancelExecutionJob(ctx context.Context, params CancelExecut
 		}
 		pathParts[1] = encoded
 	}
-	pathParts[2] = "/"
 	uri.AddPathParts(u, pathParts[:]...)
 
 	stage = "EncodeRequest"
@@ -247,36 +225,20 @@ func (c *Client) sendCancelExecutionJob(ctx context.Context, params CancelExecut
 		return res, errors.Wrap(err, "create request")
 	}
 
+	stage = "EncodeHeaderParams"
+	h := uri.NewHeaderEncoder(r.Header)
 	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:BearerAuth"
-			switch err := c.securityBearerAuth(ctx, "CancelExecutionJob", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"BearerAuth\"")
-			}
+		cfg := uri.HeaderParameterEncodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
 		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
+		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.XAuthToken.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
 			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode header")
 		}
 	}
 
@@ -300,7 +262,7 @@ func (c *Client) sendCancelExecutionJob(ctx context.Context, params CancelExecut
 //
 // Delete execution job.
 //
-// DELETE /executions/jobs/{JobId}/
+// DELETE /executions/jobs/{JobId}
 func (c *Client) DeleteExecutionJob(ctx context.Context, params DeleteExecutionJobParams) (DeleteExecutionJobRes, error) {
 	res, err := c.sendDeleteExecutionJob(ctx, params)
 	return res, err
@@ -310,7 +272,7 @@ func (c *Client) sendDeleteExecutionJob(ctx context.Context, params DeleteExecut
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("deleteExecutionJob"),
 		semconv.HTTPRequestMethodKey.String("DELETE"),
-		semconv.HTTPRouteKey.String("/executions/jobs/{JobId}/"),
+		semconv.HTTPRouteKey.String("/executions/jobs/{JobId}"),
 	}
 
 	// Run stopwatch.
@@ -342,7 +304,7 @@ func (c *Client) sendDeleteExecutionJob(ctx context.Context, params DeleteExecut
 
 	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [3]string
+	var pathParts [2]string
 	pathParts[0] = "/executions/jobs/"
 	{
 		// Encode "JobId" parameter.
@@ -362,7 +324,6 @@ func (c *Client) sendDeleteExecutionJob(ctx context.Context, params DeleteExecut
 		}
 		pathParts[1] = encoded
 	}
-	pathParts[2] = "/"
 	uri.AddPathParts(u, pathParts[:]...)
 
 	stage = "EncodeRequest"
@@ -371,36 +332,20 @@ func (c *Client) sendDeleteExecutionJob(ctx context.Context, params DeleteExecut
 		return res, errors.Wrap(err, "create request")
 	}
 
+	stage = "EncodeHeaderParams"
+	h := uri.NewHeaderEncoder(r.Header)
 	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:BearerAuth"
-			switch err := c.securityBearerAuth(ctx, "DeleteExecutionJob", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"BearerAuth\"")
-			}
+		cfg := uri.HeaderParameterEncodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
 		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
+		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.XAuthToken.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
 			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode header")
 		}
 	}
 
@@ -424,7 +369,7 @@ func (c *Client) sendDeleteExecutionJob(ctx context.Context, params DeleteExecut
 //
 // Delete execution worker.
 //
-// DELETE /executions/workers/{workerId}/
+// DELETE /executions/workers/{workerId}
 func (c *Client) DeleteExecutionWorker(ctx context.Context, params DeleteExecutionWorkerParams) (DeleteExecutionWorkerRes, error) {
 	res, err := c.sendDeleteExecutionWorker(ctx, params)
 	return res, err
@@ -434,7 +379,7 @@ func (c *Client) sendDeleteExecutionWorker(ctx context.Context, params DeleteExe
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("deleteExecutionWorker"),
 		semconv.HTTPRequestMethodKey.String("DELETE"),
-		semconv.HTTPRouteKey.String("/executions/workers/{workerId}/"),
+		semconv.HTTPRouteKey.String("/executions/workers/{workerId}"),
 	}
 
 	// Run stopwatch.
@@ -466,7 +411,7 @@ func (c *Client) sendDeleteExecutionWorker(ctx context.Context, params DeleteExe
 
 	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [3]string
+	var pathParts [2]string
 	pathParts[0] = "/executions/workers/"
 	{
 		// Encode "workerId" parameter.
@@ -486,7 +431,6 @@ func (c *Client) sendDeleteExecutionWorker(ctx context.Context, params DeleteExe
 		}
 		pathParts[1] = encoded
 	}
-	pathParts[2] = "/"
 	uri.AddPathParts(u, pathParts[:]...)
 
 	stage = "EncodeQueryParams"
@@ -516,36 +460,20 @@ func (c *Client) sendDeleteExecutionWorker(ctx context.Context, params DeleteExe
 		return res, errors.Wrap(err, "create request")
 	}
 
+	stage = "EncodeHeaderParams"
+	h := uri.NewHeaderEncoder(r.Header)
 	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:BearerAuth"
-			switch err := c.securityBearerAuth(ctx, "DeleteExecutionWorker", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"BearerAuth\"")
-			}
+		cfg := uri.HeaderParameterEncodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
 		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
+		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.XAuthToken.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
 			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode header")
 		}
 	}
 
@@ -569,17 +497,17 @@ func (c *Client) sendDeleteExecutionWorker(ctx context.Context, params DeleteExe
 //
 // Execute a script.
 //
-// POST /executions/execute/
-func (c *Client) Execute(ctx context.Context, request *ExecutionRequest) (ExecuteRes, error) {
-	res, err := c.sendExecute(ctx, request)
+// POST /executions/execute
+func (c *Client) Execute(ctx context.Context, request *ExecutionRequest, params ExecuteParams) (ExecuteRes, error) {
+	res, err := c.sendExecute(ctx, request, params)
 	return res, err
 }
 
-func (c *Client) sendExecute(ctx context.Context, request *ExecutionRequest) (res ExecuteRes, err error) {
+func (c *Client) sendExecute(ctx context.Context, request *ExecutionRequest, params ExecuteParams) (res ExecuteRes, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("execute"),
 		semconv.HTTPRequestMethodKey.String("POST"),
-		semconv.HTTPRouteKey.String("/executions/execute/"),
+		semconv.HTTPRouteKey.String("/executions/execute"),
 	}
 
 	// Run stopwatch.
@@ -612,7 +540,7 @@ func (c *Client) sendExecute(ctx context.Context, request *ExecutionRequest) (re
 	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
-	pathParts[0] = "/executions/execute/"
+	pathParts[0] = "/executions/execute"
 	uri.AddPathParts(u, pathParts[:]...)
 
 	stage = "EncodeRequest"
@@ -624,36 +552,20 @@ func (c *Client) sendExecute(ctx context.Context, request *ExecutionRequest) (re
 		return res, errors.Wrap(err, "encode request")
 	}
 
+	stage = "EncodeHeaderParams"
+	h := uri.NewHeaderEncoder(r.Header)
 	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:BearerAuth"
-			switch err := c.securityBearerAuth(ctx, "Execute", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"BearerAuth\"")
-			}
+		cfg := uri.HeaderParameterEncodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
 		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
+		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.XAuthToken.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
 			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode header")
 		}
 	}
 
@@ -673,116 +585,11 @@ func (c *Client) sendExecute(ctx context.Context, request *ExecutionRequest) (re
 	return result, nil
 }
 
-// GenerateUserToken invokes generateUserToken operation.
-//
-// Generate user token.
-//
-// GET /user/token/
-func (c *Client) GenerateUserToken(ctx context.Context) (GenerateUserTokenRes, error) {
-	res, err := c.sendGenerateUserToken(ctx)
-	return res, err
-}
-
-func (c *Client) sendGenerateUserToken(ctx context.Context) (res GenerateUserTokenRes, err error) {
-	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("generateUserToken"),
-		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/user/token/"),
-	}
-
-	// Run stopwatch.
-	startTime := time.Now()
-	defer func() {
-		// Use floating point division here for higher precision (instead of Millisecond method).
-		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
-	}()
-
-	// Increment request counter.
-	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-
-	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "GenerateUserToken",
-		trace.WithAttributes(otelAttrs...),
-		clientSpanKind,
-	)
-	// Track stage for error reporting.
-	var stage string
-	defer func() {
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, stage)
-			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-		}
-		span.End()
-	}()
-
-	stage = "BuildURL"
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [1]string
-	pathParts[0] = "/user/token/"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	stage = "EncodeRequest"
-	r, err := ht.NewRequest(ctx, "GET", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:BearerAuth"
-			switch err := c.securityBearerAuth(ctx, "GenerateUserToken", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"BearerAuth\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
-	stage = "SendRequest"
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	defer resp.Body.Close()
-
-	stage = "DecodeResponse"
-	result, err := decodeGenerateUserTokenResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
 // GetAllExecutionJobs invokes getAllExecutionJobs operation.
 //
 // Get all execution jobs.
 //
-// GET /jobs/execution/
+// GET /jobs/execution
 func (c *Client) GetAllExecutionJobs(ctx context.Context, params GetAllExecutionJobsParams) (GetAllExecutionJobsRes, error) {
 	res, err := c.sendGetAllExecutionJobs(ctx, params)
 	return res, err
@@ -792,7 +599,7 @@ func (c *Client) sendGetAllExecutionJobs(ctx context.Context, params GetAllExecu
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getAllExecutionJobs"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/jobs/execution/"),
+		semconv.HTTPRouteKey.String("/jobs/execution"),
 	}
 
 	// Run stopwatch.
@@ -825,7 +632,7 @@ func (c *Client) sendGetAllExecutionJobs(ctx context.Context, params GetAllExecu
 	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
-	pathParts[0] = "/jobs/execution/"
+	pathParts[0] = "/jobs/execution"
 	uri.AddPathParts(u, pathParts[:]...)
 
 	stage = "EncodeQueryParams"
@@ -872,36 +679,20 @@ func (c *Client) sendGetAllExecutionJobs(ctx context.Context, params GetAllExecu
 		return res, errors.Wrap(err, "create request")
 	}
 
+	stage = "EncodeHeaderParams"
+	h := uri.NewHeaderEncoder(r.Header)
 	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:BearerAuth"
-			switch err := c.securityBearerAuth(ctx, "GetAllExecutionJobs", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"BearerAuth\"")
-			}
+		cfg := uri.HeaderParameterEncodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
 		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
+		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.XAuthToken.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
 			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode header")
 		}
 	}
 
@@ -925,7 +716,7 @@ func (c *Client) sendGetAllExecutionJobs(ctx context.Context, params GetAllExecu
 //
 // Get all executions.
 //
-// GET /executions/
+// GET /executions
 func (c *Client) GetAllExecutions(ctx context.Context, params GetAllExecutionsParams) (GetAllExecutionsRes, error) {
 	res, err := c.sendGetAllExecutions(ctx, params)
 	return res, err
@@ -935,7 +726,7 @@ func (c *Client) sendGetAllExecutions(ctx context.Context, params GetAllExecutio
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getAllExecutions"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/executions/"),
+		semconv.HTTPRouteKey.String("/executions"),
 	}
 
 	// Run stopwatch.
@@ -968,7 +759,7 @@ func (c *Client) sendGetAllExecutions(ctx context.Context, params GetAllExecutio
 	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
-	pathParts[0] = "/executions/"
+	pathParts[0] = "/executions"
 	uri.AddPathParts(u, pathParts[:]...)
 
 	stage = "EncodeQueryParams"
@@ -1015,36 +806,20 @@ func (c *Client) sendGetAllExecutions(ctx context.Context, params GetAllExecutio
 		return res, errors.Wrap(err, "create request")
 	}
 
+	stage = "EncodeHeaderParams"
+	h := uri.NewHeaderEncoder(r.Header)
 	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:BearerAuth"
-			switch err := c.securityBearerAuth(ctx, "GetAllExecutions", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"BearerAuth\"")
-			}
+		cfg := uri.HeaderParameterEncodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
 		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
+		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.XAuthToken.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
 			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode header")
 		}
 	}
 
@@ -1064,21 +839,110 @@ func (c *Client) sendGetAllExecutions(ctx context.Context, params GetAllExecutio
 	return result, nil
 }
 
+// GetAllLanguages invokes getAllLanguages operation.
+//
+// Get all languages.
+//
+// GET /languages
+func (c *Client) GetAllLanguages(ctx context.Context, params GetAllLanguagesParams) (GetAllLanguagesRes, error) {
+	res, err := c.sendGetAllLanguages(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendGetAllLanguages(ctx context.Context, params GetAllLanguagesParams) (res GetAllLanguagesRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getAllLanguages"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/languages"),
+	}
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "GetAllLanguages",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/languages"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	stage = "EncodeHeaderParams"
+	h := uri.NewHeaderEncoder(r.Header)
+	{
+		cfg := uri.HeaderParameterEncodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.XAuthToken.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode header")
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodeGetAllLanguagesResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // GetExecutionConfig invokes getExecutionConfig operation.
 //
 // Get execution config.
 //
-// GET /execution/config/
-func (c *Client) GetExecutionConfig(ctx context.Context) (GetExecutionConfigRes, error) {
-	res, err := c.sendGetExecutionConfig(ctx)
+// GET /execution/config
+func (c *Client) GetExecutionConfig(ctx context.Context, params GetExecutionConfigParams) (GetExecutionConfigRes, error) {
+	res, err := c.sendGetExecutionConfig(ctx, params)
 	return res, err
 }
 
-func (c *Client) sendGetExecutionConfig(ctx context.Context) (res GetExecutionConfigRes, err error) {
+func (c *Client) sendGetExecutionConfig(ctx context.Context, params GetExecutionConfigParams) (res GetExecutionConfigRes, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getExecutionConfig"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/execution/config/"),
+		semconv.HTTPRouteKey.String("/execution/config"),
 	}
 
 	// Run stopwatch.
@@ -1111,7 +975,7 @@ func (c *Client) sendGetExecutionConfig(ctx context.Context) (res GetExecutionCo
 	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
-	pathParts[0] = "/execution/config/"
+	pathParts[0] = "/execution/config"
 	uri.AddPathParts(u, pathParts[:]...)
 
 	stage = "EncodeRequest"
@@ -1120,36 +984,20 @@ func (c *Client) sendGetExecutionConfig(ctx context.Context) (res GetExecutionCo
 		return res, errors.Wrap(err, "create request")
 	}
 
+	stage = "EncodeHeaderParams"
+	h := uri.NewHeaderEncoder(r.Header)
 	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:BearerAuth"
-			switch err := c.securityBearerAuth(ctx, "GetExecutionConfig", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"BearerAuth\"")
-			}
+		cfg := uri.HeaderParameterEncodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
 		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
+		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.XAuthToken.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
 			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode header")
 		}
 	}
 
@@ -1173,7 +1021,7 @@ func (c *Client) sendGetExecutionConfig(ctx context.Context) (res GetExecutionCo
 //
 // Get execution job.
 //
-// GET /executions/jobs/{JobId}/
+// GET /executions/jobs/{JobId}
 func (c *Client) GetExecutionJobById(ctx context.Context, params GetExecutionJobByIdParams) (GetExecutionJobByIdRes, error) {
 	res, err := c.sendGetExecutionJobById(ctx, params)
 	return res, err
@@ -1183,7 +1031,7 @@ func (c *Client) sendGetExecutionJobById(ctx context.Context, params GetExecutio
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getExecutionJobById"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/executions/jobs/{JobId}/"),
+		semconv.HTTPRouteKey.String("/executions/jobs/{JobId}"),
 	}
 
 	// Run stopwatch.
@@ -1215,7 +1063,7 @@ func (c *Client) sendGetExecutionJobById(ctx context.Context, params GetExecutio
 
 	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [3]string
+	var pathParts [2]string
 	pathParts[0] = "/executions/jobs/"
 	{
 		// Encode "JobId" parameter.
@@ -1235,7 +1083,6 @@ func (c *Client) sendGetExecutionJobById(ctx context.Context, params GetExecutio
 		}
 		pathParts[1] = encoded
 	}
-	pathParts[2] = "/"
 	uri.AddPathParts(u, pathParts[:]...)
 
 	stage = "EncodeRequest"
@@ -1244,36 +1091,20 @@ func (c *Client) sendGetExecutionJobById(ctx context.Context, params GetExecutio
 		return res, errors.Wrap(err, "create request")
 	}
 
+	stage = "EncodeHeaderParams"
+	h := uri.NewHeaderEncoder(r.Header)
 	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:BearerAuth"
-			switch err := c.securityBearerAuth(ctx, "GetExecutionJobById", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"BearerAuth\"")
-			}
+		cfg := uri.HeaderParameterEncodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
 		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
+		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.XAuthToken.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
 			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode header")
 		}
 	}
 
@@ -1297,7 +1128,7 @@ func (c *Client) sendGetExecutionJobById(ctx context.Context, params GetExecutio
 //
 // Get execution result by id.
 //
-// GET /executions/{execId}/
+// GET /executions/{execId}
 func (c *Client) GetExecutionResultById(ctx context.Context, params GetExecutionResultByIdParams) (GetExecutionResultByIdRes, error) {
 	res, err := c.sendGetExecutionResultById(ctx, params)
 	return res, err
@@ -1307,7 +1138,7 @@ func (c *Client) sendGetExecutionResultById(ctx context.Context, params GetExecu
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getExecutionResultById"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/executions/{execId}/"),
+		semconv.HTTPRouteKey.String("/executions/{execId}"),
 	}
 
 	// Run stopwatch.
@@ -1339,7 +1170,7 @@ func (c *Client) sendGetExecutionResultById(ctx context.Context, params GetExecu
 
 	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [3]string
+	var pathParts [2]string
 	pathParts[0] = "/executions/"
 	{
 		// Encode "execId" parameter.
@@ -1359,7 +1190,6 @@ func (c *Client) sendGetExecutionResultById(ctx context.Context, params GetExecu
 		}
 		pathParts[1] = encoded
 	}
-	pathParts[2] = "/"
 	uri.AddPathParts(u, pathParts[:]...)
 
 	stage = "EncodeRequest"
@@ -1368,36 +1198,20 @@ func (c *Client) sendGetExecutionResultById(ctx context.Context, params GetExecu
 		return res, errors.Wrap(err, "create request")
 	}
 
+	stage = "EncodeHeaderParams"
+	h := uri.NewHeaderEncoder(r.Header)
 	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:BearerAuth"
-			switch err := c.securityBearerAuth(ctx, "GetExecutionResultById", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"BearerAuth\"")
-			}
+		cfg := uri.HeaderParameterEncodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
 		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
+		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.XAuthToken.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
 			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode header")
 		}
 	}
 
@@ -1511,36 +1325,20 @@ func (c *Client) sendGetExecutionWorkers(ctx context.Context, params GetExecutio
 		return res, errors.Wrap(err, "create request")
 	}
 
+	stage = "EncodeHeaderParams"
+	h := uri.NewHeaderEncoder(r.Header)
 	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:BearerAuth"
-			switch err := c.securityBearerAuth(ctx, "GetExecutionWorkers", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"BearerAuth\"")
-			}
+		cfg := uri.HeaderParameterEncodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
 		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
+		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.XAuthToken.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
 			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode header")
 		}
 	}
 
@@ -1564,7 +1362,7 @@ func (c *Client) sendGetExecutionWorkers(ctx context.Context, params GetExecutio
 //
 // Get executions of given job.
 //
-// GET /jobs/{JobId}/executions/
+// GET /jobs/{JobId}/executions
 func (c *Client) GetExecutionsForJob(ctx context.Context, params GetExecutionsForJobParams) (GetExecutionsForJobRes, error) {
 	res, err := c.sendGetExecutionsForJob(ctx, params)
 	return res, err
@@ -1574,7 +1372,7 @@ func (c *Client) sendGetExecutionsForJob(ctx context.Context, params GetExecutio
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getExecutionsForJob"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/jobs/{JobId}/executions/"),
+		semconv.HTTPRouteKey.String("/jobs/{JobId}/executions"),
 	}
 
 	// Run stopwatch.
@@ -1626,7 +1424,7 @@ func (c *Client) sendGetExecutionsForJob(ctx context.Context, params GetExecutio
 		}
 		pathParts[1] = encoded
 	}
-	pathParts[2] = "/executions/"
+	pathParts[2] = "/executions"
 	uri.AddPathParts(u, pathParts[:]...)
 
 	stage = "EncodeQueryParams"
@@ -1673,36 +1471,20 @@ func (c *Client) sendGetExecutionsForJob(ctx context.Context, params GetExecutio
 		return res, errors.Wrap(err, "create request")
 	}
 
+	stage = "EncodeHeaderParams"
+	h := uri.NewHeaderEncoder(r.Header)
 	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:BearerAuth"
-			switch err := c.securityBearerAuth(ctx, "GetExecutionsForJob", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"BearerAuth\"")
-			}
+		cfg := uri.HeaderParameterEncodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
 		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
+		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.XAuthToken.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
 			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode header")
 		}
 	}
 
@@ -1722,201 +1504,21 @@ func (c *Client) sendGetExecutionsForJob(ctx context.Context, params GetExecutio
 	return result, nil
 }
 
-// GetSystemPackages invokes getSystemPackages operation.
-//
-// Retrieve a list of all system packages.
-//
-// GET /packages/system/
-func (c *Client) GetSystemPackages(ctx context.Context) (*Package, error) {
-	res, err := c.sendGetSystemPackages(ctx)
-	return res, err
-}
-
-func (c *Client) sendGetSystemPackages(ctx context.Context) (res *Package, err error) {
-	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("getSystemPackages"),
-		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/packages/system/"),
-	}
-
-	// Run stopwatch.
-	startTime := time.Now()
-	defer func() {
-		// Use floating point division here for higher precision (instead of Millisecond method).
-		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
-	}()
-
-	// Increment request counter.
-	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-
-	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "GetSystemPackages",
-		trace.WithAttributes(otelAttrs...),
-		clientSpanKind,
-	)
-	// Track stage for error reporting.
-	var stage string
-	defer func() {
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, stage)
-			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-		}
-		span.End()
-	}()
-
-	stage = "BuildURL"
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [1]string
-	pathParts[0] = "/packages/system/"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	stage = "EncodeRequest"
-	r, err := ht.NewRequest(ctx, "GET", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:BearerAuth"
-			switch err := c.securityBearerAuth(ctx, "GetSystemPackages", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"BearerAuth\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
-	stage = "SendRequest"
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	defer resp.Body.Close()
-
-	stage = "DecodeResponse"
-	result, err := decodeGetSystemPackagesResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// GetToken invokes getToken operation.
-//
-// Get token.
-//
-// POST /admin/token/
-func (c *Client) GetToken(ctx context.Context, request *GetTokenReq) (GetTokenRes, error) {
-	res, err := c.sendGetToken(ctx, request)
-	return res, err
-}
-
-func (c *Client) sendGetToken(ctx context.Context, request *GetTokenReq) (res GetTokenRes, err error) {
-	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("getToken"),
-		semconv.HTTPRequestMethodKey.String("POST"),
-		semconv.HTTPRouteKey.String("/admin/token/"),
-	}
-
-	// Run stopwatch.
-	startTime := time.Now()
-	defer func() {
-		// Use floating point division here for higher precision (instead of Millisecond method).
-		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
-	}()
-
-	// Increment request counter.
-	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-
-	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "GetToken",
-		trace.WithAttributes(otelAttrs...),
-		clientSpanKind,
-	)
-	// Track stage for error reporting.
-	var stage string
-	defer func() {
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, stage)
-			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-		}
-		span.End()
-	}()
-
-	stage = "BuildURL"
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [1]string
-	pathParts[0] = "/admin/token/"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	stage = "EncodeRequest"
-	r, err := ht.NewRequest(ctx, "POST", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-	if err := encodeGetTokenRequest(request, r); err != nil {
-		return res, errors.Wrap(err, "encode request")
-	}
-
-	stage = "SendRequest"
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	defer resp.Body.Close()
-
-	stage = "DecodeResponse"
-	result, err := decodeGetTokenResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
 // GetVersion invokes getVersion operation.
 //
 // Get version.
 //
-// GET /version/
-func (c *Client) GetVersion(ctx context.Context) (GetVersionRes, error) {
-	res, err := c.sendGetVersion(ctx)
+// GET /version
+func (c *Client) GetVersion(ctx context.Context, params GetVersionParams) (GetVersionRes, error) {
+	res, err := c.sendGetVersion(ctx, params)
 	return res, err
 }
 
-func (c *Client) sendGetVersion(ctx context.Context) (res GetVersionRes, err error) {
+func (c *Client) sendGetVersion(ctx context.Context, params GetVersionParams) (res GetVersionRes, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getVersion"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/version/"),
+		semconv.HTTPRouteKey.String("/version"),
 	}
 
 	// Run stopwatch.
@@ -1949,7 +1551,7 @@ func (c *Client) sendGetVersion(ctx context.Context) (res GetVersionRes, err err
 	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
-	pathParts[0] = "/version/"
+	pathParts[0] = "/version"
 	uri.AddPathParts(u, pathParts[:]...)
 
 	stage = "EncodeRequest"
@@ -1958,36 +1560,20 @@ func (c *Client) sendGetVersion(ctx context.Context) (res GetVersionRes, err err
 		return res, errors.Wrap(err, "create request")
 	}
 
+	stage = "EncodeHeaderParams"
+	h := uri.NewHeaderEncoder(r.Header)
 	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:BearerAuth"
-			switch err := c.securityBearerAuth(ctx, "GetVersion", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"BearerAuth\"")
-			}
+		cfg := uri.HeaderParameterEncodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
 		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
+		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.XAuthToken.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
 			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode header")
 		}
 	}
 
@@ -2000,149 +1586,6 @@ func (c *Client) sendGetVersion(ctx context.Context) (res GetVersionRes, err err
 
 	stage = "DecodeResponse"
 	result, err := decodeGetVersionResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// SearchPackages invokes searchPackages operation.
-//
-// Search for packages by language and package name.
-//
-// GET /search/
-func (c *Client) SearchPackages(ctx context.Context, params SearchPackagesParams) (SearchPackagesRes, error) {
-	res, err := c.sendSearchPackages(ctx, params)
-	return res, err
-}
-
-func (c *Client) sendSearchPackages(ctx context.Context, params SearchPackagesParams) (res SearchPackagesRes, err error) {
-	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("searchPackages"),
-		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/search/"),
-	}
-
-	// Run stopwatch.
-	startTime := time.Now()
-	defer func() {
-		// Use floating point division here for higher precision (instead of Millisecond method).
-		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
-	}()
-
-	// Increment request counter.
-	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-
-	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "SearchPackages",
-		trace.WithAttributes(otelAttrs...),
-		clientSpanKind,
-	)
-	// Track stage for error reporting.
-	var stage string
-	defer func() {
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, stage)
-			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-		}
-		span.End()
-	}()
-
-	stage = "BuildURL"
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [1]string
-	pathParts[0] = "/search/"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	stage = "EncodeQueryParams"
-	q := uri.NewQueryEncoder()
-	{
-		// Encode "language" parameter.
-		cfg := uri.QueryParameterEncodingConfig{
-			Name:    "language",
-			Style:   uri.QueryStyleForm,
-			Explode: true,
-		}
-
-		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.Language.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode query")
-		}
-	}
-	{
-		// Encode "package_name" parameter.
-		cfg := uri.QueryParameterEncodingConfig{
-			Name:    "package_name",
-			Style:   uri.QueryStyleForm,
-			Explode: true,
-		}
-
-		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.PackageName.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode query")
-		}
-	}
-	u.RawQuery = q.Values().Encode()
-
-	stage = "EncodeRequest"
-	r, err := ht.NewRequest(ctx, "GET", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:BearerAuth"
-			switch err := c.securityBearerAuth(ctx, "SearchPackages", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"BearerAuth\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
-	stage = "SendRequest"
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	defer resp.Body.Close()
-
-	stage = "DecodeResponse"
-	result, err := decodeSearchPackagesResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

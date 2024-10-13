@@ -17,16 +17,16 @@ type ExecuteRes interface {
 	executeRes()
 }
 
-type GenerateUserTokenRes interface {
-	generateUserTokenRes()
-}
-
 type GetAllExecutionJobsRes interface {
 	getAllExecutionJobsRes()
 }
 
 type GetAllExecutionsRes interface {
 	getAllExecutionsRes()
+}
+
+type GetAllLanguagesRes interface {
+	getAllLanguagesRes()
 }
 
 type GetExecutionConfigRes interface {
@@ -49,14 +49,6 @@ type GetExecutionsForJobRes interface {
 	getExecutionsForJobRes()
 }
 
-type GetTokenRes interface {
-	getTokenRes()
-}
-
 type GetVersionRes interface {
 	getVersionRes()
-}
-
-type SearchPackagesRes interface {
-	searchPackagesRes()
 }
