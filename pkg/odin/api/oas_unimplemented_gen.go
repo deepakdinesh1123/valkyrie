@@ -121,6 +121,15 @@ func (UnimplementedHandler) GetExecutionsForJob(ctx context.Context, params GetE
 	return r, ht.ErrNotImplemented
 }
 
+// GetSystemPackages implements getSystemPackages operation.
+//
+// Retrieve a list of all system packages.
+//
+// GET /packages/system/
+func (UnimplementedHandler) GetSystemPackages(ctx context.Context) (r *Package, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetToken implements getToken operation.
 //
 // Get token.
@@ -136,5 +145,14 @@ func (UnimplementedHandler) GetToken(ctx context.Context, req *GetTokenReq) (r G
 //
 // GET /version/
 func (UnimplementedHandler) GetVersion(ctx context.Context) (r GetVersionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SearchPackages implements searchPackages operation.
+//
+// Search for packages by language and package name.
+//
+// GET /search/
+func (UnimplementedHandler) SearchPackages(ctx context.Context, params SearchPackagesParams) (r SearchPackagesRes, _ error) {
 	return r, ht.ErrNotImplemented
 }

@@ -1,0 +1,7 @@
+name: language
+in: query
+required: false
+description: Programming language of the package (required if type is `language`)
+schema:
+  type: string
+  example: go

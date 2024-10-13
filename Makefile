@@ -58,7 +58,12 @@ add-pkgs:
 	fi; \
 	psql ${POSTGRES_URL} -c "DROP TABLE IF EXISTS packages CASCADE"; \
 	echo "Applying $$dump_file to database..."; \
-	psql ${POSTGRES_URL} -f $$dump_path
+	psql ${POSTGRES_URL} -f $$dump_path ; \
+	psql ${POSTGRES_URL} -c "UPDATE packages SET tsv_search = to_tsvector('english', COALESCE(name, '') || ' ' || COALESCE(version, '') || ' ' || COALESCE(language, ''));"; \
+	echo "Full-text search vectors generated successfully." ; \
+	psql ${POSTGRES_URL} -c "CREATE INDEX IF NOT EXISTS idx_packages_tsv ON packages USING GIN(tsv_search);";\
+	echo "GIN index for tsv_search created successfully." ;\
+
 
 %:
 	@:

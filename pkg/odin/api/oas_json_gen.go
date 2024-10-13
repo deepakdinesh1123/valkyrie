@@ -4461,6 +4461,120 @@ func (s *OptString) UnmarshalJSON(data []byte) error {
 }
 
 // Encode implements json.Marshaler.
+func (s *Package) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *Package) encodeFields(e *jx.Encoder) {
+	{
+		if s.PackageName.Set {
+			e.FieldStart("package_name")
+			s.PackageName.Encode(e)
+		}
+	}
+	{
+		if s.PackageVersion.Set {
+			e.FieldStart("package_version")
+			s.PackageVersion.Encode(e)
+		}
+	}
+	{
+		if s.PackageType.Set {
+			e.FieldStart("package_type")
+			s.PackageType.Encode(e)
+		}
+	}
+	{
+		if s.PackageLanguage.Set {
+			e.FieldStart("package_language")
+			s.PackageLanguage.Encode(e)
+		}
+	}
+}
+
+var jsonFieldsNameOfPackage = [4]string{
+	0: "package_name",
+	1: "package_version",
+	2: "package_type",
+	3: "package_language",
+}
+
+// Decode decodes Package from json.
+func (s *Package) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode Package to nil")
+	}
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "package_name":
+			if err := func() error {
+				s.PackageName.Reset()
+				if err := s.PackageName.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"package_name\"")
+			}
+		case "package_version":
+			if err := func() error {
+				s.PackageVersion.Reset()
+				if err := s.PackageVersion.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"package_version\"")
+			}
+		case "package_type":
+			if err := func() error {
+				s.PackageType.Reset()
+				if err := s.PackageType.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"package_type\"")
+			}
+		case "package_language":
+			if err := func() error {
+				s.PackageLanguage.Reset()
+				if err := s.PackageLanguage.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"package_language\"")
+			}
+		default:
+			return d.Skip()
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode Package")
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *Package) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *Package) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
 func (s *PaginationResponse) Encode(e *jx.Encoder) {
 	e.ObjStart()
 	s.encodeFields(e)

@@ -13,3 +13,5 @@ paths:
     $ref: paths/execution_.yml
   /execution/results/:
     $ref: paths/execution_results_.yml
+  /search/:
+    $ref: paths/search.yml

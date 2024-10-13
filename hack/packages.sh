@@ -13,28 +13,27 @@ docker run -d \
 # Wait for the database to be ready
 sleep 10
 
-# Create the table
+# Create the table and add full-text search column
 docker exec -it nixos-packages-db psql -U thors -d nixos_packages -c "
 CREATE TABLE IF NOT EXISTS packages (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     version VARCHAR(255) NOT NULL,
-    type VARCHAR(255),
+    pkgType VARCHAR(255),
     language VARCHAR(255),
-    arch VARCHAR(255),
-    path TEXT NOT NULL
-);"
+    tsv_search TSVECTOR  
+);
+"
 
 echo "PostgreSQL container is set up and running on port 5433"
 
 # Run the Nix build and nixdump command
-# nix build
+nix build
 ./result/bin/odin nixdump -c $1
 
 # Destroy the container
 docker stop nixos-packages-db
 docker rm nixos-packages-db
 
-rm store-paths.xz
-
-
+# rm nixpkgs_data.csv
+# rm nixpkgs_data.json

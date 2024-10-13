@@ -957,3 +957,120 @@ func decodeGetExecutionsForJobParams(args [1]string, argsEscaped bool, r *http.R
 	}
 	return params, nil
 }
+
+// SearchPackagesParams is parameters of searchPackages operation.
+type SearchPackagesParams struct {
+	// Programming language of the package (required if type is `language`).
+	Language OptString
+	// Name of the package (required if type is `language`).
+	PackageName OptString
+}
+
+func unpackSearchPackagesParams(packed middleware.Parameters) (params SearchPackagesParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "language",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Language = v.(OptString)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "package_name",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.PackageName = v.(OptString)
+		}
+	}
+	return params
+}
+
+func decodeSearchPackagesParams(args [0]string, argsEscaped bool, r *http.Request) (params SearchPackagesParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
+	// Decode query: language.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "language",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotLanguageVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotLanguageVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Language.SetTo(paramsDotLanguageVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "language",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: package_name.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "package_name",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotPackageNameVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotPackageNameVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.PackageName.SetTo(paramsDotPackageNameVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "package_name",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	return params, nil
+}

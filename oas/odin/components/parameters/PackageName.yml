@@ -1,0 +1,7 @@
+name: package_name
+in: query
+required: false
+description: Name of the package to search
+schema:
+  type: string
+  example: curl

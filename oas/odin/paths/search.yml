@@ -1,0 +1,34 @@
+get:
+  summary: Search for a package
+  description: Returns the package name and version based on the provided type, language, and package name.
+  parameters:
+    - $ref: ../components/parameters/Type.yml
+    - $ref: ../components/parameters/Language.yml
+    - $ref: ../components/parameters/PackageName.yml
+  responses:
+    "200":
+      description: Successful search
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: ../components/schemas/SearchResult.yml
+    "400":
+      description: Bad request - Invalid or missing parameters
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml
+    "404":
+      description: Package not found
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml
+    default:
+      description: Unexpected error
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml

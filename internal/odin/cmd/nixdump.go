@@ -1,34 +1,26 @@
 package cmd
 
 import (
-	"bufio"
 	"database/sql"
+	"encoding/csv"
+	"encoding/json"
 	"fmt"
-	"io"
 	"log"
-	"net/http"
 	"os"
 	"os/exec"
-	"path"
 	"regexp"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
-
 	_ "github.com/lib/pq"
 	"github.com/spf13/cobra"
-
-	"github.com/ulikunitz/xz"
-	"golang.org/x/net/html"
 )
 
 type Package struct {
 	Name     string
 	Version  string
-	Type     string
-	Path     string
+	pkgType  string
 	Language string
 }
 
@@ -39,10 +31,15 @@ var NixDumpCmd = &cobra.Command{
 }
 
 var (
-	languagePatterns = []string{"python", "nodejs", "gcc", "rust", "php", "go", "java", "ruby"}
-	systemPatterns   = []string{"glibc", "openssl", "zlib", "curl", "systemd", "sqlite"}
-	packageRegex     = regexp.MustCompile(`^/nix/store/[^-]+(?:-(?P<lang>[^-]+?))?-(?P<name>[^-]+?)-(?P<version>[0-9][^/-]*)(?:-(?P<suffix>[^/-]+))?$`)
+	languagePackageRegex = regexp.MustCompile(`^([a-zA-Z0-9]+)([0-9.]*Packages)\.([a-zA-Z0-9]+),(.+)$`)
+	systemPackageRegex   = regexp.MustCompile(`^([a-zA-Z0-9-]+),(.+)$`)
+	languagePatterns     = []string{"python", "nodejs", "gcc", "rust", "php", "go", "java", "ruby", "lua", "haskell"}
+	systemPatterns       = []string{"glibc", "openssl", "zlib", "curl", "systemd", "sqlite", "python3", "go", "elixir"}
 )
+
+func init() {
+	NixDumpCmd.Flags().StringP("channel", "c", "", "Nixpkgs channel")
+}
 
 func runNixDump(cmd *cobra.Command, args []string) error {
 	channel := cmd.Flag("channel").Value.String()
@@ -56,61 +53,70 @@ func runNixDump(cmd *cobra.Command, args []string) error {
 		channel = envConfig.NIXOS_VERSION
 	}
 
-	url := fmt.Sprintf("https://channels.nixos.org/nixos-%s", channel)
-
-	doc, err := fetchHTML(url)
-	if err != nil {
-		return fmt.Errorf("failed to fetch HTML: %w", err)
+	if err := generateNixEnvData(channel); err != nil {
+		return fmt.Errorf("failed to generate Nix-env data: %w", err)
 	}
 
-	href, err := findStorePaths(doc)
-	if err != nil {
-		return fmt.Errorf("failed to find the store paths href: %w", err)
+	if err := processPaths(envConfig); err != nil {
+		return fmt.Errorf("failed to process paths: %w", err)
 	}
 
-	if href != "" {
-		if strings.HasPrefix(href, "/") {
-			href = "https://releases.nixos.org" + href
-		}
-
-		finalURL, err := followRedirects(href)
-		if err != nil {
-			return fmt.Errorf("failed to follow redirects: %w", err)
-		}
-
-		fileName := path.Base(finalURL)
-		if err := downloadFile(finalURL, fileName); err != nil {
-			return fmt.Errorf("failed to download file: %w", err)
-		}
-
-		if err := processPaths(envConfig); err != nil {
-			return fmt.Errorf("failed to process paths: %w", err)
-		}
-
-		fmt.Printf("File downloaded and data inserted successfully: %s\n", fileName)
-
-		if err := createDatabaseDump(channel, envConfig); err != nil {
-			return fmt.Errorf("failed to create database dump: %w", err)
-		}
+	if err := createDatabaseDump(channel, envConfig); err != nil {
+		return fmt.Errorf("failed to create database dump: %w", err)
 	}
+
 	return nil
 }
 
-func init() {
-	NixDumpCmd.Flags().StringP("channel", "c", "", "Nixpkgs channel")
+func generateNixEnvData(channel string) error {
+	cmd := exec.Command("nix-env", "-qa", "--json", "--arg config{}", "-f", fmt.Sprintf("channel:nixos-%s", channel))
+	output, err := cmd.Output()
+	if err != nil {
+		return fmt.Errorf("failed to execute nix-env command: %w", err)
+	}
+
+	// Store raw JSON data
+	jsonFile, err := os.Create("nixpkgs_data.json")
+	if err != nil {
+		return fmt.Errorf("failed to create JSON file: %w", err)
+	}
+	defer jsonFile.Close()
+
+	_, err = jsonFile.Write(output)
+	if err != nil {
+		return fmt.Errorf("failed to write to JSON file: %w", err)
+	}
+
+	// Parse JSON and create CSV
+	var data map[string]map[string]interface{}
+	err = json.Unmarshal(output, &data)
+	if err != nil {
+		return fmt.Errorf("failed to parse JSON data: %w", err)
+	}
+
+	csvFile, err := os.Create("nixpkgs_data.csv")
+	if err != nil {
+		return fmt.Errorf("failed to create CSV file: %w", err)
+	}
+	defer csvFile.Close()
+
+	writer := csv.NewWriter(csvFile)
+	defer writer.Flush()
+
+	for name, info := range data {
+		version := info["version"].(string)
+		writer.Write([]string{name, version})
+	}
+
+	return nil
 }
 
 func processPaths(envConfig *config.EnvConfig) error {
-	file, err := os.Open("store-paths.xz")
+	file, err := os.Open("nixpkgs_data.csv")
 	if err != nil {
 		return fmt.Errorf("could not open file: %w", err)
 	}
 	defer file.Close()
-
-	xzReader, err := xz.NewReader(file)
-	if err != nil {
-		return fmt.Errorf("could not create XZ reader: %w", err)
-	}
 
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		envConfig.DATABASE_HOST,
@@ -120,48 +126,75 @@ func processPaths(envConfig *config.EnvConfig) error {
 		envConfig.DATABASE_NAME,
 		envConfig.DATABASE_SSL_MODE)
 	db, err := sql.Open("postgres", connStr)
-
 	if err != nil {
 		return fmt.Errorf("could not connect to database: %w", err)
 	}
 	defer db.Close()
 
-	var wg sync.WaitGroup
-	packageChan := make(chan Package, 100)
-
-	for i := 0; i < 4; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for pkg := range packageChan {
-				_, err := db.Exec(
-					`INSERT INTO packages (name, version, type, language, path)
-				 VALUES ($1, $2, $3, NULLIF($4, ''), $5)`,
-					pkg.Name, pkg.Version, pkg.Type, pkg.Language, pkg.Path)
-
-				if err != nil {
-					log.Printf("Error inserting package: %v", err)
-				}
+	reader := csv.NewReader(file)
+	for {
+		record, err := reader.Read()
+		if err != nil {
+			if err.Error() == "EOF" {
+				break
 			}
-		}()
-	}
+			return fmt.Errorf("error reading CSV: %w", err)
+		}
 
-	scanner := bufio.NewScanner(xzReader)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if pkg := parseLine(line); pkg != nil {
-			packageChan <- *pkg
+		if pkg := parseLine(record[0], record[1]); pkg != nil {
+			_, err := db.Exec(
+				`INSERT INTO packages (name, version, pkgType, language)
+				VALUES ($1, $2, $3, NULLIF($4, ''))`,
+				pkg.Name, pkg.Version, pkg.pkgType, pkg.Language)
+			if err != nil {
+				log.Printf("Error inserting package: %v\n", err)
+			}
 		}
 	}
 
-	close(packageChan)
-	wg.Wait()
-
-	if err := scanner.Err(); err != nil {
-		return fmt.Errorf("error reading lines: %w", err)
-	}
-
 	return nil
+}
+
+func parseLine(name, version string) *Package {
+	parts := strings.SplitN(name, ".", 2)
+	if len(parts) > 1 {
+		language := parts[0]
+		packageName := parts[1]
+		if isLanguageDependency(language) {
+			return &Package{
+				Name:     packageName,
+				Version:  version,
+				pkgType:  "language",
+				Language: language,
+			}
+		}
+	} else if isSystemDependency(name) {
+		return &Package{
+			Name:     name,
+			Version:  version,
+			pkgType:  "system",
+			Language: "",
+		}
+	}
+	return nil
+}
+
+func isLanguageDependency(language string) bool {
+	for _, pattern := range languagePatterns {
+		if strings.HasPrefix(strings.ToLower(language), pattern) {
+			return true
+		}
+	}
+	return false
+}
+
+func isSystemDependency(name string) bool {
+	for _, pattern := range systemPatterns {
+		if strings.HasPrefix(strings.ToLower(name), pattern) {
+			return true
+		}
+	}
+	return false
 }
 
 func createDatabaseDump(channel string, envConfig *config.EnvConfig) error {
@@ -202,142 +235,6 @@ func createDatabaseDump(channel string, envConfig *config.EnvConfig) error {
 	}
 
 	log.Printf("Database dump created and copied successfully: %s\n", hostDumpPath)
-
-	return nil
-}
-
-func parseLine(line string) *Package {
-	matches := packageRegex.FindStringSubmatch(line)
-	if len(matches) > 0 {
-		name := matches[packageRegex.SubexpIndex("name")]
-		version := matches[packageRegex.SubexpIndex("version")]
-		language := matches[packageRegex.SubexpIndex("lang")]
-
-		if isLanguageDependency(language) {
-			return &Package{
-				Name:     name,
-				Version:  version,
-				Language: language,
-				Path:     line,
-				Type:     "language",
-			}
-		} else if isSystemDependency(name) {
-			return &Package{
-				Name:     name,
-				Version:  version,
-				Language: "",
-				Path:     line,
-				Type:     "system",
-			}
-		}
-	}
-	return nil
-}
-
-func isLanguageDependency(language string) bool {
-	if language == "" {
-		return false
-	}
-	for _, pattern := range languagePatterns {
-		if strings.HasPrefix(language, pattern) {
-			return true
-		}
-	}
-	return false
-}
-
-func isSystemDependency(name string) bool {
-	for _, pattern := range systemPatterns {
-		if strings.HasPrefix(name, pattern) {
-			return true
-		}
-	}
-	return false
-}
-
-func fetchHTML(url string) (*html.Node, error) {
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch page: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to fetch page: %s", resp.Status)
-	}
-
-	return html.Parse(resp.Body)
-}
-
-func findStorePaths(doc *html.Node) (string, error) {
-	var findHref func(*html.Node) string
-
-	findHref = func(n *html.Node) string {
-		if n.Type == html.ElementNode && n.Data == "a" {
-			for _, attr := range n.Attr {
-				if attr.Key == "href" && strings.Contains(attr.Val, "store-paths.xz") {
-					return attr.Val
-				}
-			}
-		}
-		for c := n.FirstChild; c != nil; c = c.NextSibling {
-			if href := findHref(c); href != "" {
-				return href
-			}
-		}
-		return ""
-	}
-
-	href := findHref(doc)
-
-	if href == "" {
-		return "", fmt.Errorf("href for store-paths.xz not found")
-	}
-
-	return href, nil
-}
-
-func followRedirects(url string) (string, error) {
-	client := &http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
-
-	resp, err := client.Head(url)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusFound || resp.StatusCode == http.StatusMovedPermanently {
-		return resp.Header.Get("Location"), nil
-	}
-
-	return url, nil
-}
-
-func downloadFile(url, filepath string) error {
-	resp, err := http.Get(url)
-	if err != nil {
-		return fmt.Errorf("failed to download file: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to download file: %s", resp.Status)
-	}
-
-	out, err := os.Create(filepath)
-	if err != nil {
-		return fmt.Errorf("failed to create file: %w", err)
-	}
-	defer out.Close()
-
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		return fmt.Errorf("failed to write file: %w", err)
-	}
 
 	return nil
 }

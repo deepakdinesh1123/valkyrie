@@ -1,0 +1,11 @@
+type: object
+properties:
+  package_name:
+    type: string
+    example: curl
+  package_version:
+    type: string
+    example: 7.78.0
+  package_type:
+    type: string
+    example: system

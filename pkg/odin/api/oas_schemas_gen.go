@@ -234,6 +234,7 @@ func (s *Error) SetMessage(val string) {
 
 func (*Error) getExecutionConfigRes() {}
 func (*Error) getVersionRes()         {}
+func (*Error) searchPackagesRes()     {}
 
 type ExecuteBadRequest Error
 
@@ -1737,6 +1738,56 @@ func (o OptString) Or(d string) string {
 	}
 	return d
 }
+
+// Ref: #/components/schemas/Package
+type Package struct {
+	PackageName     OptString `json:"package_name"`
+	PackageVersion  OptString `json:"package_version"`
+	PackageType     OptString `json:"package_type"`
+	PackageLanguage OptString `json:"package_language"`
+}
+
+// GetPackageName returns the value of PackageName.
+func (s *Package) GetPackageName() OptString {
+	return s.PackageName
+}
+
+// GetPackageVersion returns the value of PackageVersion.
+func (s *Package) GetPackageVersion() OptString {
+	return s.PackageVersion
+}
+
+// GetPackageType returns the value of PackageType.
+func (s *Package) GetPackageType() OptString {
+	return s.PackageType
+}
+
+// GetPackageLanguage returns the value of PackageLanguage.
+func (s *Package) GetPackageLanguage() OptString {
+	return s.PackageLanguage
+}
+
+// SetPackageName sets the value of PackageName.
+func (s *Package) SetPackageName(val OptString) {
+	s.PackageName = val
+}
+
+// SetPackageVersion sets the value of PackageVersion.
+func (s *Package) SetPackageVersion(val OptString) {
+	s.PackageVersion = val
+}
+
+// SetPackageType sets the value of PackageType.
+func (s *Package) SetPackageType(val OptString) {
+	s.PackageType = val
+}
+
+// SetPackageLanguage sets the value of PackageLanguage.
+func (s *Package) SetPackageLanguage(val OptString) {
+	s.PackageLanguage = val
+}
+
+func (*Package) searchPackagesRes() {}
 
 // Ref: #/components/schemas/PaginationResponse
 type PaginationResponse struct {

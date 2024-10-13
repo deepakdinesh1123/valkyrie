@@ -80,6 +80,12 @@ type Handler interface {
 	//
 	// GET /jobs/{JobId}/executions/
 	GetExecutionsForJob(ctx context.Context, params GetExecutionsForJobParams) (GetExecutionsForJobRes, error)
+	// GetSystemPackages implements getSystemPackages operation.
+	//
+	// Retrieve a list of all system packages.
+	//
+	// GET /packages/system/
+	GetSystemPackages(ctx context.Context) (*Package, error)
 	// GetToken implements getToken operation.
 	//
 	// Get token.
@@ -92,6 +98,12 @@ type Handler interface {
 	//
 	// GET /version/
 	GetVersion(ctx context.Context) (GetVersionRes, error)
+	// SearchPackages implements searchPackages operation.
+	//
+	// Search for packages by language and package name.
+	//
+	// GET /search/
+	SearchPackages(ctx context.Context, params SearchPackagesParams) (SearchPackagesRes, error)
 }
 
 // Server implements http server based on OpenAPI v3 specification and

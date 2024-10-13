@@ -395,6 +395,48 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				}
 
 				elem = origElem
+			case 'p': // Prefix: "packages/system/"
+				origElem := elem
+				if l := len("packages/system/"); len(elem) >= l && elem[0:l] == "packages/system/" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					// Leaf node.
+					switch r.Method {
+					case "GET":
+						s.handleGetSystemPackagesRequest([0]string{}, elemIsEscaped, w, r)
+					default:
+						s.notAllowed(w, r, "GET")
+					}
+
+					return
+				}
+
+				elem = origElem
+			case 's': // Prefix: "search/"
+				origElem := elem
+				if l := len("search/"); len(elem) >= l && elem[0:l] == "search/" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					// Leaf node.
+					switch r.Method {
+					case "GET":
+						s.handleSearchPackagesRequest([0]string{}, elemIsEscaped, w, r)
+					default:
+						s.notAllowed(w, r, "GET")
+					}
+
+					return
+				}
+
+				elem = origElem
 			case 'u': // Prefix: "user/token/"
 				origElem := elem
 				if l := len("user/token/"); len(elem) >= l && elem[0:l] == "user/token/" {
@@ -903,6 +945,56 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					}
 
 					elem = origElem
+				}
+
+				elem = origElem
+			case 'p': // Prefix: "packages/system/"
+				origElem := elem
+				if l := len("packages/system/"); len(elem) >= l && elem[0:l] == "packages/system/" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					// Leaf node.
+					switch method {
+					case "GET":
+						r.name = "GetSystemPackages"
+						r.summary = "Retrieve all system packages"
+						r.operationID = "getSystemPackages"
+						r.pathPattern = "/packages/system/"
+						r.args = args
+						r.count = 0
+						return r, true
+					default:
+						return
+					}
+				}
+
+				elem = origElem
+			case 's': // Prefix: "search/"
+				origElem := elem
+				if l := len("search/"); len(elem) >= l && elem[0:l] == "search/" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					// Leaf node.
+					switch method {
+					case "GET":
+						r.name = "SearchPackages"
+						r.summary = "Search for packages"
+						r.operationID = "searchPackages"
+						r.pathPattern = "/search/"
+						r.args = args
+						r.count = 0
+						return r, true
+					default:
+						return
+					}
 				}
 
 				elem = origElem

@@ -1,0 +1,8 @@
+name: type
+in: query
+required: true
+description: Type of package (either language or system)
+schema:
+  type: string
+  enum: [language, system]
+  example: language

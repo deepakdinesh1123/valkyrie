@@ -56,3 +56,7 @@ type GetTokenRes interface {
 type GetVersionRes interface {
 	getVersionRes()
 }
+
+type SearchPackagesRes interface {
+	searchPackagesRes()
+}

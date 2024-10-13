@@ -1,7 +1,7 @@
-openapi: '3.0.2'
+openapi: "3.0.2"
 info:
   title: API Title
-  version: '0.0.1'
+  version: "0.0.1"
 servers:
   - url: http://localhost:8080/api/v1
 paths:
@@ -26,7 +26,7 @@ paths:
                 password:
                   type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -37,31 +37,32 @@ paths:
                 properties:
                   token:
                     type: string
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '500':
+                $ref: "#/components/schemas/Error"
+        "500":
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '403':
+                $ref: "#/components/schemas/Error"
+        "403":
           description: Forbidden
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
+
   /user/token/:
     get:
       summary: Generate user token
       description: Generate user token
       operationId: generateUserToken
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -72,24 +73,25 @@ paths:
                 properties:
                   token:
                     type: string
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '500':
+                $ref: "#/components/schemas/Error"
+        "500":
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '403':
+                $ref: "#/components/schemas/Error"
+        "403":
           description: Forbidden
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
+
   /executions/execute/:
     post:
       summary: Execute a script
@@ -100,9 +102,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ExecutionRequest'
+              $ref: "#/components/schemas/ExecutionRequest"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -118,28 +120,29 @@ paths:
                   events:
                     type: string
                     format: url
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '500':
+                $ref: "#/components/schemas/Error"
+        "500":
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
+
   /jobs/execution/:
     get:
       summary: Get all execution jobs
       description: Get all execution jobs
       operationId: getAllExecutionJobs
       parameters:
-        - $ref: '#/components/parameters/PageNumber'
-        - $ref: '#/components/parameters/PageSize'
+        - $ref: "#/components/parameters/PageNumber"
+        - $ref: "#/components/parameters/PageSize"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -152,31 +155,32 @@ paths:
                   jobs:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Job'
+                      $ref: "#/components/schemas/Job"
                   pagination:
-                    $ref: '#/components/schemas/PaginationResponse'
-        '400':
+                    $ref: "#/components/schemas/PaginationResponse"
+        "400":
           description: Bad Request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '500':
+                $ref: "#/components/schemas/Error"
+        "500":
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
+
   /executions/:
     get:
       summary: Get all executions
       description: Get all executions
       operationId: getAllExecutions
       parameters:
-        - $ref: '#/components/parameters/PageNumber'
-        - $ref: '#/components/parameters/PageSize'
+        - $ref: "#/components/parameters/PageNumber"
+        - $ref: "#/components/parameters/PageSize"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -189,21 +193,22 @@ paths:
                   executions:
                     type: array
                     items:
-                      $ref: '#/components/schemas/ExecutionResult'
+                      $ref: "#/components/schemas/ExecutionResult"
                   pagination:
-                    $ref: '#/components/schemas/PaginationResponse'
-        '400':
+                    $ref: "#/components/schemas/PaginationResponse"
+        "400":
           description: Bad Request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '500':
+                $ref: "#/components/schemas/Error"
+        "500":
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
+
   /jobs/{JobId}/executions/:
     get:
       summary: Get executions of given job
@@ -216,10 +221,10 @@ paths:
           schema:
             type: integer
             format: int64
-        - $ref: '#/components/parameters/PageNumber'
-        - $ref: '#/components/parameters/PageSize'
+        - $ref: "#/components/parameters/PageNumber"
+        - $ref: "#/components/parameters/PageSize"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -232,23 +237,24 @@ paths:
                   executions:
                     type: array
                     items:
-                      $ref: '#/components/schemas/ExecutionResult'
+                      $ref: "#/components/schemas/ExecutionResult"
                   pagination:
-                    $ref: '#/components/schemas/PaginationResponse'
-        '400':
+                    $ref: "#/components/schemas/PaginationResponse"
+        "400":
           description: Bad Request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '404':
+                $ref: "#/components/schemas/Error"
+        "404":
           description: Execution job not found
-        '500':
+        "500":
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
+
   /executions/{execId}/:
     get:
       summary: Get execution result by id
@@ -262,26 +268,27 @@ paths:
             type: integer
             format: int64
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ExecutionResult'
-        '400':
+                $ref: "#/components/schemas/ExecutionResult"
+        "400":
           description: Bad Request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '404':
+                $ref: "#/components/schemas/Error"
+        "404":
           description: Execution result not found
-        '500':
+        "500":
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
+
   /executions/jobs/{JobId}/:
     get:
       summary: Get execution job
@@ -295,26 +302,27 @@ paths:
             type: integer
             format: int64
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Job'
-        '400':
+                $ref: "#/components/schemas/Job"
+        "400":
           description: Bad Request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '404':
+                $ref: "#/components/schemas/Error"
+        "404":
           description: Execution job not found
-        '500':
+        "500":
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
+
     put:
       summary: Cancel Execution Job
       description: Cancel Execution Job
@@ -327,7 +335,7 @@ paths:
             type: integer
             format: int64
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -338,20 +346,21 @@ paths:
                 properties:
                   message:
                     type: string
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '403':
+                $ref: "#/components/schemas/Error"
+        "403":
           description: Forbidden
-        '500':
+        "500":
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
+
     delete:
       summary: Delete execution job
       description: Delete execution job
@@ -364,34 +373,35 @@ paths:
             type: integer
             format: int64
       responses:
-        '200':
+        "200":
           description: OK
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '404':
+                $ref: "#/components/schemas/Error"
+        "404":
           description: Execution job not found
-        '403':
+        "403":
           description: Forbidden
-        '500':
+        "500":
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
+
   /executions/workers:
     get:
       summary: Get all execution workers
       description: Get all execution workers
       operationId: getExecutionWorkers
       parameters:
-        - $ref: '#/components/parameters/PageNumber'
-        - $ref: '#/components/parameters/PageSize'
+        - $ref: "#/components/parameters/PageNumber"
+        - $ref: "#/components/parameters/PageSize"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -404,21 +414,22 @@ paths:
                   workers:
                     type: array
                     items:
-                      $ref: '#/components/schemas/ExecutionWorker'
+                      $ref: "#/components/schemas/ExecutionWorker"
                   pagination:
-                    $ref: '#/components/schemas/PaginationResponse'
-        '400':
+                    $ref: "#/components/schemas/PaginationResponse"
+        "400":
           description: Bad Request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '500':
+                $ref: "#/components/schemas/Error"
+        "500":
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
+
   /executions/workers/{workerId}/:
     delete:
       summary: Delete execution worker
@@ -438,7 +449,7 @@ paths:
             type: boolean
             default: false
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -449,27 +460,28 @@ paths:
                 properties:
                   message:
                     type: string
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '404':
+                $ref: "#/components/schemas/Error"
+        "404":
           description: Execution worker not found
-        '500':
+        "500":
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
+
   /version/:
     get:
       summary: Get version
       description: Get version
       operationId: getVersion
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -480,32 +492,69 @@ paths:
                 properties:
                   version:
                     type: string
-        '500':
+        "500":
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
+
   /execution/config/:
     get:
       summary: Get execution config
       description: Get execution config
       operationId: getExecutionConfig
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ExecutionConfig'
-        '500':
+                $ref: "#/components/schemas/ExecutionConfig"
+        "500":
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '403':
+                $ref: "#/components/schemas/Error"
+        "403":
           description: Forbidden
+
+  /search/:
+    get:
+      summary: Search for packages
+      description: Search for packages by language and package name.
+      operationId: searchPackages
+      parameters:
+        - $ref: "#/components/parameters/Language"
+        - $ref: "#/components/parameters/PackageName"
+      responses:
+        "200":
+          description: A list of matching packages.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Package"
+        "400":
+          description: Bad Request - Invalid input.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /packages/system/:
+    get:
+      summary: Retrieve all system packages
+      description: Retrieve a list of all system packages.
+      operationId: getSystemPackages
+      responses:
+        "200":
+          description: A list of all system packages.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Package"
+
 components:
   parameters:
     PageNumber:
@@ -526,7 +575,34 @@ components:
         type: integer
         format: int32
         default: 20
+    Language:
+      name: language
+      in: query
+      required: false
+      description: Programming language of the package (required if type is `language`)
+      schema:
+        type: string
+        example: go
+    PackageName:
+      name: package_name
+      in: query
+      required: false
+      description: Name of the package (required if type is `language`)
+      schema:
+        type: string
+        example: curl
   schemas:
+    Package:
+      type: object
+      properties:
+        package_name:
+          type: string
+        package_version:
+          type: string
+        package_type:
+          type: string
+        package_language:
+          type: string
     EnvironmentVariable:
       type: object
       properties:
@@ -547,7 +623,7 @@ components:
         environment_variables:
           type: array
           items:
-            $ref: '#/components/schemas/EnvironmentVariable'
+            $ref: "#/components/schemas/EnvironmentVariable"
         languageDependencies:
           type: array
           items:
@@ -584,12 +660,12 @@ components:
       properties:
         environment:
           oneOf:
-            - $ref: '#/components/schemas/Flake'
-            - $ref: '#/components/schemas/ExecutionEnvironmentSpec'
+            - $ref: "#/components/schemas/Flake"
+            - $ref: "#/components/schemas/ExecutionEnvironmentSpec"
         config:
           oneOf:
-            - $ref: '#/components/schemas/DockerExecutionConfig'
-            - $ref: '#/components/schemas/PodmanExecutionConfig'
+            - $ref: "#/components/schemas/DockerExecutionConfig"
+            - $ref: "#/components/schemas/PodmanExecutionConfig"
         code:
           type: string
         language:
@@ -677,7 +753,7 @@ components:
           format: date-time
     ExecutionResult:
       allOf:
-        - $ref: '#/components/schemas/Job'
+        - $ref: "#/components/schemas/Job"
         - type: object
           required:
             - execId
@@ -821,4 +897,3 @@ components:
 
 security:
   - BearerAuth: []
-        
