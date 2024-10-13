@@ -1,12 +1,11 @@
 package container
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/containers/podman/v5/pkg/api/handlers"
@@ -102,105 +101,108 @@ func (p *PodmanClient) GetContainer(ctx context.Context) (*puddle.Resource[Conta
 
 func (p *PodmanClient) Execute(ctx context.Context, containerID string, command []string) (bool, string, error) {
 	done := make(chan bool, 1)
-	success := make(chan bool, 1)
-	errch := make(chan error)
 
-	var output string
-
-	go func(ctx context.Context) {
+	go func() {
 		defer func() {
 			done <- true
 		}()
 
+		execId, err := containers.ExecCreate(p.connection, containerID, &handlers.ExecCreateConfig{
+			ExecConfig: container.ExecOptions{
+				AttachStderr: true,
+				AttachStdout: true,
+				Cmd:          command,
+			},
+		})
+		p.logger.Info().Msg("Exec created")
+		if err != nil {
+			return
+		}
+
+		p.logger.Info().Msg("Starting execution")
+		err = containers.ExecStart(p.connection, execId, nil)
+		if err != nil {
+			return
+		}
+
 		select {
 		case <-ctx.Done():
-			p.logger.Info().Msg("Context cancelled before execution")
-			success <- false
+			p.logger.Info().Msg("Timelimit exceed")
 			return
 		default:
-			p.logger.Info().Msg("Exec created")
-			execId, err := containers.ExecCreate(p.connection, containerID, &handlers.ExecCreateConfig{
-				ExecConfig: container.ExecOptions{
-					AttachStderr: true,
-					AttachStdout: true,
-					Cmd:          command,
-				},
-			})
+			p.logger.Info().Msg("Inspecting")
+			execInfo, err := containers.ExecInspect(p.connection, execId, nil)
 			if err != nil {
-				errch <- err
-				success <- false
+				p.logger.Err(err).Msg("Could not inspect exec")
 				return
 			}
-
-			r, w, err := os.Pipe()
-			if err != nil {
-				errch <- err
-				success <- false
+			if !execInfo.Running {
+				p.logger.Info().Int("Exit Code", execInfo.ExitCode).Msg("Execution process exit")
 				return
 			}
-			defer r.Close()
-			defer w.Close() // Ensure the writer is closed
-
-			p.logger.Info().Msg("Starting execution")
-			execOpts := new(containers.ExecStartAndAttachOptions).WithOutputStream(w).WithAttachOutput(true).WithErrorStream(w)
-			err = containers.ExecStartAndAttach(p.connection, execId, execOpts)
-			if err != nil {
-				errch <- err
-				success <- false
-				return
-			}
-
-			outputC := make(chan string)
-
-			// Copying output in a separate goroutine, so that printing doesn't remain blocked forever
-			go func() {
-				select {
-				case <-ctx.Done():
-					p.logger.Info().Msg("Context cancelled during output copying")
-					return
-				default:
-					var output bytes.Buffer
-					p.logger.Info().Msg("Copying output")
-					_, _ = io.Copy(&output, r)
-					outputC <- output.String()
-					p.logger.Info().Msg("Output copied")
-				}
-			}()
-
-			// Wait for output or context cancellation
-			select {
-			case out := <-outputC:
-				p.logger.Info().Msg("Output received")
-				success <- true
-				output = out
-			case <-ctx.Done():
-				p.logger.Info().Msg("Context cancelled while waiting for output")
-				success <- false
-				return
-			}
+			p.logger.Info().Msg("Exec session running")
 		}
-	}(ctx)
+	}()
 
 	select {
 	case <-ctx.Done():
 		switch ctx.Err() {
 		case context.DeadlineExceeded:
-			p.logger.Info().Msg("Timeout killing process")
-			stderr := true
-			stdout := true
-			stdoutChan := make(chan string)
-			stderrChan := make(chan string)
-			containers.Logs(p.connection, containerID, &containers.LogOptions{
-				Stderr: &stderr,
-				Stdout: &stdout,
-			}, stdoutChan, stderrChan)
-			p.logger.Info().Str("output", <-stdoutChan).Msg("Container logs")
-			return false, "", nil
+			err := containers.Stop(
+				context.TODO(),
+				containerID,
+				(&containers.StopOptions{}).WithTimeout(0),
+			)
+			if err != nil {
+				return false, "", fmt.Errorf("Error stopping container")
+			}
+			out, err := p.ReadContainerLogs(containerID)
+			if err != nil {
+				return false, "", fmt.Errorf("Error reading output")
+			}
+			return false, out, nil
 		case context.Canceled:
 			return false, "", nil
 		}
 	case <-done:
-		return <-success, string(output), nil
+		out, err := p.ReadContainerLogs(containerID)
+		return true, out, err
 	}
 	return false, "", nil
+}
+
+func (p *PodmanClient) ReadContainerLogs(containerID string) (string, error) {
+
+	var logs []string
+
+	logsBuffer := 200
+
+	done := make(chan bool)
+	logout := make(chan string, logsBuffer)
+	logerr := make(chan string, logsBuffer)
+
+	logAppender := func() {
+		for {
+			select {
+			case msg := <-logout:
+				logs = append(logs, msg)
+			case msg := <-logerr:
+				logs = append(logs, msg)
+			case <-done:
+				return
+			}
+		}
+	}
+
+	go logAppender()
+
+	options := new(containers.LogOptions).WithFollow(false)
+
+	err := containers.Logs(p.connection, containerID, options, logout, logerr)
+	if err != nil {
+		return "", err
+	}
+	done <- true
+
+	return strings.Join(logs, "\n"), nil
 }
