@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/containers/podman/v5/pkg/api/handlers"
@@ -37,9 +38,9 @@ func GetPodmanClient(cp *ContainerExecutor) (*PodmanClient, error) {
 
 func getPodmanConnection() context.Context {
 	getPodmanConnectionOnce.Do(func() {
-		// sock_dir := os.Getenv("XDG_RUNTIME_DIR")
-		// socket := "unix:" + sock_dir + "/podman/podman.sock"
-		pc, err := bindings.NewConnection(context.Background(), "unix:/run/podman/podman.sock")
+		sock_dir := os.Getenv("XDG_RUNTIME_DIR")
+		socket := "unix:" + sock_dir + "/podman/podman.sock"
+		pc, err := bindings.NewConnection(context.Background(), socket)
 		if err != nil {
 			return
 		}
@@ -54,7 +55,7 @@ func (p *PodmanClient) WriteFiles(ctx context.Context, containerID string, prepD
 		return err
 	}
 	files := map[string]string{
-		"flake.nix":  execReq.Flake,
+		"exec.sh":    execReq.NixScript,
 		execReq.Path: execReq.Code,
 	}
 
@@ -70,7 +71,12 @@ func (p *PodmanClient) WriteFiles(ctx context.Context, containerID string, prepD
 	defer tarFile.Close()
 	defer os.Remove(tarFilePath)
 
-	copyF, err := containers.CopyFromArchive(p.connection, containerID, "/odin", tarFile)
+	copyF, err := containers.CopyFromArchive(
+		p.connection,
+		containerID,
+		filepath.Join("/home", p.user, "odin"),
+		tarFile,
+	)
 	if err != nil {
 		return fmt.Errorf("Failed to copy files to container")
 	}
@@ -84,6 +90,7 @@ func (p *PodmanClient) WriteFiles(ctx context.Context, containerID string, prepD
 func (p *PodmanClient) GetContainer(ctx context.Context) (*puddle.Resource[Container], error) {
 	cont, err := p.ContainerExecutor.pool.Acquire(ctx)
 	if err != nil {
+		p.logger.Err(err).Msg("Error when acquiring container")
 		return nil, err
 	}
 	err = p.pool.CreateResource(ctx)
@@ -98,72 +105,102 @@ func (p *PodmanClient) Execute(ctx context.Context, containerID string, command 
 	success := make(chan bool, 1)
 	errch := make(chan error)
 
-	var output bytes.Buffer
+	var output string
 
-	go func() {
-		execId, err := containers.ExecCreate(p.connection, containerID, &handlers.ExecCreateConfig{
-			ExecConfig: container.ExecOptions{
-				AttachStderr: true,
-				AttachStdout: true,
-				WorkingDir:   "/odin",
-				Cmd:          []string{"nix", "run"},
-			},
-		})
-		if err != nil {
+	go func(ctx context.Context) {
+		defer func() {
 			done <- true
-			errch <- err
-			success <- false
-			return
-		}
-
-		r, w, err := os.Pipe()
-		if err != nil {
-			done <- true
-			errch <- err
-			success <- false
-			return
-		}
-		defer r.Close()
-		execOpts := new(containers.ExecStartAndAttachOptions).WithOutputStream(w).WithAttachOutput(true).WithErrorStream(w)
-		err = containers.ExecStartAndAttach(p.connection, execId, execOpts)
-		if err != nil {
-			done <- true
-			errch <- err
-			success <- false
-			return
-		}
-
-		// copying output in a separate goroutine, so that printing doesn't remain blocked forever
-		go func() {
-			for {
-				if r == nil {
-					return
-				}
-				_, err = io.Copy(&output, r)
-				if err != nil {
-					return
-				}
-			}
 		}()
-		w.Close()
-		r.Close()
-		done <- true
-	}()
-	for {
+
 		select {
 		case <-ctx.Done():
-			switch ctx.Err() {
-			case context.DeadlineExceeded:
-				containerStopTimeout := uint(0)
-				containers.Stop(ctx, containerID, &containers.StopOptions{
-					Timeout: &containerStopTimeout,
-				})
-				return false, output.String(), nil
-			case context.Canceled:
-				return false, "", nil
+			p.logger.Info().Msg("Context cancelled before execution")
+			success <- false
+			return
+		default:
+			p.logger.Info().Msg("Exec created")
+			execId, err := containers.ExecCreate(p.connection, containerID, &handlers.ExecCreateConfig{
+				ExecConfig: container.ExecOptions{
+					AttachStderr: true,
+					AttachStdout: true,
+					Cmd:          command,
+				},
+			})
+			if err != nil {
+				errch <- err
+				success <- false
+				return
 			}
-		case <-done:
-			return <-success, output.String(), nil
+
+			r, w, err := os.Pipe()
+			if err != nil {
+				errch <- err
+				success <- false
+				return
+			}
+			defer r.Close()
+			defer w.Close() // Ensure the writer is closed
+
+			p.logger.Info().Msg("Starting execution")
+			execOpts := new(containers.ExecStartAndAttachOptions).WithOutputStream(w).WithAttachOutput(true).WithErrorStream(w)
+			err = containers.ExecStartAndAttach(p.connection, execId, execOpts)
+			if err != nil {
+				errch <- err
+				success <- false
+				return
+			}
+
+			outputC := make(chan string)
+
+			// Copying output in a separate goroutine, so that printing doesn't remain blocked forever
+			go func() {
+				select {
+				case <-ctx.Done():
+					p.logger.Info().Msg("Context cancelled during output copying")
+					return
+				default:
+					var output bytes.Buffer
+					p.logger.Info().Msg("Copying output")
+					_, _ = io.Copy(&output, r)
+					outputC <- output.String()
+					p.logger.Info().Msg("Output copied")
+				}
+			}()
+
+			// Wait for output or context cancellation
+			select {
+			case out := <-outputC:
+				p.logger.Info().Msg("Output received")
+				success <- true
+				output = out
+			case <-ctx.Done():
+				p.logger.Info().Msg("Context cancelled while waiting for output")
+				success <- false
+				return
+			}
 		}
+	}(ctx)
+
+	select {
+	case <-ctx.Done():
+		switch ctx.Err() {
+		case context.DeadlineExceeded:
+			p.logger.Info().Msg("Timeout killing process")
+			stderr := true
+			stdout := true
+			stdoutChan := make(chan string)
+			stderrChan := make(chan string)
+			containers.Logs(p.connection, containerID, &containers.LogOptions{
+				Stderr: &stderr,
+				Stdout: &stdout,
+			}, stdoutChan, stderrChan)
+			p.logger.Info().Str("output", <-stdoutChan).Msg("Container logs")
+			return false, "", nil
+		case context.Canceled:
+			return false, "", nil
+		}
+	case <-done:
+		return <-success, string(output), nil
 	}
+	return false, "", nil
 }

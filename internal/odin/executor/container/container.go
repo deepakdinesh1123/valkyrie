@@ -40,7 +40,6 @@ func NewContainerExecutor(ctx context.Context, env *config.EnvConfig, queries db
 	if err != nil {
 		return nil, err
 	}
-	logger.Info().Msg("Creating a new pool of containers")
 	pool, err := NewContainerPool(ctx, int32(env.ODIN_HOT_CONTAINER), env.ODIN_WORKER_CONCURRENCY)
 	if err != nil {
 		return nil, err

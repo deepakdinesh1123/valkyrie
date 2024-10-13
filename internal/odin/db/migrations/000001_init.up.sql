@@ -14,7 +14,8 @@ create table workers (
     id int primary key,
     name text not null unique,
     created_at timestamptz not null default now(),
-    last_heartbeat timestamptz
+    last_heartbeat timestamptz,
+    current_state TEXT NOT NULL CHECK (current_state IN ('active', 'stale')) DEFAULT 'active'
 );
 
 create sequence workers_id_seq as int cycle owned by workers.id;

@@ -9,7 +9,7 @@ import (
 func GetUserInfo() (*user.User, error) {
 	eUser := os.Getenv("SUDO_USER")
 	if eUser == "" {
-		return nil, nil
+		return user.Current()
 	}
 	userInfo, err := user.Lookup(eUser)
 	if err != nil {

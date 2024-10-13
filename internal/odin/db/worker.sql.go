@@ -16,7 +16,7 @@ insert into workers
     (name)
 values
     ($1)
-returning id, name, created_at, last_heartbeat
+returning id, name, created_at, last_heartbeat, current_state
 `
 
 func (q *Queries) CreateWorker(ctx context.Context, name string) (Worker, error) {
@@ -27,6 +27,7 @@ func (q *Queries) CreateWorker(ctx context.Context, name string) (Worker, error)
 		&i.Name,
 		&i.CreatedAt,
 		&i.LastHeartbeat,
+		&i.CurrentState,
 	)
 	return i, err
 }
@@ -41,7 +42,7 @@ func (q *Queries) DeleteWorker(ctx context.Context, id int32) error {
 }
 
 const getAllWorkers = `-- name: GetAllWorkers :many
-select id, name, created_at, last_heartbeat from workers
+select id, name, created_at, last_heartbeat, current_state from workers
 limit $1 offset $2
 `
 
@@ -64,6 +65,7 @@ func (q *Queries) GetAllWorkers(ctx context.Context, arg GetAllWorkersParams) ([
 			&i.Name,
 			&i.CreatedAt,
 			&i.LastHeartbeat,
+			&i.CurrentState,
 		); err != nil {
 			return nil, err
 		}
@@ -76,8 +78,10 @@ func (q *Queries) GetAllWorkers(ctx context.Context, arg GetAllWorkersParams) ([
 }
 
 const getStaleWorkers = `-- name: GetStaleWorkers :many
-select id from workers
-where last_heartbeat < now() - interval '20 seconds'
+update workers
+    set current_state='stale'
+where last_heartbeat < now() - interval '20 seconds' and current_state != 'stale'
+returning id
 `
 
 func (q *Queries) GetStaleWorkers(ctx context.Context) ([]int32, error) {
@@ -112,7 +116,7 @@ func (q *Queries) GetTotalWorkers(ctx context.Context) (int64, error) {
 }
 
 const getWorker = `-- name: GetWorker :one
-select id, name, created_at, last_heartbeat from workers where name = $1
+select id, name, created_at, last_heartbeat, current_state from workers where name = $1
 `
 
 func (q *Queries) GetWorker(ctx context.Context, name string) (Worker, error) {
@@ -123,6 +127,7 @@ func (q *Queries) GetWorker(ctx context.Context, name string) (Worker, error) {
 		&i.Name,
 		&i.CreatedAt,
 		&i.LastHeartbeat,
+		&i.CurrentState,
 	)
 	return i, err
 }
@@ -132,7 +137,7 @@ insert into workers
     (id, name)
 values
     ($1, $2)
-returning id, name, created_at, last_heartbeat
+returning id, name, created_at, last_heartbeat, current_state
 `
 
 type InsertWorkerParams struct {
@@ -148,6 +153,7 @@ func (q *Queries) InsertWorker(ctx context.Context, arg InsertWorkerParams) (Wor
 		&i.Name,
 		&i.CreatedAt,
 		&i.LastHeartbeat,
+		&i.CurrentState,
 	)
 	return i, err
 }

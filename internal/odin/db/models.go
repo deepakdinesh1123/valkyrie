@@ -62,4 +62,5 @@ type Worker struct {
 	Name          string             `db:"name" json:"name"`
 	CreatedAt     pgtype.Timestamptz `db:"created_at" json:"created_at"`
 	LastHeartbeat pgtype.Timestamptz `db:"last_heartbeat" json:"last_heartbeat"`
+	CurrentState  string             `db:"current_state" json:"current_state"`
 }

@@ -25,7 +25,7 @@ func (s *SystemExecutor) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	s.logger.Info().Str("dir", dir).Msg("Executing job")
 	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
 		s.logger.Err(err).Msg("Failed to create directory")
-		err := s.updateJob(ctx, &job, start, err.Error(), false)
+		err := s.updateJob(ctx, &job, start, false)
 		if err != nil {
 			s.logger.Err(err).Msg("Failed to update job")
 		}
@@ -33,7 +33,7 @@ func (s *SystemExecutor) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	}
 	if err := s.writeFiles(ctx, dir, job); err != nil {
 		s.logger.Err(err).Msg("Failed to write files")
-		err := s.updateJob(ctx, &job, start, err.Error(), false)
+		err := s.updateJob(ctx, &job, start, false)
 		if err != nil {
 			s.logger.Err(err).Msg("Failed to update job")
 		}
@@ -42,7 +42,7 @@ func (s *SystemExecutor) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	outFile, err := os.Create(filepath.Join(dir, "output.txt"))
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to create output file")
-		err := s.updateJob(ctx, &job, start, err.Error(), false)
+		err := s.updateJob(ctx, &job, start, false)
 		if err != nil {
 			s.logger.Err(err).Msg("Failed to update job")
 		}
@@ -52,7 +52,7 @@ func (s *SystemExecutor) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	errFile, err := os.Create(filepath.Join(dir, "error.txt"))
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to create error file")
-		err := s.updateJob(ctx, &job, start, err.Error(), false)
+		err := s.updateJob(ctx, &job, start, false)
 		if err != nil {
 			s.logger.Err(err).Msg("Failed to update job")
 		}
@@ -104,7 +104,7 @@ func (s *SystemExecutor) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 				}
 			}
 			s.logger.Err(err).Msg("Failed to execute command")
-			err := s.updateJob(ctx, &job, start, err.Error(), false)
+			err := s.updateJob(ctx, &job, start, false)
 			if err != nil {
 				s.logger.Err(err).Msg("Failed to update job")
 			}
@@ -120,7 +120,7 @@ func (s *SystemExecutor) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 			case context.Canceled:
 				s.logger.Info().Msg("context canceled wating for process to exit")
 				<-done
-				s.updateJob(context.TODO(), &job, start, "", true)
+				s.updateJob(context.TODO(), &job, start, true)
 				return
 			default:
 				s.logger.Info().Msg("context error killing process")
@@ -128,11 +128,11 @@ func (s *SystemExecutor) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 				if err != nil {
 					s.logger.Err(err).Msg("Failed to send kill signal")
 				}
-				s.updateJob(context.TODO(), &job, start, "", false)
+				s.updateJob(context.TODO(), &job, start, false)
 				return
 			}
 		case <-done:
-			s.updateJob(context.TODO(), &job, start, "", true)
+			s.updateJob(context.TODO(), &job, start, true)
 			return
 		}
 	}
@@ -156,7 +156,7 @@ func (s *SystemExecutor) writeFiles(ctx context.Context, dir string, job db.Job)
 	return nil
 }
 
-func (s *SystemExecutor) updateJob(ctx context.Context, job *db.Job, startTime time.Time, message string, success bool) error {
+func (s *SystemExecutor) updateJob(ctx context.Context, job *db.Job, startTime time.Time, success bool) error {
 	dir := filepath.Join(s.envConfig.ODIN_SYSTEM_EXECUTOR_BASE_DIR, job.CreatedAt.Time.Format("20060102150405"))
 	out, err := os.ReadFile(filepath.Join(dir, "output.txt"))
 	if err != nil {
@@ -173,7 +173,6 @@ func (s *SystemExecutor) updateJob(ctx context.Context, job *db.Job, startTime t
 	if _, err := s.queries.UpdateJobResultTx(ctx, db.UpdateJobResultTxParams{
 		StartTime: startTime,
 		Job:       *job,
-		Message:   message,
 		Success:   success,
 		WorkerId:  s.workerId,
 		Retry:     retry,

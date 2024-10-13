@@ -193,11 +193,11 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 				return &WorkerError{Type: "Context", Message: err.Error()}
 			}
 		case <-fetchJobTicker.C:
-			w.updateStats()
-			if w.WorkerStats.CPUUsage > 75 {
-				w.logger.Info().Float64("CPU Usage", w.WorkerStats.CPUUsage).Msg("Worker: high usage")
-				continue
-			}
+			// w.updateStats()
+			// if w.WorkerStats.CPUUsage > 75 {
+			// 	w.logger.Info().Float64("CPU Usage", w.WorkerStats.CPUUsage).Msg("Worker: high usage")
+			// 	continue
+			// }
 			if swg.Count() >= w.envConfig.ODIN_WORKER_CONCURRENCY {
 				w.logger.Info().Int("Tasks in progress", int(swg.Count())).Int32("Concurrency limit", w.envConfig.ODIN_WORKER_CONCURRENCY).Msg("Worker: concurrency limit reached")
 				continue

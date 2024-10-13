@@ -13,7 +13,6 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/docker/docker/api/types/container"
 	"github.com/jackc/puddle/v2"
-	spec "github.com/opencontainers/runtime-spec/specs-go"
 )
 
 func constructor(ctx context.Context) (Container, error) {
@@ -21,24 +20,24 @@ func constructor(ctx context.Context) (Container, error) {
 
 	var cont Container
 
-	prepDir := filepath.Join(envConfig.USER_HOME_DIR, ".odin_store", fmt.Sprintf("odin-%d", time.Now().UnixNano()))
-	if _, err := os.Stat(prepDir); err != nil {
-		if os.IsNotExist(err) {
-			err := os.MkdirAll(prepDir, 0744)
-			if err != nil {
-				return Container{}, fmt.Errorf("Could not create the prep dirctory")
-			}
-		}
-	}
-	cont.HostPrepDir = prepDir
-	err := OverlayStore(prepDir, envConfig.ODIN_NIX_STORE)
-	if err != nil {
-		Cleanup(prepDir)
-		return Container{}, err
-	}
-
 	switch envConfig.ODIN_CONTAINER_ENGINE {
 	case "docker":
+		prepDir := filepath.Join(envConfig.USER_HOME_DIR, ".odin_store", fmt.Sprintf("odin-%d", time.Now().UnixNano()))
+
+		if _, err := os.Stat(prepDir); err != nil {
+			if os.IsNotExist(err) {
+				err := os.MkdirAll(prepDir, 0744)
+				if err != nil {
+					return Container{}, fmt.Errorf("Could not create the prep dirctory")
+				}
+			}
+		}
+		cont.HostPrepDir = prepDir
+		err := OverlayStore(prepDir, envConfig.ODIN_NIX_STORE)
+		if err != nil {
+			Cleanup(prepDir)
+			return Container{}, err
+		}
 		dClient := getDockerClient()
 		if dClient == nil {
 			return Container{}, fmt.Errorf("could not get docker client")
@@ -87,12 +86,16 @@ func constructor(ctx context.Context) (Container, error) {
 		s.StopSignal = &stopSignal
 		s.OCIRuntime = "crun"
 
-		s.ContainerStorageConfig.Mounts = append(s.ContainerStorageConfig.Mounts, spec.Mount{
-			Destination: "/nix",
-			Type:        "bind",
-			Source:      filepath.Join(prepDir, "merged"),
-			Options:     []string{"U"},
-		})
+		s.ContainerStorageConfig.OverlayVolumes = []*specgen.OverlayVolume{
+			{
+				Destination: "/nix",
+				Source:      "/nix",
+			},
+		}
+
+		s.ContainerSecurityConfig.UserNS = specgen.Namespace{
+			NSMode: specgen.KeepID,
+		}
 
 		containerRemove := true
 		s.Remove = &containerRemove
@@ -102,17 +105,14 @@ func constructor(ctx context.Context) (Container, error) {
 		if err != nil {
 			return Container{}, err
 		}
-		fmt.Println("Container created")
 		err = containers.Start(connection, pdContainer.ID, nil)
 		if err != nil {
 			return Container{}, err
 		}
-		fmt.Println("Container started")
 		contInfo, err := containers.Inspect(connection, pdContainer.ID, nil)
 		if err != nil {
 			return Container{}, err
 		}
-		fmt.Println("Container inspected")
 		cont.Name = contInfo.Name
 		cont.PID = contInfo.State.Pid
 	}
@@ -122,6 +122,7 @@ func constructor(ctx context.Context) (Container, error) {
 
 func destructor(cont Container) {
 	Cleanup(cont.HostPrepDir)
+	fmt.Println("killing container", cont.Name)
 	KillContainer(cont.PID)
 }
 
@@ -131,7 +132,6 @@ func NewContainerPool(ctx context.Context, initPoolSize int32, maxPoolSize int32
 		return nil, err
 	}
 	for i := 0; i < int(initPoolSize); i += 1 {
-		fmt.Println("Creating source")
 		err := pool.CreateResource(ctx)
 		if err != nil {
 			return nil, err

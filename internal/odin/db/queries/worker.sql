@@ -2,7 +2,8 @@ create table workers (
     id int primary key,
     name text not null unique,
     created_at timestamptz not null default now(),
-    last_heartbeat timestamptz
+    last_heartbeat timestamptz,
+    current_state TEXT NOT NULL CHECK (current_state IN ('active', 'stale')) DEFAULT 'active'
 );
 
 -- name: CreateWorker :one
@@ -36,8 +37,10 @@ set
 where id = $1;
 
 -- name: GetStaleWorkers :many
-select id from workers
-where last_heartbeat < now() - interval '20 seconds';
+update workers
+    set current_state='stale'
+where last_heartbeat < now() - interval '20 seconds' and current_state != 'stale'
+returning id;
 
 -- name: DeleteWorker :exec
 delete from workers where id = $1;

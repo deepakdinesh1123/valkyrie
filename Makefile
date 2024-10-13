@@ -36,7 +36,7 @@ build-docker-image:
 
 .PHONY: build-podman-image
 build-podman-image:
-	sudo podman build \
+	podman build \
 		-t odin:latest \
 		--build-arg HOST_UID=$(shell id -u) \
 		--build-arg HOST_GID=$(shell id -g) \

@@ -11,7 +11,6 @@ type UpdateJobResultTxParams struct {
 	StartTime time.Time
 	Job       Job
 	WorkerId  int32
-	Message   string
 	ExecLogs  string
 	NixLogs   string
 	Success   bool

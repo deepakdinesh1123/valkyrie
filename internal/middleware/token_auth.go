@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"log"
 	"net/http"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
@@ -14,7 +13,6 @@ func TokenAuth() Middleware {
 			ctx := r.Context()
 			envConfig, _ := config.GetEnvConfig()
 			headerValue := r.Header.Get("X-Auth-Token")
-			log.Println(envConfig.ODIN_USER_TOKEN, envConfig.ODIN_ADMIN_TOKEN)
 			if envConfig.ODIN_USER_TOKEN == "" && envConfig.ODIN_ADMIN_TOKEN == "" {
 				h.ServeHTTP(w, r)
 				return
