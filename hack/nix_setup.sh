@@ -14,10 +14,10 @@ ln -s ~/.local/state/nix/profiles/channels ~/.nix-defexpr/channels
 ln -s /nix/store/ak09zx2rza4x0c4fjn9zyjnr4nck9h1b-user-environment ~/.nix-profile
 
 echo PATH="$PATH:~/.nix-profile/bin" >> ~/.profile
-echo NIX_PATH="$HOME/nixpkgs" >> ~/.profiles
+echo NIX_PATH="/tmp/nixpkgs" >> ~/.profiles
 
 echo export PATH="$PATH:~/.nix-profile/bin" >> ~/.bashrc
-echo export NIX_PATH="$HOME/nixpkgs" >> ~/.bashrc
+echo export NIX_PATH="/tmp/nixpkgs" >> ~/.bashrc
 source ~/.profile
 
 # nix registry add flake:nixpkgs git+file://$HOME/nixpkgs

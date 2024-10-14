@@ -88,6 +88,8 @@ func GetEnvConfig() (*EnvConfig, error) {
 		viper.SetDefault("ODIN_WORKER_POLL_FREQ", 1)
 		viper.SetDefault("ODIN_WORKER_RUNTIME", "runc")
 
+		viper.SetDefault("ODIN_WORKER_MEMORY_LIMIT", 500)
+
 		viper.SetDefault("ODIN_ENABLE_TELEMETRY", false)
 		viper.SetDefault("ODIN_OTLP_ENDPOINT", "localhost:4317")
 		viper.SetDefault("ODIN_OTEL_RESOURCE_NAME", "Odin")

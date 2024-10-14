@@ -13,6 +13,7 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/docker/docker/api/types/container"
 	"github.com/jackc/puddle/v2"
+	"github.com/opencontainers/runtime-spec/specs-go"
 )
 
 func constructor(ctx context.Context) (Container, error) {
@@ -93,15 +94,27 @@ func constructor(ctx context.Context) (Container, error) {
 			},
 		}
 
+		readOnlyFileSystem := true
+		readWriteTmpfs := true
+		s.ContainerSecurityConfig = specgen.ContainerSecurityConfig{
+			UserNS: specgen.Namespace{
+				NSMode: specgen.KeepID,
+			},
+			ReadOnlyFilesystem: &readOnlyFileSystem,
+			ReadWriteTmpfs:     &readWriteTmpfs,
+		}
+
 		s.ContainerSecurityConfig.UserNS = specgen.Namespace{
 			NSMode: specgen.KeepID,
 		}
 
-		// s.ResourceLimits = &specs.LinuxResources{
-		// 	Memory: &specs.LinuxMemory{
-		// 		Limit: &envConfig.ODIN_WORKER_MEMORY_LIMIT,
-		// 	},
-		// }
+		memunit := 1024 * 1024
+		mem := int64(envConfig.ODIN_WORKER_MEMORY_LIMIT * int64(memunit))
+		s.ResourceLimits = &specs.LinuxResources{
+			Memory: &specs.LinuxMemory{
+				Limit: &mem,
+			},
+		}
 
 		containerRemove := true
 		s.Remove = &containerRemove
