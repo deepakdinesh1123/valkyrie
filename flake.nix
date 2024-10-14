@@ -18,6 +18,8 @@
           sqlc 
           go-migrate 
           go_1_22
+          nodejs
+          podman-compose
           # caddy
           pkg-config ] ++ lib.optionals stdenv.isLinux [ 
             gpgme 

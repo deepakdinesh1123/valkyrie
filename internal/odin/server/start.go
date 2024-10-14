@@ -11,6 +11,7 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/middleware"
 	"github.com/jackc/pgx/v5/pgtype"
 	"golang.org/x/sync/errgroup"
+	"github.com/gorilla/handlers"
 )
 
 var shutdownTimeout = time.Second * 5
@@ -28,14 +29,22 @@ func (s *OdinServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 	mux.Handle("/", s.server)
 
 	route_finder := middleware.MakeRouteFinder(s.server)
+
+	corsOptions := handlers.AllowedOrigins([]string{"*"} ) 
+	corsMethods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"})
+	corsHeaders := handlers.AllowedHeaders([]string{"Content-Type", "Authorization"})
+
+	
 	server = &http.Server{
 		ReadHeaderTimeout: time.Second * 5,
 		Addr:              addr,
-		Handler: middleware.Wrap(mux,
-			middleware.Instrument("server", route_finder, s.tp, s.mp, s.prop),
-			middleware.Labeler(route_finder),
-			middleware.TokenAuth(),
-			middleware.RequestMiddleware(s.logger),
+		Handler: handlers.CORS(corsOptions, corsMethods, corsHeaders)(
+			middleware.Wrap(mux,
+				middleware.Instrument("server", route_finder, s.tp, s.mp, s.prop),
+				middleware.Labeler(route_finder),
+				middleware.TokenAuth(),
+				middleware.RequestMiddleware(s.logger),
+			),
 		),
 	}
 
