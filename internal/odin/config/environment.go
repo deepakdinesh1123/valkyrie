@@ -32,6 +32,9 @@ type EnvConfig struct {
 	ODIN_WORKER_PODMAN_IMAGE string `mapstructure:"ODIN_WORKER_PODMAN_IMAGE"` // represents the default image for the podman worker containers.
 	ODIN_WORKER_DOCKER_IMAGE string `mapstructure:"ODIN_WORKER_DOCKER_IMAGE"` // represents the default image for the docker worker containers.
 
+	ODIN_WORKER_MEMORY_LIMIT int64  `mapstructure:"ODIN_WORKER_MEMORY_LIMIT"`
+	ODIN_WORKER_CPU_LIMIT    string `mapstructure:"ODIN_WORKER_CPU_LIMIT"`
+
 	ODIN_LOG_LEVEL string `mapstructure:"ODIN_LOG_LEVEL"`
 
 	ODIN_INFO_DIR           string

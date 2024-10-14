@@ -97,7 +97,13 @@ func constructor(ctx context.Context) (Container, error) {
 			NSMode: specgen.KeepID,
 		}
 
-		containerRemove := false
+		// s.ResourceLimits = &specs.LinuxResources{
+		// 	Memory: &specs.LinuxMemory{
+		// 		Limit: &envConfig.ODIN_WORKER_MEMORY_LIMIT,
+		// 	},
+		// }
+
+		containerRemove := true
 		s.Remove = &containerRemove
 
 		pdContainer, err := containers.CreateWithSpec(connection, s, nil)
