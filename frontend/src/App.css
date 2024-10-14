@@ -1,0 +1,134 @@
+/* Root container taking the full viewport */
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* App layout */
+.App {
+  display: flex;
+  height: 100vh; /* Full viewport height */
+  width: 100%;
+}
+
+/* Left section where the editor is */
+.editor-container {
+  flex-grow: 1; /* Take up the remaining space */
+  display: flex;
+  flex-direction: column;
+  background-color: #1e1e1e; /* Matching the dark background of the editor */
+}
+
+/* Right section where the language selector, button, and list builder are */
+.sidebar {
+  width: 20%; /* Base width for larger screens */
+  min-width: 250px; /* Minimum width for usability */
+  max-width: 300px; /* Maximum width to prevent excessive stretching */
+  background-color: #2d2d2d; /* Dark background for consistency */
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 1rem; /* Space between elements */
+}
+
+/* Language selector styling */
+.language-selector {
+  margin-bottom: 1rem;
+  position: absolute;
+  right: 420px;
+  top: 5px;
+}
+
+/* Run code button styling */
+.run-code-button {
+  margin-bottom: 1rem;
+  position: absolute;
+  right: 320px;
+  top: 5px;
+}
+
+/* List builder container in the sidebar */
+.list-builder {
+  flex-grow: 1;
+  overflow-y: auto;
+  border: 1px solid #3e3e3e; /* Subtle border to separate it */
+  padding: 1rem;
+  border-radius: 8px;
+  background-color: #252526;
+}
+
+.output-terminal {
+  height: 28vh; /* Terminal takes up 25% of the height */
+  background-color: #1e1e1e; /* Dark background like VS Code terminal */
+  overflow-y: auto; /* Only vertical scrolling if needed */
+  padding: 0.5rem;
+}
+
+.terminal-label {
+  padding: 1px 1px;
+  margin-left: 1em;
+  margin-bottom: 1em;
+  color: white;
+}
+
+.terminal-container {
+  width: 100%;
+  font-family: monospace; /* Monospace font like VS Code */
+  font-size: 0.875rem;
+  white-space: pre-wrap; /* Enables word wrap */
+  word-wrap: break-word; /* Break long words to wrap to the next line */
+  overflow-wrap: break-word; /* Ensures words are wrapped inside the container */
+  background-color: rgb(63, 63, 63);
+}
+
+/* Code editor should grow to fill the space */
+.CodeEditor {
+  flex-grow: 1;
+}
+
+/* Basic styling for buttons, selectors, etc. */
+button,
+select {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  background-color: #4caf50;
+  color: white;
+  cursor: pointer;
+}
+
+/* Responsive styles */
+@media (max-width: 1200px) {
+  .sidebar {
+    max-width: 25%; /* Increase maximum width on medium screens */
+  }
+}
+
+@media (max-width: 768px) {
+  .App {
+    flex-direction: column; /* Stack elements vertically on smaller screens */
+  }
+
+  .editor-container,
+  .sidebar {
+    width: 100%; /* Full width for both containers on small screens */
+  }
+
+  .language-selector,
+  .run-code-button {
+    position: static; /* Remove absolute positioning on small screens */
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    max-width: auto; /* Allow sidebar to shrink further on very small screens */
+  }
+}
