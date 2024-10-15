@@ -129,3 +129,21 @@ func (UnimplementedHandler) GetExecutionsForJob(ctx context.Context, params GetE
 func (UnimplementedHandler) GetVersion(ctx context.Context, params GetVersionParams) (r GetVersionRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
+
+// SearchLanguagePackages implements SearchLanguagePackages operation.
+//
+// Search for language specific packages.
+//
+// GET /search/language
+func (UnimplementedHandler) SearchLanguagePackages(ctx context.Context, params SearchLanguagePackagesParams) (r SearchLanguagePackagesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SearchSystemPackages implements SearchSystemPackages operation.
+//
+// Search for system packages.
+//
+// GET /search/system
+func (UnimplementedHandler) SearchSystemPackages(ctx context.Context, params SearchSystemPackagesParams) (r SearchSystemPackagesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}

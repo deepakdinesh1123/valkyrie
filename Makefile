@@ -64,3 +64,23 @@ odin:
 podman-db:
 	@podman compose -f docker-compose.yml up   postgres -d 
 	migrate -path internal/odin/db/migrations -database $(POSTGRES_URL) up
+
+.PHONY: add-pkgs
+add-pkgs:
+	@if [ -z "$(filter-out $@,$(MAKECMDGOALS))" ]; then \
+		echo "Error: Please provide the dump file name as an argument."; \
+		exit 1; \
+	fi; \
+	dump_file=$(filter-out $@,$(MAKECMDGOALS)); \
+	dump_path=./dumps/$$dump_file; \
+	if [ ! -f "$$dump_path" ]; then \
+		echo "Error: Dump file '$$dump_file' does not exist in the dumps folder."; \
+		exit 1; \
+	fi; \
+	psql ${POSTGRES_URL} -c "DROP TABLE IF EXISTS packages CASCADE"; \
+	echo "Applying $$dump_file to database..."; \
+	psql ${POSTGRES_URL} -f $$dump_path ; \
+	psql ${POSTGRES_URL} -c "UPDATE packages SET tsv_search = to_tsvector('english', COALESCE(name, '') || ' ' || COALESCE(version, '') || ' ' || COALESCE(language, ''));"; \
+	echo "Full-text search vectors generated successfully." ; \
+	psql ${POSTGRES_URL} -c "CREATE INDEX IF NOT EXISTS idx_packages_tsv ON packages USING GIN(tsv_search);";\
+	echo "GIN index for tsv_search created successfully." ;\

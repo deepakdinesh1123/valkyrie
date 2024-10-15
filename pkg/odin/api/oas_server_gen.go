@@ -86,6 +86,18 @@ type Handler interface {
 	//
 	// GET /version
 	GetVersion(ctx context.Context, params GetVersionParams) (GetVersionRes, error)
+	// SearchLanguagePackages implements SearchLanguagePackages operation.
+	//
+	// Search for language specific packages.
+	//
+	// GET /search/language
+	SearchLanguagePackages(ctx context.Context, params SearchLanguagePackagesParams) (SearchLanguagePackagesRes, error)
+	// SearchSystemPackages implements SearchSystemPackages operation.
+	//
+	// Search for system packages.
+	//
+	// GET /search/system
+	SearchSystemPackages(ctx context.Context, params SearchSystemPackagesParams) (SearchSystemPackagesRes, error)
 }
 
 // Server implements http server based on OpenAPI v3 specification and

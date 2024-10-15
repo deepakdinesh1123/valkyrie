@@ -668,16 +668,16 @@ type GetAllLanguagesForbidden struct{}
 func (*GetAllLanguagesForbidden) getAllLanguagesRes() {}
 
 type GetAllLanguagesOK struct {
-	Languages []string `json:"languages"`
+	Languages []Language `json:"languages"`
 }
 
 // GetLanguages returns the value of Languages.
-func (s *GetAllLanguagesOK) GetLanguages() []string {
+func (s *GetAllLanguagesOK) GetLanguages() []Language {
 	return s.Languages
 }
 
 // SetLanguages sets the value of Languages.
-func (s *GetAllLanguagesOK) SetLanguages(val []string) {
+func (s *GetAllLanguagesOK) SetLanguages(val []Language) {
 	s.Languages = val
 }
 
@@ -881,6 +881,70 @@ func (s *Job) SetUpdatedAt(val OptDateTime) {
 }
 
 func (*Job) getExecutionJobByIdRes() {}
+
+// Ref: #/components/schemas/Language
+type Language struct {
+	// Name of the programming language.
+	Name string `json:"name"`
+	// File extension for the programming language.
+	Extension string `json:"extension"`
+	// Default code snippet for the programming language.
+	Defaultcode string `json:"defaultcode"`
+	// Monaco editor language setting for the programming language.
+	Monacolanguage string `json:"monacolanguage"`
+	// The search query to be passed to SearchLanguagePackages API for this language.
+	Searchquery string `json:"searchquery"`
+}
+
+// GetName returns the value of Name.
+func (s *Language) GetName() string {
+	return s.Name
+}
+
+// GetExtension returns the value of Extension.
+func (s *Language) GetExtension() string {
+	return s.Extension
+}
+
+// GetDefaultcode returns the value of Defaultcode.
+func (s *Language) GetDefaultcode() string {
+	return s.Defaultcode
+}
+
+// GetMonacolanguage returns the value of Monacolanguage.
+func (s *Language) GetMonacolanguage() string {
+	return s.Monacolanguage
+}
+
+// GetSearchquery returns the value of Searchquery.
+func (s *Language) GetSearchquery() string {
+	return s.Searchquery
+}
+
+// SetName sets the value of Name.
+func (s *Language) SetName(val string) {
+	s.Name = val
+}
+
+// SetExtension sets the value of Extension.
+func (s *Language) SetExtension(val string) {
+	s.Extension = val
+}
+
+// SetDefaultcode sets the value of Defaultcode.
+func (s *Language) SetDefaultcode(val string) {
+	s.Defaultcode = val
+}
+
+// SetMonacolanguage sets the value of Monacolanguage.
+func (s *Language) SetMonacolanguage(val string) {
+	s.Monacolanguage = val
+}
+
+// SetSearchquery sets the value of Searchquery.
+func (s *Language) SetSearchquery(val string) {
+	s.Searchquery = val
+}
 
 // NewOptBool returns new OptBool with value set to v.
 func NewOptBool(v bool) OptBool {
@@ -1158,6 +1222,34 @@ func (o OptString) Or(d string) string {
 	return d
 }
 
+// Ref: #/components/schemas/Package
+type Package struct {
+	// Name of the package.
+	Name string `json:"name"`
+	// Version of the package.
+	Version string `json:"version"`
+}
+
+// GetName returns the value of Name.
+func (s *Package) GetName() string {
+	return s.Name
+}
+
+// GetVersion returns the value of Version.
+func (s *Package) GetVersion() string {
+	return s.Version
+}
+
+// SetName sets the value of Name.
+func (s *Package) SetName(val string) {
+	s.Name = val
+}
+
+// SetVersion sets the value of Version.
+func (s *Package) SetVersion(val string) {
+	s.Version = val
+}
+
 // Ref: #/components/schemas/PaginationResponse
 type PaginationResponse struct {
 	// Represents the total number of items.
@@ -1220,3 +1312,55 @@ func (s *PaginationResponse) SetLimit(val int32) {
 func (s *PaginationResponse) SetNext(val OptString) {
 	s.Next = val
 }
+
+// SearchLanguagePackagesBadRequest is response for SearchLanguagePackages operation.
+type SearchLanguagePackagesBadRequest struct{}
+
+func (*SearchLanguagePackagesBadRequest) searchLanguagePackagesRes() {}
+
+// SearchLanguagePackagesForbidden is response for SearchLanguagePackages operation.
+type SearchLanguagePackagesForbidden struct{}
+
+func (*SearchLanguagePackagesForbidden) searchLanguagePackagesRes() {}
+
+type SearchLanguagePackagesOK struct {
+	Packages []Package `json:"packages"`
+}
+
+// GetPackages returns the value of Packages.
+func (s *SearchLanguagePackagesOK) GetPackages() []Package {
+	return s.Packages
+}
+
+// SetPackages sets the value of Packages.
+func (s *SearchLanguagePackagesOK) SetPackages(val []Package) {
+	s.Packages = val
+}
+
+func (*SearchLanguagePackagesOK) searchLanguagePackagesRes() {}
+
+// SearchSystemPackagesBadRequest is response for SearchSystemPackages operation.
+type SearchSystemPackagesBadRequest struct{}
+
+func (*SearchSystemPackagesBadRequest) searchSystemPackagesRes() {}
+
+// SearchSystemPackagesForbidden is response for SearchSystemPackages operation.
+type SearchSystemPackagesForbidden struct{}
+
+func (*SearchSystemPackagesForbidden) searchSystemPackagesRes() {}
+
+type SearchSystemPackagesOK struct {
+	Packages []Package `json:"packages"`
+}
+
+// GetPackages returns the value of Packages.
+func (s *SearchSystemPackagesOK) GetPackages() []Package {
+	return s.Packages
+}
+
+// SetPackages sets the value of Packages.
+func (s *SearchSystemPackagesOK) SetPackages(val []Package) {
+	s.Packages = val
+}
+
+func (*SearchSystemPackagesOK) searchSystemPackagesRes() {}

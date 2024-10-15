@@ -1668,3 +1668,266 @@ func decodeGetVersionParams(args [0]string, argsEscaped bool, r *http.Request) (
 	}
 	return params, nil
 }
+
+// SearchLanguagePackagesParams is parameters of SearchLanguagePackages operation.
+type SearchLanguagePackagesParams struct {
+	// Authentication token.
+	XAuthToken OptString
+	// The language for which the package is searched.
+	Language string
+	// The string to be searched.
+	SearchString string
+}
+
+func unpackSearchLanguagePackagesParams(packed middleware.Parameters) (params SearchLanguagePackagesParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "X-Auth-Token",
+			In:   "header",
+		}
+		if v, ok := packed[key]; ok {
+			params.XAuthToken = v.(OptString)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "language",
+			In:   "query",
+		}
+		params.Language = packed[key].(string)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "searchString",
+			In:   "query",
+		}
+		params.SearchString = packed[key].(string)
+	}
+	return params
+}
+
+func decodeSearchLanguagePackagesParams(args [0]string, argsEscaped bool, r *http.Request) (params SearchLanguagePackagesParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
+	h := uri.NewHeaderDecoder(r.Header)
+	// Decode header: X-Auth-Token.
+	if err := func() error {
+		cfg := uri.HeaderParameterDecodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.HasParam(cfg); err == nil {
+			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotXAuthTokenVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotXAuthTokenVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.XAuthToken.SetTo(paramsDotXAuthTokenVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "X-Auth-Token",
+			In:   "header",
+			Err:  err,
+		}
+	}
+	// Decode query: language.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "language",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToString(val)
+				if err != nil {
+					return err
+				}
+
+				params.Language = c
+				return nil
+			}); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "language",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: searchString.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "searchString",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToString(val)
+				if err != nil {
+					return err
+				}
+
+				params.SearchString = c
+				return nil
+			}); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "searchString",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// SearchSystemPackagesParams is parameters of SearchSystemPackages operation.
+type SearchSystemPackagesParams struct {
+	// Authentication token.
+	XAuthToken OptString
+	// The string to be searched.
+	SearchString string
+}
+
+func unpackSearchSystemPackagesParams(packed middleware.Parameters) (params SearchSystemPackagesParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "X-Auth-Token",
+			In:   "header",
+		}
+		if v, ok := packed[key]; ok {
+			params.XAuthToken = v.(OptString)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "searchString",
+			In:   "query",
+		}
+		params.SearchString = packed[key].(string)
+	}
+	return params
+}
+
+func decodeSearchSystemPackagesParams(args [0]string, argsEscaped bool, r *http.Request) (params SearchSystemPackagesParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
+	h := uri.NewHeaderDecoder(r.Header)
+	// Decode header: X-Auth-Token.
+	if err := func() error {
+		cfg := uri.HeaderParameterDecodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.HasParam(cfg); err == nil {
+			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotXAuthTokenVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotXAuthTokenVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.XAuthToken.SetTo(paramsDotXAuthTokenVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "X-Auth-Token",
+			In:   "header",
+			Err:  err,
+		}
+	}
+	// Decode query: searchString.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "searchString",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToString(val)
+				if err != nil {
+					return err
+				}
+
+				params.SearchString = c
+				return nil
+			}); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "searchString",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	return params, nil
+}

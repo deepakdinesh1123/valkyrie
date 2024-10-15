@@ -1,17 +1,11 @@
 import React, { useState, useEffect } from "react";
 import Editor, { EditorProps } from "@monaco-editor/react";
-
-interface Language {
-  name: string;
-  extension: string;
-  monacoLanguage: string;
-  defaultCode: string;
-}
+import { Language } from "@/api-client";
 
 interface CodeEditorProps {
   languages: Language[];
   selectedLanguage: Language;
-  onChange?: (tabName: string, content: string) => void;
+  onChange?: (filename: string, content: string) => void;
   editorOptions?: EditorProps["options"];
 }
 
@@ -20,16 +14,19 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   onChange,
   editorOptions,
 }) => {
-  const [content, setContent] = useState(selectedLanguage.defaultCode);
+  const [content, setContent] = useState(selectedLanguage.defaultcode);
 
   useEffect(() => {
-    setContent(selectedLanguage.defaultCode);
+    setContent(selectedLanguage.defaultcode);
   }, [selectedLanguage]);
 
   const handleEditorChange = (newValue: string | undefined) => {
     const newContent = newValue || "";
     setContent(newContent);
-    onChange?.(`main.${selectedLanguage.extension}`, newContent);
+
+    if (onChange) {
+      onChange(`main.${selectedLanguage.extension}`, newContent);
+    }
   };
 
   return (
@@ -45,7 +42,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
         <Editor
           height="100%"
           width="100%"
-          language={selectedLanguage.monacoLanguage}
+          language={selectedLanguage.monacolanguage}
           value={content}
           onChange={handleEditorChange}
           theme="vs-dark"

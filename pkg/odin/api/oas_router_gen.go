@@ -353,6 +353,63 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				}
 
 				elem = origElem
+			case 's': // Prefix: "search/"
+				origElem := elem
+				if l := len("search/"); len(elem) >= l && elem[0:l] == "search/" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					break
+				}
+				switch elem[0] {
+				case 'l': // Prefix: "language"
+					origElem := elem
+					if l := len("language"); len(elem) >= l && elem[0:l] == "language" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch r.Method {
+						case "GET":
+							s.handleSearchLanguagePackagesRequest([0]string{}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, "GET")
+						}
+
+						return
+					}
+
+					elem = origElem
+				case 's': // Prefix: "system"
+					origElem := elem
+					if l := len("system"); len(elem) >= l && elem[0:l] == "system" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch r.Method {
+						case "GET":
+							s.handleSearchSystemPackagesRequest([0]string{}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, "GET")
+						}
+
+						return
+					}
+
+					elem = origElem
+				}
+
+				elem = origElem
 			case 'v': // Prefix: "version"
 				origElem := elem
 				if l := len("version"); len(elem) >= l && elem[0:l] == "version" {
@@ -798,6 +855,71 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					default:
 						return
 					}
+				}
+
+				elem = origElem
+			case 's': // Prefix: "search/"
+				origElem := elem
+				if l := len("search/"); len(elem) >= l && elem[0:l] == "search/" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					break
+				}
+				switch elem[0] {
+				case 'l': // Prefix: "language"
+					origElem := elem
+					if l := len("language"); len(elem) >= l && elem[0:l] == "language" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch method {
+						case "GET":
+							r.name = "SearchLanguagePackages"
+							r.summary = "Search for language specific packages"
+							r.operationID = "SearchLanguagePackages"
+							r.pathPattern = "/search/language"
+							r.args = args
+							r.count = 0
+							return r, true
+						default:
+							return
+						}
+					}
+
+					elem = origElem
+				case 's': // Prefix: "system"
+					origElem := elem
+					if l := len("system"); len(elem) >= l && elem[0:l] == "system" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch method {
+						case "GET":
+							r.name = "SearchSystemPackages"
+							r.summary = "Search for system packages"
+							r.operationID = "SearchSystemPackages"
+							r.pathPattern = "/search/system"
+							r.args = args
+							r.count = 0
+							return r, true
+						default:
+							return
+						}
+					}
+
+					elem = origElem
 				}
 
 				elem = origElem
