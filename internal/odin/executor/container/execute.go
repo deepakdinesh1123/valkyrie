@@ -66,7 +66,7 @@ func (ce *ContainerExecutor) Execute(ctx context.Context, wg *concurrency.SafeWa
 		return
 	}
 	ce.logger.Debug().Msg("Files written")
-	success, output, err := cc.Execute(tctx, contInfo.ID, []string{"bash", "nix_run.sh"})
+	success, output, err := cc.Execute(tctx, contInfo.ID, []string{"sh", "nix_run.sh"})
 	if err != nil {
 		ce.logger.Err(err).Msg(err.Error())
 		ce.checkFailed(ce.queries.UpdateJobResultTx(ctx, jobRes))

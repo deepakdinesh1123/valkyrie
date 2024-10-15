@@ -1,8 +1,7 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 set -e
-
-source ~/.profile
+. ~/.profile
 chmod +x ~/odin/exec.sh
 
 while [ ! -f ~/status.txt ]; do sleep 1; done

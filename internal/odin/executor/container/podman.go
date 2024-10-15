@@ -77,7 +77,7 @@ func (p *PodmanClient) WriteFiles(ctx context.Context, containerID string, prepD
 		tarFile,
 	)
 	if err != nil {
-		return fmt.Errorf("Failed to copy files to container")
+		return fmt.Errorf("Failed to copy from archive")
 	}
 	err = copyF()
 	if err != nil {
@@ -156,7 +156,7 @@ func (p *PodmanClient) Execute(ctx context.Context, containerID string, command 
 					containerID,
 					&handlers.ExecCreateConfig{
 						ExecConfig: container.ExecOptions{
-							Cmd: []string{"bash", "nix_stop.sh"},
+							Cmd: []string{"sh", "nix_stop.sh"},
 						},
 					},
 				)
@@ -193,7 +193,7 @@ func (p *PodmanClient) ReadExecLogs(containerID string) (string, error) {
 		ExecConfig: container.ExecOptions{
 			AttachStderr: true,
 			AttachStdout: true,
-			Cmd:          []string{"bash", "-c", "cat ~/odin/output.txt"},
+			Cmd:          []string{"sh", "-c", "cat ~/odin/output.txt"},
 		},
 	})
 	if err != nil {

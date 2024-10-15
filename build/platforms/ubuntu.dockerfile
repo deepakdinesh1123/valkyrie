@@ -23,4 +23,4 @@ COPY hack/execution/* /home/$HOST_USER/
 VOLUME [ "/home/$HOST_USER" ]
 WORKDIR /home/$HOST_USER/
 
-CMD [ "/bin/bash", "nix_setup.sh" ]
+CMD [ "/bin/sh", "nix_setup.sh" ]

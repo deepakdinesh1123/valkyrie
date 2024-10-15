@@ -34,15 +34,25 @@ build-docker-image:
 		--build-arg HOST_GROUP=$(shell whoami) \
 		-f build/platforms/ubuntu.dockerfile .
 
-.PHONY: build-podman-image
-build-podman-image:
+.PHONY: build-podman-image-ubuntu
+build-podman-image-ubuntu:
 	podman build \
-		-t odin:latest \
+		-t odin:ubuntu \
 		--build-arg HOST_UID=$(shell id -u) \
 		--build-arg HOST_GID=$(shell id -g) \
 		--build-arg HOST_USER=$(shell whoami) \
 		--build-arg HOST_GROUP=$(shell whoami) \
 		-f build/platforms/ubuntu.dockerfile .
+
+.PHONY: build-podman-image
+build-podman-image:
+	podman build \
+		-t odin:alpine \
+		--build-arg HOST_UID=$(shell id -u) \
+		--build-arg HOST_GID=$(shell id -g) \
+		--build-arg HOST_USER=$(shell whoami) \
+		--build-arg HOST_GROUP=$(shell whoami) \
+		-f build/platforms/alpine.dockerfile .
 
 .PHONY: odin
 odin:
