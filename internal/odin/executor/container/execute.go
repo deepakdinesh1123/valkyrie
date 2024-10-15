@@ -40,36 +40,41 @@ func (ce *ContainerExecutor) Execute(ctx context.Context, wg *concurrency.SafeWa
 	}
 	defer cancel()
 
+	ce.logger.Debug().Msg("Getting container client")
 	cc, err := GetContainerClient(tctx, ce)
 	if err != nil {
 		ce.logger.Err(err).Msg("could not get container client")
 		ce.checkFailed(ce.queries.UpdateJobResultTx(ctx, jobRes))
 		return
 	}
+	ce.logger.Debug().Msg("Got container client")
+	ce.logger.Debug().Msg("Getting container")
 	cont, err := cc.GetContainer(tctx)
 	if err != nil {
 		ce.logger.Err(err).Msg("could not get container")
 		ce.checkFailed(ce.queries.UpdateJobResultTx(ctx, jobRes))
 		return
 	}
+	ce.logger.Debug().Msg("Got container")
 	defer cont.Destroy()
 	contInfo := cont.Value()
+	ce.logger.Debug().Msg("Writing files")
 	err = cc.WriteFiles(tctx, contInfo.ID, contInfo.HostPrepDir, job)
 	if err != nil {
 		ce.logger.Err(err).Msg("could not write files")
 		ce.checkFailed(ce.queries.UpdateJobResultTx(ctx, jobRes))
 		return
 	}
+	ce.logger.Debug().Msg("Files written")
 	success, output, err := cc.Execute(tctx, contInfo.ID, []string{"bash", "nix_run.sh"})
 	if err != nil {
 		ce.logger.Err(err).Msg(err.Error())
 		ce.checkFailed(ce.queries.UpdateJobResultTx(ctx, jobRes))
 		return
 	}
-	ce.logger.Info().Bool("Success", success).Msg(output)
-	ce.logger.Info().Msg("Destroying container")
+	ce.logger.Debug().Msg("Destroying container")
 
-	jobRes.Success = true
+	jobRes.Success = success
 	jobRes.Retry = false
 	jobRes.ExecLogs = output
 	ce.checkFailed(ce.queries.UpdateJobResultTx(ctx, jobRes))

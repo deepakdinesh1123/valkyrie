@@ -92,10 +92,7 @@ func (p *PodmanClient) GetContainer(ctx context.Context) (*puddle.Resource[Conta
 		p.logger.Err(err).Msg("Error when acquiring container")
 		return nil, err
 	}
-	err = p.pool.CreateResource(ctx)
-	if err != nil {
-		p.logger.Debug().Msg("Container pool might be full")
-	}
+	go p.pool.CreateResource(ctx)
 	return cont, nil
 }
 
@@ -110,6 +107,7 @@ func (p *PodmanClient) Execute(ctx context.Context, containerID string, command 
 			done <- true
 		}()
 
+		p.logger.Debug().Msg("Creating exec")
 		execId, err = containers.ExecCreate(p.connection, containerID, &handlers.ExecCreateConfig{
 			ExecConfig: container.ExecOptions{
 				AttachStderr: true,
@@ -117,17 +115,17 @@ func (p *PodmanClient) Execute(ctx context.Context, containerID string, command 
 				Cmd:          command,
 			},
 		})
-		p.logger.Info().Msg("Exec created")
+		p.logger.Debug().Msg("Exec created")
 		if err != nil {
 			return
 		}
 
-		p.logger.Info().Msg("Starting execution")
+		p.logger.Debug().Msg("Starting execution")
 		err = containers.ExecStart(p.connection, execId, nil)
 		if err != nil {
 			return
 		}
-
+		p.logger.Debug().Msg("Execution started")
 		for {
 			select {
 			case <-ctx.Done():
@@ -151,7 +149,7 @@ func (p *PodmanClient) Execute(ctx context.Context, containerID string, command 
 	case <-ctx.Done():
 		switch ctx.Err() {
 		case context.DeadlineExceeded:
-			p.logger.Info().Msg("Killing process")
+			p.logger.Debug().Msg("Killing process")
 			if execId != "" {
 				stopExecId, err := containers.ExecCreate(
 					p.connection,
@@ -170,10 +168,13 @@ func (p *PodmanClient) Execute(ctx context.Context, containerID string, command 
 					return false, "", fmt.Errorf("could not start the nix_stop script: %s", err)
 				}
 			}
+			p.logger.Debug().Msg("Process killed")
+			p.logger.Debug().Msg("Reading logs")
 			out, err := p.ReadExecLogs(containerID)
 			if err != nil {
 				return false, "", fmt.Errorf("error reading output: %s", err)
 			}
+			p.logger.Debug().Msg("Logs read")
 			return true, out, nil
 		case context.Canceled:
 			return false, "", nil
