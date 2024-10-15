@@ -21,7 +21,10 @@ values
 returning *;
 
 -- name: GetWorker :one
-select * from workers where name = $1;
+update workers
+    set current_state = 'active'
+where name = $1
+returning *;
 
 -- name: GetAllWorkers :many
 select * from workers

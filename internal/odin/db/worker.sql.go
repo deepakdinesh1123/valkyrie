@@ -116,7 +116,10 @@ func (q *Queries) GetTotalWorkers(ctx context.Context) (int64, error) {
 }
 
 const getWorker = `-- name: GetWorker :one
-select id, name, created_at, last_heartbeat, current_state from workers where name = $1
+update workers
+    set current_state = 'active'
+where name = $1
+returning id, name, created_at, last_heartbeat, current_state
 `
 
 func (q *Queries) GetWorker(ctx context.Context, name string) (Worker, error) {
