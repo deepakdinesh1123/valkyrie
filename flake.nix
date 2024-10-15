@@ -35,6 +35,9 @@
           default = pkgs.mkShell {
             buildInputs = devDependencies;
           };
+          load-test = pkgs.mkShell {
+            buildInputs = with pkgs; [ k6 openapi-generator-cli go_1_22 ];
+          };
         };
     }
   );
