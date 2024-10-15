@@ -18,8 +18,8 @@ USER $HOST_USER
 RUN mkdir ~/odin && chown $HOST_USER:$HOST_GROUP ~/odin
 RUN cd /tmp && git clone --depth 1 --branch 24.05 --single-branch https://github.com/NixOS/nixpkgs.git 
 
-COPY hack/nix_setup.sh /home/$HOST_USER/nix_setup.sh
-COPY hack/nix_run.sh /home/$HOST_USER/nix_run.sh
+COPY hack/execution/* /home/$HOST_USER/
+
 VOLUME [ "/home/$HOST_USER" ]
 WORKDIR /home/$HOST_USER/
 

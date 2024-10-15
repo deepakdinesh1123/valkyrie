@@ -153,13 +153,21 @@ func (p *PodmanClient) Execute(ctx context.Context, containerID string, command 
 		case context.DeadlineExceeded:
 			p.logger.Info().Msg("Killing process")
 			if execId != "" {
-				err := containers.ExecRemove(
+				stopExecId, err := containers.ExecCreate(
 					p.connection,
-					execId,
-					(&containers.ExecRemoveOptions{}).WithForce(true),
+					containerID,
+					&handlers.ExecCreateConfig{
+						ExecConfig: container.ExecOptions{
+							Cmd: []string{"bash", "nix_stop.sh"},
+						},
+					},
 				)
 				if err != nil {
-					return false, "", fmt.Errorf("error stopping container: %s", err)
+					return false, "", fmt.Errorf("could not create exec for nix stop: %s", err)
+				}
+				err = containers.ExecStart(p.connection, stopExecId, nil)
+				if err != nil {
+					return false, "", fmt.Errorf("could not start the nix_stop script: %s", err)
 				}
 			}
 			out, err := p.ReadExecLogs(containerID)
