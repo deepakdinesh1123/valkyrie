@@ -52,3 +52,11 @@ type GetExecutionsForJobRes interface {
 type GetVersionRes interface {
 	getVersionRes()
 }
+
+type SearchLanguagePackagesRes interface {
+	searchLanguagePackagesRes()
+}
+
+type SearchSystemPackagesRes interface {
+	searchSystemPackagesRes()
+}

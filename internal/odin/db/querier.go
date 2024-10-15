@@ -41,6 +41,8 @@ type Querier interface {
 	RequeueLTJobs(ctx context.Context) error
 	RequeueWorkerJobs(ctx context.Context, workerID pgtype.Int4) error
 	RetryJob(ctx context.Context, jobID int64) error
+	SearchLanguagePackages(ctx context.Context, arg SearchLanguagePackagesParams) ([]SearchLanguagePackagesRow, error)
+	SearchSystemPackages(ctx context.Context, plaintoTsquery string) ([]SearchSystemPackagesRow, error)
 	StopJob(ctx context.Context, jobID int64) error
 	UpdateHeartbeat(ctx context.Context, id int32) error
 	UpdateJobCompleted(ctx context.Context, jobID int64) error

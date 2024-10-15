@@ -36,6 +36,7 @@ func init() {
 	RootCmd.AddCommand(server.ServerCmd)
 	RootCmd.AddCommand(worker.WorkerCmd)
 	RootCmd.AddCommand(StandaloneCmd)
+	RootCmd.AddCommand(NixDumpCmd)
 
 	createDirs(envConfig)
 }

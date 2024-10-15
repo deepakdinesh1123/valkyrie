@@ -359,10 +359,10 @@ export interface GetAllExecutions200Response {
 export interface GetAllLanguages200Response {
     /**
      * 
-     * @type {Array<string>}
+     * @type {Array<Language>}
      * @memberof GetAllLanguages200Response
      */
-    'languages': Array<string>;
+    'languages': Array<Language>;
 }
 /**
  * 
@@ -442,6 +442,43 @@ export interface Job {
 /**
  * 
  * @export
+ * @interface Language
+ */
+export interface Language {
+    /**
+     * Name of the programming language
+     * @type {string}
+     * @memberof Language
+     */
+    'name': string;
+    /**
+     * File extension for the programming language
+     * @type {string}
+     * @memberof Language
+     */
+    'extension': string;
+    /**
+     * Default code snippet for the programming language
+     * @type {string}
+     * @memberof Language
+     */
+    'defaultcode': string;
+    /**
+     * Monaco editor language setting for the programming language
+     * @type {string}
+     * @memberof Language
+     */
+    'monacolanguage': string;
+    /**
+     * The search query to be passed to SearchLanguagePackages API for this language
+     * @type {string}
+     * @memberof Language
+     */
+    'searchquery': string;
+}
+/**
+ * 
+ * @export
  * @interface ModelError
  */
 export interface ModelError {
@@ -451,6 +488,25 @@ export interface ModelError {
      * @memberof ModelError
      */
     'message': string;
+}
+/**
+ * 
+ * @export
+ * @interface Package
+ */
+export interface Package {
+    /**
+     * Name of the package
+     * @type {string}
+     * @memberof Package
+     */
+    'name': string;
+    /**
+     * Version of the package
+     * @type {string}
+     * @memberof Package
+     */
+    'version': string;
 }
 /**
  * 
@@ -488,6 +544,19 @@ export interface PaginationResponse {
      * @memberof PaginationResponse
      */
     'next'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface SearchSystemPackages200Response
+ */
+export interface SearchSystemPackages200Response {
+    /**
+     * 
+     * @type {Array<Package>}
+     * @memberof SearchSystemPackages200Response
+     */
+    'packages': Array<Package>;
 }
 
 /**
@@ -1026,6 +1095,97 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 options: localVarRequestOptions,
             };
         },
+        /**
+         * Search for language specific packages
+         * @summary Search for language specific packages
+         * @param {string} language The language for which the package is searched.
+         * @param {string} searchString The string to be searched.
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        searchLanguagePackages: async (language: string, searchString: string, xAuthToken?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'language' is not null or undefined
+            assertParamExists('searchLanguagePackages', 'language', language)
+            // verify required parameter 'searchString' is not null or undefined
+            assertParamExists('searchLanguagePackages', 'searchString', searchString)
+            const localVarPath = `/search/language`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (language !== undefined) {
+                localVarQueryParameter['language'] = language;
+            }
+
+            if (searchString !== undefined) {
+                localVarQueryParameter['searchString'] = searchString;
+            }
+
+            if (xAuthToken != null) {
+                localVarHeaderParameter['X-Auth-Token'] = String(xAuthToken);
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Search for system packages
+         * @summary Search for system packages
+         * @param {string} searchString The string to be searched.
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        searchSystemPackages: async (searchString: string, xAuthToken?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'searchString' is not null or undefined
+            assertParamExists('searchSystemPackages', 'searchString', searchString)
+            const localVarPath = `/search/system`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (searchString !== undefined) {
+                localVarQueryParameter['searchString'] = searchString;
+            }
+
+            if (xAuthToken != null) {
+                localVarHeaderParameter['X-Auth-Token'] = String(xAuthToken);
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
     }
 };
 
@@ -1221,6 +1381,35 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.getVersion']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
+        /**
+         * Search for language specific packages
+         * @summary Search for language specific packages
+         * @param {string} language The language for which the package is searched.
+         * @param {string} searchString The string to be searched.
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async searchLanguagePackages(language: string, searchString: string, xAuthToken?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SearchSystemPackages200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.searchLanguagePackages(language, searchString, xAuthToken, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.searchLanguagePackages']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Search for system packages
+         * @summary Search for system packages
+         * @param {string} searchString The string to be searched.
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async searchSystemPackages(searchString: string, xAuthToken?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SearchSystemPackages200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.searchSystemPackages(searchString, xAuthToken, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.searchSystemPackages']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
     }
 };
 
@@ -1376,6 +1565,29 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         getVersion(xAuthToken?: string, options?: RawAxiosRequestConfig): AxiosPromise<GetVersion200Response> {
             return localVarFp.getVersion(xAuthToken, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Search for language specific packages
+         * @summary Search for language specific packages
+         * @param {string} language The language for which the package is searched.
+         * @param {string} searchString The string to be searched.
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        searchLanguagePackages(language: string, searchString: string, xAuthToken?: string, options?: RawAxiosRequestConfig): AxiosPromise<SearchSystemPackages200Response> {
+            return localVarFp.searchLanguagePackages(language, searchString, xAuthToken, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Search for system packages
+         * @summary Search for system packages
+         * @param {string} searchString The string to be searched.
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        searchSystemPackages(searchString: string, xAuthToken?: string, options?: RawAxiosRequestConfig): AxiosPromise<SearchSystemPackages200Response> {
+            return localVarFp.searchSystemPackages(searchString, xAuthToken, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -1557,6 +1769,33 @@ export class DefaultApi extends BaseAPI {
      */
     public getVersion(xAuthToken?: string, options?: RawAxiosRequestConfig) {
         return DefaultApiFp(this.configuration).getVersion(xAuthToken, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Search for language specific packages
+     * @summary Search for language specific packages
+     * @param {string} language The language for which the package is searched.
+     * @param {string} searchString The string to be searched.
+     * @param {string} [xAuthToken] Authentication token
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public searchLanguagePackages(language: string, searchString: string, xAuthToken?: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).searchLanguagePackages(language, searchString, xAuthToken, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Search for system packages
+     * @summary Search for system packages
+     * @param {string} searchString The string to be searched.
+     * @param {string} [xAuthToken] Authentication token
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public searchSystemPackages(searchString: string, xAuthToken?: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).searchSystemPackages(searchString, xAuthToken, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

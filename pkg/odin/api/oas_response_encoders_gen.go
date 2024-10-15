@@ -627,3 +627,67 @@ func encodeGetVersionResponse(response GetVersionRes, w http.ResponseWriter, spa
 		return errors.Errorf("unexpected response type: %T", response)
 	}
 }
+
+func encodeSearchLanguagePackagesResponse(response SearchLanguagePackagesRes, w http.ResponseWriter, span trace.Span) error {
+	switch response := response.(type) {
+	case *SearchLanguagePackagesOK:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(200)
+		span.SetStatus(codes.Ok, http.StatusText(200))
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *SearchLanguagePackagesBadRequest:
+		w.WriteHeader(400)
+		span.SetStatus(codes.Error, http.StatusText(400))
+
+		return nil
+
+	case *SearchLanguagePackagesForbidden:
+		w.WriteHeader(403)
+		span.SetStatus(codes.Error, http.StatusText(403))
+
+		return nil
+
+	default:
+		return errors.Errorf("unexpected response type: %T", response)
+	}
+}
+
+func encodeSearchSystemPackagesResponse(response SearchSystemPackagesRes, w http.ResponseWriter, span trace.Span) error {
+	switch response := response.(type) {
+	case *SearchSystemPackagesOK:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(200)
+		span.SetStatus(codes.Ok, http.StatusText(200))
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *SearchSystemPackagesBadRequest:
+		w.WriteHeader(400)
+		span.SetStatus(codes.Error, http.StatusText(400))
+
+		return nil
+
+	case *SearchSystemPackagesForbidden:
+		w.WriteHeader(403)
+		span.SetStatus(codes.Error, http.StatusText(403))
+
+		return nil
+
+	default:
+		return errors.Errorf("unexpected response type: %T", response)
+	}
+}

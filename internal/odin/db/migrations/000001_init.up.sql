@@ -62,3 +62,14 @@ create table executions (
     nix_logs text,
     success boolean
 );
+
+create sequence packages_id_seq as bigint;
+
+create table if not exists packages (
+    package_id bigint primary key default nextval('packages_id_seq'),
+    name text not null,
+    version text not null,
+    pkgType text not null,
+    language text,
+    tsv_search TSVECTOR
+)

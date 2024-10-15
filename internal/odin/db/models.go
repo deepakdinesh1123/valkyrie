@@ -57,6 +57,15 @@ type JobType struct {
 	CreatedAt pgtype.Timestamptz `db:"created_at" json:"created_at"`
 }
 
+type Package struct {
+	PackageID int64       `db:"package_id" json:"package_id"`
+	Name      string      `db:"name" json:"name"`
+	Version   string      `db:"version" json:"version"`
+	Pkgtype   string      `db:"pkgtype" json:"pkgtype"`
+	Language  pgtype.Text `db:"language" json:"language"`
+	TsvSearch interface{} `db:"tsv_search" json:"tsv_search"`
+}
+
 type Worker struct {
 	ID            int32              `db:"id" json:"id"`
 	Name          string             `db:"name" json:"name"`

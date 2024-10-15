@@ -467,9 +467,62 @@ paths:
                   languages:
                     type: array
                     items:
-                      type: string
+                      $ref: '#/components/schemas/Language' 
         '403':
           description: Forbidden
+  /search/system:
+    get:
+      summary: Search for system packages
+      description: Search for system packages
+      operationId: SearchSystemPackages
+      parameters:
+        - $ref: '#/components/parameters/AuthHeader'
+        - $ref: '#/components/parameters/SearchString'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - packages
+                properties:
+                  packages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Package'
+        '400':
+          description: Bad request
+        '403':
+          description: Forbidden
+  /search/language:
+    get:
+      summary: Search for language specific packages
+      description: Search for language specific packages
+      operationId: SearchLanguagePackages
+      parameters:
+        - $ref: '#/components/parameters/AuthHeader'
+        - $ref: '#/components/parameters/Language'
+        - $ref: '#/components/parameters/SearchString'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - packages
+                properties:
+                  packages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Package'
+        '400':
+          description: Bad request
+        '403':
+          description: Forbidden    
 components:
   parameters:
     AuthHeader:
@@ -497,6 +550,20 @@ components:
         type: integer
         format: int32
         default: 20
+    Language:
+      name: language
+      in: query
+      description: The language for which the package is searched.
+      required: true
+      schema:
+        type: string
+    SearchString:
+      name: searchString
+      in: query
+      description: The string to be searched.
+      required: true
+      schema:
+        type: string
   schemas:
     EnvironmentVariable:
       type: object
@@ -691,3 +758,40 @@ components:
         ODIN_SYSTEM_PROVIDER_CLEAN_UP:
           type: boolean
           description: Represents whether to clean up directories created by the system provider.
+    Language:
+      type: object
+      required:
+        - name
+        - extension
+        - defaultcode
+        - monacolanguage
+        - searchquery
+      properties:
+        name:
+          type: string
+          description: Name of the programming language
+        extension:
+          type: string
+          description: File extension for the programming language
+        defaultcode:
+          type: string
+          description: Default code snippet for the programming language
+        monacolanguage:
+          type: string
+          description: Monaco editor language setting for the programming language
+        searchquery:
+          type: string
+          description: The search query to be passed to SearchLanguagePackages API for this language
+    Package:
+      type: object
+      required:
+        - name
+        - version
+      properties:
+        name:
+          type: string
+          description: Name of the package
+        version:
+          type: string
+          description: Version of the package
+        

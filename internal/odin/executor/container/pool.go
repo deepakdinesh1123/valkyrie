@@ -97,7 +97,7 @@ func constructor(ctx context.Context) (Container, error) {
 			NSMode: specgen.KeepID,
 		}
 
-		containerRemove := false
+		containerRemove := true
 		s.Remove = &containerRemove
 
 		pdContainer, err := containers.CreateWithSpec(connection, s, nil)
