@@ -1,0 +1,12 @@
+[
+  {
+    "environment": {},
+    "code": "print('hello world')",
+    "language": "python-3.10"
+  },
+  {
+    "environment": {},
+    "code": "print('The answer is 42')",
+    "language": "python-3.10"
+  }
+]
