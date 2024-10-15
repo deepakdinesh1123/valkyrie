@@ -15,14 +15,14 @@ SELECT
     version
 FROM packages
 WHERE
-    tsv_search @@ plainto_tsquery('english', $1)  
-    AND tsv_search @@ plainto_tsquery('english', $2)  
+    language = $1::text  
+    AND tsv_search @@ plainto_tsquery('english', $2::text)  
 ORDER BY name ASC
 `
 
 type SearchLanguagePackagesParams struct {
-	PlaintoTsquery   string `db:"plainto_tsquery" json:"plainto_tsquery"`
-	PlaintoTsquery_2 string `db:"plainto_tsquery_2" json:"plainto_tsquery_2"`
+	Language    string `db:"language" json:"language"`
+	Searchquery string `db:"searchquery" json:"searchquery"`
 }
 
 type SearchLanguagePackagesRow struct {
@@ -31,7 +31,7 @@ type SearchLanguagePackagesRow struct {
 }
 
 func (q *Queries) SearchLanguagePackages(ctx context.Context, arg SearchLanguagePackagesParams) ([]SearchLanguagePackagesRow, error) {
-	rows, err := q.db.Query(ctx, searchLanguagePackages, arg.PlaintoTsquery, arg.PlaintoTsquery_2)
+	rows, err := q.db.Query(ctx, searchLanguagePackages, arg.Language, arg.Searchquery)
 	if err != nil {
 		return nil, err
 	}

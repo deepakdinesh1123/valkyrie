@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api } from '@/utils/api';
 
-export const useLanguagePackages = (searchString: string, selectedLanguage: string) => {
-  const [packages, setPackages] = useState<{ name: string; version: string }[]>([]);
+export const useLanguagePackages = ( selectedLanguage: string, searchString: string,) => {
+  const [languagePackages, setLanguagePackages] = useState<{ name: string; version: string }[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -13,7 +13,7 @@ export const useLanguagePackages = (searchString: string, selectedLanguage: stri
       try {
         const languageParam = selectedLanguage.replace('-', '');
         const response = await api.searchLanguagePackages(searchString, languageParam);
-        setPackages(response.data.packages);
+        setLanguagePackages(response.data.packages);
       } catch (err) {
         console.error('Error fetching language packages:', err);
         setError('Failed to fetch language packages.');
@@ -27,5 +27,9 @@ export const useLanguagePackages = (searchString: string, selectedLanguage: stri
     }
   }, [searchString, selectedLanguage]);
 
-  return { packages, loading, error };
+  const resetLanguagePackages = useCallback(() => {
+  setLanguagePackages([]);
+}, []);
+
+  return { languagePackages, loading, error, resetLanguagePackages };
 };

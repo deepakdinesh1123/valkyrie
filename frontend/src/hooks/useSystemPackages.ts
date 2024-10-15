@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '@/utils/api';
 
 export const useSystemPackages = (searchString: string) => {
-  const [packages, setPackages] = useState<{ name: string; version: string }[]>([]);
+  const [systemPackages, setSystemPackages] = useState<{ name: string; version: string }[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -12,7 +12,7 @@ export const useSystemPackages = (searchString: string) => {
       setError(null);
       try {
         const response = await api.searchSystemPackages(searchString);
-        setPackages(response.data.packages);
+        setSystemPackages(response.data.packages);
       } catch (err) {
         console.error('Error fetching system packages:', err);
         setError('Failed to fetch system packages.');
@@ -26,5 +26,5 @@ export const useSystemPackages = (searchString: string) => {
     }
   }, [searchString]);
 
-  return { packages, loading, error };
+  return { systemPackages, loading, error };
 };

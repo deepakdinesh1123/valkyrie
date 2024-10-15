@@ -1,26 +1,55 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import debounce from "lodash/debounce";
 
 interface SearchableListBuilderProps {
   items: string[];
   onSelectionChange: (selectedItems: string[]) => void;
+  onSearchChange: (searchTerm: string) => void;
+  resetTrigger?: any;
 }
 
 const ListBuilder: React.FC<SearchableListBuilderProps> = ({
   items,
   onSelectionChange,
+  onSearchChange,
+  resetTrigger,
 }) => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
-  const filteredItems = items.filter(
-    (item) =>
-      item.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      !selectedItems.includes(item)
+  const debouncedSearchChange = useCallback(
+    debounce((value: string) => onSearchChange(value), 300),
+    [onSearchChange]
   );
+
+  useEffect(() => {
+    debouncedSearchChange(searchTerm);
+    return () => debouncedSearchChange.cancel();
+  }, [searchTerm, debouncedSearchChange]);
+
+  // Reset effect
+  useEffect(() => {
+    if (resetTrigger !== undefined) {
+      // Reset selected items and search term
+      setSelectedItems([]);
+      setSearchTerm("");
+      // Notify parent of the changes
+      onSelectionChange([]);
+      onSearchChange("");
+    }
+  }, [resetTrigger, onSelectionChange, onSearchChange]);
+
+  const filteredItems = useMemo(() => {
+    return items.filter(
+      (item) =>
+        item.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !selectedItems.includes(item)
+    );
+  }, [items, searchTerm, selectedItems]);
 
   const handleSelect = (item: string) => {
     const newSelectedItems = [...selectedItems, item];
@@ -34,6 +63,10 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
     onSelectionChange(newSelectedItems);
   };
 
+  const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
   return (
     <div className="w-full max-w-md">
       <div className="relative mb-4">
@@ -41,9 +74,7 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
           type="text"
           placeholder="Search items..."
           value={searchTerm}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setSearchTerm(e.target.value)
-          }
+          onChange={handleSearchInput}
           className="pl-10 pr-4 py-2 w-full"
         />
         <Search

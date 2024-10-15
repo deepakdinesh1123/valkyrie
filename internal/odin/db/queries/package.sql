@@ -24,8 +24,8 @@ SELECT
     version
 FROM packages
 WHERE
-    tsv_search @@ plainto_tsquery('english', $1)  
-    AND tsv_search @@ plainto_tsquery('english', $2)  
+    language = @Language::text  
+    AND tsv_search @@ plainto_tsquery('english', @SearchQuery::text)  
 ORDER BY name ASC;
 
 
