@@ -6,7 +6,7 @@ import { getLanguagePrefix } from "@/utils/prefix";
 interface CodeEditorProps {
   languages: Language[];
   selectedLanguage: Language;
-  onChange?: (filename: string, content: string) => void;
+  onChange?: (content: string) => void;
   editorOptions?: EditorProps["options"];
 }
 
@@ -28,12 +28,9 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   }, [selectedLanguage]);
 
   const handleEditorChange = (newValue: string | undefined) => {
-    const newContent = newValue || "";
+    const newContent = newValue ?? "";
     setContent(newContent);
-
-    if (onChange) {
-      onChange(`main.${selectedLanguage.extension}`, newContent);
-    }
+    onChange?.(newContent);
   };
 
   return (
