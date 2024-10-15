@@ -10,8 +10,8 @@ import (
 // SearchLanguagePackages implements api.Handler.
 func (s *OdinServer) SearchLanguagePackages(ctx context.Context, params api.SearchLanguagePackagesParams) (api.SearchLanguagePackagesRes, error) {
 	dbParams := db.SearchLanguagePackagesParams{
-		PlaintoTsquery:   params.Language,
-		PlaintoTsquery_2: params.SearchString,
+		Language:    params.Language,
+		Searchquery: params.SearchString,
 	}
 
 	packages, err := s.queries.SearchLanguagePackages(ctx, dbParams)

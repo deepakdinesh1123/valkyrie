@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Editor, { EditorProps } from "@monaco-editor/react";
 import { Language } from "@/api-client";
+import { getLanguagePrefix } from "@/utils/prefix";
 
 interface CodeEditorProps {
   languages: Language[];
@@ -15,9 +16,15 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   editorOptions,
 }) => {
   const [content, setContent] = useState(selectedLanguage.defaultcode);
+  const [previousPrefix, setPreviousPrefix] = useState(getLanguagePrefix(selectedLanguage.name));
 
   useEffect(() => {
-    setContent(selectedLanguage.defaultcode);
+    const currentPrefix = getLanguagePrefix(selectedLanguage.name);
+
+    if (currentPrefix !== previousPrefix) {
+      setContent(selectedLanguage.defaultcode);
+      setPreviousPrefix(currentPrefix);
+    }
   }, [selectedLanguage]);
 
   const handleEditorChange = (newValue: string | undefined) => {
