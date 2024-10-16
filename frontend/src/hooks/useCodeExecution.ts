@@ -10,11 +10,15 @@ export const useCodeExecution = () => {
   const executeCode = async (runData: {
     language: string;
     code: string;
-    systemDependencies: string[];
-    languageDependencies: string[];
+    environment: {
+      systemDependencies: string[];
+      languageDependencies: string[];
+      args: string;
+    }
+    
   }) => {
     try {
-      
+      console.log(runData);
       setIsLoading(true); 
       const response = await api.execute(runData);
       setTerminalOutput(['Processing...']);
