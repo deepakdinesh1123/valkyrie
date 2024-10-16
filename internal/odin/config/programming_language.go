@@ -21,6 +21,16 @@ var Languages map[string]map[string]string = map[string]map[string]string{
 		"defaultCode":     "# Type your Python code here\n\ndef main():\n    pass\n\nif __name__ == '__main__':\n    main()",
 		"searchquery":     "python311Packages",
 	},
+	"python-3.12": {
+		"nixPackageName":  "python312",
+		"version":         "3.10",
+		"extension":       "py",
+		"flake_template":  "python/python.flake.tmpl",
+		"script_template": "python/python.script.tmpl",
+		"monacoLanguage":  "python",
+		"defaultCode":     "# Type your Python code here\n\ndef main():\n    pass\n\nif __name__ == '__main__':\n    main()",
+		"searchquery":     "python312Packages",
+	},
 	"rust": {
 		"nixPackageName": "rust",
 		"version":        "1.64.0",

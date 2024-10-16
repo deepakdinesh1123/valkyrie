@@ -101,6 +101,13 @@ type Invoker interface {
 	//
 	// GET /version
 	GetVersion(ctx context.Context, params GetVersionParams) (GetVersionRes, error)
+	// PackagesExist invokes PackagesExist operation.
+	//
+	// Verify the package list is available for the language version while switching between language
+	// versions.
+	//
+	// POST /packages/exist/
+	PackagesExist(ctx context.Context, request *PackageExistRequest, params PackagesExistParams) (PackagesExistRes, error)
 	// SearchLanguagePackages invokes SearchLanguagePackages operation.
 	//
 	// Search for language specific packages.
@@ -1598,6 +1605,99 @@ func (c *Client) sendGetVersion(ctx context.Context, params GetVersionParams) (r
 
 	stage = "DecodeResponse"
 	result, err := decodeGetVersionResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// PackagesExist invokes PackagesExist operation.
+//
+// Verify the package list is available for the language version while switching between language
+// versions.
+//
+// POST /packages/exist/
+func (c *Client) PackagesExist(ctx context.Context, request *PackageExistRequest, params PackagesExistParams) (PackagesExistRes, error) {
+	res, err := c.sendPackagesExist(ctx, request, params)
+	return res, err
+}
+
+func (c *Client) sendPackagesExist(ctx context.Context, request *PackageExistRequest, params PackagesExistParams) (res PackagesExistRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("PackagesExist"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/packages/exist/"),
+	}
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "PackagesExist",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/packages/exist/"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodePackagesExistRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	stage = "EncodeHeaderParams"
+	h := uri.NewHeaderEncoder(r.Header)
+	{
+		cfg := uri.HeaderParameterEncodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.XAuthToken.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode header")
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodePackagesExistResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

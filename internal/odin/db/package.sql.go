@@ -9,6 +9,40 @@ import (
 	"context"
 )
 
+const packagesExist = `-- name: PackagesExist :one
+WITH existing_packages AS (
+    SELECT name
+    FROM packages
+    WHERE language = $2::text
+      AND name = ANY($1::text[])
+)
+SELECT 
+    COUNT(*) = array_length($1::text[], 1) AS exists,
+    ARRAY(
+        SELECT unnest($1::text[]) 
+        EXCEPT 
+        SELECT name FROM existing_packages
+    )::text[] AS nonexisting_packages
+FROM existing_packages
+`
+
+type PackagesExistParams struct {
+	Packages []string `db:"packages" json:"packages"`
+	Language string   `db:"language" json:"language"`
+}
+
+type PackagesExistRow struct {
+	Exists              bool     `db:"exists" json:"exists"`
+	NonexistingPackages []string `db:"nonexisting_packages" json:"nonexisting_packages"`
+}
+
+func (q *Queries) PackagesExist(ctx context.Context, arg PackagesExistParams) (PackagesExistRow, error) {
+	row := q.db.QueryRow(ctx, packagesExist, arg.Packages, arg.Language)
+	var i PackagesExistRow
+	err := row.Scan(&i.Exists, &i.NonexistingPackages)
+	return i, err
+}
+
 const searchLanguagePackages = `-- name: SearchLanguagePackages :many
 SELECT
     name,

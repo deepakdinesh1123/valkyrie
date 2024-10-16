@@ -130,6 +130,16 @@ func (UnimplementedHandler) GetVersion(ctx context.Context, params GetVersionPar
 	return r, ht.ErrNotImplemented
 }
 
+// PackagesExist implements PackagesExist operation.
+//
+// Verify the package list is available for the language version while switching between language
+// versions.
+//
+// POST /packages/exist/
+func (UnimplementedHandler) PackagesExist(ctx context.Context, req *PackageExistRequest, params PackagesExistParams) (r PackagesExistRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // SearchLanguagePackages implements SearchLanguagePackages operation.
 //
 // Search for language specific packages.

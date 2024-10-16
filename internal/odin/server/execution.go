@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -16,6 +17,13 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type SSEMessage struct {
+	Status   string      `json:"status"`
+	ExecID   int64       `json:"execId"`
+	Logs     interface{} `json:"logs,omitempty"`
+	ErrorMsg string      `json:"error,omitempty"`
+}
 
 func (s *OdinServer) Execute(ctx context.Context, req *api.ExecutionRequest, params api.ExecuteParams) (api.ExecuteRes, error) {
 	jobId, err := s.executionService.AddJob(ctx, req)
@@ -48,12 +56,14 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "Failed to get executionId", http.StatusBadRequest)
 		return
 	}
+
+	// Set headers required for SSE
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("Content-Type", "text/event-stream")
 
-	var flusher http.Flusher
+	// Ensure the writer supports flushing
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		s.logger.Error().Stack().Msg("Failed to get flusher")
@@ -70,8 +80,11 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 			job, err := s.queries.GetJob(ctx, execId)
 			if err != nil {
 				s.logger.Error().Stack().Err(err).Msg("Failed to get job")
-				fmt.Fprintf(w, "data: error\n\n")
-				flusher.Flush()
+				sendSSEMessage(w, flusher, SSEMessage{
+					Status:   "error",
+					ExecID:   execId,
+					ErrorMsg: "Failed to get job",
+				})
 				return
 			}
 
@@ -85,29 +98,46 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 					Offset: 0,
 				})
 				if err != nil {
-					s.logger.Error().Stack().Err(err).Msg("Failed to get execution executions")
-					fmt.Fprintf(w, "data: error %s\n\n", err)
-					flusher.Flush()
+					s.logger.Error().Stack().Err(err).Msg("Failed to get execution logs")
+					sendSSEMessage(w, flusher, SSEMessage{
+						Status:   "error",
+						ExecID:   execId,
+						ErrorMsg: err.Error(),
+					})
 					return
 				}
-				fmt.Fprintf(w, "data: completed: %d\n\n", execId)
-				flusher.Flush()
-				fmt.Fprintf(w, "data: %s\n\n", res[0].ExecLogs)
+
+				sendSSEMessage(w, flusher, SSEMessage{
+					Status: "completed",
+					ExecID: execId,
+					Logs:   res[0].ExecLogs,
+				})
 				return
+
 			case "failed":
-				fmt.Fprintf(w, "data: failed: %d\n\n", execId)
-				flusher.Flush()
+				sendSSEMessage(w, flusher, SSEMessage{
+					Status: "failed",
+					ExecID: execId,
+				})
 				return
+
 			case "pending":
-				fmt.Fprintf(w, "data: pending: %d\n\n", execId)
-				flusher.Flush()
+				sendSSEMessage(w, flusher, SSEMessage{
+					Status: "pending",
+					ExecID: execId,
+				})
+
 			case "scheduled":
-				fmt.Fprintf(w, "data: scheduled: %d\n\n", execId)
-				flusher.Flush()
+				sendSSEMessage(w, flusher, SSEMessage{
+					Status: "scheduled",
+					ExecID: execId,
+				})
+
 			default:
 				s.logger.Warn().Str("status", job.CurrentState).Msg("Unknown status")
 			}
 
+			// Sleep before checking the status again
 			time.Sleep(3 * time.Second)
 		}
 	}
@@ -461,4 +491,16 @@ func (s *OdinServer) GetAllLanguages(ctx context.Context, params api.GetAllLangu
 	return &api.GetAllLanguagesOK{
 		Languages: languages,
 	}, nil
+}
+
+func sendSSEMessage(w http.ResponseWriter, flusher http.Flusher, message SSEMessage) {
+	data, err := json.Marshal(message)
+	if err != nil {
+		fmt.Fprintf(w, "data: {\"status\":\"error\",\"error\":\"Failed to marshal JSON\"}\n\n")
+		flusher.Flush()
+		return
+	}
+
+	fmt.Fprintf(w, "data: %s\n\n", data)
+	flusher.Flush()
 }

@@ -6,10 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import debounce from "lodash/debounce";
 
 interface SearchableListBuilderProps {
-  items: string[];
+  items: { name: string; version: string }[];
   onSelectionChange: (selectedItems: string[]) => void;
   onSearchChange: (searchTerm: string) => void;
   resetTrigger?: any;
+  nonExistingPackages?: string[];
 }
 
 const ListBuilder: React.FC<SearchableListBuilderProps> = ({
@@ -17,6 +18,7 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
   onSelectionChange,
   onSearchChange,
   resetTrigger,
+  nonExistingPackages = [],
 }) => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
@@ -31,34 +33,44 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
     return () => debouncedSearchChange.cancel();
   }, [searchTerm, debouncedSearchChange]);
 
-  // Reset effect
   useEffect(() => {
     if (resetTrigger !== undefined) {
-      // Reset selected items and search term
       setSelectedItems([]);
       setSearchTerm("");
-      // Notify parent of the changes
       onSelectionChange([]);
       onSearchChange("");
     }
   }, [resetTrigger, onSelectionChange, onSearchChange]);
 
+  useEffect(() => {
+    if (nonExistingPackages.length > 0) {
+      const updatedSelectedItems = selectedItems.filter(
+        item => !nonExistingPackages.includes(item)
+      );
+      if (updatedSelectedItems.length !== selectedItems.length) {
+        setSelectedItems(updatedSelectedItems);
+        onSelectionChange(updatedSelectedItems);
+        setSearchTerm("")
+      }
+    }
+  }, [nonExistingPackages, selectedItems, onSelectionChange]);
+
   const filteredItems = useMemo(() => {
     return items.filter(
       (item) =>
-        item.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !selectedItems.includes(item)
+        item.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !selectedItems.includes(item.name)
     );
   }, [items, searchTerm, selectedItems]);
 
-  const handleSelect = (item: string) => {
-    const newSelectedItems = [...selectedItems, item];
+  const handleSelect = (item: { name: string; version: string }) => {
+    const newSelectedItems = [...selectedItems, item.name];
     setSelectedItems(newSelectedItems);
     onSelectionChange(newSelectedItems);
   };
 
-  const handleRemove = (item: string) => {
-    const newSelectedItems = selectedItems.filter((i) => i !== item);
+  const handleRemove = (itemName: string) => {
+    const newSelectedItems = selectedItems.filter((i) => i !== itemName);
     setSelectedItems(newSelectedItems);
     onSelectionChange(newSelectedItems);
   };
@@ -83,17 +95,17 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
         />
       </div>
       <div className="mb-4 flex flex-wrap gap-2">
-        {selectedItems.map((item) => (
+        {selectedItems.map((itemName) => (
           <Badge
-            key={item}
+            key={itemName}
             variant="secondary"
             className="py-1 px-2 text-sm flex items-center gap-1"
           >
-            {item}
+            {itemName}
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => handleRemove(item)}
+              onClick={() => handleRemove(itemName)}
               className="h-5 w-5 p-0 hover:bg-red-100 rounded-full"
             >
               <X size={14} className="text-gray-500 hover:text-red-500" />
@@ -105,11 +117,11 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
         <ul className="max-h-40 overflow-y-auto">
           {filteredItems.map((item) => (
             <li
-              key={item}
+              key={item.name}
               className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
               onClick={() => handleSelect(item)}
             >
-              {item}
+              {`${item.name}`}
             </li>
           ))}
         </ul>

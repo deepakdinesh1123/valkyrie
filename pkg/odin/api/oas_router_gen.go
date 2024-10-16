@@ -353,6 +353,27 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				}
 
 				elem = origElem
+			case 'p': // Prefix: "packages/exist/"
+				origElem := elem
+				if l := len("packages/exist/"); len(elem) >= l && elem[0:l] == "packages/exist/" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					// Leaf node.
+					switch r.Method {
+					case "POST":
+						s.handlePackagesExistRequest([0]string{}, elemIsEscaped, w, r)
+					default:
+						s.notAllowed(w, r, "POST")
+					}
+
+					return
+				}
+
+				elem = origElem
 			case 's': // Prefix: "search/"
 				origElem := elem
 				if l := len("search/"); len(elem) >= l && elem[0:l] == "search/" {
@@ -849,6 +870,31 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						r.summary = "Get all languages"
 						r.operationID = "getAllLanguages"
 						r.pathPattern = "/languages"
+						r.args = args
+						r.count = 0
+						return r, true
+					default:
+						return
+					}
+				}
+
+				elem = origElem
+			case 'p': // Prefix: "packages/exist/"
+				origElem := elem
+				if l := len("packages/exist/"); len(elem) >= l && elem[0:l] == "packages/exist/" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					// Leaf node.
+					switch method {
+					case "POST":
+						r.name = "PackagesExist"
+						r.summary = "Verify package list is available."
+						r.operationID = "PackagesExist"
+						r.pathPattern = "/packages/exist/"
 						r.args = args
 						r.count = 0
 						return r, true
