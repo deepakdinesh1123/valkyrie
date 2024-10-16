@@ -10,9 +10,10 @@ import (
 
 	"github.com/deepakdinesh1123/valkyrie/internal/concurrency"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
+	"github.com/rs/zerolog"
 )
 
-func (s *SystemExecutor) Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, job db.Job) {
+func (s *SystemExecutor) Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, job db.Job, logger zerolog.Logger) {
 	tracer := s.tp.Tracer("Execute")
 	_, span := tracer.Start(ctx, "Execute")
 	defer span.End()

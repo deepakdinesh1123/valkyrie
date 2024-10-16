@@ -219,7 +219,7 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 			w.logger.Info().Msgf("Worker: fetched job %d", res.Job.JobID)
 			swg.Add(1)
 			span.AddEvent("Executing job")
-			go w.exectr.Execute(tracerCtx, &swg, res.Job)
+			go w.exectr.Execute(tracerCtx, &swg, res.Job, w.logger.With().Int64("JOB_ID", res.Job.JobID).Logger())
 		case <-heartBeatTicker.C:
 			w.queries.UpdateHeartbeat(ctx, int32(w.ID))
 		}

@@ -6,9 +6,10 @@ import (
 
 	"github.com/deepakdinesh1123/valkyrie/internal/concurrency"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
+	"github.com/rs/zerolog"
 )
 
-func (ce *ContainerExecutor) Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, job db.Job) {
+func (ce *ContainerExecutor) Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, job db.Job, logger zerolog.Logger) {
 	defer wg.Done()
 	startTime := time.Now()
 
@@ -40,39 +41,39 @@ func (ce *ContainerExecutor) Execute(ctx context.Context, wg *concurrency.SafeWa
 	}
 	defer cancel()
 
-	ce.logger.Debug().Msg("Getting container client")
+	logger.Debug().Msg("Getting container client")
 	cc, err := GetContainerClient(tctx, ce)
 	if err != nil {
-		ce.logger.Err(err).Msg("could not get container client")
+		logger.Err(err).Msg("could not get container client")
 		ce.checkFailed(ce.queries.UpdateJobResultTx(ctx, jobRes))
 		return
 	}
-	ce.logger.Debug().Msg("Got container client")
-	ce.logger.Debug().Msg("Getting container")
+	logger.Debug().Msg("Got container client")
+	logger.Debug().Msg("Getting container")
 	cont, err := cc.GetContainer(tctx)
 	if err != nil {
-		ce.logger.Err(err).Msg("could not get container")
+		logger.Err(err).Msg("could not get container")
 		ce.checkFailed(ce.queries.UpdateJobResultTx(ctx, jobRes))
 		return
 	}
-	ce.logger.Debug().Msg("Got container")
+	logger.Debug().Msg("Got container")
 	defer cont.Destroy()
 	contInfo := cont.Value()
-	ce.logger.Debug().Msg("Writing files")
+	logger.Debug().Msg("Writing files")
 	err = cc.WriteFiles(tctx, contInfo.ID, contInfo.HostPrepDir, job)
 	if err != nil {
-		ce.logger.Err(err).Msg("could not write files")
+		logger.Err(err).Msg("could not write files")
 		ce.checkFailed(ce.queries.UpdateJobResultTx(ctx, jobRes))
 		return
 	}
-	ce.logger.Debug().Msg("Files written")
+	logger.Debug().Msg("Files written")
 	success, output, err := cc.Execute(tctx, contInfo.ID, []string{"sh", "nix_run.sh"})
 	if err != nil {
-		ce.logger.Err(err).Msg(err.Error())
+		logger.Err(err).Msg(err.Error())
 		ce.checkFailed(ce.queries.UpdateJobResultTx(ctx, jobRes))
 		return
 	}
-	ce.logger.Debug().Msg("Destroying container")
+	logger.Debug().Msg("Destroying container")
 
 	jobRes.Success = success
 	jobRes.Retry = false
