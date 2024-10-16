@@ -38,26 +38,40 @@ body,
   gap: 1rem; /* Space between elements */
 }
 
+/* Top bar container */
+.top-bar {
+   position: absolute;
+  top: 0;
+  right: 20%; /* Align with the start of sidebar */
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background-color: #252526;
+  z-index: 10;
+}
+
+/* Language selector and args input container */
+.language-args-container {
+  display: flex;
+  gap: 0.5rem;
+  margin-right: 1rem;
+}
+
 /* Language selector styling */
 .language-selector {
-  margin-bottom: 1rem;
-  position: absolute;
-  right: 420px;
-  top: 5px;
+  min-width: 150px;
+}
+
+/* Args input styling */
+.args-input {
+  width: 200px;
 }
 
 /* Run code button styling */
-.run-code-button {
-  margin-bottom: 1rem;
-  position: absolute;
-  right: 320px;
-  top: 5px;
-}
-
 .run-code-btn {
-  position: relative;
-  padding: 10px 20px;
-  font-size: 16px;
+  padding: 0.5rem 1rem;
+  font-size: 14px;
   border: none;
   background-color: #4caf50;
   color: white;
@@ -71,27 +85,22 @@ body,
   cursor: not-allowed;
 }
 
-
 .run-code-btn.loading::after {
   content: '';
-  position: relative;
-  right: 0;
-  width: 20px;
-  height: 20px;
-  border: 3px solid white;
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  border: 2px solid white;
   border-radius: 50%;
   border-top-color: transparent;
   animation: spin 1s linear infinite;
-  padding: 0%;
+  margin-left: 0.5rem;
+  vertical-align: middle;
 }
 
 @keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* List builder container in the sidebar */
@@ -108,13 +117,13 @@ body,
   height: 28vh; /* Terminal takes up 28% of the height */
   background-color: #1e1e1e; /* Dark background like VS Code terminal */
   color: #00ff00; /* Green text color for terminal-like feel */
-  overflow-y: hidden; /* Hide scroll bar initially */
-  padding: 0.5rem;
-}
-
-/* Enable scroll only if content overflows */
-.output-terminal:has(div) {
   overflow-y: auto;
+  padding: 0.5rem;
+  font-family: monospace;
+  font-size: 0.875rem;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .terminal-label {
@@ -126,11 +135,6 @@ body,
 
 .terminal-container {
   width: 100%;
-  font-family: monospace; /* Monospace font like VS Code */
-  font-size: 0.875rem;
-  white-space: pre-wrap; /* Enables word wrap */
-  word-wrap: break-word; /* Break long words to wrap to the next line */
-  overflow-wrap: break-word; /* Ensures words are wrapped inside the container */
   background-color: rgb(63, 63, 63);
 }
 
@@ -139,21 +143,30 @@ body,
   flex-grow: 1;
 }
 
-/* Basic styling for buttons, selectors, etc. */
-button,
-select {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  background-color: #4caf50;
-  color: white;
-  cursor: pointer;
-}
-
 /* Responsive styles */
 @media (max-width: 1200px) {
   .sidebar {
-    max-width: 25%; /* Increase maximum width on medium screens */
+    width: 25%; /* Increase width on medium screens */
+  }
+}
+
+@media (max-width: 992px) {
+  .top-bar {
+    flex-wrap: wrap;
+  }
+
+  .language-args-container {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  .language-selector,
+  .args-input {
+    flex-grow: 1;
+  }
+
+  .run-code-btn {
+    width: 100%;
   }
 }
 
@@ -167,14 +180,18 @@ select {
     width: 100%; /* Full width for both containers on small screens */
   }
 
-  .language-selector,
-  .run-code-button {
-    position: static; /* Remove absolute positioning on small screens */
+  .sidebar {
+    order: -1; /* Move sidebar to the top on small screens */
   }
 }
 
 @media (max-width: 480px) {
-  .sidebar {
-    max-width: auto; /* Allow sidebar to shrink further on very small screens */
+  .language-args-container {
+    flex-direction: column;
+  }
+
+  .language-selector,
+  .args-input {
+    width: 100%;
   }
 }

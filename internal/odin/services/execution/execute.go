@@ -7,6 +7,7 @@ import (
 	"embed"
 	"encoding/hex"
 	"fmt"
+	"log"
 	"text/template"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
@@ -74,6 +75,8 @@ func (s *ExecutionService) prepareExecutionRequest(req *api.ExecutionRequest) (*
 	}
 	execReq.Flake = flake
 	execReq.NixScript = nixScript
+	log.Print(req.Environment.Value.LanguageDependencies)
+	log.Print(execReq.LanguageDependencies)
 	return &execReq, nil
 }
 
