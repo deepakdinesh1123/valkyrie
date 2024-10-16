@@ -86,6 +86,13 @@ type Handler interface {
 	//
 	// GET /version
 	GetVersion(ctx context.Context, params GetVersionParams) (GetVersionRes, error)
+	// PackagesExist implements PackagesExist operation.
+	//
+	// Verify the package list is available for the language version while switching between language
+	// versions.
+	//
+	// POST /packages/exist/
+	PackagesExist(ctx context.Context, req *PackageExistRequest, params PackagesExistParams) (PackagesExistRes, error)
 	// SearchLanguagePackages implements SearchLanguagePackages operation.
 	//
 	// Search for language specific packages.

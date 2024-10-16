@@ -494,8 +494,16 @@ paths:
                       $ref: '#/components/schemas/Package'
         '400':
           description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /search/language:
     get:
       summary: Search for language specific packages
@@ -521,8 +529,68 @@ paths:
                       $ref: '#/components/schemas/Package'
         '400':
           description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '403':
-          description: Forbidden    
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /packages/exist/:
+    post:
+      summary: Verify package list is available.
+      description: Verify the package list is available for the language version while switching between language versions.
+      operationId: PackagesExist
+      parameters:
+        - $ref: '#/components/parameters/AuthHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PackageExistRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - exists
+                properties:
+                  exists:
+                    type: boolean
+                    description: Indicate all packages' existance for given language
+                    example: false
+                  nonExistingPackages:
+                    type: array
+                    description: List of packages that do not exist for the language
+                    items:
+                      type: string
+                    example: ["nonexistent-package"]
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
 components:
   parameters:
     AuthHeader:
@@ -794,4 +862,20 @@ components:
         version:
           type: string
           description: Version of the package
+    PackageExistRequest:
+      type: object
+      required:
+        - language
+        - packages
+      properties:
+        language:
+          type: string
+          description: The language to check the packages against
+          example: "python311Packages"
+        packages:
+          type: array
+          description: List of packages to verify.
+          items:
+            type: string
+          example: ["requests", "numpy", "nonexistent-pkg"]
         

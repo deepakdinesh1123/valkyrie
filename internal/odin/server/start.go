@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/middleware"
+	"github.com/gorilla/handlers"
 	"github.com/jackc/pgx/v5/pgtype"
 	"golang.org/x/sync/errgroup"
-	"github.com/gorilla/handlers"
 )
 
 var shutdownTimeout = time.Second * 5
@@ -24,17 +24,16 @@ func (s *OdinServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 	var server *http.Server
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/executions/{executionId}/sse", s.ExecuteSSE)
+	mux.HandleFunc("/executions/{executionId}/events", s.ExecuteSSE)
 	mux.HandleFunc("/executions/execute/ws", s.ExecuteWS)
 	mux.Handle("/", s.server)
 
 	route_finder := middleware.MakeRouteFinder(s.server)
 
-	corsOptions := handlers.AllowedOrigins([]string{"*"} ) 
+	corsOptions := handlers.AllowedOrigins([]string{"*"})
 	corsMethods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"})
 	corsHeaders := handlers.AllowedHeaders([]string{"Content-Type", "Authorization"})
 
-	
 	server = &http.Server{
 		ReadHeaderTimeout: time.Second * 5,
 		Addr:              addr,

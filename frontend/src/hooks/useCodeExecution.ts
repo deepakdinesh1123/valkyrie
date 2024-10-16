@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '@/utils/api';
 
 export const useCodeExecution = () => {
   const [terminalOutput, setTerminalOutput] = useState<string[]>([]);
+  const [eventSource, setEventSource] = useState<EventSource | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const eventPath = "http://localhost:8080/";
 
   const executeCode = async (runData: {
     language: string;
@@ -11,14 +14,47 @@ export const useCodeExecution = () => {
     languageDependencies: string[];
   }) => {
     try {
+      
+      setIsLoading(true); 
       const response = await api.execute(runData);
-      const jobOutput = `Job ID: ${response.data.jobId}\nEvents URL: ${response.data.events}`;
-      setTerminalOutput((prev) => [...prev, jobOutput]);
+      setTerminalOutput(['Processing...']);
+
+      const source = new EventSource(`${eventPath}${response.data.events}`);
+      setEventSource(source);
+
+      source.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+
+        if (data.status === 'completed') {
+          setTerminalOutput((prev) => [
+            ...prev.slice(0, prev.length - 1),
+            data.logs || 'No logs available.',
+          ]);
+          setIsLoading(false); 
+          source.close();
+        }
+      };
+
+      source.onerror = (error) => {
+        console.error('EventSource error:', error);
+        setTerminalOutput((prev) => [...prev, 'EventSource connection error.']);
+        setIsLoading(false); 
+        source.close();
+      };
     } catch (error) {
       console.error('Execution failed:', error);
       setTerminalOutput((prev) => [...prev, 'Execution failed.']);
+      setIsLoading(false); 
     }
   };
 
-  return { terminalOutput, executeCode };
+  useEffect(() => {
+    return () => {
+      if (eventSource) {
+        eventSource.close();
+      }
+    };
+  }, [eventSource]);
+
+  return { terminalOutput, executeCode, isLoading };
 };

@@ -28,8 +28,20 @@ WHERE
     AND tsv_search @@ plainto_tsquery('english', @SearchQuery::text)  
 ORDER BY name ASC;
 
-
-
-
+-- name: PackagesExist :one
+WITH existing_packages AS (
+    SELECT name
+    FROM packages
+    WHERE language = @language::text
+      AND name = ANY(@packages::text[])
+)
+SELECT 
+    COUNT(*) = array_length(@packages::text[], 1) AS exists,
+    ARRAY(
+        SELECT unnest(@packages::text[]) 
+        EXCEPT 
+        SELECT name FROM existing_packages
+    )::text[] AS nonexisting_packages
+FROM existing_packages;
 
 

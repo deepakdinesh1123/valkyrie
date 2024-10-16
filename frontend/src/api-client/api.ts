@@ -511,6 +511,44 @@ export interface Package {
 /**
  * 
  * @export
+ * @interface PackageExistRequest
+ */
+export interface PackageExistRequest {
+    /**
+     * The language to check the packages against
+     * @type {string}
+     * @memberof PackageExistRequest
+     */
+    'language': string;
+    /**
+     * List of packages to verify.
+     * @type {Array<string>}
+     * @memberof PackageExistRequest
+     */
+    'packages': Array<string>;
+}
+/**
+ * 
+ * @export
+ * @interface PackagesExist200Response
+ */
+export interface PackagesExist200Response {
+    /**
+     * Indicate all packages\' existance for given language
+     * @type {boolean}
+     * @memberof PackagesExist200Response
+     */
+    'exists': boolean;
+    /**
+     * List of packages that do not exist for the language
+     * @type {Array<string>}
+     * @memberof PackagesExist200Response
+     */
+    'nonExistingPackages'?: Array<string>;
+}
+/**
+ * 
+ * @export
  * @interface PaginationResponse
  */
 export interface PaginationResponse {
@@ -1096,6 +1134,47 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             };
         },
         /**
+         * Verify the package list is available for the language version while switching between language versions.
+         * @summary Verify package list is available.
+         * @param {PackageExistRequest} packageExistRequest 
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        packagesExist: async (packageExistRequest: PackageExistRequest, xAuthToken?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'packageExistRequest' is not null or undefined
+            assertParamExists('packagesExist', 'packageExistRequest', packageExistRequest)
+            const localVarPath = `/packages/exist/`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (xAuthToken != null) {
+                localVarHeaderParameter['X-Auth-Token'] = String(xAuthToken);
+            }
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(packageExistRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * Search for language specific packages
          * @summary Search for language specific packages
          * @param {string} language The language for which the package is searched.
@@ -1382,6 +1461,20 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
+         * Verify the package list is available for the language version while switching between language versions.
+         * @summary Verify package list is available.
+         * @param {PackageExistRequest} packageExistRequest 
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async packagesExist(packageExistRequest: PackageExistRequest, xAuthToken?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PackagesExist200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.packagesExist(packageExistRequest, xAuthToken, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.packagesExist']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * Search for language specific packages
          * @summary Search for language specific packages
          * @param {string} language The language for which the package is searched.
@@ -1565,6 +1658,17 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         getVersion(xAuthToken?: string, options?: RawAxiosRequestConfig): AxiosPromise<GetVersion200Response> {
             return localVarFp.getVersion(xAuthToken, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Verify the package list is available for the language version while switching between language versions.
+         * @summary Verify package list is available.
+         * @param {PackageExistRequest} packageExistRequest 
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        packagesExist(packageExistRequest: PackageExistRequest, xAuthToken?: string, options?: RawAxiosRequestConfig): AxiosPromise<PackagesExist200Response> {
+            return localVarFp.packagesExist(packageExistRequest, xAuthToken, options).then((request) => request(axios, basePath));
         },
         /**
          * Search for language specific packages
@@ -1769,6 +1873,19 @@ export class DefaultApi extends BaseAPI {
      */
     public getVersion(xAuthToken?: string, options?: RawAxiosRequestConfig) {
         return DefaultApiFp(this.configuration).getVersion(xAuthToken, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Verify the package list is available for the language version while switching between language versions.
+     * @summary Verify package list is available.
+     * @param {PackageExistRequest} packageExistRequest 
+     * @param {string} [xAuthToken] Authentication token
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public packagesExist(packageExistRequest: PackageExistRequest, xAuthToken?: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).packagesExist(packageExistRequest, xAuthToken, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

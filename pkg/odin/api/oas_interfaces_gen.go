@@ -53,6 +53,10 @@ type GetVersionRes interface {
 	getVersionRes()
 }
 
+type PackagesExistRes interface {
+	packagesExistRes()
+}
+
 type SearchLanguagePackagesRes interface {
 	searchLanguagePackagesRes()
 }

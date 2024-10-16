@@ -54,6 +54,46 @@ body,
   top: 5px;
 }
 
+.run-code-btn {
+  position: relative;
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  background-color: #4caf50;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.run-code-btn:disabled {
+  background-color: #9e9e9e;
+  cursor: not-allowed;
+}
+
+
+.run-code-btn.loading::after {
+  content: '';
+  position: relative;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  border: 3px solid white;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+  padding: 0%;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* List builder container in the sidebar */
 .list-builder {
   flex-grow: 1;
@@ -65,10 +105,16 @@ body,
 }
 
 .output-terminal {
-  height: 28vh; /* Terminal takes up 25% of the height */
+  height: 28vh; /* Terminal takes up 28% of the height */
   background-color: #1e1e1e; /* Dark background like VS Code terminal */
-  overflow-y: auto; /* Only vertical scrolling if needed */
+  color: #00ff00; /* Green text color for terminal-like feel */
+  overflow-y: hidden; /* Hide scroll bar initially */
   padding: 0.5rem;
+}
+
+/* Enable scroll only if content overflows */
+.output-terminal:has(div) {
+  overflow-y: auto;
 }
 
 .terminal-label {

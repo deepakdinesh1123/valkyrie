@@ -1250,6 +1250,75 @@ func (s *Package) SetVersion(val string) {
 	s.Version = val
 }
 
+// Ref: #/components/schemas/PackageExistRequest
+type PackageExistRequest struct {
+	// The language to check the packages against.
+	Language string `json:"language"`
+	// List of packages to verify.
+	Packages []string `json:"packages"`
+}
+
+// GetLanguage returns the value of Language.
+func (s *PackageExistRequest) GetLanguage() string {
+	return s.Language
+}
+
+// GetPackages returns the value of Packages.
+func (s *PackageExistRequest) GetPackages() []string {
+	return s.Packages
+}
+
+// SetLanguage sets the value of Language.
+func (s *PackageExistRequest) SetLanguage(val string) {
+	s.Language = val
+}
+
+// SetPackages sets the value of Packages.
+func (s *PackageExistRequest) SetPackages(val []string) {
+	s.Packages = val
+}
+
+type PackagesExistBadRequest Error
+
+func (*PackagesExistBadRequest) packagesExistRes() {}
+
+type PackagesExistForbidden Error
+
+func (*PackagesExistForbidden) packagesExistRes() {}
+
+type PackagesExistInternalServerError Error
+
+func (*PackagesExistInternalServerError) packagesExistRes() {}
+
+type PackagesExistOK struct {
+	// Indicate all packages' existance for given language.
+	Exists bool `json:"exists"`
+	// List of packages that do not exist for the language.
+	NonExistingPackages []string `json:"nonExistingPackages"`
+}
+
+// GetExists returns the value of Exists.
+func (s *PackagesExistOK) GetExists() bool {
+	return s.Exists
+}
+
+// GetNonExistingPackages returns the value of NonExistingPackages.
+func (s *PackagesExistOK) GetNonExistingPackages() []string {
+	return s.NonExistingPackages
+}
+
+// SetExists sets the value of Exists.
+func (s *PackagesExistOK) SetExists(val bool) {
+	s.Exists = val
+}
+
+// SetNonExistingPackages sets the value of NonExistingPackages.
+func (s *PackagesExistOK) SetNonExistingPackages(val []string) {
+	s.NonExistingPackages = val
+}
+
+func (*PackagesExistOK) packagesExistRes() {}
+
 // Ref: #/components/schemas/PaginationResponse
 type PaginationResponse struct {
 	// Represents the total number of items.
@@ -1313,13 +1382,11 @@ func (s *PaginationResponse) SetNext(val OptString) {
 	s.Next = val
 }
 
-// SearchLanguagePackagesBadRequest is response for SearchLanguagePackages operation.
-type SearchLanguagePackagesBadRequest struct{}
+type SearchLanguagePackagesBadRequest Error
 
 func (*SearchLanguagePackagesBadRequest) searchLanguagePackagesRes() {}
 
-// SearchLanguagePackagesForbidden is response for SearchLanguagePackages operation.
-type SearchLanguagePackagesForbidden struct{}
+type SearchLanguagePackagesForbidden Error
 
 func (*SearchLanguagePackagesForbidden) searchLanguagePackagesRes() {}
 
@@ -1339,13 +1406,11 @@ func (s *SearchLanguagePackagesOK) SetPackages(val []Package) {
 
 func (*SearchLanguagePackagesOK) searchLanguagePackagesRes() {}
 
-// SearchSystemPackagesBadRequest is response for SearchSystemPackages operation.
-type SearchSystemPackagesBadRequest struct{}
+type SearchSystemPackagesBadRequest Error
 
 func (*SearchSystemPackagesBadRequest) searchSystemPackagesRes() {}
 
-// SearchSystemPackagesForbidden is response for SearchSystemPackages operation.
-type SearchSystemPackagesForbidden struct{}
+type SearchSystemPackagesForbidden Error
 
 func (*SearchSystemPackagesForbidden) searchSystemPackagesRes() {}
 
