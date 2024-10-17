@@ -46,7 +46,7 @@ body,
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 5rem;
   background-color: #252526;
   z-index: 10;
 }
@@ -68,16 +68,23 @@ body,
   width: 200px;
 }
 
-/* Run code button styling */
 .run-code-btn {
-  padding: 0.5rem 1rem;
   font-size: 14px;
   border: none;
-  background-color: #4caf50;
   color: white;
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s;
+  padding: 8px 16px;
+  min-width: 100px; /* Ensure consistent width */
+  display: inline-flex; /* Align content horizontally */
+  align-items: center;
+  justify-content: center;
+  position: relative; /* Required for spinner */
+}
+
+.run-code-btn:hover {
+  border: 1px solid white
 }
 
 .run-code-btn:disabled {
@@ -88,15 +95,16 @@ body,
 .run-code-btn.loading::after {
   content: '';
   display: inline-block;
-  width: 1em;
-  height: 1em;
+  width: 1.5em;
+  height: 1.5em;
   border: 2px solid white;
   border-radius: 50%;
   border-top-color: transparent;
   animation: spin 1s linear infinite;
-  margin-left: 0.5rem;
+  position: absolute; /* Position spinner inside the button */
   vertical-align: middle;
 }
+
 
 @keyframes spin {
   from { transform: rotate(0deg); }

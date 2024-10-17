@@ -23,10 +23,10 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
                 }
             }}
         >
-            <SelectTrigger className="w-[180px] bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 transition-colors duration-200 ease-in-out">
+            <SelectTrigger className="w-[180px] outline-none bg-neutral-900 text-white rounded-md px-2 py-1 transition-colors duration-200 ease-in-out">
                 <SelectValue placeholder="Select a language" />
             </SelectTrigger>
-            <SelectContent className="dark:bg-gray-800">
+            <SelectContent className="bg-black text-white">
                 {languages.map((lang) => (
                     <SelectItem key={lang.name} value={lang.name}>
                         {lang.name}

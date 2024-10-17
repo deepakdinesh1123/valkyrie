@@ -81,16 +81,16 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
 
   return (
     <div className="w-full max-w-md">
-      <div className="relative mb-4">
+      <div className="relative mb-4 ">
         <Input
           type="text"
           placeholder="Search items..."
           value={searchTerm}
           onChange={handleSearchInput}
-          className="pl-10 pr-4 py-2 w-full"
+          className="pl-10 pr-4 py-2 w-full outline-1 bg-neutral-900 text-white border-none"
         />
         <Search
-          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+          className="absolute outline-1 left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
           size={20}
         />
       </div>
@@ -99,26 +99,26 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
           <Badge
             key={itemName}
             variant="secondary"
-            className="py-1 px-2 text-sm flex items-center gap-1"
+            className="py-1 px-2 text-sm flex items-center gap-1 bg-neutral-900 text-white hover:bg-neutral-900"
           >
             {itemName}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => handleRemove(itemName)}
-              className="h-5 w-5 p-0 hover:bg-red-100 rounded-full"
+              className="h-5 w-5 p-0 hover:bg-red-100 hover:text-black rounded-full bg-neutral-800"
             >
-              <X size={14} className="text-gray-500 hover:text-red-500" />
+              <X size={14} className="text-gray-500 hover:text-black-500" />
             </Button>
           </Badge>
         ))}
       </div>
-      <div className="bg-white shadow-md rounded-md overflow-hidden">
+      <div className="bg-neutral-900 text-white shadow-md rounded-md overflow-hidden">
         <ul className="max-h-40 overflow-y-auto">
           {filteredItems.map((item) => (
             <li
               key={item.name}
-              className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+              className="px-4 py-2 hover:bg-gray-200 hover:text-black cursor-pointer"
               onClick={() => handleSelect(item)}
             >
               {`${item.name}`}
