@@ -218,7 +218,7 @@ const App: React.FC = () => {
               If you need a package that's not available, please submit a request to our team. We'll review it and add it to our system if possible. Currently we are supporting only packages that are already available as <a className="underline text-blue-500" href="https://nixos.org/manual/nixpkgs/stable/#overview-of-nixpkgs">nixpkgs</a>, so if you are not sure if your package is available, head over to <a className="underline text-blue-500" href="https://search.nixos.org/packages">NixOS search</a> to check.
             </DialogDescription>
           </DialogHeader>
-          <p className="text-white">To request a package, please fill out this <a className="underline text-blue-500" href="https://forms.gle/QNmnjvTv2bQgLBqH8">form</a> with the following information:</p>
+          <p className="text-white">To request a package, please fill out this <a className="underline text-blue-500" href="https://forms.gle/XpSVTpf3ix4rAjrr9">form</a> with the following information:</p>
           <ul className="list-disc pl-5 text-white">
             <li>Package details</li>
             <li>Nix channel version</li>
