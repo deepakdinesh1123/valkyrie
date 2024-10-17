@@ -123,7 +123,7 @@ const App: React.FC = () => {
               placeholder="Args"
               value={args}
               onChange={(e) => setArgs(e.target.value)}
-              className="args-input w-50"
+              className="args-input w-50 bg-neutral-900 text-white border-none"
             />
           </div>
           <Button
@@ -131,7 +131,7 @@ const App: React.FC = () => {
             disabled={isLoading}
             className={`run-code-btn ${isLoading ? 'loading' : ''}`}
           >
-            {!isLoading && 'Run'}
+            {!isLoading && 'Run Code'}
           </Button>
         </div>
 
@@ -149,24 +149,47 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      <div className="sidebar">
-        <div className="flex flex-col gap-4 h-full">
-          <div className="flex flex-col gap-2">
-            <Button onClick={() => setSidebarOption("addDependencies")}>Add Dependencies</Button>
-            <Button onClick={() => setIsRequestModalOpen(true)}>Request Package</Button>
-            <Button onClick={() => setSidebarOption("help")}>Help</Button>
-          </div>
+      <div className="sidebar w-70  text-white h-screen p-6 flex flex-col justify-between">
+        {/* Sidebar Header */}
+        <div>
+          <h2 className="font-bold border-b border-gray-700 pb-2">Menu</h2>
+          <ul className="mt-6 space-y-2">
+            <li
+              className={`cursor-pointer px-3 py-2 rounded-md transition-colors ${sidebarOption === "addDependencies" ? "bg-neutral-800" : "hover:bg-stone-600"
+                }`}
+              onClick={() => setSidebarOption("addDependencies")}
+            >
+              Add Dependencies
+            </li>
+            <li
+              className={`cursor-pointer px-3 py-2 rounded-md transition-colors ${isRequestModalOpen ? "bg-neutral-800" : "hover:bg-stone-600"
+                }`}
+              onClick={() => setIsRequestModalOpen(true)}
+            >
+              Request Package
+            </li>
+            <li
+              className={`cursor-pointer px-3 py-2 rounded-md transition-colors ${sidebarOption === "help" ? "bg-neutral-800" : "hover:bg-stone-600"
+                }`}
+              onClick={() => setSidebarOption("help")}
+            >
+              Help
+            </li>
+          </ul>
+        </div>
 
+        {/* Sidebar Content */}
+        <div className="flex-1 overflow-y-auto mt-1 border-t border-gray-700 pt-6">
           {sidebarOption === "addDependencies" && (
-            <div className="flex flex-col gap-4 overflow-y-auto">
-              <span>System Dependencies</span>
+            <div className="flex flex-col gap-6">
+              <span className="text-lg font-semibold">System Dependencies</span>
               <ListBuilder
                 items={systemPackages}
                 onSelectionChange={setSelectedSystemDependencies}
                 onSearchChange={setSystemSearchString}
               />
 
-              <span>Language Dependencies</span>
+              <span className="text-lg font-semibold">Language Dependencies</span>
               <ListBuilder
                 items={languagePackages}
                 onSelectionChange={setSelectedLanguageDependencies}
@@ -179,24 +202,29 @@ const App: React.FC = () => {
 
           {sidebarOption === "help" && <HelpComponent />}
         </div>
+        {/* Sidebar Footer */}
+        <div className="text-sm text-neutral-500 border-t border-gray-700 pt-4">
+          Valkyrie
+        </div>
       </div>
 
+
+
       <Dialog open={isRequestModalOpen} onOpenChange={setIsRequestModalOpen}>
-        <DialogContent>
+        <DialogContent className=" bg-black">
           <DialogHeader>
-            <DialogTitle>Request a Package</DialogTitle>
+            <DialogTitle className="text-white">Request a Package</DialogTitle>
             <DialogDescription>
-              If you need a package that's not available, please submit a request to our team. We'll review it and add it to our system if possible.
+              If you need a package that's not available, please submit a request to our team. We'll review it and add it to our system if possible. Currently we are supporting only packages that are already available as <a className="underline text-blue-500" href="https://nixos.org/manual/nixpkgs/stable/#overview-of-nixpkgs">nixpkgs</a>, so if you are not sure if your package is available, head over to <a className="underline text-blue-500" href="https://search.nixos.org/packages">NixOS search</a> to check.
             </DialogDescription>
           </DialogHeader>
-          <p>To request a package, please contact our support team at support@example.com with the following information:</p>
-          <ul className="list-disc pl-5">
-            <li>Package name</li>
-            <li>Programming language</li>
-            <li>Brief description of why you need this package</li>
+          <p className="text-white">To request a package, please fill out this <a className="underline text-blue-500" href="https://forms.gle/QNmnjvTv2bQgLBqH8">form</a> with the following information:</p>
+          <ul className="list-disc pl-5 text-white">
+            <li>Package details</li>
+            <li>Nix channel version</li>
           </ul>
           <DialogClose asChild>
-            <Button className="mt-4">Close</Button>
+            <Button className="mt-4 border border-transparent hover:border-white transition-colors">Close</Button>
           </DialogClose>
         </DialogContent>
       </Dialog>
