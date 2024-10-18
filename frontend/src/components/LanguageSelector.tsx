@@ -13,7 +13,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
     selectedLanguage,
     onLanguageChange,
 }) => (
-    <div className="language-selector">
+    <div className="language-selector focus:outline-none">
         <Select
             value={selectedLanguage?.name}
             onValueChange={(value) => {

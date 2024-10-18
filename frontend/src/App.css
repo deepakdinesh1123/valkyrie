@@ -8,6 +8,7 @@ body,
   width: 100%;
   display: flex;
   flex-direction: column;
+  background-color: black;
 }
 
 /* App layout */
@@ -29,7 +30,7 @@ body,
 .sidebar {
   width: 20%; /* Base width for larger screens */
   min-width: 250px; /* Minimum width for usability */
-  max-width: 300px; /* Maximum width to prevent excessive stretching */
+  max-width: 350px; /* Maximum width to prevent excessive stretching */
   background-color: #2d2d2d; /* Dark background for consistency */
   padding: 1rem;
   display: flex;
@@ -40,7 +41,7 @@ body,
 
 /* Top bar container */
 .top-bar {
-   position: absolute;
+  position: absolute;
   top: 0;
   right: 20%; /* Align with the start of sidebar */
   display: flex;
@@ -116,7 +117,6 @@ body,
 /* List builder container in the sidebar */
 .list-builder {
   flex-grow: 1;
-  overflow-y: auto;
   border: 1px solid #3e3e3e; /* Subtle border to separate it */
   padding: 1rem;
   border-radius: 8px;
@@ -227,4 +227,12 @@ body,
   .args-input {
     width: 100%;
   }
+}
+
+.input {
+@apply h-full w-full outline-none border-none text-sm text-gray-700;
+
+&:focus {
+@apply focus:ring-0 focus:ring-offset-0;
+}
 }
