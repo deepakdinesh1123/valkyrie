@@ -49,6 +49,12 @@ validation:
 nav:
   - Intro:
     - index.md
+  - Getting Started:
+      - getting_started/index.md
+  - Deployment Guide:
+      - deployment_guide/index.md
+  - Architecture:
+      - architecture/index.md
   - Blog:
       - blog/index.md
 markdown_extensions: 
