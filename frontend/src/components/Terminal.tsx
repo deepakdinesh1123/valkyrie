@@ -2,9 +2,10 @@ import React, { useRef, useEffect } from "react";
 
 interface TerminalProps {
   output: string[];
+  tabName?: string;
 }
 
-const Terminal: React.FC<TerminalProps> = ({ output }) => {
+const Terminal: React.FC<TerminalProps> = ({ output, tabName }) => {
   const terminalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -14,15 +15,23 @@ const Terminal: React.FC<TerminalProps> = ({ output }) => {
   }, [output]);
 
   return (
-    <div
-      ref={terminalRef}
-      className="output-terminal font-mono text-green-500 bg-black"
-    >
-      {output.length === 0 ? (
-        <div className="text-green-500">No output yet...</div>
-      ) : (
-        output.map((line, index) => <div key={index}>{line}</div>)
-      )}
+    <div className="terminal-container">
+      <div className="terminal-tab">
+        <span className="font-medium">{tabName}</span>
+      </div>
+      <div
+        ref={terminalRef}
+        className="output-terminal"
+      >
+        {output.length === 0 ? (
+          <div>No output yet...</div>
+        ) : (
+          output.map((line, index) => (
+            <div key={index}>{line}</div>
+          ))
+        )}
+
+      </div>
     </div>
   );
 };
