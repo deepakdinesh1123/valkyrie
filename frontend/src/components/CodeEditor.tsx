@@ -16,7 +16,9 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   editorOptions,
 }) => {
   const [content, setContent] = useState(selectedLanguage.defaultcode);
-  const [previousPrefix, setPreviousPrefix] = useState(getLanguagePrefix(selectedLanguage.name));
+  const [previousPrefix, setPreviousPrefix] = useState(
+    getLanguagePrefix(selectedLanguage.name)
+  );
 
   useEffect(() => {
     const currentPrefix = getLanguagePrefix(selectedLanguage.name);
@@ -35,14 +37,20 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
 
   return (
     <div className="flex flex-col h-screen bg-[#1E1E1E] text-white">
-      <div className="flex justify-between items-center bg-[#252526] p-2">
-        <div className="flex">
-          <button className="px-4 py-2 cursor-pointer text-sm bg-[#1E1E1E] text-white border-t-2 border-blue-500">
+      {/* VS Code-style filename tab */}
+      <div className="flex  h-14 px-4 border-b border-stone-700 pb-0 mb-0 pt-3">
+        <div
+          className="inline-block px-4 py-2 border min-w-20"
+          style={{ marginBottom: '-1px' }}
+        >
+          <button className="text-sm text-white bg-transparent border-none cursor-pointer focus:outline-none pb-0 mb-0">
             {`main.${selectedLanguage.extension}`}
           </button>
         </div>
       </div>
-      <div className="flex-grow">
+
+      {/* Editor Section */}
+      <div className="flex-grow mt-0">
         <Editor
           height="100%"
           width="100%"

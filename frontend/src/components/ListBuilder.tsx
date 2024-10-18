@@ -80,26 +80,26 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
   };
 
   return (
-    <div className="w-full max-w-md">
-      <div className="relative mb-4 ">
+    <div className="w-full max-w-md ">
+      <div className="relative mb-2 ">
         <Input
           type="text"
           placeholder="Search items..."
           value={searchTerm}
           onChange={handleSearchInput}
-          className="pl-10 pr-4 py-2 w-full outline-1 bg-neutral-900 text-white border-none"
+          className="border-transparent focus:border-transparent focus:ring-0 pl-10 pr-4 py-2 w-full outline-1 bg-neutral-900 text-white border-none"
         />
         <Search
           className="absolute outline-1 left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
           size={20}
         />
       </div>
-      <div className="mb-4 flex flex-wrap gap-2">
+      <div className="mb-4 flex flex-wrap gap-2 ">
         {selectedItems.map((itemName) => (
           <Badge
             key={itemName}
             variant="secondary"
-            className="py-1 px-2 text-sm flex items-center gap-1 bg-neutral-900 text-white hover:bg-neutral-900"
+            className="py-1 px-2 text-sm flex items-center gap-1 bg-neutral-900 text-white hover:bg-neutral-900 "
           >
             {itemName}
             <Button

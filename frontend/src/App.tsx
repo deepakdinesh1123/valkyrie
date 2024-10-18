@@ -3,6 +3,7 @@ import CodeEditor from "@/components/CodeEditor";
 import ListBuilder from "@/components/ListBuilder";
 import Terminal from "@/components/Terminal";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import "@/App.css";
 import { useLanguages } from '@/hooks/useLanguages';
 import { useCodeExecution } from '@/hooks/useCodeExecution';
@@ -10,15 +11,17 @@ import { useSystemPackages } from '@/hooks/useSystemPackages';
 import { useLanguagePackages } from '@/hooks/useLanguagePackages';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { usePackagesExist } from "@/hooks/usePackageExists";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
-import { HelpComponent } from "@/components/HelpComponent";
-import { Input } from "./components/ui/input";
+import HelpModal from "@/components/HelpModal";
+import RequestPackageModal from "@/components/RequestModal";
+import {
+  enable as enableDarkMode,
+} from 'darkreader';
 
 
 const App: React.FC = () => {
   const { languages, selectedLanguage, setSelectedLanguage } = useLanguages();
   const { terminalOutput, executeCode, isLoading } = useCodeExecution();
-  const [terminalHeight, setTerminalHeight] = useState<number>(300); // Initial height
+  const [terminalHeight, setTerminalHeight] = useState<number>(300);
   const [codeContent, setCodeContent] = useState<string>("");
   const [args, setArgs] = useState<string>("");
   const [selectedLanguageDependencies, setSelectedLanguageDependencies] = useState<string[]>([]);
@@ -28,35 +31,39 @@ const App: React.FC = () => {
   const [resetLanguageDependencies, setResetLanguageDependencies] = useState({});
   const { systemPackages } = useSystemPackages(systemSearchString);
   const { languagePackages, resetLanguagePackages } = useLanguagePackages(languageSearchString, selectedLanguage?.searchquery);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true); // New state to control sidebar visibility
-
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [selectedLanguagePrefix, setSelectedLanguagePrefix] = useState<string>("");
   const [pendingLanguageChange, setPendingLanguageChange] = useState<any>(null);
   const { existsResponse } = usePackagesExist(
     pendingLanguageChange?.searchquery || "",
     selectedLanguageDependencies
   );
-
-  const [sidebarOption, setSidebarOption] = useState<string>("addDependencies");
   const [isRequestModalOpen, setIsRequestModalOpen] = useState<boolean>(false);
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState<boolean>(false);
+
+
 
   useEffect(() => {
+    enableDarkMode({
+      brightness: 100,
+      contrast: 90,
+      sepia: 10,
+    });
     if (pendingLanguageChange && existsResponse) {
       handleLanguageChangeEffect(pendingLanguageChange, existsResponse);
       setPendingLanguageChange(null);
     }
   }, [pendingLanguageChange, existsResponse]);
 
-  const handleTerminalResize = (height: number) => {
+  const handleTerminalResize = useCallback((height: number) => {
     setTerminalHeight(height);
-  };
+  }, []);
 
-  const handleEditorChange = (content: string) => {
+  const handleEditorChange = useCallback((content: string) => {
     setCodeContent(content);
-  };
+  }, []);
 
-  const handleRunCode = () => {
-
+  const handleRunCode = useCallback(() => {
     if (selectedLanguage) {
       executeCode({
         language: selectedLanguage.name,
@@ -66,41 +73,9 @@ const App: React.FC = () => {
           languageDependencies: selectedLanguageDependencies,
           args: args
         }
-
       });
     }
-  };
-
-  const handleLanguageChangeEffect = useCallback((language: any, existsResponse: any) => {
-    const newPrefix = language.name.split("-")[0];
-
-    if (newPrefix !== selectedLanguagePrefix) {
-      setSelectedLanguagePrefix(newPrefix);
-      resetOnNewLanguage(language);
-    } else {
-      if (language.name !== selectedLanguage?.name) {
-        if (existsResponse.exists) {
-          setSelectedLanguage(language);
-          setCodeContent(language.defaultcode);
-        } else {
-          const nonExistingPackages = existsResponse.nonExistingPackages;
-
-          const updatedDependencies = selectedLanguageDependencies.filter(
-            dep => !nonExistingPackages.includes(dep)
-          );
-
-          setSelectedLanguageDependencies(updatedDependencies);
-
-          setSelectedLanguage(language);
-          setCodeContent(language.defaultcode);
-        }
-      }
-    }
-  }, [selectedLanguagePrefix, selectedLanguage, selectedLanguageDependencies, setSelectedLanguage]);
-
-  const handleLanguageChange = useCallback((language: any) => {
-    setPendingLanguageChange(language);
-  }, []);
+  }, [selectedLanguage, codeContent, selectedSystemDependencies, selectedLanguageDependencies, args, executeCode]);
 
   const resetOnNewLanguage = useCallback((language: any) => {
     setSelectedLanguage(language);
@@ -111,13 +86,35 @@ const App: React.FC = () => {
     resetLanguagePackages();
   }, [setSelectedLanguage, resetLanguagePackages]);
 
+  const handleLanguageChangeEffect = useCallback((language: any, existsResponse: any) => {
+    const newPrefix = language.name.split("-")[0];
+
+    if (newPrefix !== selectedLanguagePrefix) {
+      setSelectedLanguagePrefix(newPrefix);
+      resetOnNewLanguage(language);
+    } else if (language.name !== selectedLanguage?.name) {
+      if (existsResponse.exists) {
+        setSelectedLanguage(language);
+        setCodeContent(language.defaultcode);
+      } else {
+        const nonExistingPackages = existsResponse.nonExistingPackages;
+        setSelectedLanguageDependencies(prev => prev.filter(dep => !nonExistingPackages.includes(dep)));
+        setSelectedLanguage(language);
+        setCodeContent(language.defaultcode);
+      }
+    }
+  }, [selectedLanguagePrefix, selectedLanguage, resetOnNewLanguage, setSelectedLanguage]);
+
+  const handleLanguageChange = useCallback((language: any) => {
+    setPendingLanguageChange(language);
+  }, []);
 
   return (
     <div className="flex h-screen">
       {/* Editor Container */}
       <div className={`editor-container flex-1 transition-all duration-300 ${isSidebarOpen ? "w-2/3" : "w-full"}`}>
-        <div className="top-bar flex justify-between items-center h-4 pt-7">
-          <div className="language-args-container flex items-center">
+        <div className="top-bar flex justify-between items-center h-4 pt-7 pr-0 mr-11 bg-transparent">
+          <div className="language-args-container flex items-center ">
             <LanguageSelector
               languages={languages}
               selectedLanguage={selectedLanguage}
@@ -187,103 +184,75 @@ const App: React.FC = () => {
       {/* Collapsible Sidebar */}
       {
         isSidebarOpen && (
-          <div className="sidebar w-1/3 text-white h-screen p-6  flex flex-col justify-between transition-all duration-300">
-            {/* Sidebar Header */}
-            <div>
-              <h2 className="font-bold border-b border-gray-700 pb-2">Menu</h2>
-              <ul className="mt-6 space-y-2">
-                <li
-                  className={`cursor-pointer px-3 py-2 rounded-md transition-colors ${sidebarOption === 'addDependencies' ? 'bg-neutral-800' : 'hover:bg-stone-600'
-                    }`}
-                  onClick={() => setSidebarOption('addDependencies')}
-                >
-                  Add Dependencies
-                </li>
-                <li
-                  className={`cursor-pointer px-3 py-2 rounded-md transition-colors ${isRequestModalOpen ? 'bg-neutral-800' : 'hover:bg-stone-600'
-                    }`}
-                  onClick={() => setIsRequestModalOpen(true)}
-                >
-                  Request Package
-                </li>
-                <li
-                  className={`cursor-pointer px-3 py-2 rounded-md transition-colors ${sidebarOption === 'help' ? 'bg-neutral-800' : 'hover:bg-stone-600'
-                    }`}
-                  onClick={() => setSidebarOption('help')}
-                >
-                  Help
-                </li>
-              </ul>
-            </div>
-
+          <div className="sidebar w-1/3 text-white p-6 pt-1 flex flex-col justify-between transition-all duration-300">
             {/* Sidebar Content */}
-            <div className="flex-1 overflow-y-auto mt-1 border-t border-gray-700 pt-6">
-              {sidebarOption === 'addDependencies' && (
-                <div className="flex flex-col gap-6">
-                  <span className="text-lg font-semibold">System Dependencies</span>
-                  <ListBuilder
-                    items={systemPackages}
-                    onSelectionChange={setSelectedSystemDependencies}
-                    onSearchChange={setSystemSearchString}
-                  />
-
-                  <span className="text-lg font-semibold">Language Dependencies</span>
-                  <ListBuilder
-                    items={languagePackages}
-                    onSelectionChange={setSelectedLanguageDependencies}
-                    onSearchChange={setLanguageSearchString}
-                    resetTrigger={resetLanguageDependencies}
-                    nonExistingPackages={existsResponse?.nonExistingPackages || []}
-                  />
+            <div className="flex-1">
+              <div className="flex flex-col gap-4 h-full">
+                {/* System Dependencies Section */}
+                <div className="flex-1 flex flex-col rounded-md shadow-md p-4">
+                  <span className="">System Dependencies</span>
+                  <div className="flex-1 mt-2 rounded-md min-h-56">
+                    <ListBuilder
+                      items={systemPackages}
+                      onSelectionChange={setSelectedSystemDependencies}
+                      onSearchChange={setSystemSearchString}
+                    />
+                  </div>
                 </div>
-              )}
+                <div className="border border-t border-zinc-700"></div>
 
-              {sidebarOption === 'help' && <HelpComponent />}
+                {/* Language Dependencies Section */}
+                <div className="flex-1 flex flex-col bg-transparent rounded-md shadow-md p-4">
+                  <span className="">Language Dependencies</span>
+                  <div className="flex-1 overflow-y-auto mt-2 rounded-md min-h-56">
+                    <ListBuilder
+                      items={languagePackages}
+                      onSelectionChange={setSelectedLanguageDependencies}
+                      onSearchChange={setLanguageSearchString}
+                      resetTrigger={resetLanguageDependencies}
+                      nonExistingPackages={existsResponse?.nonExistingPackages || []}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
+
+            {/* Sidebar Buttons */}
+            <div className="flex space-x-2 mt-6">
+              <button
+                className={`flex-grow cursor-pointer px-3 py-2 bg-neutral-900 rounded-md transition-colors hover:bg-stone-600`}
+                onClick={() => setIsRequestModalOpen(true)}
+              >
+                Request Package
+              </button>
+              <button
+                className={`flex-grow cursor-pointer px-3 py-2 bg-neutral-900 rounded-md transition-colors hover:bg-stone-600`}
+                onClick={() => setIsHelpModalOpen(true)}
+              >
+                Help
+              </button>
+            </div>
+
 
             {/* Sidebar Footer */}
-            <div className="text-sm text-neutral-500 border-t border-gray-700 pt-4">
+            <div className="text-sm text-white border-t border-gray-700 pt-1">
               Valkyrie
             </div>
+
           </div>
         )
       }
 
-      <Dialog open={isRequestModalOpen} onOpenChange={setIsRequestModalOpen}>
-        <DialogContent className="bg-black">
-          <DialogHeader>
-            <DialogTitle className="text-white">Request a Package</DialogTitle>
-            <DialogDescription>
-              If you need a package that's not available, please submit a request to our team. We'll review it and add it to our system if possible. Currently, we are supporting only packages that are already available as{' '}
-              <a className="underline text-blue-500" href="https://nixos.org/manual/nixpkgs/stable/#overview-of-nixpkgs">
-                nixpkgs
-              </a>
-              , so if you are not sure if your package is available, head over to{' '}
-              <a className="underline text-blue-500" href="https://search.nixos.org/packages">
-                NixOS search
-              </a>{' '}
-              to check.
-            </DialogDescription>
-          </DialogHeader>
-          <p className="text-white">
-            To request a package, please fill out this{' '}
-            <a className="underline text-blue-500" href="https://forms.gle/XpSVTpf3ix4rAjrr9">
-              form
-            </a>{' '}
-            with the following information:
-          </p>
-          <ul className="list-disc pl-5 text-white">
-            <li>Package details</li>
-            <li>Nix channel version</li>
-          </ul>
-          <DialogClose asChild>
-            <Button className="mt-4 border border-transparent hover:border-white transition-colors">
-              Close
-            </Button>
-          </DialogClose>
-        </DialogContent>
-      </Dialog>
-    </div >
+      <HelpModal
+        isOpen={isHelpModalOpen}
+        onClose={() => setIsHelpModalOpen(false)}
+      />
+
+      <RequestPackageModal
+        isOpen={isRequestModalOpen}
+        onClose={() => setIsRequestModalOpen(false)}
+      />
+    </div>
   );
 
 };
