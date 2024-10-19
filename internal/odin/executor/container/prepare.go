@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"strconv"
 	"time"
-
-	"github.com/deepakdinesh1123/valkyrie/internal/user"
 )
 
 func CreateTarArchive(files map[string]string, dir string) (string, error) {
@@ -39,7 +38,7 @@ func CreateTarArchive(files map[string]string, dir string) (string, error) {
 }
 
 func OverlayStore(dir string, odinNixStore string) error {
-	userInfo, err := user.GetUserInfo()
+	userInfo, err := user.Current()
 	if err != nil {
 		return fmt.Errorf("failed to get user name: %w", err)
 	}
@@ -69,22 +68,22 @@ func OverlayStore(dir string, odinNixStore string) error {
 		return fmt.Errorf("failed to create work dir: %w", err)
 	}
 
-	// change the ownership of the store and work dir to the user
-	err = os.Chown(upperStore, userId, groupId)
-	if err != nil {
-		return fmt.Errorf("failed to change ownership of upper store: %w", err)
-	}
-	err = os.Chown(mergedStore, userId, groupId)
-	if err != nil {
-		return fmt.Errorf("failed to change ownership of merged store: %w", err)
-	}
-	err = os.Chown(workDir, userId, groupId)
-	if err != nil {
-		return fmt.Errorf("failed to change ownership of work dir: %w", err)
-	}
+	// // change the ownership of the store and work dir to the user
+	// err = os.Chown(upperStore, userId, groupId)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to change ownership of upper store: %w", err)
+	// }
+	// err = os.Chown(mergedStore, userId, groupId)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to change ownership of merged store: %w", err)
+	// }
+	// err = os.Chown(workDir, userId, groupId)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to change ownership of work dir: %w", err)
+	// }
 
 	// mount the overlay
-	cmd := exec.Command("mount", "-t", "overlay", "overlay",
+	cmd := exec.Command("fuse-overlayfs",
 		"-o", fmt.Sprintf("lowerdir=%s", odinNixStore),
 		"-o", fmt.Sprintf("upperdir=%s", upperStore),
 		"-o", fmt.Sprintf("workdir=%s", workDir),

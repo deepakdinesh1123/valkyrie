@@ -73,7 +73,7 @@ func (p *PodmanClient) WriteFiles(ctx context.Context, containerID string, prepD
 	copyF, err := containers.CopyFromArchive(
 		p.connection,
 		containerID,
-		filepath.Join("/home", p.user, "odin"),
+		filepath.Join("/home", "valnix", "odin"),
 		tarFile,
 	)
 	if err != nil {

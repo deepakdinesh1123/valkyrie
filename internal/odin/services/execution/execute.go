@@ -54,6 +54,8 @@ func (s *ExecutionService) prepareExecutionRequest(req *api.ExecutionRequest) (*
 		Content: req.Code,
 	}
 	execReq.Args = req.Environment.Value.Args.Value
+	execReq.LanguageDependencies = req.Environment.Value.LanguageDependencies
+	execReq.SystemDependencies = req.Environment.Value.SystemDependencies
 
 	flake, err := s.convertExecSpecToFlake(execReq)
 	if err != nil {

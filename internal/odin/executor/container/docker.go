@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/jackc/puddle/v2"
@@ -96,13 +97,16 @@ func (d *DockerProvider) GetContainer(ctx context.Context) (*puddle.Resource[Con
 
 func (d *DockerProvider) Execute(ctx context.Context, containerID string, command []string) (bool, string, error) {
 	done := make(chan bool)
-	errch := make(chan error)
-	success := make(chan bool)
 
-	var out []byte
+	var dexec types.IDResponse
+	var err error
 
 	go func() {
-		resp, err := d.client.ContainerExecCreate(
+		defer func() {
+			done <- true
+		}()
+
+		dexec, err = d.client.ContainerExecCreate(
 			ctx,
 			containerID,
 			container.ExecOptions{
@@ -113,55 +117,87 @@ func (d *DockerProvider) Execute(ctx context.Context, containerID string, comman
 			},
 		)
 		if err != nil {
-			done <- true
-			errch <- err
-			success <- false
-		}
-		hijResp, err := d.client.ContainerExecAttach(ctx, resp.ID, container.ExecAttachOptions{})
-		if err != nil {
-			done <- true
-			errch <- err
-			success <- false
 			return
 		}
-		if hijResp.Reader != nil {
-			out, err = io.ReadAll(hijResp.Reader)
-			if err != nil {
-				done <- true
-				return
+		err = d.client.ContainerExecStart(ctx, dexec.ID, container.ExecAttachOptions{})
+		if err != nil {
+			return
+		}
+		for {
+			select {
+			case <-ctx.Done():
+				d.logger.Info().Msg("Timelimit exced")
+			default:
+				execInfo, err := d.client.ContainerExecInspect(ctx, dexec.ID)
+				if err != nil {
+					return
+				}
+				if !execInfo.Running {
+					d.logger.Info().Int("Exit Code", execInfo.ExitCode).Msg("Execution process exit")
+					return
+				}
 			}
 		}
-		done <- true
-		success <- true
 	}()
-	for {
-		select {
-		case <-ctx.Done():
-			switch ctx.Err() {
-			case context.DeadlineExceeded:
-				containerStopTimeout := 0
-				d.client.ContainerStop(ctx, containerID, container.StopOptions{
-					Timeout: &containerStopTimeout,
-				})
-				reader, err := d.client.ContainerLogs(context.TODO(), containerID, container.LogsOptions{
-					ShowStdout: true,
-					ShowStderr: true,
-					Follow:     false,
-					Tail:       "all",
-				})
+
+	select {
+	case <-ctx.Done():
+		switch ctx.Err() {
+		case context.DeadlineExceeded:
+			if dexec.ID != "" {
+				stopExec, err := d.client.ContainerExecCreate(
+					context.TODO(),
+					containerID,
+					container.ExecOptions{
+						Cmd: []string{"sh", "nix_stop.sh"},
+					},
+				)
 				if err != nil {
-					return false, "", err
+					return false, "", fmt.Errorf("could not create exec for nix stop: %s", err)
 				}
-				out, err = io.ReadAll(reader)
+				err = d.client.ContainerExecStart(context.TODO(), stopExec.ID, container.ExecStartOptions{})
 				if err != nil {
-					return false, "", err
+					return false, "", fmt.Errorf("could not start the nix_stop script: %s", err)
 				}
-				return false, string(out), nil
-			case context.Canceled:
-				return false, "", nil
 			}
-		case <-done:
-			return <-success, string(out), nil
+			out, err := d.ReadExecLogs(context.TODO(), containerID)
+			if err != nil {
+				return false, "", fmt.Errorf("error reading output: %s", err)
+			}
+			return true, out, nil
+		case context.Canceled:
+			return false, "", fmt.Errorf("Context canceled")
+		}
+	case <-done:
+		out, err := d.ReadExecLogs(context.TODO(), containerID)
+		if err != nil {
+			return false, "", fmt.Errorf("error reading output: %s", err)
+		}
+		return true, out, nil
+	}
+	return false, "", nil
+}
+
+func (d *DockerProvider) ReadExecLogs(ctx context.Context, containerID string) (string, error) {
+	var out []byte
+	dexec, err := d.client.ContainerExecCreate(
+		ctx,
+		containerID,
+		container.ExecOptions{
+			AttachStdout: true,
+			AttachStderr: true,
+			Cmd:          []string{"sh", "-c", "cat ~/odin/output.txt"},
+		},
+	)
+	if err != nil {
+		return "", fmt.Errorf("Could not create exec: %s", err)
+	}
+	resp, err := d.client.ContainerExecAttach(ctx, dexec.ID, container.ExecStartOptions{})
+	if resp.Reader != nil {
+		out, err = io.ReadAll(resp.Reader)
+		if err != nil {
+			return "", fmt.Errorf("Could not read from hijacked response: %s", err)
 		}
 	}
+	return string(out), nil
 }

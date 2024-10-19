@@ -53,6 +53,7 @@ func constructor(ctx context.Context) (Container, error) {
 				Binds: []string{
 					fmt.Sprintf("%s:/nix", filepath.Join(prepDir, "merged")),
 				},
+				Runtime: "runsc",
 			},
 			nil,
 			nil,
@@ -99,20 +100,42 @@ func constructor(ctx context.Context) (Container, error) {
 		s.ContainerSecurityConfig = specgen.ContainerSecurityConfig{
 			UserNS: specgen.Namespace{
 				NSMode: specgen.KeepID,
+				Value:  "uid=2048,gid=2048",
 			},
 			ReadOnlyFilesystem: &readOnlyFileSystem,
 			ReadWriteTmpfs:     &readWriteTmpfs,
-		}
-
-		s.ContainerSecurityConfig.UserNS = specgen.Namespace{
-			NSMode: specgen.KeepID,
+			CapDrop: []string{
+				"CAP_DAC_OVERRIDE",
+				"CAP_FOWNER",
+				"CAP_FSETID",
+				"CAP_KILL",
+				"CAP_NET_BIND_SERVICE",
+				"CAP_SETGID",
+				"CAP_SETPCAP",
+				"CAP_SETUID",
+				"CAP_SYS_CHROOT",
+			},
 		}
 
 		memunit := 1024 * 1024
 		mem := int64(envConfig.ODIN_WORKER_MEMORY_LIMIT * int64(memunit))
+
+		quota := int64(300000)
+		burst := uint64(100000)
+		period := uint64(1000000)
+		realTimeRuntime := int64(500000)
+		realTimePeriod := uint64(1000000)
+
 		s.ResourceLimits = &specs.LinuxResources{
 			Memory: &specs.LinuxMemory{
 				Limit: &mem,
+			},
+			CPU: &specs.LinuxCPU{
+				Quota:           &quota,
+				Burst:           &burst,
+				Period:          &period,
+				RealtimeRuntime: &realTimeRuntime,
+				RealtimePeriod:  &realTimePeriod,
 			},
 		}
 
@@ -140,7 +163,9 @@ func constructor(ctx context.Context) (Container, error) {
 }
 
 func destructor(cont Container) {
-	Cleanup(cont.HostPrepDir)
+	if cont.HostPrepDir != "" {
+		Cleanup(cont.HostPrepDir)
+	}
 	fmt.Println("killing container", cont.Name)
 	KillContainer(cont.PID)
 }

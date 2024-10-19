@@ -24,6 +24,7 @@
             libgpg-error 
             libassuan
             btrfs-progs
+            fuse-overlayfs
           ];
 
         packages = {

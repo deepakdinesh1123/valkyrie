@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/user"
 	"strconv"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
-	"github.com/deepakdinesh1123/valkyrie/internal/user"
 	"github.com/jackc/puddle/v2"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/metric"
@@ -36,7 +36,7 @@ type ContainerExecutor struct {
 }
 
 func NewContainerExecutor(ctx context.Context, env *config.EnvConfig, queries db.Store, workerId int32, tp trace.TracerProvider, mp metric.MeterProvider, logger *zerolog.Logger) (*ContainerExecutor, error) {
-	user, err := user.GetUserInfo()
+	user, err := user.Current()
 	if err != nil {
 		return nil, err
 	}

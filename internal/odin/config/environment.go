@@ -3,10 +3,10 @@ package config
 import (
 	"fmt"
 	"os"
+	"os/user"
 	"path/filepath"
 	"sync"
 
-	"github.com/deepakdinesh1123/valkyrie/internal/user"
 	"github.com/spf13/viper"
 )
 
@@ -115,7 +115,7 @@ func GetEnvConfig() (*EnvConfig, error) {
 			return
 		}
 
-		usr, err := user.GetUserInfo()
+		usr, err := user.Current()
 		if err != nil {
 			return
 		}

@@ -27,12 +27,18 @@ start-observability:
 .PHONY: build-docker-image
 build-docker-image:
 	docker build \
-		-t odin:latest \
+		-t odin:alpine \
+		-f build/platforms/alpine/Dockerfile .
+
+.PHONY: build-docker-image-ubuntu
+build-docker-image-ubuntu:
+	docker build \
+		-t odin:ubuntu \
 		--build-arg HOST_UID=$(shell id -u) \
 		--build-arg HOST_GID=$(shell id -g) \
 		--build-arg HOST_USER=$(shell whoami) \
 		--build-arg HOST_GROUP=$(shell whoami) \
-		-f build/platforms/ubuntu.dockerfile .
+		-f build/platforms/ubuntu/Dockerfile .
 
 .PHONY: build-podman-image-ubuntu
 build-podman-image-ubuntu:
@@ -42,17 +48,13 @@ build-podman-image-ubuntu:
 		--build-arg HOST_GID=$(shell id -g) \
 		--build-arg HOST_USER=$(shell whoami) \
 		--build-arg HOST_GROUP=$(shell whoami) \
-		-f build/platforms/ubuntu.dockerfile .
+		-f build/platforms/ubuntu/Containerfile .
 
 .PHONY: build-podman-image
 build-podman-image:
 	podman build \
 		-t odin:alpine \
-		--build-arg HOST_UID=$(shell id -u) \
-		--build-arg HOST_GID=$(shell id -g) \
-		--build-arg HOST_USER=$(shell whoami) \
-		--build-arg HOST_GROUP=$(shell whoami) \
-		-f build/platforms/alpine.dockerfile .
+		-f build/platforms/alpine/Containerfile .
 
 .PHONY: odin
 odin:

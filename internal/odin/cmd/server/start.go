@@ -29,7 +29,11 @@ func serverExec(cmd *cobra.Command, args []string) error {
 	}
 
 	logLevel := cmd.Flag("log-level").Value.String()
-	config := logs.NewLogConfig(logs.WithLevel(logLevel), logs.WithExport(envConfig.ODIN_EXPORT_LOGS))
+	config := logs.NewLogConfig(
+		logs.WithLevel(logLevel),
+		logs.WithExport(envConfig.ODIN_EXPORT_LOGS),
+		logs.WithSource("server"),
+	)
 	logger := logs.GetLogger(config)
 	logger.Info().Msg("Starting Odin in standalone mode")
 

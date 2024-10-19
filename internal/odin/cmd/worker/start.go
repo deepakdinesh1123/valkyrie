@@ -31,7 +31,11 @@ var WorkerStartCmd = &cobra.Command{
 		}
 
 		logLevel := cmd.Flag("log-level").Value.String()
-		config := logs.NewLogConfig(logs.WithLevel(logLevel), logs.WithExport(envConfig.ODIN_EXPORT_LOGS))
+		config := logs.NewLogConfig(
+			logs.WithLevel(logLevel),
+			logs.WithExport(envConfig.ODIN_EXPORT_LOGS),
+			logs.WithSource("worker"),
+		)
 		logger := logs.GetLogger(config)
 		logger.Info().Msg("Starting worker")
 		ctx, cancel := context.WithCancel(cmd.Context())

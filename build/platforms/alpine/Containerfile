@@ -1,0 +1,18 @@
+FROM alpine:3.20
+
+RUN apk update && \
+    apk add --no-cache shadow xz curl git vim && \
+    addgroup -g 2048 -S valnix && \
+    adduser -u 2048 -G valnix -s /bin/sh -D valnix
+
+RUN mkdir /etc/nix && echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
+USER valnix
+RUN mkdir ~/odin && chown valnix:valnix ~/odin
+RUN cd /tmp && git clone --depth 1 --branch 24.05 --single-branch https://github.com/NixOS/nixpkgs.git 
+
+COPY hack/execution/* /home/valnix/
+
+VOLUME [ "/home/valnix" ]
+WORKDIR /home/valnix/
+
+CMD [ "/bin/sh", "nix_setup.sh" ]
