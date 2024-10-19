@@ -3,6 +3,7 @@ import Editor, { EditorProps } from "@monaco-editor/react";
 import { Language } from "@/api-client";
 import { getLanguagePrefix } from "@/utils/prefix";
 
+
 interface CodeEditorProps {
   languages: Language[];
   selectedLanguage: Language;
@@ -38,7 +39,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   return (
     <div className="flex flex-col h-screen bg-[#1E1E1E] text-white">
       {/* VS Code-style filename tab */}
-      <div className="flex  h-14 px-4 border-b border-stone-700 pb-0 mb-0 pt-3">
+      <div className="flex h-14 px-4 border-b border-stone-700 pb-0 mb-0 pt-3">
         <div
           className="inline-block px-4 py-2 border min-w-20"
           style={{ marginBottom: '-1px' }}
@@ -47,6 +48,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
             {`main.${selectedLanguage.extension}`}
           </button>
         </div>
+
       </div>
 
       {/* Editor Section */}

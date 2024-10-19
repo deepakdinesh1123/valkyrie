@@ -87,7 +87,7 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
           placeholder="Search items..."
           value={searchTerm}
           onChange={handleSearchInput}
-          className="border-transparent focus:border-transparent focus:ring-0 pl-10 pr-4 py-2 w-full outline-1 bg-neutral-900 text-white border-none"
+          className="b pl-10 pr-4 py-2 w-full outline-1 bg-neutral-900 text-white border-none"
         />
         <Search
           className="absolute outline-1 left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
@@ -113,8 +113,8 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
           </Badge>
         ))}
       </div>
-      <div className="bg-neutral-900 text-white shadow-md rounded-md overflow-hidden">
-        <ul className="max-h-40 overflow-y-auto">
+      <div className="bg-neutral-900 text-white shadow-md rounded-md overflow-hidden pb-0 mb-0">
+        <ul className="overflow-y-auto">
           {filteredItems.map((item) => (
             <li
               key={item.name}
