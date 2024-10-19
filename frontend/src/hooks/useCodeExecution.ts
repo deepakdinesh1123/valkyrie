@@ -5,7 +5,7 @@ export const useCodeExecution = () => {
   const [terminalOutput, setTerminalOutput] = useState<string[]>([]);
   const [eventSource, setEventSource] = useState<EventSource | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const eventPath = "http://localhost:8080/";
+  const eventPath = import.meta.env.VITE_EVENT_PATH;
 
   const executeCode = async (runData: {
     language: string;

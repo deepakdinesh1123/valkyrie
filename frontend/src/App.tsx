@@ -33,7 +33,7 @@ const App: React.FC = () => {
   const [resetLanguageDependencies, setResetLanguageDependencies] = useState({});
   const { systemPackages } = useSystemPackages(systemSearchString);
   const { languagePackages, resetLanguagePackages } = useLanguagePackages(languageSearchString, selectedLanguage?.searchquery);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [selectedLanguagePrefix, setSelectedLanguagePrefix] = useState<string>("");
   const [pendingLanguageChange, setPendingLanguageChange] = useState<any>(null);
   const { existsResponse } = usePackagesExist(

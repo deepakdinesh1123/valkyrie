@@ -14,9 +14,8 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     config.headers = config.headers || {};
-    config.headers['ngrok-skip-browser-warning'] = '69420';
-    config.headers['X-Auth-Token'] = import.meta.env.VITE_AUTH_TOKEN;
-    config.headers.Authorization = `Bearer ${import.meta.env.VITE_AUTH_TOKEN}`;
+   config.headers = config.headers || {};
+    config.headers.Authorization = `Bearer ${localStorage.getItem('jwtToken') || import.meta.env.VITE_AUTH_TOKEN}`;
     return config;
   },
   (error) => Promise.reject(error)
