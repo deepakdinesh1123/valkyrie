@@ -15,11 +15,11 @@ const RequestPackageModal: React.FC<RequestPackageModalProps> = ({ isOpen, onClo
                     <DialogTitle className="text-white">Request a Package</DialogTitle>
                     <DialogDescription>
                         If you need a package that's not available, please submit a request to our team. We'll review it and add it to our system if possible. Currently, we are supporting only packages that are already available as{' '}
-                        <a className="underline text-blue-500" href="https://nixos.org/manual/nixpkgs/stable/#overview-of-nixpkgs">
+                        <a className="underline text-blue-500" href="https://nixos.org/manual/nixpkgs/stable/#overview-of-nixpkgs" target='_blank'>
                             nixpkgs
                         </a>
                         , so if you are not sure if your package is available, head over to{' '}
-                        <a className="underline text-blue-500" href="https://search.nixos.org/packages">
+                        <a className="underline text-blue-500" href="https://search.nixos.org/packages" target='_blank'>
                             NixOS search
                         </a>{' '}
                         to check.
@@ -27,7 +27,7 @@ const RequestPackageModal: React.FC<RequestPackageModalProps> = ({ isOpen, onClo
                 </DialogHeader>
                 <p className="text-white">
                     To request a package, please fill out this{' '}
-                    <a className="underline text-blue-500" href="https://forms.gle/XpSVTpf3ix4rAjrr9">
+                    <a className="underline text-blue-500" href="https://forms.gle/XpSVTpf3ix4rAjrr9" target='_blank'>
                         form
                     </a>{' '}
                     with the following information:

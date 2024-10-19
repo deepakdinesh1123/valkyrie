@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bufio"
 	"database/sql"
 	"encoding/csv"
 	"encoding/json"
@@ -33,12 +34,14 @@ var NixDumpCmd = &cobra.Command{
 var (
 	languagePackageRegex = regexp.MustCompile(`^([a-zA-Z0-9]+)([0-9.]*Packages)\.([a-zA-Z0-9]+),(.+)$`)
 	systemPackageRegex   = regexp.MustCompile(`^([a-zA-Z0-9-]+),(.+)$`)
-	languagePatterns     = []string{"python", "nodejs", "gcc", "rust", "php", "go", "java", "ruby", "lua", "haskell"}
-	systemPatterns       = []string{"glibc", "openssl", "zlib", "curl", "systemd", "sqlite", "python3", "go", "elixir"}
+	languagePatterns     []string
+	systemPatterns       []string
 )
 
 func init() {
 	NixDumpCmd.Flags().StringP("channel", "c", "", "Nixpkgs channel")
+	languagePatterns = loadPatterns("internal/odin/cmd/patterns/languages.txt")
+	systemPatterns = loadPatterns("internal/odin/cmd/patterns/systempackages.txt")
 }
 
 func runNixDump(cmd *cobra.Command, args []string) error {
@@ -237,4 +240,26 @@ func createDatabaseDump(channel string, envConfig *config.EnvConfig) error {
 	log.Printf("Database dump created and copied successfully: %s\n", hostDumpPath)
 
 	return nil
+}
+
+func loadPatterns(filePath string) []string {
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.Fatalf("Failed to open %s: %v", filePath, err)
+	}
+	defer file.Close()
+
+	var patterns []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line != "" {
+			patterns = append(patterns, line)
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Fatalf("Error reading %s: %v", filePath, err)
+	}
+	return patterns
 }
