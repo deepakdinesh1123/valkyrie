@@ -1,45 +1,87 @@
 site_name: Valkyrie
+site_description: Valkyrie Documentation
+strict: true
+site_url: https://deepakdinesh1123.github.io/valkyrie/
+
+repo_name: deepakdinesh1123/valkyrie
+repo_url: https://github.com/deepakdinesh1123/valkyrie
+
 theme: 
-  name: "material"
+  name: material
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: custom
-      accent: custom
       toggle:
-        icon: material/lightbulb-outline
-        name: "Switch to dark mode"
+        icon: material/brightness-7 
+        name: Switch to dark mode
+      primary: black
+      accent: red
+
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: custom
-      accent: custom
       toggle:
-        icon: material/lightbulb
-        name: "Switch to light mode"
+        icon: material/brightness-4
+        name: Switch to light mode
+      primary: black
+      accent: lime
+  font:
+    text: Roboto
+    code: Roboto Mono
+  language: en
   features:
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.tabs
+    - navigation.tracking
+    - navigation.sections
+    - navigation.prune
+    - navigation.top
+    - navigation.footer
+    - toc.follow
+    - toc.integrate
     - search.suggest
     - search.highlight
-    - content.tabs.link
-    - content.code.annotate
-    - content.code.copy
-    - content.code.select
-    - navigation.indexes
-    - navigation.path
-    - navigation.tabs
-    - navigation.instant
-    - navigation.instant.preview
-    - navigation.instant.prefetch
-    - navigation.instant.progress
-    - navigation.sections
-    - navigation.tracking
-    - navigation.top
-    - toc.follow
-
+    - headers.autohide
 validation:
   omitted_files: warn
   absolute_links: warn
   unrecognized_links: warn
-
 nav:
   - Intro:
-      - index.md
+    - index.md
+  - Getting Started:
+      - getting_started/index.md
+  - Deployment Guide:
+      - deployment_guide/index.md
+  - Architecture:
+      - architecture/index.md
+  - Blog:
+      - blog/index.md
+markdown_extensions: 
+  - toc:
+      permalink: true
+plugins: 
+  - privacy
+  - search
+  - blog
+  - minify:
+      minify_html: true
+extra:
+  status:
+    new: Recently added
+    deprecated: Deprecated
+  consent:
+    title: Cookie consent
+    description: >- 
+      We use cookies to recognize your repeated visits and preferences, as well
+      as to measure the effectiveness of our documentation and whether users
+      find what they're searching for. With your consent, you're helping us to
+      make our documentation better.
+  version:
+    provider: mike
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/deepakdinesh1123/valkyrie
+copyright: >
+  Copyright &copy; 2024 Valkyrie –
+  <a href="#__consent">Change cookie settings</a>

@@ -13,8 +13,7 @@ post {
 body:json {
   {
     
-    "code": "print('2nd minute')",
-    "language": "python",
-    "cron_expression": "*/2 * * * *"
+    "code": "from time import sleep\n\nfor i in range(30):\n    sleep(1)\n    print(\"Hello\")",
+    "language": "python"
   }
 }

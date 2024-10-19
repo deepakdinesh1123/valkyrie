@@ -25,10 +25,14 @@ paths:
                 type: object
                 required:
                   - executionId
+                  - events
                 properties:
                   executionId:
                     type: integer
                     format: int64
+                  events:
+                    type: string
+                    format: url
         '400':
           description: Bad Request
           content:
@@ -251,6 +255,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /executions/workers/{workerId}/:
+    delete:
+      summary: Delete execution worker
+      description: Delete execution worker
+      operationId: deleteExecutionWorker
+      parameters:
+        - name: workerId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: force
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Execution worker not found
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /version/:
     get:
       summary: Get version
@@ -380,16 +420,14 @@ components:
           type: string
         language:
           type: string
-        cron_expression:
-          type: string
         max_retries:
           type: integer
           format: int4
-          default: 0
+          default: 5
         timeout:
           type: integer
-          format: int64
-          default: 0
+          format: int32
+          default: -1
         priority:
           type: integer
           format: int4
@@ -467,7 +505,7 @@ components:
             - args
             - started_at
             - finished_at
-            - logs
+            - exec_logs
           properties:
             script:
               type: string
@@ -481,7 +519,9 @@ components:
             finished_at:
               type: string
               format: date-time
-            logs:
+            exec_logs:
+              type: string
+            nix_logs:
               type: string
     Flake:
       type: string

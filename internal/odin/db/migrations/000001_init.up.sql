@@ -13,7 +13,8 @@ create table job_types (
 create table workers (
     id int primary key,
     name text not null unique,
-    created_at timestamptz not null default now()
+    created_at timestamptz not null default now(),
+    last_heartbeat timestamptz
 );
 
 create sequence workers_id_seq as int cycle owned by workers.id;
@@ -34,15 +35,15 @@ create table exec_request (
 
 create table jobs (
     id bigint primary key default nextval('jobs_id_seq'),
-    cron_expression text,
-    last_scheduled_at timestamptz default null,
-    next_run_at timestamptz default null,
     created_at timestamptz not null  default now(),
     updated_at timestamptz,
+    time_out int,
+    started_at timestamptz,
     exec_request_id int references exec_request on delete set null,
     status TEXT NOT NULL CHECK (status IN ('pending', 'scheduled', 'completed', 'failed', 'cancelled')) DEFAULT 'pending',
     retries int default 0,
-    max_retries int default 0
+    max_retries int default 5,
+    worker_id int references workers on delete set null
 );
 
 create sequence job_runs_id_seq as bigint;
@@ -54,5 +55,7 @@ create table job_runs (
     started_at timestamptz not null,
     finished_at timestamptz not null,
     exec_request_id int references exec_request on delete set null,
-    logs text not null
+    exec_logs text not null,
+    nix_logs text,
+    status TEXT NOT NULL
 );

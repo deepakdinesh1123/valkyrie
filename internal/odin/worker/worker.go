@@ -42,6 +42,18 @@ type Worker struct {
 	}
 }
 
+// GetWorker returns a worker instance based on the provided configuration and name.
+//
+// Parameters:
+// - ctx: the context for the function call
+// - name: the name of the worker
+// - envConfig: the environment configuration
+// - newWorker: flag indicating whether to create a new worker
+// - standalone: flag indicating whether the worker is standalone
+// - logger: the logger instance
+// Returns:
+// - *Worker: the worker instance
+// - error: any error that occurred during the function call
 func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, newWorker bool, standalone bool, logger *zerolog.Logger) (*Worker, error) {
 	if newWorker {
 		deleteWorkerInfo(envConfig.ODIN_WORKER_INFO_FILE)
@@ -63,19 +75,18 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 		queries:      queries,
 		envConfig:    envConfig,
 		logger:       logger,
-		tp:           tp,
-		mp:           mp,
+		tp:           tp, // trace provider
+		mp:           mp, // metric provider
 		otelShutdown: otelShutdown,
 	}
 	workerInfo, err := readWorkerInfo(envConfig.ODIN_WORKER_INFO_FILE, logger)
 	if err != nil {
-		logger.Err(err).Msg("Failed to read worker info")
 		switch err.(type) {
 		case *WorkerInfoNotFoundError:
-			logger.Info().Msgf("Creating new worker")
 			if name == "" {
 				name = namesgenerator.GetRandomName(0)
 			}
+			wrkr.Name = name
 			wrkr.ID, err = wrkr.upsertWorker(ctx, name)
 			if err != nil {
 				logger.Err(err).Msg("Failed to create worker")
@@ -85,7 +96,8 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 		}
 	}
 	if wrkr.ID == 0 && workerInfo != nil {
-		logger.Info().Msgf("Found worker info")
+		logger.Info().Str("workerName", workerInfo.Name).Int("workerID", workerInfo.ID).Msgf("Found worker info")
+		wrkr.Name = workerInfo.Name
 		wrkr.ID, err = wrkr.upsertWorker(ctx, workerInfo.Name)
 		if err != nil {
 			logger.Err(err).Msg("Failed to get worker")
@@ -96,7 +108,7 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 		logger.Err(err).Msg("Failed to get provider")
 	}
 	wrkr.provider = prvdr
-	logger.Info().Msgf("Starting worker %d", wrkr.ID)
+	logger.Info().Msgf("Starting worker %d with name %s", wrkr.ID, wrkr.Name)
 
 	err = writeWorkerInfo(envConfig.ODIN_WORKER_INFO_FILE, wrkr)
 	if err != nil {
@@ -105,6 +117,14 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 	return wrkr, nil
 }
 
+// upsertWorker Upserts a worker in the database.
+//
+// Parameters:
+// - ctx: the context for the function call
+// - name: the name of the worker
+// Returns:
+// - int: the ID of the worker
+// - error: any error that occurred during the function call
 func (w *Worker) upsertWorker(ctx context.Context, name string) (int, error) {
 	wrkr, err := w.queries.GetWorker(ctx, name)
 	if err != nil {
@@ -122,7 +142,15 @@ func (w *Worker) upsertWorker(ctx context.Context, name string) (int, error) {
 	return int(wrkr.ID), nil
 }
 
+// Run runs the worker in a separate goroutine.
+//
+// Parameters:
+// - ctx: the context for the function call
+// - wg: the WaitGroup to wait for the worker to finish
+// Returns:
+// - error: any error that occurred during the function call
 func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
+	defer wg.Done()
 	defer func() {
 		var err error
 
@@ -139,17 +167,27 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 
 	span.AddEvent("Acquiring lock on worker info")
 	infLock := flock.New(w.envConfig.ODIN_WORKER_INFO_FILE)
+	locked, err := infLock.TryLock()
+	if err != nil {
+		w.logger.Err(err).Msg("Failed to acquire lock on worker info")
+		return err
+	}
+	if !locked {
+		w.logger.Info().Msg("Worker: failed to acquire lock on worker info, another worker is running")
+		return &WorkerError{Type: "Lock", Message: "Failed to acquire lock on worker info"}
+	}
 	defer infLock.Unlock()
-	defer wg.Done()
 	var swg concurrency.SafeWaitGroup
-	ticker := time.NewTicker(time.Duration(w.envConfig.ODIN_WORKER_POLL_FREQ) * time.Second)
+	fetchJobTicker := time.NewTicker(time.Duration(w.envConfig.ODIN_WORKER_POLL_FREQ) * time.Second)
+	rqJobTicker := time.NewTicker(time.Duration(30) * time.Second)
+	heartBeatTicker := time.NewTicker(time.Duration(1) * time.Second)
 	for {
 		select {
 		case <-ctx.Done():
 			w.logger.Info().Int32("Tasks in progress", swg.Count()).Msg("Worker: context done")
 			swg.Wait()
 			err := ctx.Err()
-			ticker.Stop()
+			fetchJobTicker.Stop()
 			switch err {
 			case context.Canceled:
 				w.logger.Info().Msg("Worker: context canceled")
@@ -158,7 +196,7 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 				w.logger.Err(err).Msg("Worker: context error")
 				return &WorkerError{Type: "Context", Message: err.Error()}
 			}
-		case <-ticker.C:
+		case <-fetchJobTicker.C:
 			w.updateStats()
 			if w.WorkerStats.CPUUsage > 75 || w.WorkerStats.MemUsed > 75 {
 				w.logger.Info().Float64("CPU Usage", w.WorkerStats.CPUUsage).Uint64("Memory Used", w.WorkerStats.MemUsed).Msg("Worker: high usage")
@@ -185,10 +223,21 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 			swg.Add(1)
 			span.AddEvent("Executing job")
 			go w.provider.Execute(tracerCtx, &swg, res.Job)
+		case <-rqJobTicker.C:
+			w.queries.RequeueLTJobs(ctx)
+		case <-heartBeatTicker.C:
+			w.queries.UpdateHeartbeat(ctx, int32(w.ID))
 		}
 	}
 }
 
+// writeWorkerInfo writes worker information to a file.
+//
+// Parameters:
+// - infoFile: the file path where the worker information will be written
+// - worker: the worker instance containing the information to be written
+// Returns:
+// - error: any error that occurred during the file write operation
 func writeWorkerInfo(infoFile string, worker *Worker) error {
 	wrkrInfo := models.WorkerInfo{
 		ID:   worker.ID,
@@ -210,6 +259,12 @@ func writeWorkerInfo(infoFile string, worker *Worker) error {
 	return nil
 }
 
+// deleteWorkerInfo deletes the worker information stored in a file.
+//
+// Parameters:
+// - infoFile: the file path from which the worker information will be deleted
+// Returns:
+// - error: any error that occurred during the file deletion operation
 func deleteWorkerInfo(infoFile string) error {
 	err := os.Remove(infoFile)
 	if err != nil {
@@ -218,6 +273,14 @@ func deleteWorkerInfo(infoFile string) error {
 	return nil
 }
 
+// readWorkerInfo reads the worker information from a file.
+//
+// Parameters:
+// - infoFile: the file path from which the worker information will be read
+// - logger: the logger instance used for logging errors
+// Returns:
+// - *models.WorkerInfo: the worker information read from the file
+// - error: any error that occurred during the file read operation
 func readWorkerInfo(infoFile string, logger *zerolog.Logger) (*models.WorkerInfo, error) {
 	if _, err := os.Stat(infoFile); err != nil {
 		if os.IsNotExist(err) {

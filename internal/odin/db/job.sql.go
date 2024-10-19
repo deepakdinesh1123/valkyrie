@@ -30,40 +30,40 @@ func (q *Queries) DeleteJob(ctx context.Context, id int64) error {
 }
 
 const fetchJob = `-- name: FetchJob :one
-update jobs set status = 'scheduled'
+update jobs set status = 'scheduled', started_at = now(), worker_id = $1, updated_at = now()
 where id = (
     select id from jobs
     where 
         status = 'pending'
-        and next_run_at <= now()
+        and retries < max_retries
     order by
         id asc
     for update skip locked
     limit 1
     )
-returning id, cron_expression, last_scheduled_at, next_run_at, created_at, updated_at, exec_request_id, status, retries, max_retries
+returning id, created_at, updated_at, time_out, started_at, exec_request_id, status, retries, max_retries, worker_id
 `
 
-func (q *Queries) FetchJob(ctx context.Context) (Job, error) {
-	row := q.db.QueryRow(ctx, fetchJob)
+func (q *Queries) FetchJob(ctx context.Context, workerID pgtype.Int4) (Job, error) {
+	row := q.db.QueryRow(ctx, fetchJob, workerID)
 	var i Job
 	err := row.Scan(
 		&i.ID,
-		&i.CronExpression,
-		&i.LastScheduledAt,
-		&i.NextRunAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.TimeOut,
+		&i.StartedAt,
 		&i.ExecRequestID,
 		&i.Status,
 		&i.Retries,
 		&i.MaxRetries,
+		&i.WorkerID,
 	)
 	return i, err
 }
 
 const getAllExecutionResults = `-- name: GetAllExecutionResults :many
-select job_runs.id, job_id, worker_id, started_at, finished_at, exec_request_id, logs, exec_request.id, hash, code, path, flake, args, programming_language from job_runs
+select job_runs.id, job_id, worker_id, started_at, finished_at, exec_request_id, exec_logs, nix_logs, status, exec_request.id, hash, code, path, flake, args, programming_language from job_runs
 inner join exec_request on job_runs.exec_request_id = exec_request.id
 order by started_at desc
 limit $1 offset $2
@@ -81,7 +81,9 @@ type GetAllExecutionResultsRow struct {
 	StartedAt           pgtype.Timestamptz `db:"started_at" json:"started_at"`
 	FinishedAt          pgtype.Timestamptz `db:"finished_at" json:"finished_at"`
 	ExecRequestID       pgtype.Int4        `db:"exec_request_id" json:"exec_request_id"`
-	Logs                string             `db:"logs" json:"logs"`
+	ExecLogs            string             `db:"exec_logs" json:"exec_logs"`
+	NixLogs             pgtype.Text        `db:"nix_logs" json:"nix_logs"`
+	Status              string             `db:"status" json:"status"`
 	ID_2                int32              `db:"id_2" json:"id_2"`
 	Hash                string             `db:"hash" json:"hash"`
 	Code                string             `db:"code" json:"code"`
@@ -107,7 +109,9 @@ func (q *Queries) GetAllExecutionResults(ctx context.Context, arg GetAllExecutio
 			&i.StartedAt,
 			&i.FinishedAt,
 			&i.ExecRequestID,
-			&i.Logs,
+			&i.ExecLogs,
+			&i.NixLogs,
+			&i.Status,
 			&i.ID_2,
 			&i.Hash,
 			&i.Code,
@@ -127,7 +131,7 @@ func (q *Queries) GetAllExecutionResults(ctx context.Context, arg GetAllExecutio
 }
 
 const getAllJobs = `-- name: GetAllJobs :many
-select jobs.id, cron_expression, last_scheduled_at, next_run_at, created_at, updated_at, exec_request_id, status, retries, max_retries, exec_request.id, hash, code, path, flake, args, programming_language from jobs
+select jobs.id, created_at, updated_at, time_out, started_at, exec_request_id, status, retries, max_retries, worker_id, exec_request.id, hash, code, path, flake, args, programming_language from jobs
 inner join exec_request on jobs.exec_request_id = exec_request.id
 order by jobs.id
 limit $1 offset $2
@@ -140,15 +144,15 @@ type GetAllJobsParams struct {
 
 type GetAllJobsRow struct {
 	ID                  int64              `db:"id" json:"id"`
-	CronExpression      pgtype.Text        `db:"cron_expression" json:"cron_expression"`
-	LastScheduledAt     pgtype.Timestamptz `db:"last_scheduled_at" json:"last_scheduled_at"`
-	NextRunAt           pgtype.Timestamptz `db:"next_run_at" json:"next_run_at"`
 	CreatedAt           pgtype.Timestamptz `db:"created_at" json:"created_at"`
 	UpdatedAt           pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+	TimeOut             pgtype.Int4        `db:"time_out" json:"time_out"`
+	StartedAt           pgtype.Timestamptz `db:"started_at" json:"started_at"`
 	ExecRequestID       pgtype.Int4        `db:"exec_request_id" json:"exec_request_id"`
 	Status              string             `db:"status" json:"status"`
 	Retries             pgtype.Int4        `db:"retries" json:"retries"`
 	MaxRetries          pgtype.Int4        `db:"max_retries" json:"max_retries"`
+	WorkerID            pgtype.Int4        `db:"worker_id" json:"worker_id"`
 	ID_2                int32              `db:"id_2" json:"id_2"`
 	Hash                string             `db:"hash" json:"hash"`
 	Code                string             `db:"code" json:"code"`
@@ -169,15 +173,15 @@ func (q *Queries) GetAllJobs(ctx context.Context, arg GetAllJobsParams) ([]GetAl
 		var i GetAllJobsRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.CronExpression,
-			&i.LastScheduledAt,
-			&i.NextRunAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.TimeOut,
+			&i.StartedAt,
 			&i.ExecRequestID,
 			&i.Status,
 			&i.Retries,
 			&i.MaxRetries,
+			&i.WorkerID,
 			&i.ID_2,
 			&i.Hash,
 			&i.Code,
@@ -197,9 +201,10 @@ func (q *Queries) GetAllJobs(ctx context.Context, arg GetAllJobsParams) ([]GetAl
 }
 
 const getExecutionResultsByID = `-- name: GetExecutionResultsByID :many
-select job_runs.id, job_id, worker_id, started_at, finished_at, exec_request_id, logs, exec_request.id, hash, code, path, flake, args, programming_language from job_runs
+select job_runs.id, job_id, worker_id, started_at, finished_at, exec_request_id, exec_logs, nix_logs, status, exec_request.id, hash, code, path, flake, args, programming_language from job_runs
 inner join exec_request on job_runs.exec_request_id = exec_request.id
 where job_runs.job_id = $1
+order by finished_at desc
 limit $2 offset $3
 `
 
@@ -216,7 +221,9 @@ type GetExecutionResultsByIDRow struct {
 	StartedAt           pgtype.Timestamptz `db:"started_at" json:"started_at"`
 	FinishedAt          pgtype.Timestamptz `db:"finished_at" json:"finished_at"`
 	ExecRequestID       pgtype.Int4        `db:"exec_request_id" json:"exec_request_id"`
-	Logs                string             `db:"logs" json:"logs"`
+	ExecLogs            string             `db:"exec_logs" json:"exec_logs"`
+	NixLogs             pgtype.Text        `db:"nix_logs" json:"nix_logs"`
+	Status              string             `db:"status" json:"status"`
 	ID_2                int32              `db:"id_2" json:"id_2"`
 	Hash                string             `db:"hash" json:"hash"`
 	Code                string             `db:"code" json:"code"`
@@ -242,7 +249,9 @@ func (q *Queries) GetExecutionResultsByID(ctx context.Context, arg GetExecutionR
 			&i.StartedAt,
 			&i.FinishedAt,
 			&i.ExecRequestID,
-			&i.Logs,
+			&i.ExecLogs,
+			&i.NixLogs,
+			&i.Status,
 			&i.ID_2,
 			&i.Hash,
 			&i.Code,
@@ -262,20 +271,20 @@ func (q *Queries) GetExecutionResultsByID(ctx context.Context, arg GetExecutionR
 }
 
 const getJob = `-- name: GetJob :one
-select jobs.id, cron_expression, last_scheduled_at, next_run_at, created_at, updated_at, exec_request_id, status, retries, max_retries, exec_request.id, hash, code, path, flake, args, programming_language from jobs inner join exec_request on jobs.exec_request_id = exec_request.id where jobs.id = $1
+select jobs.id, created_at, updated_at, time_out, started_at, exec_request_id, status, retries, max_retries, worker_id, exec_request.id, hash, code, path, flake, args, programming_language from jobs inner join exec_request on jobs.exec_request_id = exec_request.id where jobs.id = $1
 `
 
 type GetJobRow struct {
 	ID                  int64              `db:"id" json:"id"`
-	CronExpression      pgtype.Text        `db:"cron_expression" json:"cron_expression"`
-	LastScheduledAt     pgtype.Timestamptz `db:"last_scheduled_at" json:"last_scheduled_at"`
-	NextRunAt           pgtype.Timestamptz `db:"next_run_at" json:"next_run_at"`
 	CreatedAt           pgtype.Timestamptz `db:"created_at" json:"created_at"`
 	UpdatedAt           pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+	TimeOut             pgtype.Int4        `db:"time_out" json:"time_out"`
+	StartedAt           pgtype.Timestamptz `db:"started_at" json:"started_at"`
 	ExecRequestID       pgtype.Int4        `db:"exec_request_id" json:"exec_request_id"`
 	Status              string             `db:"status" json:"status"`
 	Retries             pgtype.Int4        `db:"retries" json:"retries"`
 	MaxRetries          pgtype.Int4        `db:"max_retries" json:"max_retries"`
+	WorkerID            pgtype.Int4        `db:"worker_id" json:"worker_id"`
 	ID_2                int32              `db:"id_2" json:"id_2"`
 	Hash                string             `db:"hash" json:"hash"`
 	Code                string             `db:"code" json:"code"`
@@ -290,15 +299,15 @@ func (q *Queries) GetJob(ctx context.Context, id int64) (GetJobRow, error) {
 	var i GetJobRow
 	err := row.Scan(
 		&i.ID,
-		&i.CronExpression,
-		&i.LastScheduledAt,
-		&i.NextRunAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.TimeOut,
+		&i.StartedAt,
 		&i.ExecRequestID,
 		&i.Status,
 		&i.Retries,
 		&i.MaxRetries,
+		&i.WorkerID,
 		&i.ID_2,
 		&i.Hash,
 		&i.Code,
@@ -345,50 +354,42 @@ func (q *Queries) GetTotalJobs(ctx context.Context) (int64, error) {
 
 const insertJob = `-- name: InsertJob :one
 insert into jobs
-    (cron_expression, exec_request_id, last_scheduled_at, next_run_at, max_retries)
+    (exec_request_id, max_retries, time_out)
 values
-    ($1, $2, $3, $4, $5)
-returning id, cron_expression, last_scheduled_at, next_run_at, created_at, updated_at, exec_request_id, status, retries, max_retries
+    ($1, $2, $3)
+returning id, created_at, updated_at, time_out, started_at, exec_request_id, status, retries, max_retries, worker_id
 `
 
 type InsertJobParams struct {
-	CronExpression  pgtype.Text        `db:"cron_expression" json:"cron_expression"`
-	ExecRequestID   pgtype.Int4        `db:"exec_request_id" json:"exec_request_id"`
-	LastScheduledAt pgtype.Timestamptz `db:"last_scheduled_at" json:"last_scheduled_at"`
-	NextRunAt       pgtype.Timestamptz `db:"next_run_at" json:"next_run_at"`
-	MaxRetries      pgtype.Int4        `db:"max_retries" json:"max_retries"`
+	ExecRequestID pgtype.Int4 `db:"exec_request_id" json:"exec_request_id"`
+	MaxRetries    pgtype.Int4 `db:"max_retries" json:"max_retries"`
+	TimeOut       pgtype.Int4 `db:"time_out" json:"time_out"`
 }
 
 func (q *Queries) InsertJob(ctx context.Context, arg InsertJobParams) (Job, error) {
-	row := q.db.QueryRow(ctx, insertJob,
-		arg.CronExpression,
-		arg.ExecRequestID,
-		arg.LastScheduledAt,
-		arg.NextRunAt,
-		arg.MaxRetries,
-	)
+	row := q.db.QueryRow(ctx, insertJob, arg.ExecRequestID, arg.MaxRetries, arg.TimeOut)
 	var i Job
 	err := row.Scan(
 		&i.ID,
-		&i.CronExpression,
-		&i.LastScheduledAt,
-		&i.NextRunAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.TimeOut,
+		&i.StartedAt,
 		&i.ExecRequestID,
 		&i.Status,
 		&i.Retries,
 		&i.MaxRetries,
+		&i.WorkerID,
 	)
 	return i, err
 }
 
 const insertJobRun = `-- name: InsertJobRun :one
 insert into job_runs
-    (job_id, worker_id, started_at, finished_at, exec_request_id, logs)
+    (job_id, worker_id, started_at, finished_at, exec_request_id, exec_logs, nix_logs)
 values
-    ($1, $2, $3, $4, $5, $6)
-returning id, job_id, worker_id, started_at, finished_at, exec_request_id, logs
+    ($1, $2, $3, $4, $5, $6, $7)
+returning id, job_id, worker_id, started_at, finished_at, exec_request_id, exec_logs, nix_logs, status
 `
 
 type InsertJobRunParams struct {
@@ -397,7 +398,8 @@ type InsertJobRunParams struct {
 	StartedAt     pgtype.Timestamptz `db:"started_at" json:"started_at"`
 	FinishedAt    pgtype.Timestamptz `db:"finished_at" json:"finished_at"`
 	ExecRequestID pgtype.Int4        `db:"exec_request_id" json:"exec_request_id"`
-	Logs          string             `db:"logs" json:"logs"`
+	ExecLogs      string             `db:"exec_logs" json:"exec_logs"`
+	NixLogs       pgtype.Text        `db:"nix_logs" json:"nix_logs"`
 }
 
 func (q *Queries) InsertJobRun(ctx context.Context, arg InsertJobRunParams) (JobRun, error) {
@@ -407,7 +409,8 @@ func (q *Queries) InsertJobRun(ctx context.Context, arg InsertJobRunParams) (Job
 		arg.StartedAt,
 		arg.FinishedAt,
 		arg.ExecRequestID,
-		arg.Logs,
+		arg.ExecLogs,
+		arg.NixLogs,
 	)
 	var i JobRun
 	err := row.Scan(
@@ -417,7 +420,9 @@ func (q *Queries) InsertJobRun(ctx context.Context, arg InsertJobRunParams) (Job
 		&i.StartedAt,
 		&i.FinishedAt,
 		&i.ExecRequestID,
-		&i.Logs,
+		&i.ExecLogs,
+		&i.NixLogs,
+		&i.Status,
 	)
 	return i, err
 }
@@ -428,6 +433,35 @@ delete from jobs where status = 'completed'
 
 func (q *Queries) PruneCompletedJobs(ctx context.Context) error {
 	_, err := q.db.Exec(ctx, pruneCompletedJobs)
+	return err
+}
+
+const requeueLTJobs = `-- name: RequeueLTJobs :exec
+update jobs
+set
+    status = 'pending',
+    updated_at = now()
+where status = 'scheduled' 
+  and started_at + time_out * INTERVAL '1 second' < now()
+`
+
+func (q *Queries) RequeueLTJobs(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, requeueLTJobs)
+	return err
+}
+
+const requeueWorkerJobs = `-- name: RequeueWorkerJobs :exec
+update jobs
+set
+    status = 'pending',
+    worker_id = null,
+    updated_at = now()
+where status = 'scheduled' 
+  and worker_id = $1
+`
+
+func (q *Queries) RequeueWorkerJobs(ctx context.Context, workerID pgtype.Int4) error {
+	_, err := q.db.Exec(ctx, requeueWorkerJobs, workerID)
 	return err
 }
 
@@ -464,27 +498,6 @@ where id = $1 AND status = 'scheduled'
 
 func (q *Queries) UpdateJobCompleted(ctx context.Context, id int64) error {
 	_, err := q.db.Exec(ctx, updateJobCompleted, id)
-	return err
-}
-
-const updateJobSchedule = `-- name: UpdateJobSchedule :exec
-update jobs
-set
-    status = 'pending',
-    last_scheduled_at = $2,
-    next_run_at = $3,
-    updated_at = now()
-where id = $1 AND status = 'scheduled'
-`
-
-type UpdateJobScheduleParams struct {
-	ID              int64              `db:"id" json:"id"`
-	LastScheduledAt pgtype.Timestamptz `db:"last_scheduled_at" json:"last_scheduled_at"`
-	NextRunAt       pgtype.Timestamptz `db:"next_run_at" json:"next_run_at"`
-}
-
-func (q *Queries) UpdateJobSchedule(ctx context.Context, arg UpdateJobScheduleParams) error {
-	_, err := q.db.Exec(ctx, updateJobSchedule, arg.ID, arg.LastScheduledAt, arg.NextRunAt)
 	return err
 }
 

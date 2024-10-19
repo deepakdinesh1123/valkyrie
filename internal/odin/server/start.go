@@ -10,20 +10,31 @@ import (
 	"time"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/middleware"
+	"github.com/jackc/pgx/v5/pgtype"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
+// Start starts the Odin server.
+//
+// Parameters:
+// - ctx: context.Context for managing the lifecycle of the server.
+// - wg: *sync.WaitGroup to wait for the server to finish before returning.
 func (s *OdinServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
 	addr := fmt.Sprintf("%s:%s", s.envConfig.ODIN_SERVER_HOST, s.envConfig.ODIN_SERVER_PORT)
 	done := make(chan bool, 1)
 
 	var server *http.Server
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/executions/{executionId}/sse", s.ExecuteSSE)
+	mux.HandleFunc("/executions/execute/ws", s.ExecuteWS)
+	mux.Handle("/", s.server)
 
 	if s.envConfig.ODIN_ENABLE_TELEMETRY {
 		server = &http.Server{
 			Addr:    addr,
-			Handler: otelhttp.NewHandler(middleware.LoggingMiddleware(s.server), "/"),
+			Handler: otelhttp.NewHandler(middleware.LoggingMiddleware(mux), "/"),
 			BaseContext: func(_ net.Listener) context.Context {
 				return ctx
 			},
@@ -31,7 +42,7 @@ func (s *OdinServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 	} else {
 		server = &http.Server{
 			Addr:    addr,
-			Handler: middleware.LoggingMiddleware(s.server),
+			Handler: middleware.LoggingMiddleware(mux),
 		}
 	}
 
@@ -65,6 +76,26 @@ func (s *OdinServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 		}
 	}(ctx)
 
+	go func(ctx context.Context) {
+		ticker := time.NewTicker(time.Duration(5) * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				ids, err := s.queries.GetStaleWorkers(ctx)
+				if err != nil {
+					s.logger.Err(err).Msg("Failed to get stale workers")
+				}
+				for _, id := range ids {
+					s.logger.Info().Msg(fmt.Sprintf("Requeuing jobs for stale worker %d", id))
+					s.queries.RequeueWorkerJobs(ctx, pgtype.Int4{Int32: id, Valid: true})
+				}
+			}
+		}
+	}(ctx)
+
 	go func() {
 		<-ctx.Done()
 
@@ -76,6 +107,8 @@ func (s *OdinServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 		}
 
 		s.logger.Info().Msg("Shutting down server")
+
+		// Shutdown the server after 5 seconds
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5)
 		defer cancel()
 		err = server.Shutdown(shutdownCtx)
@@ -84,5 +117,6 @@ func (s *OdinServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 		}
 		done <- true
 	}()
+	// Wait for the server to shutdown
 	<-done
 }

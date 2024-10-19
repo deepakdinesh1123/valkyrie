@@ -3,7 +3,7 @@ module github.com/deepakdinesh1123/valkyrie
 go 1.22.0
 
 require (
-	github.com/adhocore/gronx v1.19.0
+	github.com/coder/websocket v1.8.12
 	github.com/containers/podman/v5 v5.2.0
 	github.com/docker/docker v27.1.1+incompatible
 	github.com/exaring/otelpgx v0.6.2

@@ -18,8 +18,24 @@ import (
 
 func (d *DockerProvider) Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, job db.Job) {
 	start := time.Now()
-	tctx, cancel := context.WithTimeout(ctx, time.Duration(d.envConfig.ODIN_WORKER_TASK_TIMEOUT)*time.Second)
+	var timeout int
+	if job.TimeOut.Int32 > 0 { // By default, timeout is set to -1
+		timeout = int(job.TimeOut.Int32)
+	} else if job.TimeOut.Int32 == 0 {
+		timeout = 0
+	} else {
+		timeout = d.envConfig.ODIN_WORKER_TASK_TIMEOUT
+	}
+
+	var tctx context.Context
+	var cancel context.CancelFunc
+	if timeout > 0 {
+		tctx, cancel = context.WithTimeout(context.TODO(), time.Duration(timeout)*time.Second)
+	} else {
+		tctx, cancel = context.WithCancel(context.TODO())
+	}
 	defer cancel()
+
 	defer wg.Done()
 	containerName := namesgenerator.GetRandomName(0)
 	resp, err := d.client.ContainerCreate(
@@ -228,19 +244,24 @@ func (d *DockerProvider) updateJob(ctx context.Context, job *db.Job, startTime t
 		retry = false
 	}
 	if _, err := d.queries.UpdateJobResultTx(ctx, db.UpdateJobResultTxParams{
-		StartTime:      startTime,
-		Job:            *job,
-		Message:        message,
-		Success:        success,
-		Retry:          retry,
-		WorkerId:       d.workerId,
-		CronExpression: job.CronExpression.String,
+		StartTime: startTime,
+		Job:       *job,
+		Message:   message,
+		Success:   success,
+		Retry:     retry,
+		WorkerId:  d.workerId,
 	}); err != nil {
 		return err
 	}
 	return nil
 }
 
+// stripCtlAndExtFromUTF8 removes control characters and non-ASCII characters from a UTF8 string.
+//
+// Parameters:
+// - str: the input string to be processed.
+// Returns:
+// - string: the processed string with control characters and non-ASCII characters removed.
 func stripCtlAndExtFromUTF8(str string) string {
 	return strings.Map(func(r rune) rune {
 		if r >= 32 && r < 127 || r == 10 {

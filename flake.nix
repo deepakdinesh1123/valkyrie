@@ -13,7 +13,6 @@
       in
       rec {
 
-        docsDependencies = with pkgs; [ python312Packages.mkdocs-material redocly ];
         k8sDependencies = with pkgs; [ 
           skaffold 
           k3d 
@@ -26,7 +25,7 @@
           sqlc 
           go-migrate 
           go_1_22  
-          pkg-config ] ++ docsDependencies ++ lib.optionals stdenv.isLinux [ 
+          pkg-config ] ++ lib.optionals stdenv.isLinux [ 
             gpgme 
             libgpg-error 
             libassuanbtrfs-progs 
@@ -40,7 +39,19 @@
 
         devShells = {
           default = pkgs.mkShell {
-            buildInputs = devDependencies ++ docsDependencies;
+            buildInputs = devDependencies;
+          };
+          docs = pkgs.mkShell {
+            packages = [
+              pkgs.python3
+              (pkgs.python3.withPackages ( python-pkgs: [
+                python-pkgs.mkdocs
+                python-pkgs.mkdocs-material
+                python-pkgs.mike
+                python-pkgs.mkdocs-minify-plugin
+              ]))
+              pkgs.mkdocs
+            ];
           };
         };
     }

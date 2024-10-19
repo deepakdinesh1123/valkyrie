@@ -3,13 +3,27 @@ package server
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"strconv"
+	"time"
 
+	"github.com/coder/websocket"
+	"github.com/coder/websocket/wsjson"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/services/execution"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
 	"github.com/jackc/pgx/v5"
 )
 
+// Execute Adds a job to the execution queue and returns the execution ID.
+//
+// Parameters:
+// - ctx: the context of the execution request
+// - req: the execution request
+//
+// Returns:
+// - api.ExecuteRes: the result of the execution
+// - error: any error that occurred during execution
 func (s *OdinServer) Execute(ctx context.Context, req *api.ExecutionRequest) (api.ExecuteRes, error) {
 	execId, err := s.executionService.AddJob(ctx, req)
 	if err != nil {
@@ -29,9 +43,159 @@ func (s *OdinServer) Execute(ctx context.Context, req *api.ExecutionRequest) (ap
 			}, nil
 		}
 	}
-	return &api.ExecuteOK{ExecutionId: execId}, nil
+	return &api.ExecuteOK{ExecutionId: execId, Events: fmt.Sprintf("/executions/%d/events", execId)}, nil
 }
 
+func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
+	execIdStr := req.PathValue("executionId")
+	execId, err := strconv.ParseInt(execIdStr, 10, 64)
+	if err != nil {
+		s.logger.Error().Stack().Err(err).Msg("Failed to get executionId")
+		http.Error(w, "Failed to get executionId", http.StatusBadRequest)
+		return
+	}
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("Content-Type", "text/event-stream")
+
+	var flusher http.Flusher
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		s.logger.Error().Stack().Msg("Failed to get flusher")
+		http.Error(w, "Streaming not supported", http.StatusInternalServerError)
+		return
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			s.logger.Info().Int64("executionId", execId).Msg("Client disconnected")
+			return
+		default:
+			job, err := s.queries.GetJob(ctx, execId)
+			if err != nil {
+				s.logger.Error().Stack().Err(err).Msg("Failed to get job")
+				fmt.Fprintf(w, "data: error\n\n")
+				flusher.Flush()
+				return
+			}
+
+			s.logger.Debug().Str("status", job.Status).Msg("Status fetched")
+
+			switch job.Status {
+			case "completed":
+				res, err := s.queries.GetExecutionResultsByID(ctx, db.GetExecutionResultsByIDParams{
+					JobID:  execId,
+					Limit:  1,
+					Offset: 0,
+				})
+				if err != nil {
+					s.logger.Error().Stack().Err(err).Msg("Failed to get execution results")
+					fmt.Fprintf(w, "data: error %s\n\n", err)
+					flusher.Flush()
+					return
+				}
+				fmt.Fprintf(w, "data: completed: %d\n\n", execId)
+				flusher.Flush()
+				fmt.Fprintf(w, "data: %s\n\n", res[0].ExecLogs)
+				return
+			case "failed":
+				fmt.Fprintf(w, "data: failed: %d\n\n", execId)
+				flusher.Flush()
+				return
+			case "pending":
+				fmt.Fprintf(w, "data: pending: %d\n\n", execId)
+				flusher.Flush()
+			case "scheduled":
+				fmt.Fprintf(w, "data: scheduled: %d\n\n", execId)
+				flusher.Flush()
+			default:
+				s.logger.Warn().Str("status", job.Status).Msg("Unknown status")
+			}
+
+			time.Sleep(3 * time.Second)
+		}
+	}
+}
+
+func (s *OdinServer) ExecuteWS(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	c, err := websocket.Accept(w, r, nil)
+	if err != nil {
+		s.logger.Error().Stack().Err(err).Msg("Failed to accept websocket")
+		http.Error(w, "Failed to accept websocket", http.StatusInternalServerError)
+		return
+	}
+	defer c.Close(websocket.StatusNormalClosure, "Closing connection")
+	var execReq api.ExecutionRequest
+	err = wsjson.Read(ctx, c, &execReq)
+	if err != nil {
+		s.logger.Error().Stack().Err(err).Msg("Failed to read request")
+		http.Error(w, "Failed to read request", http.StatusInternalServerError)
+		return
+	}
+	execId, err := s.executionService.AddJob(ctx, &execReq)
+	if err != nil {
+		s.logger.Error().Stack().Err(err).Msg("Failed to execute")
+		http.Error(w, "Failed to execute", http.StatusInternalServerError)
+		return
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			s.logger.Info().Int64("executionId", execId).Msg("Client disconnected")
+			return
+		default:
+			job, err := s.queries.GetJob(ctx, execId)
+			if err != nil {
+				s.logger.Error().Stack().Err(err).Msg("Failed to get job")
+				return
+			}
+
+			s.logger.Debug().Str("status", job.Status).Msg("Status fetched")
+
+			switch job.Status {
+			case "completed":
+				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("completed: %d\n\n", execId)))
+				res, err := s.queries.GetExecutionResultsByID(ctx, db.GetExecutionResultsByIDParams{
+					JobID:  execId,
+					Limit:  1,
+					Offset: 0,
+				})
+				if err != nil {
+					s.logger.Error().Stack().Err(err).Msg("Failed to get execution results")
+					c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("failed: %s\n\n", err)))
+					return
+				}
+				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("data: %s\n\n", res[0].ExecLogs)))
+				return
+			case "failed":
+				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("failed: %d\n\n", execId)))
+				return
+			case "pending":
+				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("pending: %d\n\n", execId)))
+			case "scheduled":
+				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("scheduled: %d\n\n", execId)))
+			default:
+				s.logger.Warn().Str("status", job.Status).Msg("Unknown status")
+			}
+			time.Sleep(3 * time.Second)
+		}
+	}
+}
+
+// GetAllExecutionResults Retrieves all execution results.
+//
+// Parameters:
+// - ctx: The context of the request.
+// - params: The parameters of the request, including pagination options.
+//
+// Returns:
+// - api.GetAllExecutionResultsRes: The response containing the execution results.
+// - error: Any error that occurred during the request.
 func (s *OdinServer) GetAllExecutionResults(ctx context.Context, params api.GetAllExecutionResultsParams) (api.GetAllExecutionResultsRes, error) {
 	execResDB, err := s.queries.GetAllExecutionResults(ctx, db.GetAllExecutionResultsParams{
 		Limit:  params.PageSize.Value,
@@ -52,7 +216,7 @@ func (s *OdinServer) GetAllExecutionResults(ctx context.Context, params api.GetA
 	for _, execRes := range execResDB {
 		executions = append(executions, api.ExecutionResult{
 			ExecutionId: int64(execRes.ExecRequestID.Int32),
-			Logs:        execRes.Logs,
+			ExecLogs:    execRes.ExecLogs,
 			Script:      execRes.Code,
 			Flake:       execRes.Flake,
 			Args:        execRes.Args.String,
@@ -69,6 +233,15 @@ func (s *OdinServer) GetAllExecutionResults(ctx context.Context, params api.GetA
 	return &resp, nil
 }
 
+// GetExecutionResultsById returns the execution results for a specific job ID.
+//
+// Parameters:
+// - ctx: The context of the request.
+// - params: The parameters of the request, including the job ID, page size, and page value.
+//
+// Returns:
+// - api.GetExecutionResultsByIdRes: The response containing the execution results.
+// - error: Any error that occurred during the request.
 func (s *OdinServer) GetExecutionResultsById(ctx context.Context, params api.GetExecutionResultsByIdParams) (api.GetExecutionResultsByIdRes, error) {
 	execRes, err := s.queries.GetExecutionResultsByID(ctx, db.GetExecutionResultsByIDParams{
 		JobID:  params.JobId,
@@ -90,7 +263,7 @@ func (s *OdinServer) GetExecutionResultsById(ctx context.Context, params api.Get
 	for _, execRes := range execRes {
 		executions = append(executions, api.ExecutionResult{
 			ExecutionId: int64(execRes.ExecRequestID.Int32),
-			Logs:        execRes.Logs,
+			ExecLogs:    execRes.ExecLogs,
 			Script:      execRes.Code,
 			Flake:       execRes.Flake,
 			Args:        execRes.Args.String,
@@ -107,6 +280,15 @@ func (s *OdinServer) GetExecutionResultsById(ctx context.Context, params api.Get
 	return &resp, nil
 }
 
+// GetAllExecutions Retrieves a list of all executions.
+//
+// Parameters:
+// - ctx: The context for the request.
+// - params: The parameters for the request, including pagination options.
+//
+// Returns:
+// - api.GetAllExecutionsRes: The response containing the list of executions and pagination metadata.
+// - error: Any error that occurred during the request.
 func (s *OdinServer) GetAllExecutions(ctx context.Context, params api.GetAllExecutionsParams) (api.GetAllExecutionsRes, error) {
 	executionsDB, err := s.queries.GetAllJobs(ctx, db.GetAllJobsParams{
 		Limit:  params.PageSize.Value,
@@ -140,6 +322,14 @@ func (s *OdinServer) GetAllExecutions(ctx context.Context, params api.GetAllExec
 	return &resp, nil
 }
 
+// GetExecutionConfig returns the execution configuration.
+//
+// Parameters:
+// - ctx (context.Context): the context for the request.
+//
+// Returns:
+// - api.GetExecutionConfigRes: the execution configuration response.
+// - error: any error that occurred while retrieving the configuration.
 func (s *OdinServer) GetExecutionConfig(ctx context.Context) (api.GetExecutionConfigRes, error) {
 	return &api.ExecutionConfig{
 		ODINWORKERPROVIDER:    s.envConfig.ODIN_WORKER_PROVIDER,
@@ -152,6 +342,14 @@ func (s *OdinServer) GetExecutionConfig(ctx context.Context) (api.GetExecutionCo
 	}, nil
 }
 
+// GetExecutionWorkers returns a list of execution workers based on the provided pagination parameters.
+//
+// Parameters:
+// - ctx: The context for the request.
+// - params: The pagination parameters for the request.
+// Returns:
+// - api.GetExecutionWorkersRes: The response containing the list of execution workers.
+// - error: Any error that occurred during the request.
 func (s *OdinServer) GetExecutionWorkers(ctx context.Context, params api.GetExecutionWorkersParams) (api.GetExecutionWorkersRes, error) {
 	workersDB, err := s.queries.GetAllWorkers(ctx, db.GetAllWorkersParams{
 		Limit:  params.PageSize.Value,
@@ -186,6 +384,14 @@ func (s *OdinServer) GetExecutionWorkers(ctx context.Context, params api.GetExec
 	return &resp, nil
 }
 
+// DeleteJob deletes a job by its ID.
+//
+// Parameters:
+// - ctx: context for the request.
+// - params: DeleteJobParams containing the JobId to delete.
+// Returns:
+// - api.DeleteJobRes: result of the delete operation.
+// - error: error if the delete operation fails.
 func (s *OdinServer) DeleteJob(ctx context.Context, params api.DeleteJobParams) (api.DeleteJobRes, error) {
 	err := s.queries.DeleteJob(ctx, params.JobId)
 	if err != nil {
