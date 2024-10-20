@@ -193,7 +193,7 @@ const App: React.FC = () => {
       {/* Collapsible Sidebar */}
       {
         isSidebarOpen && (
-          <div className="sidebar z-10 w-full md:w-1/3 lg:w-1/4 text-white p-2 flex flex-col justify-between transition-all duration-300 max-h-screen overflow-y-auto">
+          <div className="sidebar z-10 w-full md:w-1/3 lg:w-1/4 text-white p-2 flex flex-col justify-between transition-all duration-300 max-h-screen">
             {/* Sidebar Content */}
             <div className="flex-1">
               <div className="flex flex-col gap-2 h-full">

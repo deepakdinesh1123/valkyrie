@@ -1,0 +1,13 @@
+nodejs
+gcc
+rust
+php
+go
+java
+ruby
+lua
+haskell
+perl
+sbcl
+rPackages
+python
