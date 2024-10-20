@@ -14,7 +14,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                 <DialogHeader>
                     <DialogTitle className="text-white">Help</DialogTitle>
                     <DialogDescription className="text-white">
-                        This is a code editor environment where you can write and run code in various languages.
+                        Odin is a code executor with ability to run various languages and supports addition of numerous packages or dependencies.
                     </DialogDescription>
                 </DialogHeader>
                 <p className="text-white mt-2">
@@ -23,8 +23,9 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                 <ul className="list-disc pl-5 text-white">
                     <li>Select a language from the dropdown menu.</li>
                     <li>Write your code in the editor.</li>
+                    <li>Add any args to pass if necessary.</li>
                     <li>Add system and language dependencies if needed.</li>
-                    <li>Click "Run" to execute your code.</li>
+                    <li>Click "Run code" to execute your code.</li>
                     <li>View the output in the terminal below.</li>
                 </ul>
                 <DialogClose asChild>

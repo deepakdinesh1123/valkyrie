@@ -29,11 +29,11 @@ echo "PostgreSQL container is set up and running on port 5433"
 
 # Run the Nix build and nixdump command
 # nix build
-./result/bin/odin nixdump -c $1
+./odinb nixdump -c $1
 
 # Destroy the container
 docker stop nixos-packages-db
 docker rm nixos-packages-db
 
-# rm nixpkgs_data.csv
-# rm nixpkgs_data.json
+rm nixpkgs_data.csv
+rm nixpkgs_data.json

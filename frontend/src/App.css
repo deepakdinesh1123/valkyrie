@@ -11,6 +11,9 @@ body,
   background-color: black;
 }
 
+.tabicon {
+  height: 10em;
+}
 /* App layout */
 .App {
   display: flex;

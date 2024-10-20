@@ -103,3 +103,14 @@ store-pkgs:
 		fi; \
 	done <<< "$$packages"; \
 	echo "All packages processed successfully.";
+
+.PHONY: dump
+dump:
+	@if [ -z "$(filter-out $@,$(MAKECMDGOALS))" ]; then \
+		echo "Error: Please specify a version (e.g., make dump 24.05)"; \
+		exit 1; \
+	fi
+	./hack/packages.sh $(filter-out $@,$(MAKECMDGOALS))
+
+%:
+	@:
