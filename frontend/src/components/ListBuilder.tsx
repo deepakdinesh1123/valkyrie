@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -22,21 +22,56 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [filteredItems, setFilteredItems] = useState<{ name: string; version: string }[]>([]);
 
   const debouncedSearchChange = useCallback(
-    debounce((value: string) => onSearchChange(value), 300),
+    debounce((value: string) => {
+      onSearchChange(value);
+    }, 800),
     [onSearchChange]
   );
 
+  // Clear results and trigger search on search term change
   useEffect(() => {
-    debouncedSearchChange(searchTerm);
-    return () => debouncedSearchChange.cancel();
-  }, [searchTerm, debouncedSearchChange]);
+    setFilteredItems([]);
+    setIsSearching(true);
+    if (searchTerm === "") {
+      setIsSearching(false);
+      onSearchChange("");
+    } else {
+      debouncedSearchChange(searchTerm);
+    }
+    return () => {
+      debouncedSearchChange.cancel();
+    };
+  }, [searchTerm, debouncedSearchChange, onSearchChange]);
+
+  // Simulate API call to get new results
+  useEffect(() => {
+    if (isSearching && searchTerm !== "") {
+      const fetchResults = async () => {
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        const newFilteredItems = items.filter(
+          (item) =>
+            item.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+            !selectedItems.includes(item.name)
+        );
+        setFilteredItems(newFilteredItems);
+        setIsSearching(false);
+      };
+
+      fetchResults();
+    }
+  }, [isSearching, searchTerm, items, selectedItems]);
 
   useEffect(() => {
     if (resetTrigger !== undefined) {
       setSelectedItems([]);
       setSearchTerm("");
+      setFilteredItems([]);
       onSelectionChange([]);
       onSearchChange("");
     }
@@ -50,23 +85,17 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
       if (updatedSelectedItems.length !== selectedItems.length) {
         setSelectedItems(updatedSelectedItems);
         onSelectionChange(updatedSelectedItems);
-        setSearchTerm("")
+        setSearchTerm("");
       }
     }
   }, [nonExistingPackages, selectedItems, onSelectionChange]);
-
-  const filteredItems = useMemo(() => {
-    return items.filter(
-      (item) =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !selectedItems.includes(item.name)
-    );
-  }, [items, searchTerm, selectedItems]);
 
   const handleSelect = (item: { name: string; version: string }) => {
     const newSelectedItems = [...selectedItems, item.name];
     setSelectedItems(newSelectedItems);
     onSelectionChange(newSelectedItems);
+    setSearchTerm("");
+    setFilteredItems([]);
   };
 
   const handleRemove = (itemName: string) => {
@@ -80,8 +109,8 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
   };
 
   return (
-    <div className="w-full max-w-md ">
-      <div className="relative mb-2 ">
+    <div className="w-full max-w-md">
+      <div className="relative mb-2">
         <Input
           type="text"
           placeholder="Search items..."
@@ -94,12 +123,12 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
           size={20}
         />
       </div>
-      <div className="mb-4 flex flex-wrap gap-2 ">
+      <div className="mb-4 flex flex-wrap gap-2">
         {selectedItems.map((itemName) => (
           <Badge
             key={itemName}
             variant="secondary"
-            className="py-1 px-2 text-sm flex items-center gap-1 bg-neutral-900 text-white hover:bg-neutral-900 "
+            className="py-1 px-2 text-sm flex items-center gap-1 bg-neutral-900 text-white hover:bg-neutral-900"
           >
             {itemName}
             <Button
@@ -113,19 +142,27 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
           </Badge>
         ))}
       </div>
-      <div className="bg-neutral-900 text-white shadow-md rounded-md overflow-hidden">
-        <ul className="max-h-40 overflow-y-auto">
-          {filteredItems.map((item) => (
-            <li
-              key={item.name}
-              className="px-4 py-2 hover:bg-gray-200 hover:text-black cursor-pointer"
-              onClick={() => handleSelect(item)}
-            >
-              {`${item.name}`}
-            </li>
-          ))}
-        </ul>
-      </div>
+      {searchTerm !== "" && (
+        isSearching ? (
+          <div className="pl-2">Searching...</div>
+        ) : filteredItems.length === 0 ? (
+          <div className="pl-2">No results found</div>
+        ) : (
+          <div className="bg-neutral-900 text-white shadow-md rounded-md overflow-hidden">
+            <ul className="max-h-40 overflow-y-auto">
+              {filteredItems.map((item) => (
+                <li
+                  key={item.name}
+                  className="px-4 py-2 hover:bg-gray-200 hover:text-black cursor-pointer"
+                  onClick={() => handleSelect(item)}
+                >
+                  {`${item.name}`}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
+      )}
     </div>
   );
 };

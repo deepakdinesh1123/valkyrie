@@ -9,5 +9,4 @@ lua
 haskell
 perl
 sbcl
-rPackages
 python

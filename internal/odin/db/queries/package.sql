@@ -14,9 +14,12 @@ SELECT
 FROM packages
 WHERE
     pkgType = 'system'
-    AND tsv_search @@ plainto_tsquery('english', $1)
-ORDER BY name ASC;
-
+    AND (
+        tsv_search @@ plainto_tsquery('english', $1) OR  -- Full-text search
+        name ILIKE '%' || $1 || '%'                       -- Contains search
+    )
+ORDER BY name ASC
+LIMIT 50;
 
 -- name: SearchLanguagePackages :many
 SELECT
@@ -25,8 +28,13 @@ SELECT
 FROM packages
 WHERE
     language = @Language::text  
-    AND tsv_search @@ plainto_tsquery('english', @SearchQuery::text)  
-ORDER BY name ASC;
+    AND (
+        tsv_search @@ plainto_tsquery('english', @SearchQuery::text) OR  -- Full-text search
+        name ILIKE '%' || @SearchQuery::text || '%'                       -- Contains search
+    )
+ORDER BY name ASC
+LIMIT 50;
+
 
 -- name: PackagesExist :one
 WITH existing_packages AS (

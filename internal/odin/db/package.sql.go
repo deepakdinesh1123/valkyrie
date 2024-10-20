@@ -50,8 +50,12 @@ SELECT
 FROM packages
 WHERE
     language = $1::text  
-    AND tsv_search @@ plainto_tsquery('english', $2::text)  
+    AND (
+        tsv_search @@ plainto_tsquery('english', $2::text) OR  -- Full-text search
+        name ILIKE '%' || $2::text || '%'                       -- Contains search
+    )
 ORDER BY name ASC
+LIMIT 50
 `
 
 type SearchLanguagePackagesParams struct {
@@ -91,8 +95,12 @@ SELECT
 FROM packages
 WHERE
     pkgType = 'system'
-    AND tsv_search @@ plainto_tsquery('english', $1)
+    AND (
+        tsv_search @@ plainto_tsquery('english', $1) OR  -- Full-text search
+        name ILIKE '%' || $1 || '%'                       -- Contains search
+    )
 ORDER BY name ASC
+LIMIT 50
 `
 
 type SearchSystemPackagesRow struct {
