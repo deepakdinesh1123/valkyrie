@@ -9,7 +9,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"regexp"
 	"strings"
 	"time"
 
@@ -32,15 +31,13 @@ var NixDumpCmd = &cobra.Command{
 }
 
 var (
-	languagePackageRegex = regexp.MustCompile(`^([a-zA-Z0-9]+)([0-9.]*Packages)\.([a-zA-Z0-9]+),(.+)$`)
-	systemPackageRegex   = regexp.MustCompile(`^([a-zA-Z0-9-]+),(.+)$`)
-	languagePatterns     []string
-	systemPatterns       []string
+	languagePackages map[string][]string
+	systemPatterns   []string
 )
 
 func init() {
 	NixDumpCmd.Flags().StringP("channel", "c", "", "Nixpkgs channel")
-	languagePatterns = loadPatterns("internal/odin/cmd/patterns/languages.txt")
+	languagePackages = loadLanguagePackages("internal/odin/cmd/patterns/languages.txt")
 	systemPatterns = loadPatterns("internal/odin/cmd/patterns/systempackages.txt")
 }
 
@@ -159,19 +156,21 @@ func processPaths(envConfig *config.EnvConfig) error {
 }
 
 func parseLine(name, version string) *Package {
-	parts := strings.SplitN(name, ".", 2)
-	if len(parts) > 1 {
-		language := parts[0]
-		packageName := parts[1]
-		if isLanguageDependency(language) {
-			return &Package{
-				Name:     packageName,
-				Version:  version,
-				pkgType:  "language",
-				Language: language,
+	for language, packages := range languagePackages {
+		for _, pkg := range packages {
+			fullPackageName := fmt.Sprintf("%sPackages.%s", language, pkg)
+			if name == fullPackageName {
+				return &Package{
+					Name:     pkg,
+					Version:  version,
+					pkgType:  "language",
+					Language: fmt.Sprintf("%sPackages", language),
+				}
 			}
 		}
-	} else if isSystemDependency(name) {
+	}
+
+	if isSystemDependency(name) {
 		return &Package{
 			Name:     name,
 			Version:  version,
@@ -182,18 +181,9 @@ func parseLine(name, version string) *Package {
 	return nil
 }
 
-func isLanguageDependency(language string) bool {
-	for _, pattern := range languagePatterns {
-		if strings.HasPrefix(strings.ToLower(language), pattern) {
-			return true
-		}
-	}
-	return false
-}
-
 func isSystemDependency(name string) bool {
 	for _, pattern := range systemPatterns {
-		if strings.HasPrefix(strings.ToLower(name), pattern) {
+		if strings.ToLower(name) == pattern {
 			return true
 		}
 	}
@@ -242,6 +232,33 @@ func createDatabaseDump(channel string, envConfig *config.EnvConfig) error {
 	return nil
 }
 
+func loadLanguagePackages(filePath string) map[string][]string {
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.Fatalf("Failed to open %s: %v", filePath, err)
+	}
+	defer file.Close()
+
+	packages := make(map[string][]string)
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line != "" {
+			parts := strings.Split(line, ",")
+			if len(parts) > 1 {
+				language := strings.TrimSpace(parts[0])
+				for _, pkg := range parts[1:] {
+					packages[language] = append(packages[language], strings.TrimSpace(pkg))
+				}
+			}
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Fatalf("Error reading %s: %v", filePath, err)
+	}
+	return packages
+}
 func loadPatterns(filePath string) []string {
 	file, err := os.Open(filePath)
 	if err != nil {

@@ -1,9 +1,1 @@
-glibc
-openssl
-zlib
 curl
-systemd
-sqlite
-python3
-go
-elixir

@@ -1,11 +1,2 @@
-nodejs
-gcc
-rust
-php
-go
-java
-ruby
-lua
-haskell
-perl
-sbcl
+python311, requests, numpy
+lua54, vstruct
