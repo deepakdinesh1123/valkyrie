@@ -67,13 +67,14 @@ func (q *Queries) FetchJob(ctx context.Context, workerID pgtype.Int4) (Job, erro
 const getAllExecutions = `-- name: GetAllExecutions :many
 select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, success, id, hash, code, path, flake, nix_script, args, programming_language from executions
 inner join exec_request on executions.exec_request_id = exec_request.id
-order by started_at desc
-limit $1 offset $2
+where  exec_id <= $2::integer
+order by exec_id desc
+limit $1
 `
 
 type GetAllExecutionsParams struct {
-	Limit  int32 `db:"limit" json:"limit"`
-	Offset int32 `db:"offset" json:"offset"`
+	Limit int32 `db:"limit" json:"limit"`
+	Crsr  int32 `db:"crsr" json:"crsr"`
 }
 
 type GetAllExecutionsRow struct {
@@ -98,7 +99,7 @@ type GetAllExecutionsRow struct {
 }
 
 func (q *Queries) GetAllExecutions(ctx context.Context, arg GetAllExecutionsParams) ([]GetAllExecutionsRow, error) {
-	rows, err := q.db.Query(ctx, getAllExecutions, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, getAllExecutions, arg.Limit, arg.Crsr)
 	if err != nil {
 		return nil, err
 	}
@@ -139,13 +140,14 @@ func (q *Queries) GetAllExecutions(ctx context.Context, arg GetAllExecutionsPara
 const getAllJobs = `-- name: GetAllJobs :many
 select job_id, created_at, updated_at, time_out, started_at, exec_request_id, current_state, retries, max_retries, worker_id, id, hash, code, path, flake, nix_script, args, programming_language from jobs
 inner join exec_request on jobs.exec_request_id = exec_request.id
-order by jobs.job_id
-limit $1 offset $2
+where jobs.job_id <=  $2::integer
+order by jobs.job_id desc
+limit $1
 `
 
 type GetAllJobsParams struct {
-	Limit  int32 `db:"limit" json:"limit"`
-	Offset int32 `db:"offset" json:"offset"`
+	Limit int32 `db:"limit" json:"limit"`
+	Crsr  int32 `db:"crsr" json:"crsr"`
 }
 
 type GetAllJobsRow struct {
@@ -170,7 +172,7 @@ type GetAllJobsRow struct {
 }
 
 func (q *Queries) GetAllJobs(ctx context.Context, arg GetAllJobsParams) ([]GetAllJobsRow, error) {
-	rows, err := q.db.Query(ctx, getAllJobs, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, getAllJobs, arg.Limit, arg.Crsr)
 	if err != nil {
 		return nil, err
 	}
@@ -264,15 +266,15 @@ func (q *Queries) GetExecution(ctx context.Context, execID int64) (GetExecutionR
 const getExecutionsForJob = `-- name: GetExecutionsForJob :many
 select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, success, id, hash, code, path, flake, nix_script, args, programming_language from executions
 inner join exec_request on executions.exec_request_id = exec_request.id
-where executions.job_id = $1
-order by finished_at desc
-limit $2 offset $3
+where executions.job_id = $1 and executions.exec_id <= $3::integer
+order by exec_id desc
+limit $2
 `
 
 type GetExecutionsForJobParams struct {
-	JobID  pgtype.Int8 `db:"job_id" json:"job_id"`
-	Limit  int32       `db:"limit" json:"limit"`
-	Offset int32       `db:"offset" json:"offset"`
+	JobID pgtype.Int8 `db:"job_id" json:"job_id"`
+	Limit int32       `db:"limit" json:"limit"`
+	Crsr  int32       `db:"crsr" json:"crsr"`
 }
 
 type GetExecutionsForJobRow struct {
@@ -297,7 +299,7 @@ type GetExecutionsForJobRow struct {
 }
 
 func (q *Queries) GetExecutionsForJob(ctx context.Context, arg GetExecutionsForJobParams) ([]GetExecutionsForJobRow, error) {
-	rows, err := q.db.Query(ctx, getExecutionsForJob, arg.JobID, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, getExecutionsForJob, arg.JobID, arg.Limit, arg.Crsr)
 	if err != nil {
 		return nil, err
 	}
@@ -395,6 +397,61 @@ func (q *Queries) GetJobState(ctx context.Context, jobID int64) (string, error) 
 	var current_state string
 	err := row.Scan(&current_state)
 	return current_state, err
+}
+
+const getLatestExecutionForJob = `-- name: GetLatestExecutionForJob :one
+select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, success, id, hash, code, path, flake, nix_script, args, programming_language from executions
+inner join exec_request  on executions.exec_request_id = exec_request.id
+where executions.job_id = $1
+order by started_at desc
+limit 1
+`
+
+type GetLatestExecutionForJobRow struct {
+	ExecID              int64              `db:"exec_id" json:"exec_id"`
+	JobID               pgtype.Int8        `db:"job_id" json:"job_id"`
+	WorkerID            pgtype.Int4        `db:"worker_id" json:"worker_id"`
+	StartedAt           pgtype.Timestamptz `db:"started_at" json:"started_at"`
+	FinishedAt          pgtype.Timestamptz `db:"finished_at" json:"finished_at"`
+	CreatedAt           pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	ExecRequestID       pgtype.Int4        `db:"exec_request_id" json:"exec_request_id"`
+	ExecLogs            string             `db:"exec_logs" json:"exec_logs"`
+	NixLogs             pgtype.Text        `db:"nix_logs" json:"nix_logs"`
+	Success             pgtype.Bool        `db:"success" json:"success"`
+	ID                  int32              `db:"id" json:"id"`
+	Hash                string             `db:"hash" json:"hash"`
+	Code                string             `db:"code" json:"code"`
+	Path                string             `db:"path" json:"path"`
+	Flake               string             `db:"flake" json:"flake"`
+	NixScript           string             `db:"nix_script" json:"nix_script"`
+	Args                pgtype.Text        `db:"args" json:"args"`
+	ProgrammingLanguage pgtype.Text        `db:"programming_language" json:"programming_language"`
+}
+
+func (q *Queries) GetLatestExecutionForJob(ctx context.Context, jobID pgtype.Int8) (GetLatestExecutionForJobRow, error) {
+	row := q.db.QueryRow(ctx, getLatestExecutionForJob, jobID)
+	var i GetLatestExecutionForJobRow
+	err := row.Scan(
+		&i.ExecID,
+		&i.JobID,
+		&i.WorkerID,
+		&i.StartedAt,
+		&i.FinishedAt,
+		&i.CreatedAt,
+		&i.ExecRequestID,
+		&i.ExecLogs,
+		&i.NixLogs,
+		&i.Success,
+		&i.ID,
+		&i.Hash,
+		&i.Code,
+		&i.Path,
+		&i.Flake,
+		&i.NixScript,
+		&i.Args,
+		&i.ProgrammingLanguage,
+	)
+	return i, err
 }
 
 const getTotalExecutions = `-- name: GetTotalExecutions :one

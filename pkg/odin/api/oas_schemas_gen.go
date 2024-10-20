@@ -1323,13 +1323,10 @@ func (*PackagesExistOK) packagesExistRes() {}
 type PaginationResponse struct {
 	// Represents the total number of items.
 	Total int64 `json:"total"`
-	// Represents the total number of pages.
-	Pages OptInt32 `json:"pages"`
-	// Represents the current page.
-	Page OptInt32 `json:"page"`
-	// Represents the number of items per page.
-	Limit int32     `json:"limit"`
-	Next  OptString `json:"next"`
+	// Represets the page number.
+	PageNumber int64 `json:"page_number"`
+	// Represents the page size.
+	PageSize int64 `json:"page_size"`
 }
 
 // GetTotal returns the value of Total.
@@ -1337,24 +1334,14 @@ func (s *PaginationResponse) GetTotal() int64 {
 	return s.Total
 }
 
-// GetPages returns the value of Pages.
-func (s *PaginationResponse) GetPages() OptInt32 {
-	return s.Pages
+// GetPageNumber returns the value of PageNumber.
+func (s *PaginationResponse) GetPageNumber() int64 {
+	return s.PageNumber
 }
 
-// GetPage returns the value of Page.
-func (s *PaginationResponse) GetPage() OptInt32 {
-	return s.Page
-}
-
-// GetLimit returns the value of Limit.
-func (s *PaginationResponse) GetLimit() int32 {
-	return s.Limit
-}
-
-// GetNext returns the value of Next.
-func (s *PaginationResponse) GetNext() OptString {
-	return s.Next
+// GetPageSize returns the value of PageSize.
+func (s *PaginationResponse) GetPageSize() int64 {
+	return s.PageSize
 }
 
 // SetTotal sets the value of Total.
@@ -1362,24 +1349,14 @@ func (s *PaginationResponse) SetTotal(val int64) {
 	s.Total = val
 }
 
-// SetPages sets the value of Pages.
-func (s *PaginationResponse) SetPages(val OptInt32) {
-	s.Pages = val
+// SetPageNumber sets the value of PageNumber.
+func (s *PaginationResponse) SetPageNumber(val int64) {
+	s.PageNumber = val
 }
 
-// SetPage sets the value of Page.
-func (s *PaginationResponse) SetPage(val OptInt32) {
-	s.Page = val
-}
-
-// SetLimit sets the value of Limit.
-func (s *PaginationResponse) SetLimit(val int32) {
-	s.Limit = val
-}
-
-// SetNext sets the value of Next.
-func (s *PaginationResponse) SetNext(val OptString) {
-	s.Next = val
+// SetPageSize sets the value of PageSize.
+func (s *PaginationResponse) SetPageSize(val int64) {
+	s.PageSize = val
 }
 
 type SearchLanguagePackagesBadRequest Error

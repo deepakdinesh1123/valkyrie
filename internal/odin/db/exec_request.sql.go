@@ -95,16 +95,18 @@ func (q *Queries) InsertExecRequest(ctx context.Context, arg InsertExecRequestPa
 
 const listExecRequests = `-- name: ListExecRequests :many
 select id, hash, code, path, flake, nix_script, args, programming_language from exec_request
-limit $1 offset $2
+where id <= $1
+order by id desc
+limit $2
 `
 
 type ListExecRequestsParams struct {
-	Limit  int32 `db:"limit" json:"limit"`
-	Offset int32 `db:"offset" json:"offset"`
+	ID    int32 `db:"id" json:"id"`
+	Limit int32 `db:"limit" json:"limit"`
 }
 
 func (q *Queries) ListExecRequests(ctx context.Context, arg ListExecRequestsParams) ([]ExecRequest, error) {
-	rows, err := q.db.Query(ctx, listExecRequests, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listExecRequests, arg.ID, arg.Limit)
 	if err != nil {
 		return nil, err
 	}

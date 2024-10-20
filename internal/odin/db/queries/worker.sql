@@ -28,7 +28,9 @@ returning *;
 
 -- name: GetAllWorkers :many
 select * from workers
-limit $1 offset $2;
+where id <= @crsr::integer
+order by id desc
+limit $1;
 
 -- name: GetTotalWorkers :one
 select count(*) from workers;

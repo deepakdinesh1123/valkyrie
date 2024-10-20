@@ -11,8 +11,6 @@ sql:
       database: false
     rules:
       - sqlc/db-prepare
-    database:
-      uri: "postgresql://thors:thorkell@localhost:5432/valkyrie?sslmode=disable"
     gen:
       go:
         package: "db"

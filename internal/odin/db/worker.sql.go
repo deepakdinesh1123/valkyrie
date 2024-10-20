@@ -43,16 +43,18 @@ func (q *Queries) DeleteWorker(ctx context.Context, id int32) error {
 
 const getAllWorkers = `-- name: GetAllWorkers :many
 select id, name, created_at, last_heartbeat, current_state from workers
-limit $1 offset $2
+where id <= $2::integer
+order by id desc
+limit $1
 `
 
 type GetAllWorkersParams struct {
-	Limit  int32 `db:"limit" json:"limit"`
-	Offset int32 `db:"offset" json:"offset"`
+	Limit int32 `db:"limit" json:"limit"`
+	Crsr  int32 `db:"crsr" json:"crsr"`
 }
 
 func (q *Queries) GetAllWorkers(ctx context.Context, arg GetAllWorkersParams) ([]Worker, error) {
-	rows, err := q.db.Query(ctx, getAllWorkers, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, getAllWorkers, arg.Limit, arg.Crsr)
 	if err != nil {
 		return nil, err
 	}

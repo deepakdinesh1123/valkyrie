@@ -26,6 +26,7 @@ type Querier interface {
 	GetExecutionsForJob(ctx context.Context, arg GetExecutionsForJobParams) ([]GetExecutionsForJobRow, error)
 	GetJob(ctx context.Context, jobID int64) (GetJobRow, error)
 	GetJobState(ctx context.Context, jobID int64) (string, error)
+	GetLatestExecutionForJob(ctx context.Context, jobID pgtype.Int8) (GetLatestExecutionForJobRow, error)
 	GetStaleWorkers(ctx context.Context) ([]int32, error)
 	GetTotalExecutions(ctx context.Context) (int64, error)
 	GetTotalExecutionsForJob(ctx context.Context, jobID pgtype.Int8) (int64, error)

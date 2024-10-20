@@ -62,8 +62,9 @@ returning *;
 -- name: GetAllJobs :many
 select * from jobs
 inner join exec_request on jobs.exec_request_id = exec_request.id
-order by jobs.job_id
-limit $1 offset $2;
+where jobs.job_id <=  @crsr::integer
+order by jobs.job_id desc
+limit $1;
 
 -- name: GetJob :one
 select * from jobs inner join exec_request on jobs.exec_request_id = exec_request.id where jobs.job_id = $1;
@@ -85,15 +86,23 @@ SELECT count(*) FROM jobs;
 -- name: GetExecutionsForJob :many
 select * from executions
 inner join exec_request on executions.exec_request_id = exec_request.id
+where executions.job_id = $1 and executions.exec_id <= @crsr::integer
+order by exec_id desc
+limit $2;
+
+-- name: GetLatestExecutionForJob :one
+select * from executions
+inner join exec_request  on executions.exec_request_id = exec_request.id
 where executions.job_id = $1
-order by finished_at desc
-limit $2 offset $3;
+order by started_at desc
+limit 1;
 
 -- name: GetAllExecutions :many
 select * from executions
 inner join exec_request on executions.exec_request_id = exec_request.id
-order by started_at desc
-limit $1 offset $2;
+where  exec_id <= @crsr::integer
+order by exec_id desc
+limit $1;
 
 -- name: GetTotalExecutionsForJob :one
 select count(*) from executions where job_id = $1;

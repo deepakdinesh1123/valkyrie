@@ -712,27 +712,21 @@ components:
       type: object
       required:
         - total
-        - limit
-        - offset
+        - page_number
+        - page_size
       properties:
         total:
           type: integer
           format: int64
           description: Represents the total number of items.
-        pages:
+        page_number:
           type: integer
-          format: int32
-          description: Represents the total number of pages.
-        page:
+          format: int64
+          description: Represets the page number
+        page_size:
           type: integer
-          format: int32
-          description: Represents the current page.
-        limit:
-          type: integer
-          format: int32
-          description: Represents the number of items per page.
-        next:
-          type: string
+          format: int64
+          description: Represents the page size
     ExecutionResult:
       allOf:
         - $ref: '#/components/schemas/Job'

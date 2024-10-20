@@ -3966,35 +3966,19 @@ func (s *PaginationResponse) encodeFields(e *jx.Encoder) {
 		e.Int64(s.Total)
 	}
 	{
-		if s.Pages.Set {
-			e.FieldStart("pages")
-			s.Pages.Encode(e)
-		}
+		e.FieldStart("page_number")
+		e.Int64(s.PageNumber)
 	}
 	{
-		if s.Page.Set {
-			e.FieldStart("page")
-			s.Page.Encode(e)
-		}
-	}
-	{
-		e.FieldStart("limit")
-		e.Int32(s.Limit)
-	}
-	{
-		if s.Next.Set {
-			e.FieldStart("next")
-			s.Next.Encode(e)
-		}
+		e.FieldStart("page_size")
+		e.Int64(s.PageSize)
 	}
 }
 
-var jsonFieldsNameOfPaginationResponse = [5]string{
+var jsonFieldsNameOfPaginationResponse = [3]string{
 	0: "total",
-	1: "pages",
-	2: "page",
-	3: "limit",
-	4: "next",
+	1: "page_number",
+	2: "page_size",
 }
 
 // Decode decodes PaginationResponse from json.
@@ -4018,47 +4002,29 @@ func (s *PaginationResponse) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"total\"")
 			}
-		case "pages":
+		case "page_number":
+			requiredBitSet[0] |= 1 << 1
 			if err := func() error {
-				s.Pages.Reset()
-				if err := s.Pages.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"pages\"")
-			}
-		case "page":
-			if err := func() error {
-				s.Page.Reset()
-				if err := s.Page.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"page\"")
-			}
-		case "limit":
-			requiredBitSet[0] |= 1 << 3
-			if err := func() error {
-				v, err := d.Int32()
-				s.Limit = int32(v)
+				v, err := d.Int64()
+				s.PageNumber = int64(v)
 				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"limit\"")
+				return errors.Wrap(err, "decode field \"page_number\"")
 			}
-		case "next":
+		case "page_size":
+			requiredBitSet[0] |= 1 << 2
 			if err := func() error {
-				s.Next.Reset()
-				if err := s.Next.Decode(d); err != nil {
+				v, err := d.Int64()
+				s.PageSize = int64(v)
+				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"next\"")
+				return errors.Wrap(err, "decode field \"page_size\"")
 			}
 		default:
 			return d.Skip()
@@ -4070,7 +4036,7 @@ func (s *PaginationResponse) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00001001,
+		0b00000111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.

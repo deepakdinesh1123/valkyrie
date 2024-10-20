@@ -92,11 +92,7 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 
 			switch job.CurrentState {
 			case "completed":
-				res, err := s.queries.GetExecutionsForJob(ctx, db.GetExecutionsForJobParams{
-					JobID:  pgtype.Int8{Int64: execId, Valid: true},
-					Limit:  1,
-					Offset: 0,
-				})
+				res, err := s.queries.GetLatestExecutionForJob(ctx, pgtype.Int8{Int64: execId, Valid: true})
 				if err != nil {
 					s.logger.Error().Stack().Err(err).Msg("Failed to get execution logs")
 					sendSSEMessage(w, flusher, SSEMessage{
@@ -110,7 +106,7 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 				sendSSEMessage(w, flusher, SSEMessage{
 					Status: "completed",
 					ExecID: execId,
-					Logs:   res[0].ExecLogs,
+					Logs:   res.ExecLogs,
 				})
 				return
 
@@ -183,17 +179,13 @@ func (s *OdinServer) ExecuteWS(w http.ResponseWriter, r *http.Request) {
 			switch job.CurrentState {
 			case "completed":
 				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("completed: %d\n\n", execId)))
-				res, err := s.queries.GetExecutionsForJob(ctx, db.GetExecutionsForJobParams{
-					JobID:  pgtype.Int8{Int64: execId, Valid: true},
-					Limit:  1,
-					Offset: 0,
-				})
+				res, err := s.queries.GetLatestExecutionForJob(ctx, pgtype.Int8{Int64: execId, Valid: true})
 				if err != nil {
 					s.logger.Error().Stack().Err(err).Msg("Failed to get execution executions")
 					c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("failed: %s\n\n", err)))
 					return
 				}
-				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("data: %s\n\n", res[0].ExecLogs)))
+				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("data: %s\n\n", res.ExecLogs)))
 				return
 			case "failed":
 				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("failed: %d\n\n", execId)))
@@ -212,8 +204,8 @@ func (s *OdinServer) ExecuteWS(w http.ResponseWriter, r *http.Request) {
 
 func (s *OdinServer) GetAllExecutions(ctx context.Context, params api.GetAllExecutionsParams) (api.GetAllExecutionsRes, error) {
 	execResDB, err := s.queries.GetAllExecutions(ctx, db.GetAllExecutionsParams{
-		Limit:  params.PageSize.Value,
-		Offset: params.Page.Value * params.PageSize.Value,
+		Limit: params.PageSize.Value,
+		Crsr:  params.Page.Value * params.PageSize.Value,
 	})
 	if err != nil {
 		return &api.GetAllExecutionsInternalServerError{
@@ -250,9 +242,9 @@ func (s *OdinServer) GetAllExecutions(ctx context.Context, params api.GetAllExec
 
 func (s *OdinServer) GetExecutionsForJob(ctx context.Context, params api.GetExecutionsForJobParams) (api.GetExecutionsForJobRes, error) {
 	execRes, err := s.queries.GetExecutionsForJob(ctx, db.GetExecutionsForJobParams{
-		JobID:  pgtype.Int8{Int64: params.JobId, Valid: true},
-		Limit:  params.PageSize.Value,
-		Offset: params.Page.Value * params.PageSize.Value,
+		JobID: pgtype.Int8{Int64: params.JobId, Valid: true},
+		Limit: params.PageSize.Value,
+		Crsr:  params.Page.Value * params.PageSize.Value,
 	})
 	if err != nil {
 		return &api.GetExecutionsForJobInternalServerError{
@@ -295,8 +287,8 @@ func (s *OdinServer) GetAllExecutionJobs(ctx context.Context, params api.GetAllE
 		return &api.GetAllExecutionJobsForbidden{}, nil
 	}
 	executionsDB, err := s.queries.GetAllJobs(ctx, db.GetAllJobsParams{
-		Limit:  params.PageSize.Value,
-		Offset: params.Page.Value * params.PageSize.Value,
+		Limit: params.PageSize.Value,
+		Crsr:  params.Page.Value * params.PageSize.Value,
 	})
 	if err != nil {
 		return &api.GetAllExecutionJobsInternalServerError{
@@ -331,8 +323,8 @@ func (s *OdinServer) GetAllExecutionJobs(ctx context.Context, params api.GetAllE
 
 func (s *OdinServer) GetExecutionWorkers(ctx context.Context, params api.GetExecutionWorkersParams) (api.GetExecutionWorkersRes, error) {
 	workersDB, err := s.queries.GetAllWorkers(ctx, db.GetAllWorkersParams{
-		Limit:  params.PageSize.Value,
-		Offset: params.PageSize.Value * params.Page.Value,
+		Limit: params.PageSize.Value,
+		Crsr:  params.PageSize.Value * params.Page.Value,
 	})
 	if err != nil {
 		return &api.GetExecutionWorkersInternalServerError{
