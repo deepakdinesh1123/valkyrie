@@ -24,7 +24,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                     <li>Select a language from the dropdown menu.</li>
                     <li>Write your code in the editor.</li>
                     <li>Add any args to pass if necessary.</li>
-                    <li>Add system and language dependencies if needed.</li>
+                    <li>Add system and language dependencies if needed. (The versions of the packages are what nixos-24.05 provides.)</li>
                     <li>Click "Run code" to execute your code.</li>
                     <li>View the output in the terminal below.</li>
                 </ul>

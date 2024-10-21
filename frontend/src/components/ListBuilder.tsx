@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -23,55 +23,41 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState<boolean>(false);
-  const [filteredItems, setFilteredItems] = useState<{ name: string; version: string }[]>([]);
+  const [showNoResults, setShowNoResults] = useState<boolean>(false);
 
   const debouncedSearchChange = useCallback(
     debounce((value: string) => {
       onSearchChange(value);
-    }, 800),
+      setIsSearching(false);
+    }, 300),
     [onSearchChange]
   );
 
-  // Clear results and trigger search on search term change
   useEffect(() => {
-    setFilteredItems([]);
-    setIsSearching(true);
+    let noResultsTimer: NodeJS.Timeout;
     if (searchTerm === "") {
       setIsSearching(false);
+      setShowNoResults(false);
       onSearchChange("");
     } else {
+      setIsSearching(true);
+      setShowNoResults(false);
       debouncedSearchChange(searchTerm);
+      noResultsTimer = setTimeout(() => {
+        setShowNoResults(true);
+      }, 1000); // Delay of 1 second before showing "No results"
     }
     return () => {
       debouncedSearchChange.cancel();
+      if (noResultsTimer) clearTimeout(noResultsTimer);
     };
   }, [searchTerm, debouncedSearchChange, onSearchChange]);
-
-  // Simulate API call to get new results
-  useEffect(() => {
-    if (isSearching && searchTerm !== "") {
-      const fetchResults = async () => {
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        const newFilteredItems = items.filter(
-          (item) =>
-            item.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-            !selectedItems.includes(item.name)
-        );
-        setFilteredItems(newFilteredItems);
-        setIsSearching(false);
-      };
-
-      fetchResults();
-    }
-  }, [isSearching, searchTerm, items, selectedItems]);
 
   useEffect(() => {
     if (resetTrigger !== undefined) {
       setSelectedItems([]);
       setSearchTerm("");
-      setFilteredItems([]);
+      setShowNoResults(false);
       onSelectionChange([]);
       onSearchChange("");
     }
@@ -90,12 +76,21 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
     }
   }, [nonExistingPackages, selectedItems, onSelectionChange]);
 
+  const filteredItems = useMemo(() => {
+    if (searchTerm === "") {
+      return items.filter(item => !selectedItems.includes(item.name));
+    }
+    return items.filter(
+      (item) =>
+        item.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !selectedItems.includes(item.name)
+    );
+  }, [items, searchTerm, selectedItems]);
+
   const handleSelect = (item: { name: string; version: string }) => {
     const newSelectedItems = [...selectedItems, item.name];
     setSelectedItems(newSelectedItems);
     onSelectionChange(newSelectedItems);
-    setSearchTerm("");
-    setFilteredItems([]);
   };
 
   const handleRemove = (itemName: string) => {
@@ -145,9 +140,9 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
       {searchTerm !== "" && (
         isSearching ? (
           <div className="pl-2">Searching...</div>
-        ) : filteredItems.length === 0 ? (
-          <div className="pl-2">No results found</div>
-        ) : (
+        ) : filteredItems.length === 0 && showNoResults ? (
+          <div className="pl-2">No results...</div>
+        ) : filteredItems.length > 0 && (
           <div className="bg-neutral-900 text-white shadow-md rounded-md overflow-hidden">
             <ul className="max-h-40 overflow-y-auto">
               {filteredItems.map((item) => (

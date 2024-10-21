@@ -132,7 +132,7 @@ const App: React.FC = () => {
               placeholder="Args"
               value={args}
               onChange={(e) => setArgs(e.target.value)}
-              className="args-input w-full sm:w-36 mr-1 bg-neutral-900 text-white border-none"
+              className="args-input w-full sm:w-36 mr-1 bg-neutral-900 text-white border-white border-2 border-opacity-100"
             />
           </div>
           <div className="flex items-center w-full sm:w-auto justify-end">
