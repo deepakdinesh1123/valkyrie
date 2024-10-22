@@ -1,2 +1,0 @@
-python311, requests, numpy
-lua54, vstruct

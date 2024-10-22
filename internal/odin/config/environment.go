@@ -151,7 +151,7 @@ func GetEnvConfig() (*EnvConfig, error) {
 			}
 			envConfig.USER_HOME_DIR = home_dir
 		}
-		envConfig.ODIN_INFO_DIR = filepath.Join(envConfig.USER_HOME_DIR, ".odin_info")
+		envConfig.ODIN_INFO_DIR = filepath.Join(os.TempDir(), ".odin_info")
 		envConfig.ODIN_WORKER_INFO_FILE = filepath.Join(envConfig.ODIN_INFO_DIR, "worker.json")
 	})
 	if envConfig != nil {

@@ -37,11 +37,14 @@ var (
 
 func init() {
 	NixDumpCmd.Flags().StringP("channel", "c", "", "Nixpkgs channel")
-	languagePackages = loadLanguagePackages("internal/odin/cmd/patterns/languages.txt")
-	systemPatterns = loadPatterns("internal/odin/cmd/patterns/systempackages.txt")
+	NixDumpCmd.Flags().StringP("languages", "l", "languages.txt", "Path to the languages.txt file")
+	NixDumpCmd.Flags().StringP("systems", "s", "systempackages.txt", "Path to the systempackages.txt file")
+
 }
 
 func runNixDump(cmd *cobra.Command, args []string) error {
+	languagePackages = loadLanguagePackages(cmd.Flag("languages").Value.String())
+	systemPatterns = loadSystemPackages(cmd.Flag("systems").Value.String())
 	channel := cmd.Flag("channel").Value.String()
 
 	envConfig, err := config.GetEnvConfig()
@@ -259,7 +262,7 @@ func loadLanguagePackages(filePath string) map[string][]string {
 	}
 	return packages
 }
-func loadPatterns(filePath string) []string {
+func loadSystemPackages(filePath string) []string {
 	file, err := os.Open(filePath)
 	if err != nil {
 		log.Fatalf("Failed to open %s: %v", filePath, err)

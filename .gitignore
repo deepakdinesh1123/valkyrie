@@ -53,3 +53,5 @@ go.work.sum
 *.log
 
 odinb
+languages.txt
+systempackages.txt
