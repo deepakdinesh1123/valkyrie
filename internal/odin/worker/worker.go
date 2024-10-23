@@ -193,7 +193,7 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 				return &WorkerError{Type: "Context", Message: err.Error()}
 			}
 		case <-fetchJobTicker.C:
-			w.updateStats()
+			// w.updateStats()
 			// if w.WorkerStats.CPUUsage > 75 {
 			// 	w.logger.Info().Float64("CPU Usage", w.WorkerStats.CPUUsage).Msg("Worker: high usage")
 			// 	continue
