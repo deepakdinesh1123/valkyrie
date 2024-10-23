@@ -88,10 +88,17 @@ func constructor(ctx context.Context) (Container, error) {
 		s.StopSignal = &stopSignal
 		s.OCIRuntime = "crun"
 
+		s.ContainerBasicConfig = specgen.ContainerBasicConfig{
+			Env: map[string]string{
+				"NIX_CHANNELS_ENVIRONMENT": envConfig.ODIN_NIX_CHANNELS_ENVIRONMENT,
+				"NIX_USER_ENVIRONMENT":     envConfig.ODIN_NIX_USER_ENVIRONMENT,
+			},
+		}
+
 		s.ContainerStorageConfig.OverlayVolumes = []*specgen.OverlayVolume{
 			{
 				Destination: "/nix",
-				Source:      "/nix",
+				Source:      envConfig.ODIN_NIX_STORE,
 			},
 		}
 

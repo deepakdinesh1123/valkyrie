@@ -3,15 +3,15 @@
 set -e
 
 mkdir -p ~/.local/state/nix/profiles
-ln -s /nix/store/2a5fmngm88v94ihg6yzgd2w38kllqs67-user-environment ~/.local/state/nix/profiles/channels-1-link
+ln -s $NIX_CHANNELS_ENVIRONMENT ~/.local/state/nix/profiles/channels-1-link
 ln -s ~/.local/state/nix/profiles/channels-1-link ~/.local/state/nix/profiles/channels
-ln -s /nix/store/ak09zx2rza4x0c4fjn9zyjnr4nck9h1b-user-environment ~/.local/state/nix/profiles/profiles-1-link
+ln -s $NIX_USER_ENVIRONMENT ~/.local/state/nix/profiles/profiles-1-link
 ln -s ~/.local/state/nix/profiles/profiles-1-link ~/.local/state/nix/profiles/profile
 
 mkdir ~/.nix-defexpr
 ln -s ~/.local/state/nix/profiles/channels ~/.nix-defexpr/channels
 
-ln -s /nix/store/ak09zx2rza4x0c4fjn9zyjnr4nck9h1b-user-environment ~/.nix-profile
+ln -s $NIX_USER_ENVIRONMENT ~/.nix-profile
 
 echo PATH="$PATH:~/.nix-profile/bin" >> ~/.profile
 echo NIX_PATH="/tmp/nixpkgs" >> ~/.profile
