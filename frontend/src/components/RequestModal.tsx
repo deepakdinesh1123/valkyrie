@@ -22,7 +22,7 @@ const RequestPackageModal: React.FC<RequestPackageModalProps> = ({ isOpen, onClo
                         <a className="underline text-blue-500" href="https://search.nixos.org/packages" target='_blank'>
                             NixOS search
                         </a>{' '}
-                        to check.
+                        and search in the 24.05 channel.
                     </DialogDescription>
                 </DialogHeader>
                 <p className="text-white">
@@ -33,8 +33,9 @@ const RequestPackageModal: React.FC<RequestPackageModalProps> = ({ isOpen, onClo
                     with the following information:
                 </p>
                 <ul className="list-disc pl-5 text-white">
-                    <li>Package details</li>
-                    <li>Nix channel version</li>
+                    <li>Package Name</li>
+                    <li>Package Version</li>
+                    <li>Type</li>
                 </ul>
                 <DialogClose asChild>
                     <Button className="mt-4 border border-transparent hover:border-white transition-colors">

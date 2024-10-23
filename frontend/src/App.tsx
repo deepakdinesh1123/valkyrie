@@ -132,7 +132,7 @@ const App: React.FC = () => {
               placeholder="Args"
               value={args}
               onChange={(e) => setArgs(e.target.value)}
-              className="args-input w-full sm:w-36 mr-1 bg-neutral-900 text-white border-none"
+              className="args-input w-full sm:w-36 mr-1 bg-neutral-900 text-white border-white border-2 border-opacity-100"
             />
           </div>
           <div className="flex items-center w-full sm:w-auto justify-end">
@@ -193,10 +193,10 @@ const App: React.FC = () => {
       {/* Collapsible Sidebar */}
       {
         isSidebarOpen && (
-          <div className="sidebar z-10 w-full md:w-1/3 lg:w-1/4 text-white p-2 flex flex-col justify-between transition-all duration-300 max-h-screen overflow-y-auto">
+          <div className="sidebar z-10 w-full md:w-1/3 lg:w-1/4 text-white p-2 flex flex-col justify-between transition-all duration-300 max-h-screen">
             {/* Sidebar Content */}
             <div className="flex-1">
-              <div className="flex flex-col gap-4 h-full">
+              <div className="flex flex-col gap-2 h-full">
                 {/* System Dependencies Section */}
                 <div className="flex-1 flex flex-col rounded-md shadow-md p-2">
                   <span className="">System Dependencies</span>
@@ -250,7 +250,7 @@ const App: React.FC = () => {
             <div className="text-sm text-white border-t border-gray-700 pt-1 flex items-center space-x-2 justify-between">
               <span>Valkyrie</span>
               <a
-                href="https://discord.com/invite/your-invite-code"
+                href="https://discord.gg/3cJpQNgT"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:opacity-80 transition-opacity"
