@@ -45,7 +45,9 @@ type EnvConfig struct {
 	ODIN_EXPORT_LOGS        string `mapstructure:"ODIN_EXPORT_LOGS"`
 	ODIN_ENVIRONMENT        string `mapstructure:"ODIN_ENVIRONMENT"` // represents the environment for the server (e.g. dev, staging, prod).
 
-	ODIN_NIX_STORE string `mapstructure:"ODIN_NIX_STORE"` // represents the Nix store directory.
+	ODIN_NIX_STORE                string `mapstructure:"ODIN_NIX_STORE"`                // represents the Nix store directory.
+	ODIN_NIX_USER_ENVIRONMENT     string `mapstructure:"ODIN_NIX_USER_ENVIRONMENT"`     // realpath of  ~/.nix-profile
+	ODIN_NIX_CHANNELS_ENVIRONMENT string `mapstructure:"ODIN_NIX_CHANNELS_ENVIRONMENT"` //
 
 	ODIN_JOB_PRUNE_FREQ int `mapstructure:"ODIN_JOB_PRUNE_FREQ"` // represents the job prune frequency in hours.
 
@@ -101,6 +103,8 @@ func GetEnvConfig() (*EnvConfig, error) {
 		viper.SetDefault("ODIN_WORKER_RUNTIME", "runc")
 
 		viper.SetDefault("ODIN_WORKER_MEMORY_LIMIT", 500)
+
+		viper.SetDefault("ODIN_NIX_STORE", "/nix")
 
 		viper.SetDefault("ODIN_ENABLE_TELEMETRY", false)
 		viper.SetDefault("ODIN_OTLP_ENDPOINT", "localhost:4317")

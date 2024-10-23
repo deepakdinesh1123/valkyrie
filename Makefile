@@ -13,7 +13,16 @@ gq: start-db
 
 .PHONY: start-db
 start-db:
-	@docker compose up postgres -d
+	@podman run -d \
+		--name postgres-container \
+		-e POSTGRES_DB=${POSTGRES_DB} \
+		-e POSTGRES_USER=${POSTGRES_USER} \
+		-e POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
+		-p 5432:5432 \
+		postgres
+
+.PHONY: migrate-db
+migrate-db:
 	migrate -path internal/odin/db/migrations -database ${POSTGRES_URL} up
 
 .PHONY: clear-stdb
