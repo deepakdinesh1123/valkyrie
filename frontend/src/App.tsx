@@ -13,9 +13,6 @@ import { LanguageSelector } from '@/components/LanguageSelector';
 import { usePackagesExist } from "@/hooks/usePackageExists";
 import HelpModal from "@/components/HelpModal";
 import RequestPackageModal from "@/components/RequestModal";
-import {
-  enable as enableDarkMode,
-} from 'darkreader';
 import PackageIcon from '@/assets/package.svg'
 import HelpIcon from '@/assets/help.svg'
 import ValkyrieIcon from '@/assets/valkyrie.svg'
@@ -46,11 +43,6 @@ const App: React.FC = () => {
 
 
   useEffect(() => {
-    enableDarkMode({
-      brightness: 100,
-      contrast: 90,
-      sepia: 10,
-    });
     if (pendingLanguageChange && existsResponse) {
       handleLanguageChangeEffect(pendingLanguageChange, existsResponse);
       setPendingLanguageChange(null);
@@ -120,7 +112,7 @@ const App: React.FC = () => {
       <div className={`editor-container flex-1 transition-all duration-300 ${isSidebarOpen ? "w-2/3" : "w-full"}`}>
         <div className="top-bar flex flex-wrap justify-between items-center p-2 bg-transparent mr-14">
           <div className="flex flex-wrap items-center w-full sm:w-auto mb-2 sm:mb-0">
-            <div className="w-full sm:w-auto mb-2 sm:mb-0 sm:mr-2">
+            <div className="w-full sm:w-auto mb-2 sm:mb-0 sm:mr-2 border-none">
               <LanguageSelector
                 languages={languages}
                 selectedLanguage={selectedLanguage}
@@ -132,20 +124,20 @@ const App: React.FC = () => {
               placeholder="Args"
               value={args}
               onChange={(e) => setArgs(e.target.value)}
-              className="args-input w-full sm:w-36 mr-1 bg-neutral-900 text-white border-white border-2 border-opacity-100"
+              className="args-input w-full sm:w-36 mr-1 bg-neutral-900 text-whit border-opacity-100 focus:ring-0 "
             />
           </div>
           <div className="flex items-center w-full sm:w-auto justify-end">
             <Button
               onClick={handleRunCode}
               disabled={isLoading}
-              className={`run-code-btn mr-2 ${isLoading ? 'loading' : ''} w-1/2 sm:w-auto`}
+              className={`run-code-btn mr-2 ${isLoading ? 'loading' : ''} w-1/2 sm:w-auto  bg-neutral-900  transition-colors hover:bg-stone-600 text-sm active:bg-neutral-900`}
             >
               {isLoading ? '' : 'Run Code'}
             </Button>
             <Button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="menu-toggle-btn w-1/2 sm:w-auto"
+              className="menu-toggle-btn w-1/2 sm:w-auto  bg-neutral-900 transition-colors hover:bg-stone-600 text-sm active:bg-neutral-900"
             >
               {isSidebarOpen ? "Menu" : "Menu"}
             </Button>
@@ -155,7 +147,7 @@ const App: React.FC = () => {
         </div>
 
         {/* Resizable Editor */}
-        <div className="flex-grow overflow-hidden" style={{ height: `calc(100% - ${terminalHeight}px - 4rem)` }}>
+        <div className="flex-grow overflow-hidden " style={{ height: `calc(100% - ${terminalHeight}px - 4rem)` }}>
           <CodeEditor
             languages={languages}
             selectedLanguage={selectedLanguage}
