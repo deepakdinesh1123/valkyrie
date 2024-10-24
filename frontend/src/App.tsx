@@ -40,8 +40,6 @@ const App: React.FC = () => {
   const [isRequestModalOpen, setIsRequestModalOpen] = useState<boolean>(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState<boolean>(false);
 
-
-
   useEffect(() => {
     if (pendingLanguageChange && existsResponse) {
       handleLanguageChangeEffect(pendingLanguageChange, existsResponse);
@@ -104,13 +102,14 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden relative">
       <div className="absolute top-0 right-0">
-        <img src={ValkyrieIcon} className="h-14 p-1 pr-16 pt-4" ></img>
+        <img src={ValkyrieIcon} className="h-14 p-1 pr-16 pt-4" alt="Valkyrie" />
       </div>
+
       {/* Editor Container */}
-      <div className={`editor-container flex-1 transition-all duration-300 ${isSidebarOpen ? "w-2/3" : "w-full"}`}>
-        <div className="top-bar flex flex-wrap justify-between items-center p-2 bg-transparent mr-14">
+      <div className="editor-container flex-1 w-full">
+        <div className="top-bar flex flex-wrap justify-between items-center p-2 bg-transparent mr-20">
           <div className="flex flex-wrap items-center w-full sm:w-auto mb-2 sm:mb-0">
             <div className="w-full sm:w-auto mb-2 sm:mb-0 sm:mr-2 border-none">
               <LanguageSelector
@@ -124,30 +123,27 @@ const App: React.FC = () => {
               placeholder="Args"
               value={args}
               onChange={(e) => setArgs(e.target.value)}
-              className="args-input w-full sm:w-36 mr-1 bg-neutral-900 text-whit border-opacity-100 focus:ring-0 "
+              className="args-input w-full sm:w-36 mr-1 bg-neutral-900 text-whit border-opacity-100 focus:ring-0"
             />
           </div>
           <div className="flex items-center w-full sm:w-auto justify-end">
             <Button
               onClick={handleRunCode}
               disabled={isLoading}
-              className={`run-code-btn mr-2 ${isLoading ? 'loading' : ''} w-1/2 sm:w-auto  bg-neutral-900  transition-colors hover:bg-stone-600 text-sm active:bg-neutral-900`}
+              className={`run-code-btn mr-2 ${isLoading ? 'loading' : ''} w-1/2 sm:w-auto bg-neutral-900 transition-colors hover:bg-stone-600 text-sm active:bg-neutral-900`}
             >
               {isLoading ? '' : 'Run Code'}
             </Button>
             <Button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="menu-toggle-btn w-1/2 sm:w-auto  bg-neutral-900 transition-colors hover:bg-stone-600 text-sm active:bg-neutral-900"
+              className="menu-toggle-btn w-1/2 sm:w-auto bg-neutral-900 transition-colors hover:bg-stone-600 text-sm active:bg-neutral-900"
             >
               {isSidebarOpen ? "Menu" : "Menu"}
             </Button>
           </div>
-
-
         </div>
 
-        {/* Resizable Editor */}
-        <div className="flex-grow overflow-hidden " style={{ height: `calc(100% - ${terminalHeight}px - 4rem)` }}>
+        <div className="flex-grow overflow-hidden" style={{ height: `calc(100% - ${terminalHeight}px - 4rem)` }}>
           <CodeEditor
             languages={languages}
             selectedLanguage={selectedLanguage}
@@ -156,7 +152,6 @@ const App: React.FC = () => {
           />
         </div>
 
-        {/* Resizable Terminal */}
         <div className="relative" style={{ height: `${terminalHeight}px` }}>
           <div
             className="absolute top-0 left-0 right-0 h-1 bg-gray-600 cursor-n-resize"
@@ -182,88 +177,79 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      {/* Collapsible Sidebar */}
-      {
-        isSidebarOpen && (
-          <div className="sidebar z-10 w-full md:w-1/3 lg:w-1/4 text-white p-2 flex flex-col justify-between transition-all duration-300 max-h-screen">
-            {/* Sidebar Content */}
-            <div className="flex-1">
-              <div className="flex flex-col gap-2 h-full">
-                {/* System Dependencies Section */}
-                <div className="flex-1 flex flex-col rounded-md shadow-md p-2">
-                  <span className="">System Dependencies</span>
-                  <div className="flex-1 mt-2 rounded-md min-h-[14rem]">
-                    <ListBuilder
-                      items={systemPackages}
-                      onSelectionChange={setSelectedSystemDependencies}
-                      onSearchChange={setSystemSearchString}
-                    />
-                  </div>
-                </div>
-                <div className="border border-t border-zinc-700"></div>
-
-                {/* Language Dependencies Section */}
-                <div className="flex-1 flex flex-col bg-transparent rounded-md shadow-md p-2">
-                  <span className="">Language Dependencies</span>
-                  <div className="flex-1  mt-2 rounded-md min-h-[14rem]">
-                    <ListBuilder
-                      items={languagePackages}
-                      onSelectionChange={setSelectedLanguageDependencies}
-                      onSearchChange={setLanguageSearchString}
-                      resetTrigger={resetLanguageDependencies}
-                      nonExistingPackages={existsResponse?.nonExistingPackages || []}
-                    />
-                  </div>
-                </div>
+      {/* Overlay Sidebar */}
+      <div
+        className={`fixed top-0 right-0 h-full w-full md:w-1/3 lg:w-1/4 bg-neutral-800 text-white p-2 
+          flex flex-col justify-between transition-transform duration-300 ease-in-out z-50
+          ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}
+          shadow-2xl`}
+      >
+        <div className="flex-1">
+          <div className="flex flex-col gap-2 h-full">
+            <div className="flex-1 flex flex-col rounded-md shadow-md p-2">
+              <span className="">System Dependencies</span>
+              <div className="flex-1 mt-2 rounded-md min-h-[14rem]">
+                <ListBuilder
+                  items={systemPackages}
+                  onSelectionChange={setSelectedSystemDependencies}
+                  onSearchChange={setSystemSearchString}
+                />
               </div>
             </div>
-
-            {/* Sidebar Buttons */}
-            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 mt-4">
-              {/* Request Package Button */}
-              <button
-                className="flex-grow flex items-center justify-center cursor-pointer px-3 py-2 bg-neutral-900 rounded-md transition-colors hover:bg-stone-600 text-sm"
-                onClick={() => setIsRequestModalOpen(true)}
-              >
-                <img src={PackageIcon} alt="Package" className="h-4 w-4 mr-2" />
-                Request Package
-              </button>
-
-              {/* Help Button */}
-              <button
-                className="flex-grow flex items-center justify-center cursor-pointer px-3 py-2 bg-neutral-900 rounded-md transition-colors hover:bg-stone-600 text-sm"
-                onClick={() => setIsHelpModalOpen(true)}
-              >
-                <img src={HelpIcon} alt="Help" className="h-4 w-4 mr-2" />
-                Help
-              </button>
+            <div className="border border-t border-zinc-700"></div>
+            <div className="flex-1 flex flex-col bg-transparent rounded-md shadow-md p-2">
+              <span className="">Language Dependencies</span>
+              <div className="flex-1 mt-2 rounded-md min-h-[14rem]">
+                <ListBuilder
+                  items={languagePackages}
+                  onSelectionChange={setSelectedLanguageDependencies}
+                  onSearchChange={setLanguageSearchString}
+                  resetTrigger={resetLanguageDependencies}
+                  nonExistingPackages={existsResponse?.nonExistingPackages || []}
+                />
+              </div>
             </div>
-            {/* Sidebar Footer */}
-            <div className="text-sm text-white border-t border-gray-700 pt-1 flex items-center space-x-2 justify-between">
-              <span>Valkyrie</span>
-              <a
-                href="https://discord.gg/3cJpQNgT"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:opacity-80 transition-opacity"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="w-5 h-5 text-white"
-                >
-                  <path
-                    d="M20.317 4.369a19.791 19.791 0 00-4.885-1.527.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.248a18.292 18.292 0 00-5.487 0 12.327 12.327 0 00-.617-1.248.079.079 0 00-.079-.037A19.425 19.425 0 003.68 4.369a.07.07 0 00-.032.027C.533 9.39-.32 14.313.099 19.163a.082.082 0 00.031.058 19.875 19.875 0 005.996 3.03.079.079 0 00.084-.027c.464-.637.873-1.312 1.226-2.016a.074.074 0 00-.041-.105 13.12 13.12 0 01-1.872-.9.076.076 0 01-.008-.126c.125-.094.25-.191.371-.292a.073.073 0 01.077-.01c3.927 1.793 8.18 1.793 12.061 0a.073.073 0 01.079.009c.122.1.247.198.372.292a.076.076 0 01-.007.125 12.663 12.663 0 01-1.873.901.075.075 0 00-.04.105c.366.704.776 1.379 1.224 2.016a.079.079 0 00.084.028 19.875 19.875 0 005.997-3.03.08.08 0 00.031-.058c.5-5.192-.83-10.058-3.575-14.767a.061.061 0 00-.03-.028zM8.02 15.331c-1.182 0-2.158-1.085-2.158-2.419 0-1.333.953-2.418 2.158-2.418 1.21 0 2.174 1.09 2.158 2.418 0 1.334-.953 2.419-2.158 2.419zm7.974 0c-1.182 0-2.158-1.085-2.158-2.419 0-1.333.953-2.418 2.158-2.418 1.21 0 2.174 1.09 2.158 2.418 0 1.334-.953 2.419-2.158 2.419z"
-                  />
-                </svg>
-              </a>
-            </div>
-
-
           </div>
-        )
-      }
+        </div>
+
+        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 mt-4 pb-2">
+          <button
+            className="flex-grow flex items-center justify-center cursor-pointer px-3 py-2 bg-neutral-900 rounded-md transition-colors hover:bg-stone-600 text-sm"
+            onClick={() => setIsRequestModalOpen(true)}
+          >
+            <img src={PackageIcon} alt="Package" className="h-4 w-4 mr-2" />
+            Request Package
+          </button>
+          <button
+            className="flex-grow flex items-center justify-center cursor-pointer px-3 py-2 bg-neutral-900 rounded-md transition-colors hover:bg-stone-600 text-sm"
+            onClick={() => setIsHelpModalOpen(true)}
+          >
+            <img src={HelpIcon} alt="Help" className="h-4 w-4 mr-2" />
+            Help
+          </button>
+        </div>
+        <div className="border border-t border-zinc-700"></div>
+        <div className="text-sm text-white pt-1 flex items-center space-x-2 justify-between">
+          <span>Valkyrie</span>
+          <a
+            href="https://discord.gg/3cJpQNgT"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:opacity-80 transition-opacity"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="w-5 h-5 text-white"
+            >
+              <path
+                d="M20.317 4.369a19.791 19.791 0 00-4.885-1.527.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.248a18.292 18.292 0 00-5.487 0 12.327 12.327 0 00-.617-1.248.079.079 0 00-.079-.037A19.425 19.425 0 003.68 4.369a.07.07 0 00-.032.027C.533 9.39-.32 14.313.099 19.163a.082.082 0 00.031.058 19.875 19.875 0 005.996 3.03.079.079 0 00.084-.027c.464-.637.873-1.312 1.226-2.016a.074.074 0 00-.041-.105 13.12 13.12 0 01-1.872-.9.076.076 0 01-.008-.126c.125-.094.25-.191.371-.292a.073.073 0 01.077-.01c3.927 1.793 8.18 1.793 12.061 0a.073.073 0 01.079.009c.122.1.247.198.372.292a.076.076 0 01-.007.125 12.663 12.663 0 01-1.873.901.075.075 0 00-.04.105c.366.704.776 1.379 1.224 2.016a.079.079 0 00.084.028 19.875 19.875 0 005.997-3.03.08.08 0 00.031-.058c.5-5.192-.83-10.058-3.575-14.767a.061.061 0 00-.03-.028zM8.02 15.331c-1.182 0-2.158-1.085-2.158-2.419 0-1.333.953-2.418 2.158-2.418 1.21 0 2.174 1.09 2.158 2.418 0 1.334-.953 2.419-2.158 2.419zm7.974 0c-1.182 0-2.158-1.085-2.158-2.419 0-1.333.953-2.418 2.158-2.418 1.21 0 2.174 1.09 2.158 2.418 0 1.334-.953 2.419-2.158 2.419z"
+              />
+            </svg>
+          </a>
+        </div>
+      </div>
 
       <HelpModal
         isOpen={isHelpModalOpen}
@@ -274,9 +260,8 @@ const App: React.FC = () => {
         isOpen={isRequestModalOpen}
         onClose={() => setIsRequestModalOpen(false)}
       />
-    </div >
+    </div>
   );
-
 };
 
 export default App;
