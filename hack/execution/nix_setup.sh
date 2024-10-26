@@ -3,8 +3,8 @@
 set -e
 
 mkdir -p ~/.local/state/nix/profiles
-ln -s $NIX_CHANNELS_ENVIRONMENT ~/.local/state/nix/profiles/channels-1-link
-ln -s ~/.local/state/nix/profiles/channels-1-link ~/.local/state/nix/profiles/channels
+ln -s $NIX_CHANNELS_ENVIRONMENT ~/.local/state/nix/profiles/channels
+ln -s  ~/.local/state/nix/profiles/channels ~/.local/state/nix/profiles/channels-1-link 
 ln -s $NIX_USER_ENVIRONMENT ~/.local/state/nix/profiles/profiles-1-link
 ln -s ~/.local/state/nix/profiles/profiles-1-link ~/.local/state/nix/profiles/profile
 
