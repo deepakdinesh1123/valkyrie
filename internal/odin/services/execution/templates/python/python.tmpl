@@ -1,0 +1,13 @@
+{{ define "LangSetup" }}
+{{- if .Flake -}}
+          ({{.LangNixPkg}}.withPackages (python-pkgs: [
+            {{ range .LanguageDependencies -}}
+              python-pkgs.{{.}}
+            {{ end -}}
+          ]))
+{{- else -}}
+'{{.LangNixPkg}}.withPackages( p: [ {{ range .LanguageDependencies }} p.{{.}} {{ end }} ] )'
+{{- end -}}
+{{ end }}
+
+{{  define "execute" }} python main.py {{ end }}
