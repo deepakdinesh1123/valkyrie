@@ -41,7 +41,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
       {/* VS Code-style filename tab */}
       <div className="flex h-14 px-4 border-b border-stone-700 pb-0 mb-0 pt-3">
         <div
-          className="inline-block px-4 py-2 border min-w-20"
+          className="inline-block px-4 py-2 border border-stone-700 min-w-20"
           style={{ marginBottom: '-1px' }}
         >
           <button className="text-sm text-white bg-transparent border-none cursor-pointer focus:outline-none pb-0 mb-0">

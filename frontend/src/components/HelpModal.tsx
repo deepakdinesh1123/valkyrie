@@ -28,7 +28,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                     <li>Click "Run code" to execute your code.</li>
                     <li>View the output in the terminal below.</li>
                 </ul>
-                Community links:
+                <span className='text-white'>Community links:</span>
                 <a
                     href="https://discord.gg/3cJpQNgT"
                     target="_blank"
