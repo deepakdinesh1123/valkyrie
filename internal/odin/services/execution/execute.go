@@ -7,6 +7,7 @@ import (
 	"embed"
 	"encoding/hex"
 	"fmt"
+	"path/filepath"
 	"text/template"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
@@ -77,16 +78,11 @@ func (s *ExecutionService) prepareExecutionRequest(req *api.ExecutionRequest) (*
 }
 
 func (s *ExecutionService) convertExecSpecToFlake(execSpec ExecutionRequest) (string, error) {
-	tmplName := config.Languages[execSpec.Language]["flake_template"]
-	tmplF, err := flakes.ReadFile(fmt.Sprintf("templates/%s", tmplName))
-	if err != nil {
-		return "", &ExecutionServiceError{
-			Type:    "template",
-			Message: "failed to get template",
-		}
-	}
+	execSpec.IsFlake = true
+	tmplName := filepath.Join("templates", config.Languages[execSpec.Language]["template"])
+
 	var res bytes.Buffer
-	tmpl, err := template.New(string("flake")).Parse(string(tmplF))
+	tmpl, err := template.New("base.flake.tmpl").ParseFS(flakes, "templates/base.flake.tmpl", tmplName)
 	if err != nil {
 		s.logger.Err(err).Msg("failed to parse template")
 		return "", &ExecutionServiceError{
@@ -107,16 +103,15 @@ func (s *ExecutionService) convertExecSpecToFlake(execSpec ExecutionRequest) (st
 }
 
 func (s *ExecutionService) convertExecSpecToNixScript(execSpec ExecutionRequest) (string, error) {
-	tmplName := config.Languages[execSpec.Language]["script_template"]
-	tmplF, err := flakes.ReadFile(fmt.Sprintf("templates/%s", tmplName))
-	if err != nil {
-		return "", &ExecutionServiceError{
-			Type:    "template",
-			Message: "failed to get template",
-		}
-	}
+	execSpec.IsFlake = false
+	tmplName := filepath.Join("templates", config.Languages[execSpec.Language]["template"])
+
 	var res bytes.Buffer
-	tmpl, err := template.New(string("nix_script")).Parse(string(tmplF))
+	tmpl, err := template.New(string("base.exec.tmpl")).ParseFS(
+		flakes,
+		"templates/base.exec.tmpl",
+		tmplName,
+	)
 	if err != nil {
 		s.logger.Err(err).Msg("failed to parse template")
 		return "", &ExecutionServiceError{

@@ -1,5 +1,5 @@
 {{ define "LangSetup" }}
-{{- if .Flake -}}
+{{- if .IsFlake -}}
           ({{.LangNixPkg}}.withPackages (lua-pkgs: [
             {{ range .LanguageDependencies -}}
               lua-pkgs.{{.}}

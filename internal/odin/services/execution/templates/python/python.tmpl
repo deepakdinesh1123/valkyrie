@@ -1,5 +1,5 @@
 {{ define "LangSetup" }}
-{{- if .Flake -}}
+{{- if .IsFlake -}}
           ({{.LangNixPkg}}.withPackages (python-pkgs: [
             {{ range .LanguageDependencies -}}
               python-pkgs.{{.}}
