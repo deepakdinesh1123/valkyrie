@@ -1,0 +1,3 @@
+apis:
+  oas/odin-schema.yml:
+    alias: api-title

@@ -57,6 +57,24 @@ type JobType struct {
 	CreatedAt pgtype.Timestamptz `db:"created_at" json:"created_at"`
 }
 
+type Language struct {
+	ID             int64  `db:"id" json:"id"`
+	Name           string `db:"name" json:"name"`
+	Extension      string `db:"extension" json:"extension"`
+	MonacoLanguage string `db:"monaco_language" json:"monaco_language"`
+}
+
+type LanguageVersion struct {
+	ID             int64  `db:"id" json:"id"`
+	LanguageID     int64  `db:"language_id" json:"language_id"`
+	Version        string `db:"version" json:"version"`
+	NixPackageName string `db:"nix_package_name" json:"nix_package_name"`
+	FlakeTemplate  string `db:"flake_template" json:"flake_template"`
+	ScriptTemplate string `db:"script_template" json:"script_template"`
+	DefaultCode    string `db:"default_code" json:"default_code"`
+	SearchQuery    string `db:"search_query" json:"search_query"`
+}
+
 type Package struct {
 	PackageID int64       `db:"package_id" json:"package_id"`
 	Name      string      `db:"name" json:"name"`

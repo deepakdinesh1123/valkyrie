@@ -1,32 +1,28 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/utils/api';
-import { Language } from '@/api-client';
+import { LanguageResponse } from '@/api-client';
 
-const initlanguage: Language = 
+const initlanguage: LanguageResponse = 
   {
-    name: "python-3.10",
+    id: 1,
+    name: "python",
     extension: "py",
-    monacolanguage: "python",
-    defaultcode:
-      '# Type your Python code here\n\ndef main():\n    pass\n\nif __name__ == "__main__":\n    main()',
-    searchquery: "python310Packages"
+    monaco_language: "python",
   }
 
-
 export const useLanguages = () => {
-  const [languages, setLanguages] = useState<Language[]>([]);
-  const [selectedLanguage, setSelectedLanguage] = useState<Language>(initlanguage);
+  const [languages, setLanguages] = useState<LanguageResponse[]>([]);
+  const [selectedLanguage, setSelectedLanguage] = useState<LanguageResponse>(initlanguage);
 
   useEffect(() => {
     const fetchLanguages = async () => {
       try {
         const response = await api.getAllLanguages();
         const languageList = response.data.languages.map((lang) => ({
+          id: lang.id,
           name: lang.name,
           extension: lang.extension,
-          monacolanguage: lang.monacolanguage,
-          defaultcode: lang.defaultcode,
-          searchquery: lang.searchquery,
+          monaco_language: lang.monaco_language,
         }));
         setLanguages(languageList);
         setSelectedLanguage(languageList[0]);

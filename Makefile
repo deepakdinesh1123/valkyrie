@@ -74,7 +74,7 @@ podman-db:
 	@podman compose -f docker-compose.yml up   postgres -d 
 	migrate -path internal/odin/db/migrations -database $(POSTGRES_URL) up
 
-.PHONY: add-pkgs run-pkgs
+.PHONY: add-pkgs store-pkgs
 add-pkgs:
 	@if [ -z "$(filter-out $@,$(MAKECMDGOALS))" ]; then \
 		echo "Error: Please provide the dump file name as an argument."; \
@@ -112,6 +112,9 @@ store-pkgs:
 		fi; \
 	done <<< "$$packages"; \
 	echo "All packages processed successfully.";
+
+%:
+	@:
 
 .PHONY: dump
 dump:

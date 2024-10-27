@@ -1,64 +1,109 @@
-import React, { useEffect, useRef } from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
-import { Language } from '@/api-client';
+import * as React from "react"
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from "@/components/ui/command"
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover"
+import { useLanguages } from "@/hooks/useLanguages";
+import { useLanguageVersions } from "@/hooks/useLanguageVersions";
+import { useEffect } from "react"
+import { CheckIcon } from "lucide-react"
+import { cn } from "@/lib/utils"
 
-interface LanguageSelectorProps {
-    languages: Language[];
-    selectedLanguage: Language | null;
-    onLanguageChange: (language: Language) => void;
-    isLoading?: boolean;
-}
 
-export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
-    languages,
-    selectedLanguage,
-    onLanguageChange,
-    isLoading = false
-}) => {
-    const isInitialLoad = useRef(true);
-
-    const sortedLanguages = [...languages].sort((a, b) =>
-        a.name.localeCompare(b.name)
-    );
+const LanguageSelector = () => {
+    const { languages, selectedLanguage, setSelectedLanguage } = useLanguages();
+    const { languageVersions, refetch } = useLanguageVersions(selectedLanguage?.id);
+    const [open, setOpen] = React.useState(false)
+    const [value, setValue] = React.useState("")
+    console.log(selectedLanguage);
 
     useEffect(() => {
-        if (isInitialLoad.current && sortedLanguages.length > 0) {
-            onLanguageChange(sortedLanguages[0]);
-            isInitialLoad.current = false;
+        if (selectedLanguage?.id) {
+            refetch();
         }
-    }, [sortedLanguages, onLanguageChange]);
-
-    if (isLoading) {
-        return (
-            <div className="w-[180px] h-9 flex items-center justify-center bg-neutral-900 rounded-md">
-                <Loader2 className="h-4 w-4 text-white animate-spin" />
-            </div>
-        );
-    }
+    }, [selectedLanguage, refetch]);
 
     return (
-        <div className="language-selector focus:outline-none">
-            <Select
-                value={selectedLanguage?.name}
-                onValueChange={(value) => {
-                    const language = sortedLanguages.find((lang) => lang.name === value);
-                    if (language) {
-                        onLanguageChange(language);
-                    }
-                }}
-            >
-                <SelectTrigger className="w-[180px] outline-none bg-neutral-900 text-white rounded-md px-2 py-1 transition-colors duration-200 ease-in-out">
-                    <SelectValue placeholder="Select a language" />
+        <div>
+            <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                    <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={open}
+                        className="w-[200px] justify-between"
+                    >
+                        {value
+                            ? languages.find((language) => language.name === value)?.name
+                            : "Select Language..."}
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[200px] p-0">
+                    <Command>
+                        <CommandInput placeholder="Search Language" className="h-9" />
+                        <CommandList>
+                            <CommandEmpty>No Language found.</CommandEmpty>
+                            <CommandGroup>
+                                {languages.map((language) => (
+                                    <CommandItem
+                                        key={language.name}
+                                        value={language.name}
+                                        onSelect={(currentValue) => {
+                                            setValue(currentValue === value ? "" : currentValue)
+                                            setOpen(false)
+                                            setSelectedLanguage(language)
+                                        }}
+                                    >
+                                        {language.name}
+                                        <CheckIcon
+                                            className={cn(
+                                                "ml-auto h-4 w-4",
+                                                value === language.name ? "opacity-100" : "opacity-0"
+                                            )}
+                                        />
+                                    </CommandItem>
+                                ))}
+                            </CommandGroup>
+                        </CommandList>
+                    </Command>
+                </PopoverContent>
+            </Popover>
+            <Select>
+                <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select version" />
                 </SelectTrigger>
-                <SelectContent className="bg-black text-white">
-                    {sortedLanguages.map((lang) => (
-                        <SelectItem key={lang.name} value={lang.name}>
-                            {lang.name}
-                        </SelectItem>
-                    ))}
+                <SelectContent>
+                    <SelectGroup>
+                        {languageVersions.map((ver) => (
+                            <SelectItem
+                                key={ver.version}
+                                value={ver.version}>
+                                {ver.version}
+                            </SelectItem>
+                        ))}
+                    </SelectGroup>
                 </SelectContent>
             </Select>
         </div>
-    );
-};
+    )
+}
+
+export default LanguageSelector;

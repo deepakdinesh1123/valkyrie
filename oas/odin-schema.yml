@@ -447,29 +447,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /languages:
-    get:
-      summary: Get all languages
-      description: Get all languages
-      operationId: getAllLanguages
-      parameters:
-        - $ref: '#/components/parameters/AuthHeader'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - languages
-                properties:
-                  languages:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Language' 
-        '403':
-          description: Forbidden
+  
   /search/system:
     get:
       summary: Search for system packages
@@ -539,7 +517,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /packages/exist/:
+  /packages/exist:
     post:
       summary: Verify package list is available.
       description: Verify the package list is available for the language version while switching between language versions.
@@ -590,6 +568,520 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+    
+  /languages/{id}/versions:
+    get:
+      summary: Get all language versions
+      description: Retrieve a list of all language versions from the database.
+      operationId: getAllVersions
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the language to retrieve versions.
+          schema:
+            type: integer
+            format: int64
+            example: 1
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - languageVersions
+                properties:
+                  languageVersions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LanguageVersionResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/Error'  
+
+  /languages:
+    get:
+      summary: Get all languages
+      description: Retrieve a list of all languages from the database.
+      operationId: getAllLanguages
+      parameters:
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - languages
+                properties:
+                  languages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LanguageResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/Error'
+
+  /languages/create:
+    post:
+      summary: Create a language
+      description: Create a new language entry in the database.
+      operationId: createLanguage
+      parameters:
+        - $ref: '#/components/parameters/AuthHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Language'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - language
+                properties:
+                  language:
+                    type: object
+                    $ref: '#/components/schemas/LanguageResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+
+  /languages/{id}:
+    get:
+      summary: Get language by ID
+      description: Retrieve a language entry from the database using its ID.
+      operationId: getLanguageById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the language to retrieve.
+          schema:
+            type: integer
+            format: int64
+            example: 1
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - language
+                properties:
+                  language:
+                    type: object
+                    $ref: '#/components/schemas/LanguageResponse'
+        '404':
+          description: Language not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      summary: Update a language
+      description: Update the details of a specific language by its ID.
+      operationId: updateLanguage
+      parameters:
+        - name: id
+          in: path
+          description: ID of the language to update.
+          required: true
+          schema:
+            type: integer
+            format: int64
+            example: 1
+        - $ref: '#/components/parameters/AuthHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Language'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - language
+                properties:
+                  language:
+                    type: object
+                    $ref: '#/components/schemas/LanguageResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Language not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Delete a language
+      description: Delete a specific language by its ID.
+      operationId: deleteLanguage
+      parameters:
+        - name: id
+          in: path
+          description: ID of the language to delete.
+          required: true
+          schema:
+            type: integer
+            format: int64
+            example: 1
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Language not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  /language-versions:
+    get:
+      summary: Get all language versions
+      description: Retrieve a list of all language versions from the database.
+      operationId: getAllLanguageVersions
+      parameters:
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - languageVersions
+                properties:
+                  languageVersions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LanguageVersionResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /language-versions/create:
+    post:
+      summary: Create a language version
+      description: Create a new language version entry in the database.
+      operationId: createLanguageVersion
+      parameters:
+        - $ref: '#/components/parameters/AuthHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LanguageVersion'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - language
+                properties:
+                  language:
+                    type: object
+                    $ref: '#/components/schemas/LanguageVersionResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /language-versions/{id}:
+    get:
+      summary: Get language version by ID
+      description: Retrieve a language version entry from the database using its ID.
+      operationId: getLanguageVersionById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the language version to retrieve.
+          schema:
+            type: integer
+            format: int64
+            example: 1
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - language
+                properties:
+                  language:
+                    type: object
+                    $ref: '#/components/schemas/LanguageVersionResponse'
+        '404':
+          description: Language version not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      summary: Update a language version
+      description: Update the details of a specific language version by its ID.
+      operationId: updateLanguageVersion
+      parameters:
+        - name: id
+          in: path
+          description: ID of the language version to update.
+          required: true
+          schema:
+            type: integer
+            format: int64
+            example: 1
+        - $ref: '#/components/parameters/AuthHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LanguageVersion'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - language
+                properties:
+                  language:
+                    type: object
+                    $ref: '#/components/schemas/LanguageVersionResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Language version not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Delete a language version
+      description: Delete a specific language version by its ID.
+      operationId: deleteLanguageVersion
+      parameters:
+        - name: id
+          in: path
+          description: ID of the language version to delete.
+          required: true
+          schema:
+            type: integer
+            format: int64
+            example: 1
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Language version not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
 
 components:
   parameters:
@@ -826,30 +1318,6 @@ components:
         ODIN_SYSTEM_PROVIDER_CLEAN_UP:
           type: boolean
           description: Represents whether to clean up directories created by the system provider.
-    Language:
-      type: object
-      required:
-        - name
-        - extension
-        - defaultcode
-        - monacolanguage
-        - searchquery
-      properties:
-        name:
-          type: string
-          description: Name of the programming language
-        extension:
-          type: string
-          description: File extension for the programming language
-        defaultcode:
-          type: string
-          description: Default code snippet for the programming language
-        monacolanguage:
-          type: string
-          description: Monaco editor language setting for the programming language
-        searchquery:
-          type: string
-          description: The search query to be passed to SearchLanguagePackages API for this language
     Package:
       type: object
       required:
@@ -878,4 +1346,103 @@ components:
           items:
             type: string
           example: ["requests", "numpy", "nonexistent-pkg"]
+    Language:
+      type: object
+      required:
+        - name
+        - extension
+        - monaco_language
+      properties:
+        name:
+          type: string
+          description: Name of the language.
+          example: python-3.10
+        extension:
+          type: string
+          description: File extension for the language.
+          example: py
+        monaco_language:
+          type: string
+          description: Monaco editor language identifier.
+          example: python
+
+    LanguageResponse:
+      allOf:
+        - $ref: '#/components/schemas/Language'
+        - type: object
+          required:
+            - id
+            - name
+            - extension
+            - monaco_language
+          properties:
+            id:
+              type: integer
+              format: int64
+              description: Unique identifier for the language version
+              example: 1
+            name:
+              type: string
+              example: python-3.10
+            extension:
+              type: string
+              example: py
+            monaco_language:
+              type: string
+              example: python
+
+    LanguageVersion:
+      type: object
+      required:
+        - language_id
+        - version
+        - nix_package_name
+        - flake_template
+        - script_template
+        - default_code
+        - search_query
+      properties:
+        language_id:
+          type: integer
+          format: int64
+          description: Reference to the parent language
+          example: 1
+        version:
+          type: string
+          description: Version identifier of the language
+          example: "3.1.0"
+        nix_package_name:
+          type: string
+          description: Name of the Nix package
+          example: "python310"
+        flake_template:
+          type: string
+          description: path of template for the Nix flake
+          example: python/python.flake.tmpl
+        script_template:
+          type: string
+          description: path of template for scripts
+          example: python/python.script.tmpl
+        default_code:
+          type: string
+          description: Default code template
+          example: "print('Hello, World!')"
+        search_query:
+          type: string
+          description: Search query string
+          example: "python310Packages"
+
+    LanguageVersionResponse:
+      allOf:
+        - $ref: '#/components/schemas/LanguageVersion'
+        - type: object
+          required:
+            - id
+          properties:
+            id:
+              type: integer
+              format: int64
+              description: Unique identifier for the language version
+              example: 1
+
         

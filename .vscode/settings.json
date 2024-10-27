@@ -1,6 +1,7 @@
 {
   "yaml.schemas": {
-    "https://raw.githubusercontent.com/GoogleContainerTools/skaffold/main/docs-v2/content/en/schemas/v3.json": "file:///Users/zelthy/Deepak/github/valkyrie/skaffold.yaml"
+    "https://raw.githubusercontent.com/GoogleContainerTools/skaffold/main/docs-v2/content/en/schemas/v3.json": "file:///Users/zelthy/Deepak/github/valkyrie/skaffold.yaml",
+    "openapi:v3": "file:///home/sujay/valkyrie/oas/odin-schema.yml"
   },
   "[nix]": {
     "editor.tabSize": 2,
