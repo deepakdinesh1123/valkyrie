@@ -15,4 +15,7 @@ type ExecutionRequest struct {
 	LanguageDependencies []string `json:"language_dependencies"`
 	SystemDependencies   []string `json:"system_dependencies"`
 	Args                 string   `json:"args"`
+
+	// internal variables used for converting this to flake or script
+	IsFlake bool
 }

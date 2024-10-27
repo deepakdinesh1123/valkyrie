@@ -69,9 +69,9 @@ build-podman-image:
 odin:
 	go build -o odinb cmd/odin/main.go
 
-.PHONY: podman-db
-podman-db:
-	@podman compose -f docker-compose.yml up   postgres -d 
+.PHONY: docker-db
+docker-db:
+	@docker compose up postgres -d 
 	migrate -path internal/odin/db/migrations -database $(POSTGRES_URL) up
 
 .PHONY: add-pkgs run-pkgs
