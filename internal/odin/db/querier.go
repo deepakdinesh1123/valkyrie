@@ -15,6 +15,7 @@ type Querier interface {
 	CreateWorker(ctx context.Context, name string) (Worker, error)
 	DeleteExecRequest(ctx context.Context, id int32) error
 	DeleteJob(ctx context.Context, jobID int64) (int64, error)
+	DeleteJobById(ctx context.Context, jobID int64) (int64, error)
 	DeleteWorker(ctx context.Context, id int32) error
 	FetchJob(ctx context.Context, workerID pgtype.Int4) (Job, error)
 	GetAllExecutions(ctx context.Context, arg GetAllExecutionsParams) ([]GetAllExecutionsRow, error)
