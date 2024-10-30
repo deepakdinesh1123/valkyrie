@@ -31,17 +31,6 @@ func (q *Queries) DeleteJob(ctx context.Context, jobID int64) (int64, error) {
 	return job_id, err
 }
 
-const deleteJobById = `-- name: DeleteJobById :one
-delete from jobs where job_id = $1 returning job_id
-`
-
-func (q *Queries) DeleteJobById(ctx context.Context, jobID int64) (int64, error) {
-	row := q.db.QueryRow(ctx, deleteJobById, jobID)
-	var job_id int64
-	err := row.Scan(&job_id)
-	return job_id, err
-}
-
 const fetchJob = `-- name: FetchJob :one
 update jobs set current_state = 'scheduled', started_at = now(), worker_id = $1, updated_at = now()
 where job_id = (
