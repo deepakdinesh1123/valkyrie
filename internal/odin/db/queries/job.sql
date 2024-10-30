@@ -77,10 +77,7 @@ where executions.exec_id = $1;
 select current_state from jobs where job_id = $1;
 
 -- name: DeleteJob :one
-delete from jobs where job_id = $1 and completed = false and current_state in ('pending', 'cancelled', 'failed') returning job_id;
-
--- name: DeleteJobById :one
-delete from jobs where job_id = $1 returning job_id;
+delete from jobs where job_id = $1 and current_state in ('pending', 'cancelled', 'failed') returning job_id;
 
 -- name: GetTotalJobs :one
 SELECT count(*) FROM jobs;

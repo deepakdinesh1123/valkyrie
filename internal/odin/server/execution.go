@@ -79,7 +79,7 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 				return
 			}
 			if job.CurrentState == "pending" {
-				if _, err := s.queries.DeleteJobById(context.TODO(), execId); err != nil {
+				if _, err := s.queries.DeleteJob(context.TODO(), execId); err != nil {
 					s.logger.Error().Stack().Err(err).Msg("Failed to delete pending job on disconnect")
 				} else {
 					s.logger.Info().Int64("executionId", execId).Msg("Deleted pending job due to client disconnection")
