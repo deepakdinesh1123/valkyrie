@@ -14,7 +14,9 @@ ln -s ~/.local/state/nix/profiles/channels ~/.nix-defexpr/channels
 ln -s $NIX_USER_ENVIRONMENT ~/.nix-profile
 
 echo PATH="$PATH:~/.nix-profile/bin" >> ~/.profile
-echo NIX_PATH="/tmp/nixpkgs" >> ~/.profile
+# echo NIX_PATH="/tmp/nixpkgs" >> ~/.profile
+
+echo https://nixos.org/channels/nixos-24.05 nixpkgs >> ~/.nix-channels
 
 # echo export PATH="$PATH:~/.nix-profile/bin" >> ~/.bashrc
 # echo export NIX_PATH="/tmp/nixpkgs" >> ~/.bashrc

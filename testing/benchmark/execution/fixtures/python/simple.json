@@ -1,0 +1,14 @@
+[
+    { 
+        "code": "print('hello world')",
+        "language": "python-3.10"
+    },
+    { 
+        "code": "print('The answer is 42')",
+        "language": "python-3.10"
+    },
+    { 
+        "code": "input('give me a number')",
+        "language": "python-3.10"
+    }
+]
