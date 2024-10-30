@@ -65,7 +65,7 @@ func (p *PodmanClient) WriteFiles(ctx context.Context, containerID string, prepD
 
 	tarFile, err := os.Open(tarFilePath)
 	if err != nil {
-		return fmt.Errorf("Failed to open tar file")
+		return fmt.Errorf("failed to open tar file")
 	}
 	defer tarFile.Close()
 	defer os.Remove(tarFilePath)
@@ -77,11 +77,11 @@ func (p *PodmanClient) WriteFiles(ctx context.Context, containerID string, prepD
 		tarFile,
 	)
 	if err != nil {
-		return fmt.Errorf("Failed to copy from archive")
+		return fmt.Errorf("failed to copy from archive")
 	}
 	err = copyF()
 	if err != nil {
-		return fmt.Errorf("Failed to copy files to container")
+		return fmt.Errorf("failed to copy files to container")
 	}
 	return nil
 }
@@ -102,7 +102,7 @@ func (p *PodmanClient) Execute(ctx context.Context, containerID string, command 
 	var execId string
 	var err error
 
-	go func() {
+	go func(ctx context.Context) {
 		defer func() {
 			done <- true
 		}()
@@ -143,10 +143,11 @@ func (p *PodmanClient) Execute(ctx context.Context, containerID string, command 
 				}
 			}
 		}
-	}()
+	}(ctx)
 
 	select {
 	case <-ctx.Done():
+		p.logger.Info().Msg("Context was canceled")
 		switch ctx.Err() {
 		case context.DeadlineExceeded:
 			p.logger.Debug().Msg("Killing process")
@@ -180,6 +181,7 @@ func (p *PodmanClient) Execute(ctx context.Context, containerID string, command 
 			return false, "", nil
 		}
 	case <-done:
+		p.logger.Info().Msg("Execution completed")
 		out, err := p.ReadExecLogs(containerID)
 		return true, out, err
 	}
@@ -197,7 +199,7 @@ func (p *PodmanClient) ReadExecLogs(containerID string) (string, error) {
 		},
 	})
 	if err != nil {
-		return "", fmt.Errorf("Could not create exec: %s", err)
+		return "", fmt.Errorf("could not create exec: %s", err)
 	}
 	err = containers.ExecStartAndAttach(
 		p.connection,
@@ -205,7 +207,7 @@ func (p *PodmanClient) ReadExecLogs(containerID string) (string, error) {
 		(&containers.ExecStartAndAttachOptions{}).WithAttachOutput(true).WithOutputStream(&execLogs),
 	)
 	if err != nil {
-		return "", fmt.Errorf("Could not attach to exec")
+		return "", fmt.Errorf("could not attach to exec")
 	}
 	p.logger.Info().Msg(execLogs.String())
 	return execLogs.String(), nil

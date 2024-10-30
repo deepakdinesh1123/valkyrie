@@ -5,10 +5,11 @@ RUN apk update && \
     addgroup -g 2048 -S valnix && \
     adduser -u 2048 -G valnix -s /bin/sh -D valnix
 
-RUN mkdir /etc/nix && echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
+# RUN mkdir /etc/nix && echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
+COPY configs/nix/nix.conf /etc/nix/nix.conf
 USER valnix
 RUN mkdir ~/odin && chown valnix:valnix ~/odin
-RUN cd /tmp && git clone --depth 1 --branch 24.05 --single-branch https://github.com/NixOS/nixpkgs.git 
+# RUN cd /tmp && git clone --depth 1 --branch 24.05 --single-branch https://github.com/NixOS/nixpkgs.git 
 
 COPY hack/execution/* /home/valnix/
 

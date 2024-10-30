@@ -35,9 +35,9 @@ func (ce *ContainerExecutor) Execute(ctx context.Context, wg *concurrency.SafeWa
 	var tctx context.Context
 	var cancel context.CancelFunc
 	if timeout > 0 {
-		tctx, cancel = context.WithTimeout(context.TODO(), time.Duration(timeout)*time.Second)
+		tctx, cancel = context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
 	} else {
-		tctx, cancel = context.WithCancel(context.TODO())
+		tctx, cancel = context.WithCancel(ctx)
 	}
 	defer cancel()
 
@@ -45,7 +45,7 @@ func (ce *ContainerExecutor) Execute(ctx context.Context, wg *concurrency.SafeWa
 	cc, err := GetContainerClient(tctx, ce)
 	if err != nil {
 		logger.Err(err).Msg("could not get container client")
-		ce.checkFailed(ce.queries.UpdateJobResultTx(ctx, jobRes))
+		ce.checkFailed(ce.queries.UpdateJobResultTx(context.TODO(), jobRes))
 		return
 	}
 	logger.Debug().Msg("Got container client")
@@ -53,7 +53,7 @@ func (ce *ContainerExecutor) Execute(ctx context.Context, wg *concurrency.SafeWa
 	cont, err := cc.GetContainer(tctx)
 	if err != nil {
 		logger.Err(err).Msg("could not get container")
-		ce.checkFailed(ce.queries.UpdateJobResultTx(ctx, jobRes))
+		ce.checkFailed(ce.queries.UpdateJobResultTx(context.TODO(), jobRes))
 		return
 	}
 	logger.Debug().Msg("Got container")
@@ -63,27 +63,29 @@ func (ce *ContainerExecutor) Execute(ctx context.Context, wg *concurrency.SafeWa
 	err = cc.WriteFiles(tctx, contInfo.ID, contInfo.HostPrepDir, job)
 	if err != nil {
 		logger.Err(err).Msg("could not write files")
-		ce.checkFailed(ce.queries.UpdateJobResultTx(ctx, jobRes))
+		ce.checkFailed(ce.queries.UpdateJobResultTx(context.TODO(), jobRes))
 		return
 	}
 	logger.Debug().Msg("Files written")
 	success, output, err := cc.Execute(tctx, contInfo.ID, []string{"sh", "nix_run.sh"})
 	if err != nil {
 		logger.Err(err).Msg(err.Error())
-		ce.checkFailed(ce.queries.UpdateJobResultTx(ctx, jobRes))
+		ce.checkFailed(ce.queries.UpdateJobResultTx(context.TODO(), jobRes))
 		return
 	}
 	logger.Debug().Msg("Destroying container")
 
 	jobRes.Success = success
-	jobRes.Retry = false
+	if success {
+		jobRes.Retry = false
+	}
 	jobRes.ExecLogs = output
-	ce.checkFailed(ce.queries.UpdateJobResultTx(ctx, jobRes))
+	ce.checkFailed(ce.queries.UpdateJobResultTx(context.TODO(), jobRes))
 }
 
-func (ce *ContainerExecutor) checkFailed(res db.UpdateJobTxResult, err error) {
+func (ce *ContainerExecutor) checkFailed(_ db.UpdateJobTxResult, err error) {
 	if err != nil {
-		ce.logger.Err(err).Msg("Failed to update job")
+		ce.logger.Error().Err(err).Stack().Msgf("An error occurred %s: ", err)
 	}
 }
 
