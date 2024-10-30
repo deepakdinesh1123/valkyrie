@@ -166,7 +166,7 @@ func (d *DockerProvider) Execute(ctx context.Context, containerID string, comman
 			}
 			return true, out, nil
 		case context.Canceled:
-			return false, "", fmt.Errorf("Context canceled")
+			return false, "", fmt.Errorf("context canceled")
 		}
 	case <-done:
 		out, err := d.ReadExecLogs(context.TODO(), containerID)
@@ -190,13 +190,16 @@ func (d *DockerProvider) ReadExecLogs(ctx context.Context, containerID string) (
 		},
 	)
 	if err != nil {
-		return "", fmt.Errorf("Could not create exec: %s", err)
+		return "", fmt.Errorf("could not create exec: %s", err)
 	}
 	resp, err := d.client.ContainerExecAttach(ctx, dexec.ID, container.ExecStartOptions{})
+	if err != nil {
+		return "", fmt.Errorf("could not attach to container: %s", err)
+	}
 	if resp.Reader != nil {
 		out, err = io.ReadAll(resp.Reader)
 		if err != nil {
-			return "", fmt.Errorf("Could not read from hijacked response: %s", err)
+			return "", fmt.Errorf("could not read from hijacked response: %s", err)
 		}
 	}
 	return string(out), nil

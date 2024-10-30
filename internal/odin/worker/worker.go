@@ -16,6 +16,7 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/pkg/namesgenerator"
 	"github.com/gofrs/flock"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
@@ -147,6 +148,8 @@ func (w *Worker) upsertWorker(ctx context.Context, name string, id int) (int, er
 func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 	w.queries.UpdateHeartbeat(ctx, int32(w.ID))
 	defer wg.Done()
+	defer w.exectr.Cleanup()
+
 	defer func() {
 		var err error
 
@@ -157,11 +160,11 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 		}
 	}()
 
-	tracer := w.tp.Tracer("worker")
-	tracerCtx, span := tracer.Start(ctx, "Run")
-	defer span.End()
+	// tracer := w.tp.Tracer("worker")
+	// tracerCtx, span := tracer.Start(ctx, "Run")
+	// defer span.End()
 
-	span.AddEvent("Acquiring lock on worker info")
+	// span.AddEvent("Acquiring lock on worker info")
 	infLock := flock.New(w.envConfig.ODIN_WORKER_INFO_FILE)
 	locked, err := infLock.TryLock()
 	if err != nil {
@@ -179,11 +182,11 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 	for {
 		select {
 		case <-ctx.Done():
-			w.logger.Info().Int32("Tasks in progress", swg.Count()).Msg("Worker: context done")
+			// w.logger.Info().Int32("Tasks in progress", swg.Count()).Msg("Worker: context done")
 			swg.Wait()
 			err := ctx.Err()
 			fetchJobTicker.Stop()
-			w.exectr.Cleanup()
+			w.queries.RequeueWorkerJobs(context.TODO(), pgtype.Int4{Valid: true, Int32: int32(w.ID)})
 			switch err {
 			case context.Canceled:
 				w.logger.Info().Msg("Worker: context canceled")
@@ -209,7 +212,7 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 					continue
 				case context.Canceled:
 					w.logger.Info().Msg("Worker: context canceled")
-					w.exectr.Cleanup()
+					swg.Wait()
 					return nil
 				default:
 					w.logger.Err(err).Msgf("Worker: failed to fetch job")
@@ -218,8 +221,8 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 			}
 			w.logger.Info().Msgf("Worker: fetched job %d", res.Job.JobID)
 			swg.Add(1)
-			span.AddEvent("Executing job")
-			go w.exectr.Execute(tracerCtx, &swg, res.Job, w.logger.With().Int64("JOB_ID", res.Job.JobID).Logger())
+			// span.AddEvent("Executing job")
+			go w.exectr.Execute(ctx, &swg, res.Job, w.logger.With().Int64("JOB_ID", res.Job.JobID).Logger())
 		case <-heartBeatTicker.C:
 			w.queries.UpdateHeartbeat(ctx, int32(w.ID))
 		}
