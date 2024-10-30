@@ -15,6 +15,8 @@ import http from "k6/http";
 import { group, check, sleep } from "k6";
 import { SharedArray } from 'k6/data';
 import { vu } from 'k6/execution';
+import sse from "k6/x/sse";
+
 
 const data = new SharedArray('data', function() {
     return JSON.parse(open('./load-test-data.json'));
@@ -37,79 +39,6 @@ const BASE_URL = `${__ENV.BASE_URL}`;
 const SLEEP_DURATION = __ENV.SLEEP_DURATION;
 
 export default function() {
-    // group("/executions/jobs/{JobId}", () => {
-    //     let jobId = 'TODO_EDIT_THE_JOBID'; // specify value as there is no example value for this parameter in OpenAPI spec
-
-    //     // Request No. 1: getExecutionJobById
-    //     {
-    //         let url = BASE_URL + `/executions/jobs/${JobId}`;
-    //         let params = {headers: {"X-Auth-Token": `${xAuthToken}`, "Accept": "application/json"}};
-    //         let request = http.get(url, params);
-
-    //         check(request, {
-    //             "OK": (r) => r.status === 200
-    //         });
-
-    //         sleep(SLEEP_DURATION);
-    //     }
-
-    //     // Request No. 2: deleteExecutionJob
-    //     {
-    //         let url = BASE_URL + `/executions/jobs/${JobId}`;
-    //         let params = {headers: {"X-Auth-Token": `${xAuthToken}`, "Accept": "application/json"}};
-    //         // this is a DELETE method request - if params are also set, empty body must be passed
-    //         let request = http.del(url, {} , params);
-
-    //         check(request, {
-    //             "OK": (r) => r.status === 200
-    //         });
-    //     }
-    // });
-
-    // group("/jobs/{JobId}/executions", () => {
-    //     let jobId = 'TODO_EDIT_THE_JOBID'; // specify value as there is no example value for this parameter in OpenAPI spec
-    //     let pageSize = 'TODO_EDIT_THE_PAGESIZE'; // specify value as there is no example value for this parameter in OpenAPI spec
-    //     let page = 'TODO_EDIT_THE_PAGE'; // specify value as there is no example value for this parameter in OpenAPI spec
-
-    //     // Request No. 1: getExecutionsForJob
-    //     {
-    //         let url = BASE_URL + `/jobs/${JobId}/executions?page=${page}&pageSize=${pageSize}`;
-    //         let params = {headers: {"X-Auth-Token": `${xAuthToken}`, "Accept": "application/json"}};
-    //         let request = http.get(url, params);
-
-    //         check(request, {
-    //             "OK": (r) => r.status === 200
-    //         });
-    //     }
-    // });
-
-    // group("/version", () => {
-
-    //     // Request No. 1: getVersion
-    //     {
-    //         let url = BASE_URL + `/version`;
-    //         let params = {headers: {"X-Auth-Token": `${xAuthToken}`, "Accept": "application/json"}};
-    //         let request = http.get(url, params);
-
-    //         check(request, {
-    //             "OK": (r) => r.status === 200
-    //         });
-    //     }
-    // });
-
-    // group("/languages", () => {
-
-    //     // Request No. 1: getAllLanguages
-    //     {
-    //         let url = BASE_URL + `/languages`;
-    //         let params = {headers: {"X-Auth-Token": `${xAuthToken}`, "Accept": "application/json"}};
-    //         let request = http.get(url, params);
-
-    //         check(request, {
-    //             "OK": (r) => r.status === 200
-    //         });
-    //     }
-    // });
 
     group("execute code", () => {
         {
@@ -122,33 +51,23 @@ export default function() {
                 "OK": (r) => r.status === 200,
             });
         }
-        // let execId = 'TODO_EDIT_THE_EXECID';
-        // {
-        //     let url = BASE_URL + `/executions/${execId}`;
-        //     let params = {headers: {"X-Auth-Token": `${xAuthToken}`, "Accept": "application/json"}};
-        //     let request = http.get(url, params);
 
-        //     check(request, {
-        //         "OK": (r) => r.status === 200
-        //     });
-        // }
+        const resp = sse.open(url, params, function(client)  {
+            client.on('open', function open() {
+
+            }) 
+
+            client.on('event', function (event) {
+                
+            })
+    
+            client.on('error', function (e) {
+
+            })
+        })
+
+        check(response, {"status is 200": (r) => r && r.status === 200})
+        
     });
-
-
-    // group("/executions", () => {
-    //     let pageSize = 'TODO_EDIT_THE_PAGESIZE'; // specify value as there is no example value for this parameter in OpenAPI spec
-    //     let page = 'TODO_EDIT_THE_PAGE'; // specify value as there is no example value for this parameter in OpenAPI spec
-
-    //     // Request No. 1: getAllExecutions
-    //     {
-    //         let url = BASE_URL + `/executions?page=${page}&pageSize=${pageSize}`;
-    //         let params = {headers: {"X-Auth-Token": `${xAuthToken}`, "Accept": "application/json"}};
-    //         let request = http.get(url, params);
-
-    //         check(request, {
-    //             "OK": (r) => r.status === 200
-    //         });
-    //     }
-    // });
 
 }

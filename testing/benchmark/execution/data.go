@@ -48,7 +48,6 @@ func main() {
 		log.Fatalf("error walking the path %v: %v\n", root, err)
 	}
 	for _, file := range files {
-		var execRequest ExecutionRequest
 		fileContent, err := os.ReadFile(file)
 		if err != nil {
 			log.Fatalf("error reading file %v: %v\n", file, err)
@@ -58,7 +57,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("error unmarshalling file %v: %v\n", file, err)
 		}
-		data = append(execRequests, execRequest)
+		data = append(execRequests, data...)
 	}
 
 	jsonData, err := json.MarshalIndent(data, "", "  ")

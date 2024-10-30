@@ -17,4 +17,8 @@ generate-load-test-data:
 .PHONY: run-load-test
 
 run-load-test:
-	k6 run testing/benchmark/execution/script.js
+	./k6 run testing/benchmark/execution/script.js
+
+get-k6-binary:
+	docker run --rm -it -u "$(id -u):$(id -g)" -v "${PWD}:/xk6" grafana/xk6 build v0.45.1 \
+		--with github.com/phymbert/xk6-sse@v0.1.2
