@@ -1,4 +1,4 @@
-//go:build linux && !(docker || podman)
+//go:build all && !darwin
 
 package container
 

@@ -1,3 +1,5 @@
+//go:build podman && !darwin
+
 package container
 
 import (

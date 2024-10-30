@@ -20,8 +20,6 @@ type Container struct {
 	Name string
 	ID   string
 	PID  int
-
-	HostPrepDir string
 }
 
 type ContainerExecutor struct {

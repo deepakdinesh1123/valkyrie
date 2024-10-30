@@ -1,4 +1,4 @@
-//go:build all && !darwin
+//go:build podman && !darwin
 
 package container
 
@@ -10,7 +10,6 @@ import (
 	"github.com/containers/podman/v5/pkg/bindings/containers"
 	"github.com/containers/podman/v5/pkg/specgen"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
-	"github.com/docker/docker/api/types/container"
 	"github.com/jackc/puddle/v2"
 	"github.com/opencontainers/runtime-spec/specs-go"
 )
@@ -22,36 +21,7 @@ func constructor(ctx context.Context) (Container, error) {
 
 	switch envConfig.ODIN_CONTAINER_ENGINE {
 	case "docker":
-		dClient := getDockerClient()
-		if dClient == nil {
-			return Container{}, fmt.Errorf("could not get docker client")
-		}
-		createResp, err := dClient.ContainerCreate(ctx, &container.Config{
-			Image:       envConfig.ODIN_WORKER_DOCKER_IMAGE,
-			StopTimeout: &envConfig.ODIN_WORKER_TASK_TIMEOUT,
-			StopSignal:  "SIGKILL",
-		},
-			&container.HostConfig{
-				AutoRemove: true,
-			},
-			nil,
-			nil,
-			"",
-		)
-		if err != nil {
-			return Container{}, err
-		}
-		cont.ID = createResp.ID
-		err = dClient.ContainerStart(ctx, createResp.ID, container.StartOptions{})
-		if err != nil {
-			return Container{}, err
-		}
-		contInfo, err := dClient.ContainerInspect(ctx, createResp.ID)
-		if err != nil {
-			return Container{}, err
-		}
-		cont.Name = contInfo.Name
-		cont.PID = contInfo.State.Pid
+		return Container{}, fmt.Errorf("docker is not supported")
 	case "podman":
 		connection := getPodmanConnection()
 		if connection == nil {

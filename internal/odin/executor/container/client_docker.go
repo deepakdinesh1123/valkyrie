@@ -10,11 +10,11 @@ import (
 func GetContainerClient(ctx context.Context, cp *ContainerExecutor) (ContainerClient, error) {
 	switch cp.envConfig.ODIN_CONTAINER_ENGINE {
 	case "docker":
-		client, err := GetDockerClient(cp)
+		containerClient, err := GetDockerProvider(cp)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create docker client")
+			return nil, fmt.Errorf("failed to create docker containerClient")
 		}
-		return client, nil
+		return containerClient, nil
 	case " podman":
 		return nil, fmt.Errorf("podman engine not supported")
 	case "default":

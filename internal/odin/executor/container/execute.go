@@ -2,6 +2,7 @@ package container
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/concurrency"
@@ -60,7 +61,7 @@ func (ce *ContainerExecutor) Execute(ctx context.Context, wg *concurrency.SafeWa
 	defer cont.Destroy()
 	contInfo := cont.Value()
 	logger.Debug().Msg("Writing files")
-	err = cc.WriteFiles(tctx, contInfo.ID, contInfo.HostPrepDir, job)
+	err = cc.WriteFiles(tctx, contInfo.ID, os.TempDir(), job)
 	if err != nil {
 		logger.Err(err).Msg("could not write files")
 		ce.checkFailed(ce.queries.UpdateJobResultTx(context.TODO(), jobRes))

@@ -1,3 +1,5 @@
+//go:build docker
+
 package container
 
 import (
@@ -72,7 +74,7 @@ func (d *DockerProvider) WriteFiles(ctx context.Context, containerID string, pre
 	err = d.client.CopyToContainer(
 		ctx,
 		containerID,
-		filepath.Join("/home", d.user, "/odin"),
+		filepath.Join("/home/valnix/odin"),
 		tarFile,
 		container.CopyToContainerOptions{AllowOverwriteDirWithFile: true, CopyUIDGID: true},
 	)
@@ -113,7 +115,6 @@ func (d *DockerProvider) Execute(ctx context.Context, containerID string, comman
 				AttachStderr: true,
 				AttachStdout: true,
 				Cmd:          command,
-				User:         d.user,
 			},
 		)
 		if err != nil {

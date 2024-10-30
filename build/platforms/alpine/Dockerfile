@@ -1,23 +1,22 @@
 FROM alpine:3.20
 
-ARG HOST_UID
-ARG HOST_GID
-ARG HOST_USER
-ARG HOST_GROUP
-
 RUN apk update && \
     apk add --no-cache shadow xz curl git vim && \
-    addgroup -g ${HOST_GID} -S ${HOST_GROUP} && \
-    adduser -u ${HOST_UID} -G ${HOST_GROUP} -s /bin/sh -D ${HOST_USER}
+    addgroup -g 1024 -S valnix && \
+    adduser -u 1024 -G valnix -S -D valnix
 
-RUN mkdir /etc/nix && echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
-USER $HOST_USER
-RUN mkdir ~/odin && chown $HOST_USER:$HOST_USER ~/odin
-RUN cd /tmp && git clone --depth 1 --branch 24.05 --single-branch https://github.com/NixOS/nixpkgs.git 
+RUN curl -L https://nixos.org/nix/install -o install_nix.sh
+RUN chmod +x install_nix.sh
+RUN mkdir /nix
+RUN chown -R valnix /nix
+COPY configs/nix/nix.conf /etc/nix/nix.conf
 
-COPY hack/execution/* /home/$HOST_USER/
+USER valnix
+RUN sh install_nix.sh --no-daemon
+ENV PATH="$PATH:/home/valnix/.nix-profile/bin"
 
-VOLUME [ "/home/$HOST_USER" ]
-WORKDIR /home/$HOST_USER/
+RUN mkdir ~/odin
+COPY hack/execution/* /home/valnix
+WORKDIR /home/valnix/odin
 
-CMD [ "/bin/sh", "nix_setup.sh" ]
+CMD [ "/bin/sh", "-c", "sleep infinity" ]
