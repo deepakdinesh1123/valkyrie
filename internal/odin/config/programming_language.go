@@ -307,6 +307,15 @@ var Languages map[string]map[string]string = map[string]map[string]string{
 		"defaultCode":    "<?php\necho \"Hello, World!\";\n?>\n",
 		"searchquery":    "php",
 	},
+	"rust": {
+		"nixPackageName": "rustc",
+		"version":        "1.77.1",
+		"extension":      "rs",
+		"template":       "rust/rust.tmpl",
+		"monacoLanguage": "rust",
+		"defaultCode":    "fn main() {\n    println!(\"Hello, world!\");\n}",
+		"searchquery":    "rust",
+	},
 	"sql": {
 		"nixPackageName": "sql",
 		"version":        "3.45.3",
