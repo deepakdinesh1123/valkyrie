@@ -87,12 +87,10 @@ const App: React.FC = () => {
     } else if (language.name !== selectedLanguage?.name) {
       if (existsResponse.exists) {
         setSelectedLanguage(language);
-        setCodeContent(language.defaultcode);
       } else {
         const nonExistingPackages = existsResponse.nonExistingPackages;
         setSelectedLanguageDependencies(prev => prev.filter(dep => !nonExistingPackages.includes(dep)));
         setSelectedLanguage(language);
-        setCodeContent(language.defaultcode);
       }
     }
   }, [selectedLanguagePrefix, selectedLanguage, resetOnNewLanguage, setSelectedLanguage]);
