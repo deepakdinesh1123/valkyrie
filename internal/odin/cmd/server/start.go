@@ -35,7 +35,7 @@ func serverExec(cmd *cobra.Command, args []string) error {
 		logs.WithSource("server"),
 	)
 	logger := logs.GetLogger(config)
-	logger.Info().Msg("Starting Odin in standalone mode")
+	logger.Info().Msg("Starting Odin server")
 
 	applyMigrations, err := cmd.Flags().GetBool("migrate")
 	if err != nil {

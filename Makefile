@@ -1,17 +1,26 @@
-include .env oas/Makefile
+# Include other Makefiles
+include .env oas/Makefile build/Makefile testing/Makefile
 
+# PostgreSQL Connection URL
 POSTGRES_URL = postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=${POSTGRES_SSL_MODE}
 
-.PHONY: migrate
+# Phony Targets
+.PHONY: all migrate gq start-db clear-stdb start-observability odin
+
+# Default target
+all: odin migrate start-db start-observability
+
+# Run database migrations
 migrate:
+	@echo "Running database migrations..."
 	@migrate -path internal/odin/db/migrations -database ${POSTGRES_URL} up
 
-.PHONY: gq
+# Generate SQL code
 gq: start-db
-	# cd internal/odin/db && sqlc verify
-	cd internal/odin/db && sqlc generate
+	@echo "Generating SQL code..."
+	@cd internal/odin/db && sqlc generate
 
-.PHONY: start-db
+# Start the PostgreSQL database
 start-db:
 	@podman run -d \
 		--name postgres-container \
@@ -25,12 +34,14 @@ start-db:
 migrate-db:
 	migrate -path internal/odin/db/migrations -database ${POSTGRES_URL} up
 
-.PHONY: clear-stdb
+# Clear the state database
 clear-stdb:
-	rm -rf ~/.zango/data
+	@echo "Clearing state database..."
+	@rm -rf ~/.zango/data
 
-.PHONY: start-observability
+# Start observability services
 start-observability:
+	@echo "Starting observability services..."
 	@docker compose up valkyrie-otel-collector jaeger prometheus -d
 
 .PHONY: build-docker-image
@@ -69,9 +80,9 @@ build-podman-image:
 odin:
 	go build -o odinb cmd/odin/main.go
 
-.PHONY: podman-db
-podman-db:
-	@podman compose -f docker-compose.yml up   postgres -d 
+.PHONY: docker-db
+docker-db:
+	@docker compose up postgres -d 
 	migrate -path internal/odin/db/migrations -database $(POSTGRES_URL) up
 
 .PHONY: add-pkgs run-pkgs

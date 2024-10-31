@@ -1,0 +1,10 @@
+#!/usr/bin/env nix-shell
+#! nix-shell -i bash --pure
+#! nix-shell -p {{ block "LangSetup" . }}{{.LangNixPkg}}{{ end }}
+{{ if eq (len .SystemDependencies) 0 -}}
+{{else -}}
+#! nix-shell -p {{ range .SystemDependencies }}{{.}} {{ end }}
+{{end -}}
+
+{{- block "compile" . -}}{{ end }}
+{{ block "execute" . }}{{ end }}{{ if ne .Args "" }}{{ .Args -}}{{ end }} >> output.txt 2>&1
