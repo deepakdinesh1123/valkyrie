@@ -1,3 +1,7 @@
+variable "db_instance_name" {
+  type = string
+}
+
 variable "rds_engine" {
   type = string
 }
