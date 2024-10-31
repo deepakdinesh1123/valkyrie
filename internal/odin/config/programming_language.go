@@ -79,7 +79,7 @@ var Languages map[string]map[string]string = map[string]map[string]string{
 		"extension":      "asm",
 		"template":       "assembly/assembly.tmpl",
 		"monacoLanguage": "assembly",
-		"defaultCode":    "",
+		"defaultCode":    "section .data\n\thello:     db 'Hello world!',10    ; 'Hello world!' plus a linefeed character\n\thelloLen:  equ $-hello             ; Length of the 'Hello world!' string\n\nsection .text\n\tglobal _start\n\n_start:\n\tmov eax,4            ; The system call for write (sys_write)\n\tmov ebx,1            ; File descriptor 1 - standard output\n\tmov ecx,hello        ; Put the offset of hello in ecx\n\tmov edx,helloLen     ; helloLen is a constant, so we don't need to say\n\t                     ;  mov edx,[helloLen] to get it's actual value\n\tint 80h              ; Call the kernel\n\tmov eax,1            ; The system call for exit (sys_exit)\n\tmov ebx,0            ; Exit with return code of 0 (no error)\n\tint 80h;",
 		"searchquery":    "assembly",
 	},
 	"bash": {

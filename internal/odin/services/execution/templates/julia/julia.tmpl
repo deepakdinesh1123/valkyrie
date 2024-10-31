@@ -1,13 +1,1 @@
-{{ define "LangSetup" }}
-{{- if .IsFlake -}}
-          ({{.LangNixPkg}}.withPackages ([
-            {{ range .LanguageDependencies -}}
-              "{{.}}"
-            {{ end -}}
-          ]))
-{{- else -}}
-'{{.LangNixPkg}}.withPackages( [ {{ range .LanguageDependencies }}"{{.}}" {{ end }} ] )'
-{{- end -}}
-{{ end }}
-
 {{  define "execute" }} julia main.jl {{ end }}
