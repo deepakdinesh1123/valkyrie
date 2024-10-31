@@ -13,7 +13,7 @@
     {
       devShells = forEachSupportedSystem ({ pkgs }: {
         default = pkgs.mkShell {
-            packages = [
+            packages = with pkgs; [
               {{ block "LangSetup" . }}{{.LangNixPkg}}{{ end -}}
               {{ range .SystemDependencies }}
               {{ . -}}
