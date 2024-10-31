@@ -21,7 +21,7 @@ func (q *Queries) CancelJob(ctx context.Context, jobID int64) error {
 }
 
 const deleteJob = `-- name: DeleteJob :one
-delete from jobs where job_id = $1 and completed = false and current_state in ('pending', 'cancelled', 'failed') returning job_id
+delete from jobs where job_id = $1 and current_state in ('pending', 'cancelled', 'failed') returning job_id
 `
 
 func (q *Queries) DeleteJob(ctx context.Context, jobID int64) (int64, error) {
