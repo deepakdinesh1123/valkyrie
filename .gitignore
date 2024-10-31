@@ -56,3 +56,9 @@ odinb
 languages.txt
 systempackages.txt
 k6
+
+# Ignore OpenTofu (Terraform) state and cache
+*.tfstate
+*.tfstate.backup
+*.terraform.lock*
+.terraform/
