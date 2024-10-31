@@ -106,18 +106,16 @@ func constructor(ctx context.Context) (Container, error) {
 			},
 		}
 
-		s.ContainerStorageConfig = specgen.ContainerStorageConfig{
-			Volumes: []*specgen.NamedVolume{
-				{
-					Dest: "/home/valnix/.cache/cached-nix-shell",
-					Name: "shared-cache",
-				},
+		s.ContainerStorageConfig.Volumes = []*specgen.NamedVolume{
+			{
+				Dest: "/home/valnix/.cache/cached-nix-shell",
+				Name: "shared-cache",
 			},
-			OverlayVolumes: []*specgen.OverlayVolume{
-				{
-					Destination: "/nix",
-					Source:      envConfig.ODIN_NIX_STORE,
-				},
+		}
+		s.ContainerStorageConfig.OverlayVolumes = []*specgen.OverlayVolume{
+			{
+				Destination: "/nix",
+				Source:      envConfig.ODIN_NIX_STORE,
 			},
 		}
 
