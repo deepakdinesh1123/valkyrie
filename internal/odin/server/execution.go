@@ -57,13 +57,11 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// Set headers required for SSE
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("Content-Type", "text/event-stream")
 
-	// Ensure the writer supports flushing
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		s.logger.Error().Stack().Msg("Failed to get flusher")
@@ -75,6 +73,18 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 		select {
 		case <-ctx.Done():
 			s.logger.Info().Int64("executionId", execId).Msg("Client disconnected")
+			job, err := s.queries.GetJob(context.TODO(), execId)
+			if err != nil {
+				s.logger.Error().Stack().Err(err).Msg("Failed to get job status")
+				return
+			}
+			if job.CurrentState == "pending" {
+				if _, err := s.queries.DeleteJob(context.TODO(), execId); err != nil {
+					s.logger.Error().Stack().Err(err).Msg("Failed to delete pending job on disconnect")
+				} else {
+					s.logger.Info().Int64("executionId", execId).Msg("Deleted pending job due to client disconnection")
+				}
+			}
 			return
 		default:
 			job, err := s.queries.GetJob(ctx, execId)
@@ -137,7 +147,6 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 				s.logger.Warn().Str("status", job.CurrentState).Msg("Unknown status")
 			}
 
-			// Sleep before checking the status again
 			time.Sleep(3 * time.Second)
 		}
 	}

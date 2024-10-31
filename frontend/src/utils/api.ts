@@ -2,7 +2,7 @@ import axios from 'axios';
 import { Configuration, DefaultApi } from "@/api-client";
 
 const config = new Configuration({
-  basePath: import.meta.env.VITE_BASE_PATH,
+  basePath: `${import.meta.env.VITE_BASE_PATH}/api`,
 });
 
 const axiosInstance = axios.create({
