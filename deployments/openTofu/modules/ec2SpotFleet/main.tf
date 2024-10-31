@@ -9,8 +9,8 @@ resource "aws_spot_fleet_request" "example" {
       ami                  = var.ami_id
       instance_type        = launch_specification.value
       key_name             = var.key_Pair
-      spot_price           = "0.6"
-      iam_instance_profile = "OdinSpotInstance"
+      spot_price           = "0.039"
+      iam_instance_profile = "OdinBuilderWorker"
       subnet_id            = var.subnet_id
       availability_zone    = var.availability_zone
 			associate_public_ip_address = var.associate_pip
@@ -19,6 +19,8 @@ resource "aws_spot_fleet_request" "example" {
 			user_data = <<-EOF
 				#!/bin/bash
 
+				cd /home/ubuntu
+				echo "hello" > log.txt
 				BUCKET_NAME="valnix-stage-bucket"
 				REGION="us-east-1"
 				SCRIPT_NAME="deploy.sh"
@@ -26,13 +28,16 @@ resource "aws_spot_fleet_request" "example" {
 
 				aws s3 cp s3://$BUCKET_NAME/$SCRIPT_NAME $SCRIPT_PATH --region $REGION
 
-				cd /home/ubuntu
 
 				chmod +x $SCRIPT_NAME
 
 				su ubuntu -c ./$SCRIPT_NAME
 			EOF
-
+			root_block_device {
+				volume_size           = "30"
+				volume_type           = "gp3"
+				delete_on_termination = "true"
+			}
 			tags = {
 				Name = "valnix-spot-fleet-instance"
 			}

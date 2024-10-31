@@ -13,3 +13,9 @@ variable "ebs_type" {
 variable "ebs_iops" {
   type = number
 }
+variable "snapshot_id" {
+  
+}
+variable "ebs_name" {
+  
+}

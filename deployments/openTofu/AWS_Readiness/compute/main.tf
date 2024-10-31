@@ -41,24 +41,26 @@ module "key_Pair" {
 #   key_pair_name      = module.key_Pair.aws_key_pair_name
 # }
 
-# module "ebs" {
-#   source = "../../modules/ebs"
+module "ebs" {
+  source = "../../modules/ebs"
 
-#   ebs_size              = var.ebs_size
-#   ec2_availability_zone = "us-east-1a" #module.ec2_spot.spot_ec2_availability_zone
-#   multi_attach_enabled  = var.multi_attach_enabled
-#   ebs_type              = "io1"
-#   ebs_iops              = 1000
-# }
+  ebs_name              = "valnix_ebs"
+  ebs_size              = var.ebs_size
+  ec2_availability_zone = "us-east-1a" #module.ec2_spot.spot_ec2_availability_zone
+  multi_attach_enabled  = var.multi_attach_enabled
+  ebs_type              = "gp3"
+  ebs_iops              = 3000
+  snapshot_id           = "snap-0daa1ed513204e62f"
+}
 
 module "ec2_spot_fleet" {
   source = "../../modules/ec2SpotFleet"
 
   ami_id                = "ami-010e773a908e799c1" 
-  instance_types        = ["c5.large", "m5.large", "t3.large"]
+  instance_types        = ["c5.xlarge", "m5.large", "t3.large"]
   key_Pair              = module.key_Pair.aws_key_pair_name
   subnet_id             = data.aws_subnet.compute_subnet.id
-  availability_zone     = data.aws_subnet.compute_subnet.availability_zone
+  availability_zone     = module.ebs.ebs_availability_zone#data.aws_subnet.compute_subnet.availability_zone
   associate_pip         = true
   security_group_ids    = [ module.security_group.sg_id ]
 }
