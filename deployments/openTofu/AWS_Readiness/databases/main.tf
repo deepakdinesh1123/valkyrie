@@ -8,6 +8,7 @@ module "security_group" {
 module "rds" {
   source = "../../modules/rds"
 
+  db_instance_name           = "valnix-rds-01"
   rds_engine                 = "postgres"
   engine_version             = "16.1" 
   db_compute_instance        = "db.t3.micro"

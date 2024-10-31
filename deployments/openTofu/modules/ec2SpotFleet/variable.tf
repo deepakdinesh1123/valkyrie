@@ -4,7 +4,7 @@ variable "key_Pair" {
 variable "subnet_id" {
   type = string
 }
-variable "ebs_availability_zone" {
+variable "availability_zone" {
   type = string
 }
 variable "instance_types" {
