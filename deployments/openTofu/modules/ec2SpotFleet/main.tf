@@ -12,7 +12,7 @@ resource "aws_spot_fleet_request" "example" {
       spot_price           = "0.6"
       iam_instance_profile = "OdinSpotInstance"
       subnet_id            = var.subnet_id
-      availability_zone    = var.ebs_availability_zone
+      availability_zone    = var.availability_zone
 			associate_public_ip_address = var.associate_pip
 			vpc_security_group_ids = var.security_group_ids
 

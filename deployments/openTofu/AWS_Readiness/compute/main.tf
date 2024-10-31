@@ -58,7 +58,7 @@ module "ec2_spot_fleet" {
   instance_types        = ["c5.large", "m5.large", "t3.large"]
   key_Pair              = module.key_Pair.aws_key_pair_name
   subnet_id             = data.aws_subnet.compute_subnet.id
-  ebs_availability_zone = module.ebs.ebs_availability_zone
+  availability_zone     = data.aws_subnet.compute_subnet.availability_zone
   associate_pip         = true
   security_group_ids    = [ module.security_group.sg_id ]
 }
