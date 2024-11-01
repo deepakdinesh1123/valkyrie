@@ -87,12 +87,10 @@ const App: React.FC = () => {
     } else if (language.name !== selectedLanguage?.name) {
       if (existsResponse.exists) {
         setSelectedLanguage(language);
-        setCodeContent(language.defaultcode);
       } else {
         const nonExistingPackages = existsResponse.nonExistingPackages;
         setSelectedLanguageDependencies(prev => prev.filter(dep => !nonExistingPackages.includes(dep)));
         setSelectedLanguage(language);
-        setCodeContent(language.defaultcode);
       }
     }
   }, [selectedLanguagePrefix, selectedLanguage, resetOnNewLanguage, setSelectedLanguage]);
@@ -109,7 +107,7 @@ const App: React.FC = () => {
 
       {/* Editor Container */}
       <div className="editor-container flex-1 w-full">
-        <div className="top-bar flex flex-wrap justify-between items-center p-2 bg-transparent mr-20">
+        <div className="top-bar flex flex-wrap justify-between items-center p-2 bg-transparent mr-28">
           <div className="flex flex-wrap items-center w-full sm:w-auto mb-2 sm:mb-0">
             <div className="w-full sm:w-auto mb-2 sm:mb-0 sm:mr-2 border-none">
               <LanguageSelector
@@ -123,7 +121,7 @@ const App: React.FC = () => {
               placeholder="Args"
               value={args}
               onChange={(e) => setArgs(e.target.value)}
-              className="args-input w-full sm:w-36 mr-1 bg-neutral-900 text-whit border-opacity-100 focus:ring-0"
+              className="args-input w-full sm:w-36 mr-1 bg-neutral-900 text-white border-opacity-100 focus:ring-0"
             />
           </div>
           <div className="flex items-center w-full sm:w-auto justify-end">

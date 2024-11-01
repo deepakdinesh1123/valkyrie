@@ -28,15 +28,6 @@ var Languages map[string]map[string]string = map[string]map[string]string{
 		"defaultCode":    "# Type your Python code here\n\ndef main():\n    pass\n\nif __name__ == '__main__':\n    main()",
 		"searchquery":    "python312Packages",
 	},
-	"go-1.19": {
-		"nixPackageName": "go_1_19",
-		"version":        "1.19.1",
-		"extension":      "go",
-		"template":       "go/go.tmpl",
-		"monacoLanguage": "go",
-		"defaultCode":    "package main\n\nimport \"fmt\"\n\nfunc main() {\n\t// Type your Go code here\n}",
-		"searchquery":    "go",
-	},
 	"go-1.23": {
 		"nixPackageName": "go_1_23",
 		"version":        "1.23.1",
@@ -88,7 +79,7 @@ var Languages map[string]map[string]string = map[string]map[string]string{
 		"extension":      "asm",
 		"template":       "assembly/assembly.tmpl",
 		"monacoLanguage": "assembly",
-		"defaultCode":    "",
+		"defaultCode":    "section .data\n\thello:     db 'Hello world!',10    ; 'Hello world!' plus a linefeed character\n\thelloLen:  equ $-hello             ; Length of the 'Hello world!' string\n\nsection .text\n\tglobal _start\n\n_start:\n\tmov eax,4            ; The system call for write (sys_write)\n\tmov ebx,1            ; File descriptor 1 - standard output\n\tmov ecx,hello        ; Put the offset of hello in ecx\n\tmov edx,helloLen     ; helloLen is a constant, so we don't need to say\n\t                     ;  mov edx,[helloLen] to get it's actual value\n\tint 80h              ; Call the kernel\n\tmov eax,1            ; The system call for exit (sys_exit)\n\tmov ebx,0            ; Exit with return code of 0 (no error)\n\tint 80h;",
 		"searchquery":    "assembly",
 	},
 	"bash": {
@@ -109,15 +100,15 @@ var Languages map[string]map[string]string = map[string]map[string]string{
 		"defaultCode":    "console.log('hello world')",
 		"searchquery":    "bun",
 	},
-	"cobol": {
-		"nixPackageName": "gnu-cobol",
-		"version":        "3.1.2",
-		"extension":      "cob",
-		"template":       "cobol/cobol.tmpl",
-		"monacoLanguage": "cobol",
-		"defaultCode":    "IDENTIFICATION DIVISION.\nPROGRAM-ID. HelloWorld.\nDATA DIVISION.\nWORKING-STORAGE SECTION.\nPROCEDURE DIVISION.\n    DISPLAY \"Hello, World!\".\n    STOP RUN.",
-		"searchquery":    "cobol",
-	},
+	// "cobol": {
+	// 	"nixPackageName": "gnu-cobol",
+	// 	"version":        "3.1.2",
+	// 	"extension":      "cob",
+	// 	"template":       "cobol/cobol.tmpl",
+	// 	"monacoLanguage": "cobol",
+	// 	"defaultCode":    "IDENTIFICATION DIVISION.\nPROGRAM-ID. HelloWorld.\nDATA DIVISION.\nWORKING-STORAGE SECTION.\nPROCEDURE DIVISION.\n    DISPLAY \"Hello, World!\".\n    STOP RUN.",
+	// 	"searchquery":    "cobol",
+	// },
 	"crystal-1.11": {
 		"nixPackageName": "crystal",
 		"version":        "1.11.2",
@@ -281,7 +272,7 @@ var Languages map[string]map[string]string = map[string]map[string]string{
 		"searchquery":    "php",
 	},
 	"php-8.3": {
-		"nixPackageName": "php",
+		"nixPackageName": "php83",
 		"version":        "8.3.12",
 		"extension":      "php",
 		"template":       "php/php.tmpl",
@@ -290,7 +281,7 @@ var Languages map[string]map[string]string = map[string]map[string]string{
 		"searchquery":    "php",
 	},
 	"php-8.1": {
-		"nixPackageName": "php",
+		"nixPackageName": "php81",
 		"version":        "8.1.30",
 		"extension":      "php",
 		"template":       "php/php.tmpl",
@@ -317,7 +308,7 @@ var Languages map[string]map[string]string = map[string]map[string]string{
 		"searchquery":    "ruby",
 	},
 	"ruby-3.2": {
-		"nixPackageName": "ruby",
+		"nixPackageName": "ruby_3_2",
 		"version":        "3.2.4",
 		"extension":      "rb",
 		"template":       "ruby/ruby.tmpl",
@@ -326,7 +317,7 @@ var Languages map[string]map[string]string = map[string]map[string]string{
 		"searchquery":    "ruby",
 	},
 	"ruby-3.3": {
-		"nixPackageName": "ruby",
+		"nixPackageName": "ruby_3_3",
 		"version":        "3.3.5",
 		"extension":      "rb",
 		"template":       "ruby/ruby.tmpl",
@@ -335,7 +326,7 @@ var Languages map[string]map[string]string = map[string]map[string]string{
 		"searchquery":    "ruby",
 	},
 	"sql": {
-		"nixPackageName": "sql",
+		"nixPackageName": "sqlite",
 		"version":        "3.45.3",
 		"extension":      "sql",
 		"template":       "sql/sql.tmpl",

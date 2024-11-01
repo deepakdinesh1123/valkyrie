@@ -47,7 +47,7 @@ type EnvConfig struct {
 
 	ODIN_NIX_STORE                string `mapstructure:"ODIN_NIX_STORE"`                // represents the Nix store directory.
 	ODIN_NIX_USER_ENVIRONMENT     string `mapstructure:"ODIN_NIX_USER_ENVIRONMENT"`     // realpath of  ~/.nix-profile
-	ODIN_NIX_CHANNELS_ENVIRONMENT string `mapstructure:"ODIN_NIX_CHANNELS_ENVIRONMENT"` // realpath of ~/.local/state/nix/profiles/channels-1-link
+	ODIN_NIX_CHANNELS_ENVIRONMENT string `mapstructure:"ODIN_NIX_CHANNELS_ENVIRONMENT"` // realpath of ~/.local/state/nix/profiles/channels
 
 	ODIN_JOB_PRUNE_FREQ int `mapstructure:"ODIN_JOB_PRUNE_FREQ"` // represents the job prune frequency in hours.
 
