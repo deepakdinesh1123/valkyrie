@@ -1,4 +1,4 @@
-//go:build podman && !darwin
+//go:build podman || (all && !darwin)
 
 package container
 

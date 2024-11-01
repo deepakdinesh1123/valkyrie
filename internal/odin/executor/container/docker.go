@@ -1,4 +1,4 @@
-//go:build docker
+//go:build docker || all
 
 package container
 
