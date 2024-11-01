@@ -5,7 +5,7 @@ include .env oas/Makefile build/Makefile testing/Makefile
 POSTGRES_URL = postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=${POSTGRES_SSL_MODE}
 
 # Phony Targets
-.PHONY: all migrate gq start-db clear-stdb start-observability odin build-docker-image build-docker-image-ubuntu build-podman-image-ubuntu build-podman-image docker-db add-pkgs run-pkgs store-pkgs dump
+.PHONY: all migrate gq start-db clear-stdb start-observability odin docker-db add-pkgs run-pkgs store-pkgs dump
 
 # Default target
 all: odin migrate start-db start-observability
