@@ -35,6 +35,62 @@ func (s *CancelExecutionJobOK) SetMessage(val string) {
 
 func (*CancelExecutionJobOK) cancelExecutionJobRes() {}
 
+type CreateLanguageBadRequest Error
+
+func (*CreateLanguageBadRequest) createLanguageRes() {}
+
+type CreateLanguageForbidden Error
+
+func (*CreateLanguageForbidden) createLanguageRes() {}
+
+type CreateLanguageInternalServerError Error
+
+func (*CreateLanguageInternalServerError) createLanguageRes() {}
+
+type CreateLanguageOK struct {
+	Language LanguageResponse `json:"language"`
+}
+
+// GetLanguage returns the value of Language.
+func (s *CreateLanguageOK) GetLanguage() LanguageResponse {
+	return s.Language
+}
+
+// SetLanguage sets the value of Language.
+func (s *CreateLanguageOK) SetLanguage(val LanguageResponse) {
+	s.Language = val
+}
+
+func (*CreateLanguageOK) createLanguageRes() {}
+
+type CreateLanguageVersionBadRequest Error
+
+func (*CreateLanguageVersionBadRequest) createLanguageVersionRes() {}
+
+type CreateLanguageVersionForbidden Error
+
+func (*CreateLanguageVersionForbidden) createLanguageVersionRes() {}
+
+type CreateLanguageVersionInternalServerError Error
+
+func (*CreateLanguageVersionInternalServerError) createLanguageVersionRes() {}
+
+type CreateLanguageVersionOK struct {
+	Language LanguageVersionResponse `json:"language"`
+}
+
+// GetLanguage returns the value of Language.
+func (s *CreateLanguageVersionOK) GetLanguage() LanguageVersionResponse {
+	return s.Language
+}
+
+// SetLanguage sets the value of Language.
+func (s *CreateLanguageVersionOK) SetLanguage(val LanguageVersionResponse) {
+	s.Language = val
+}
+
+func (*CreateLanguageVersionOK) createLanguageVersionRes() {}
+
 type DeleteExecutionJobBadRequest Error
 
 func (*DeleteExecutionJobBadRequest) deleteExecutionJobRes() {}
@@ -91,6 +147,70 @@ func (s *DeleteExecutionWorkerOK) SetMessage(val string) {
 }
 
 func (*DeleteExecutionWorkerOK) deleteExecutionWorkerRes() {}
+
+type DeleteLanguageBadRequest Error
+
+func (*DeleteLanguageBadRequest) deleteLanguageRes() {}
+
+type DeleteLanguageForbidden Error
+
+func (*DeleteLanguageForbidden) deleteLanguageRes() {}
+
+type DeleteLanguageInternalServerError Error
+
+func (*DeleteLanguageInternalServerError) deleteLanguageRes() {}
+
+type DeleteLanguageNotFound Error
+
+func (*DeleteLanguageNotFound) deleteLanguageRes() {}
+
+type DeleteLanguageOK struct {
+	Message string `json:"message"`
+}
+
+// GetMessage returns the value of Message.
+func (s *DeleteLanguageOK) GetMessage() string {
+	return s.Message
+}
+
+// SetMessage sets the value of Message.
+func (s *DeleteLanguageOK) SetMessage(val string) {
+	s.Message = val
+}
+
+func (*DeleteLanguageOK) deleteLanguageRes() {}
+
+type DeleteLanguageVersionBadRequest Error
+
+func (*DeleteLanguageVersionBadRequest) deleteLanguageVersionRes() {}
+
+type DeleteLanguageVersionForbidden Error
+
+func (*DeleteLanguageVersionForbidden) deleteLanguageVersionRes() {}
+
+type DeleteLanguageVersionInternalServerError Error
+
+func (*DeleteLanguageVersionInternalServerError) deleteLanguageVersionRes() {}
+
+type DeleteLanguageVersionNotFound Error
+
+func (*DeleteLanguageVersionNotFound) deleteLanguageVersionRes() {}
+
+type DeleteLanguageVersionOK struct {
+	Message string `json:"message"`
+}
+
+// GetMessage returns the value of Message.
+func (s *DeleteLanguageVersionOK) GetMessage() string {
+	return s.Message
+}
+
+// SetMessage sets the value of Message.
+func (s *DeleteLanguageVersionOK) SetMessage(val string) {
+	s.Message = val
+}
+
+func (*DeleteLanguageVersionOK) deleteLanguageVersionRes() {}
 
 // Ref: #/components/schemas/EnvironmentVariable
 type EnvironmentVariable struct {
@@ -338,6 +458,7 @@ type ExecutionRequest struct {
 	Environment OptExecutionEnvironmentSpec `json:"environment"`
 	Code        string                      `json:"code"`
 	Language    string                      `json:"language"`
+	Version     OptString                   `json:"version"`
 	MaxRetries  OptInt                      `json:"max_retries"`
 	Timeout     OptInt32                    `json:"timeout"`
 }
@@ -355,6 +476,11 @@ func (s *ExecutionRequest) GetCode() string {
 // GetLanguage returns the value of Language.
 func (s *ExecutionRequest) GetLanguage() string {
 	return s.Language
+}
+
+// GetVersion returns the value of Version.
+func (s *ExecutionRequest) GetVersion() OptString {
+	return s.Version
 }
 
 // GetMaxRetries returns the value of MaxRetries.
@@ -380,6 +506,11 @@ func (s *ExecutionRequest) SetCode(val string) {
 // SetLanguage sets the value of Language.
 func (s *ExecutionRequest) SetLanguage(val string) {
 	s.Language = val
+}
+
+// SetVersion sets the value of Version.
+func (s *ExecutionRequest) SetVersion(val OptString) {
+	s.Version = val
 }
 
 // SetMaxRetries sets the value of MaxRetries.
@@ -662,26 +793,77 @@ func (s *GetAllExecutionsOK) SetPagination(val PaginationResponse) {
 
 func (*GetAllExecutionsOK) getAllExecutionsRes() {}
 
-// GetAllLanguagesForbidden is response for GetAllLanguages operation.
-type GetAllLanguagesForbidden struct{}
+type GetAllLanguageVersionsForbidden Error
+
+func (*GetAllLanguageVersionsForbidden) getAllLanguageVersionsRes() {}
+
+type GetAllLanguageVersionsInternalServerError Error
+
+func (*GetAllLanguageVersionsInternalServerError) getAllLanguageVersionsRes() {}
+
+type GetAllLanguageVersionsOK struct {
+	LanguageVersions []LanguageVersionResponse `json:"languageVersions"`
+}
+
+// GetLanguageVersions returns the value of LanguageVersions.
+func (s *GetAllLanguageVersionsOK) GetLanguageVersions() []LanguageVersionResponse {
+	return s.LanguageVersions
+}
+
+// SetLanguageVersions sets the value of LanguageVersions.
+func (s *GetAllLanguageVersionsOK) SetLanguageVersions(val []LanguageVersionResponse) {
+	s.LanguageVersions = val
+}
+
+func (*GetAllLanguageVersionsOK) getAllLanguageVersionsRes() {}
+
+type GetAllLanguagesForbidden Error
 
 func (*GetAllLanguagesForbidden) getAllLanguagesRes() {}
 
+type GetAllLanguagesInternalServerError Error
+
+func (*GetAllLanguagesInternalServerError) getAllLanguagesRes() {}
+
 type GetAllLanguagesOK struct {
-	Languages []Language `json:"languages"`
+	Languages []LanguageResponse `json:"languages"`
 }
 
 // GetLanguages returns the value of Languages.
-func (s *GetAllLanguagesOK) GetLanguages() []Language {
+func (s *GetAllLanguagesOK) GetLanguages() []LanguageResponse {
 	return s.Languages
 }
 
 // SetLanguages sets the value of Languages.
-func (s *GetAllLanguagesOK) SetLanguages(val []Language) {
+func (s *GetAllLanguagesOK) SetLanguages(val []LanguageResponse) {
 	s.Languages = val
 }
 
 func (*GetAllLanguagesOK) getAllLanguagesRes() {}
+
+type GetAllVersionsForbidden Error
+
+func (*GetAllVersionsForbidden) getAllVersionsRes() {}
+
+type GetAllVersionsInternalServerError Error
+
+func (*GetAllVersionsInternalServerError) getAllVersionsRes() {}
+
+type GetAllVersionsOK struct {
+	LanguageVersions []LanguageVersionResponse `json:"languageVersions"`
+}
+
+// GetLanguageVersions returns the value of LanguageVersions.
+func (s *GetAllVersionsOK) GetLanguageVersions() []LanguageVersionResponse {
+	return s.LanguageVersions
+}
+
+// SetLanguageVersions sets the value of LanguageVersions.
+func (s *GetAllVersionsOK) SetLanguageVersions(val []LanguageVersionResponse) {
+	s.LanguageVersions = val
+}
+
+func (*GetAllVersionsOK) getAllVersionsRes() {}
 
 // GetExecutionConfigForbidden is response for GetExecutionConfig operation.
 type GetExecutionConfigForbidden struct{}
@@ -794,6 +976,62 @@ func (s *GetExecutionsForJobOK) SetPagination(val PaginationResponse) {
 
 func (*GetExecutionsForJobOK) getExecutionsForJobRes() {}
 
+type GetLanguageByIdForbidden Error
+
+func (*GetLanguageByIdForbidden) getLanguageByIdRes() {}
+
+type GetLanguageByIdInternalServerError Error
+
+func (*GetLanguageByIdInternalServerError) getLanguageByIdRes() {}
+
+type GetLanguageByIdNotFound Error
+
+func (*GetLanguageByIdNotFound) getLanguageByIdRes() {}
+
+type GetLanguageByIdOK struct {
+	Language LanguageResponse `json:"language"`
+}
+
+// GetLanguage returns the value of Language.
+func (s *GetLanguageByIdOK) GetLanguage() LanguageResponse {
+	return s.Language
+}
+
+// SetLanguage sets the value of Language.
+func (s *GetLanguageByIdOK) SetLanguage(val LanguageResponse) {
+	s.Language = val
+}
+
+func (*GetLanguageByIdOK) getLanguageByIdRes() {}
+
+type GetLanguageVersionByIdForbidden Error
+
+func (*GetLanguageVersionByIdForbidden) getLanguageVersionByIdRes() {}
+
+type GetLanguageVersionByIdInternalServerError Error
+
+func (*GetLanguageVersionByIdInternalServerError) getLanguageVersionByIdRes() {}
+
+type GetLanguageVersionByIdNotFound Error
+
+func (*GetLanguageVersionByIdNotFound) getLanguageVersionByIdRes() {}
+
+type GetLanguageVersionByIdOK struct {
+	Language LanguageVersionResponse `json:"language"`
+}
+
+// GetLanguage returns the value of Language.
+func (s *GetLanguageVersionByIdOK) GetLanguage() LanguageVersionResponse {
+	return s.Language
+}
+
+// SetLanguage sets the value of Language.
+func (s *GetLanguageVersionByIdOK) SetLanguage(val LanguageVersionResponse) {
+	s.Language = val
+}
+
+func (*GetLanguageVersionByIdOK) getLanguageVersionByIdRes() {}
+
 type GetVersionOK struct {
 	Version string `json:"version"`
 }
@@ -884,16 +1122,12 @@ func (*Job) getExecutionJobByIdRes() {}
 
 // Ref: #/components/schemas/Language
 type Language struct {
-	// Name of the programming language.
+	// Name of the language.
 	Name string `json:"name"`
-	// File extension for the programming language.
+	// File extension for the language.
 	Extension string `json:"extension"`
-	// Default code snippet for the programming language.
-	Defaultcode string `json:"defaultcode"`
-	// Monaco editor language setting for the programming language.
-	Monacolanguage string `json:"monacolanguage"`
-	// The search query to be passed to SearchLanguagePackages API for this language.
-	Searchquery string `json:"searchquery"`
+	// Monaco editor language identifier.
+	MonacoLanguage string `json:"monaco_language"`
 }
 
 // GetName returns the value of Name.
@@ -906,19 +1140,9 @@ func (s *Language) GetExtension() string {
 	return s.Extension
 }
 
-// GetDefaultcode returns the value of Defaultcode.
-func (s *Language) GetDefaultcode() string {
-	return s.Defaultcode
-}
-
-// GetMonacolanguage returns the value of Monacolanguage.
-func (s *Language) GetMonacolanguage() string {
-	return s.Monacolanguage
-}
-
-// GetSearchquery returns the value of Searchquery.
-func (s *Language) GetSearchquery() string {
-	return s.Searchquery
+// GetMonacoLanguage returns the value of MonacoLanguage.
+func (s *Language) GetMonacoLanguage() string {
+	return s.MonacoLanguage
 }
 
 // SetName sets the value of Name.
@@ -931,19 +1155,251 @@ func (s *Language) SetExtension(val string) {
 	s.Extension = val
 }
 
-// SetDefaultcode sets the value of Defaultcode.
-func (s *Language) SetDefaultcode(val string) {
-	s.Defaultcode = val
+// SetMonacoLanguage sets the value of MonacoLanguage.
+func (s *Language) SetMonacoLanguage(val string) {
+	s.MonacoLanguage = val
 }
 
-// SetMonacolanguage sets the value of Monacolanguage.
-func (s *Language) SetMonacolanguage(val string) {
-	s.Monacolanguage = val
+// Merged schema.
+// Ref: #/components/schemas/LanguageResponse
+type LanguageResponse struct {
+	// Merged property.
+	Name string `json:"name"`
+	// Merged property.
+	Extension string `json:"extension"`
+	// Merged property.
+	MonacoLanguage string `json:"monaco_language"`
+	// Unique identifier for the language version.
+	ID int64 `json:"id"`
 }
 
-// SetSearchquery sets the value of Searchquery.
-func (s *Language) SetSearchquery(val string) {
-	s.Searchquery = val
+// GetName returns the value of Name.
+func (s *LanguageResponse) GetName() string {
+	return s.Name
+}
+
+// GetExtension returns the value of Extension.
+func (s *LanguageResponse) GetExtension() string {
+	return s.Extension
+}
+
+// GetMonacoLanguage returns the value of MonacoLanguage.
+func (s *LanguageResponse) GetMonacoLanguage() string {
+	return s.MonacoLanguage
+}
+
+// GetID returns the value of ID.
+func (s *LanguageResponse) GetID() int64 {
+	return s.ID
+}
+
+// SetName sets the value of Name.
+func (s *LanguageResponse) SetName(val string) {
+	s.Name = val
+}
+
+// SetExtension sets the value of Extension.
+func (s *LanguageResponse) SetExtension(val string) {
+	s.Extension = val
+}
+
+// SetMonacoLanguage sets the value of MonacoLanguage.
+func (s *LanguageResponse) SetMonacoLanguage(val string) {
+	s.MonacoLanguage = val
+}
+
+// SetID sets the value of ID.
+func (s *LanguageResponse) SetID(val int64) {
+	s.ID = val
+}
+
+// Ref: #/components/schemas/LanguageVersion
+type LanguageVersion struct {
+	// Reference to the parent language.
+	LanguageID int64 `json:"language_id"`
+	// Version identifier of the language.
+	Version string `json:"version"`
+	// Name of the Nix package.
+	NixPackageName string `json:"nix_package_name"`
+	// Path of template for the Nix flake.
+	FlakeTemplate string `json:"flake_template"`
+	// Path of template for scripts.
+	ScriptTemplate string `json:"script_template"`
+	// Default code template.
+	DefaultCode string `json:"default_code"`
+	// Search query string.
+	SearchQuery string `json:"search_query"`
+}
+
+// GetLanguageID returns the value of LanguageID.
+func (s *LanguageVersion) GetLanguageID() int64 {
+	return s.LanguageID
+}
+
+// GetVersion returns the value of Version.
+func (s *LanguageVersion) GetVersion() string {
+	return s.Version
+}
+
+// GetNixPackageName returns the value of NixPackageName.
+func (s *LanguageVersion) GetNixPackageName() string {
+	return s.NixPackageName
+}
+
+// GetFlakeTemplate returns the value of FlakeTemplate.
+func (s *LanguageVersion) GetFlakeTemplate() string {
+	return s.FlakeTemplate
+}
+
+// GetScriptTemplate returns the value of ScriptTemplate.
+func (s *LanguageVersion) GetScriptTemplate() string {
+	return s.ScriptTemplate
+}
+
+// GetDefaultCode returns the value of DefaultCode.
+func (s *LanguageVersion) GetDefaultCode() string {
+	return s.DefaultCode
+}
+
+// GetSearchQuery returns the value of SearchQuery.
+func (s *LanguageVersion) GetSearchQuery() string {
+	return s.SearchQuery
+}
+
+// SetLanguageID sets the value of LanguageID.
+func (s *LanguageVersion) SetLanguageID(val int64) {
+	s.LanguageID = val
+}
+
+// SetVersion sets the value of Version.
+func (s *LanguageVersion) SetVersion(val string) {
+	s.Version = val
+}
+
+// SetNixPackageName sets the value of NixPackageName.
+func (s *LanguageVersion) SetNixPackageName(val string) {
+	s.NixPackageName = val
+}
+
+// SetFlakeTemplate sets the value of FlakeTemplate.
+func (s *LanguageVersion) SetFlakeTemplate(val string) {
+	s.FlakeTemplate = val
+}
+
+// SetScriptTemplate sets the value of ScriptTemplate.
+func (s *LanguageVersion) SetScriptTemplate(val string) {
+	s.ScriptTemplate = val
+}
+
+// SetDefaultCode sets the value of DefaultCode.
+func (s *LanguageVersion) SetDefaultCode(val string) {
+	s.DefaultCode = val
+}
+
+// SetSearchQuery sets the value of SearchQuery.
+func (s *LanguageVersion) SetSearchQuery(val string) {
+	s.SearchQuery = val
+}
+
+// Merged schema.
+// Ref: #/components/schemas/LanguageVersionResponse
+type LanguageVersionResponse struct {
+	// Reference to the parent language.
+	LanguageID int64 `json:"language_id"`
+	// Version identifier of the language.
+	Version string `json:"version"`
+	// Name of the Nix package.
+	NixPackageName string `json:"nix_package_name"`
+	// Path of template for the Nix flake.
+	FlakeTemplate string `json:"flake_template"`
+	// Path of template for scripts.
+	ScriptTemplate string `json:"script_template"`
+	// Default code template.
+	DefaultCode string `json:"default_code"`
+	// Search query string.
+	SearchQuery string `json:"search_query"`
+	// Unique identifier for the language version.
+	ID int64 `json:"id"`
+}
+
+// GetLanguageID returns the value of LanguageID.
+func (s *LanguageVersionResponse) GetLanguageID() int64 {
+	return s.LanguageID
+}
+
+// GetVersion returns the value of Version.
+func (s *LanguageVersionResponse) GetVersion() string {
+	return s.Version
+}
+
+// GetNixPackageName returns the value of NixPackageName.
+func (s *LanguageVersionResponse) GetNixPackageName() string {
+	return s.NixPackageName
+}
+
+// GetFlakeTemplate returns the value of FlakeTemplate.
+func (s *LanguageVersionResponse) GetFlakeTemplate() string {
+	return s.FlakeTemplate
+}
+
+// GetScriptTemplate returns the value of ScriptTemplate.
+func (s *LanguageVersionResponse) GetScriptTemplate() string {
+	return s.ScriptTemplate
+}
+
+// GetDefaultCode returns the value of DefaultCode.
+func (s *LanguageVersionResponse) GetDefaultCode() string {
+	return s.DefaultCode
+}
+
+// GetSearchQuery returns the value of SearchQuery.
+func (s *LanguageVersionResponse) GetSearchQuery() string {
+	return s.SearchQuery
+}
+
+// GetID returns the value of ID.
+func (s *LanguageVersionResponse) GetID() int64 {
+	return s.ID
+}
+
+// SetLanguageID sets the value of LanguageID.
+func (s *LanguageVersionResponse) SetLanguageID(val int64) {
+	s.LanguageID = val
+}
+
+// SetVersion sets the value of Version.
+func (s *LanguageVersionResponse) SetVersion(val string) {
+	s.Version = val
+}
+
+// SetNixPackageName sets the value of NixPackageName.
+func (s *LanguageVersionResponse) SetNixPackageName(val string) {
+	s.NixPackageName = val
+}
+
+// SetFlakeTemplate sets the value of FlakeTemplate.
+func (s *LanguageVersionResponse) SetFlakeTemplate(val string) {
+	s.FlakeTemplate = val
+}
+
+// SetScriptTemplate sets the value of ScriptTemplate.
+func (s *LanguageVersionResponse) SetScriptTemplate(val string) {
+	s.ScriptTemplate = val
+}
+
+// SetDefaultCode sets the value of DefaultCode.
+func (s *LanguageVersionResponse) SetDefaultCode(val string) {
+	s.DefaultCode = val
+}
+
+// SetSearchQuery sets the value of SearchQuery.
+func (s *LanguageVersionResponse) SetSearchQuery(val string) {
+	s.SearchQuery = val
+}
+
+// SetID sets the value of ID.
+func (s *LanguageVersionResponse) SetID(val int64) {
+	s.ID = val
 }
 
 // NewOptBool returns new OptBool with value set to v.
@@ -1429,3 +1885,67 @@ func (s *SearchSystemPackagesOK) SetPackages(val []Package) {
 }
 
 func (*SearchSystemPackagesOK) searchSystemPackagesRes() {}
+
+type UpdateLanguageBadRequest Error
+
+func (*UpdateLanguageBadRequest) updateLanguageRes() {}
+
+type UpdateLanguageForbidden Error
+
+func (*UpdateLanguageForbidden) updateLanguageRes() {}
+
+type UpdateLanguageInternalServerError Error
+
+func (*UpdateLanguageInternalServerError) updateLanguageRes() {}
+
+type UpdateLanguageNotFound Error
+
+func (*UpdateLanguageNotFound) updateLanguageRes() {}
+
+type UpdateLanguageOK struct {
+	Language LanguageResponse `json:"language"`
+}
+
+// GetLanguage returns the value of Language.
+func (s *UpdateLanguageOK) GetLanguage() LanguageResponse {
+	return s.Language
+}
+
+// SetLanguage sets the value of Language.
+func (s *UpdateLanguageOK) SetLanguage(val LanguageResponse) {
+	s.Language = val
+}
+
+func (*UpdateLanguageOK) updateLanguageRes() {}
+
+type UpdateLanguageVersionBadRequest Error
+
+func (*UpdateLanguageVersionBadRequest) updateLanguageVersionRes() {}
+
+type UpdateLanguageVersionForbidden Error
+
+func (*UpdateLanguageVersionForbidden) updateLanguageVersionRes() {}
+
+type UpdateLanguageVersionInternalServerError Error
+
+func (*UpdateLanguageVersionInternalServerError) updateLanguageVersionRes() {}
+
+type UpdateLanguageVersionNotFound Error
+
+func (*UpdateLanguageVersionNotFound) updateLanguageVersionRes() {}
+
+type UpdateLanguageVersionOK struct {
+	Language LanguageVersionResponse `json:"language"`
+}
+
+// GetLanguage returns the value of Language.
+func (s *UpdateLanguageVersionOK) GetLanguage() LanguageVersionResponse {
+	return s.Language
+}
+
+// SetLanguage sets the value of Language.
+func (s *UpdateLanguageVersionOK) SetLanguage(val LanguageVersionResponse) {
+	s.Language = val
+}
+
+func (*UpdateLanguageVersionOK) updateLanguageVersionRes() {}

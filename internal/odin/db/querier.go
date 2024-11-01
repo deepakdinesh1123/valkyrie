@@ -12,13 +12,20 @@ import (
 
 type Querier interface {
 	CancelJob(ctx context.Context, jobID int64) error
+	CreateLanguage(ctx context.Context, arg CreateLanguageParams) (int64, error)
+	CreateLanguageVersion(ctx context.Context, arg CreateLanguageVersionParams) (int64, error)
 	CreateWorker(ctx context.Context, name string) (Worker, error)
+	DeleteAllVersionsForLanguage(ctx context.Context, languageID int64) (int64, error)
 	DeleteExecRequest(ctx context.Context, id int32) error
 	DeleteJob(ctx context.Context, jobID int64) (int64, error)
+	DeleteLanguage(ctx context.Context, id int64) (int64, error)
+	DeleteLanguageVersion(ctx context.Context, id int64) (int64, error)
 	DeleteWorker(ctx context.Context, id int32) error
 	FetchJob(ctx context.Context, workerID pgtype.Int4) (Job, error)
 	GetAllExecutions(ctx context.Context, arg GetAllExecutionsParams) ([]GetAllExecutionsRow, error)
 	GetAllJobs(ctx context.Context, arg GetAllJobsParams) ([]GetAllJobsRow, error)
+	GetAllLanguageVersions(ctx context.Context) ([]LanguageVersion, error)
+	GetAllLanguages(ctx context.Context) ([]Language, error)
 	GetAllWorkers(ctx context.Context, arg GetAllWorkersParams) ([]Worker, error)
 	GetExecRequest(ctx context.Context, id int32) (ExecRequest, error)
 	GetExecRequestByHash(ctx context.Context, hash string) (ExecRequest, error)
@@ -26,11 +33,15 @@ type Querier interface {
 	GetExecutionsForJob(ctx context.Context, arg GetExecutionsForJobParams) ([]GetExecutionsForJobRow, error)
 	GetJob(ctx context.Context, jobID int64) (GetJobRow, error)
 	GetJobState(ctx context.Context, jobID int64) (string, error)
+	GetLanguageByID(ctx context.Context, id int64) (Language, error)
+	GetLanguageVersion(ctx context.Context, arg GetLanguageVersionParams) (LanguageVersion, error)
+	GetLanguageVersionByID(ctx context.Context, id int64) (LanguageVersion, error)
 	GetStaleWorkers(ctx context.Context) ([]int32, error)
 	GetTotalExecutions(ctx context.Context) (int64, error)
 	GetTotalExecutionsForJob(ctx context.Context, jobID pgtype.Int8) (int64, error)
 	GetTotalJobs(ctx context.Context) (int64, error)
 	GetTotalWorkers(ctx context.Context) (int64, error)
+	GetVersionsByLanguageID(ctx context.Context, languageID int64) ([]LanguageVersion, error)
 	GetWorker(ctx context.Context, name string) (Worker, error)
 	InsertExecRequest(ctx context.Context, arg InsertExecRequestParams) (int32, error)
 	InsertExecution(ctx context.Context, arg InsertExecutionParams) (Execution, error)
@@ -47,6 +58,8 @@ type Querier interface {
 	StopJob(ctx context.Context, jobID int64) error
 	UpdateHeartbeat(ctx context.Context, id int32) error
 	UpdateJobCompleted(ctx context.Context, jobID int64) error
+	UpdateLanguage(ctx context.Context, arg UpdateLanguageParams) (int64, error)
+	UpdateLanguageVersion(ctx context.Context, arg UpdateLanguageVersionParams) (int64, error)
 	WorkerTaskCount(ctx context.Context, workerID pgtype.Int4) (int64, error)
 	updateJobFailed(ctx context.Context, jobID int64) error
 }

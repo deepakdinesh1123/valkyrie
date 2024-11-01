@@ -24,6 +24,23 @@ type ExecutionService struct {
 	envConfig *config.EnvConfig
 	logger    *zerolog.Logger
 }
+type Language struct {
+	ID             int64
+	Name           string
+	Extension      string
+	MonacoLanguage string
+}
+
+type LanguageVersion struct {
+	ID             int64
+	LanguageID     int64
+	Version        string
+	NixPackageName string
+	FlakeTemplate  string
+	ScriptTemplate string
+	DefaultCode    string
+	SearchQuery    string
+}
 
 func NewExecutionService(queries db.Store, envConfig *config.EnvConfig, logger *zerolog.Logger) *ExecutionService {
 	return &ExecutionService{
@@ -41,15 +58,65 @@ func (s *ExecutionService) prepareExecutionRequest(req *api.ExecutionRequest) (*
 			Message: "Timeout cannot be more than 180 seconds",
 		}
 	}
-	if config.Languages[req.Language] == nil {
+
+	languageData, err := s.queries.GetAllLanguages(context.TODO())
+	if err != nil {
+		return nil, &ExecutionServiceError{
+			Type:    "db",
+			Message: "Failed to fetch languages from the database",
+		}
+	}
+
+	languages := make(map[string]Language)
+	for _, lang := range languageData {
+		languages[lang.Name] = Language{
+			ID:        lang.ID,
+			Name:      lang.Name,
+			Extension: lang.Extension,
+		}
+	}
+
+	if _, ok := languages[req.Language]; !ok {
 		return nil, &ExecutionServiceError{
 			Type:    "language",
 			Message: "Language not supported",
 		}
 	}
+
+	languageVersionData, err := s.queries.GetVersionsByLanguageID(context.TODO(), languages[req.Language].ID)
+	if err != nil {
+		return nil, &ExecutionServiceError{
+			Type:    "db",
+			Message: "Failed to fetch language version from the database",
+		}
+	}
+
+	languageVersions := make(map[string]LanguageVersion)
+	for _, lang := range languageVersionData {
+		languageVersions[lang.Version] = LanguageVersion{
+			ID:             lang.ID,
+			LanguageID:     lang.LanguageID,
+			Version:        lang.Version,
+			NixPackageName: lang.NixPackageName,
+			FlakeTemplate:  lang.FlakeTemplate,
+			ScriptTemplate: lang.ScriptTemplate,
+			DefaultCode:    lang.DefaultCode,
+			SearchQuery:    lang.SearchQuery,
+		}
+	}
+
+	if _, ok := languageVersions[req.Version.Value]; !ok {
+		return nil, &ExecutionServiceError{
+			Type:    "language",
+			Message: "Language version not supported",
+		}
+	}
+
+	languageConfig := languages[req.Language]
+	languageVersionConfig := languageVersions[req.Version.Value]
 	execReq.Language = req.Language
-	execReq.LangNixPkg = config.Languages[req.Language]["nixPackageName"]
-	scriptName := fmt.Sprintf("main.%s", config.Languages[req.Language]["extension"])
+	execReq.LangNixPkg = languageVersions[req.Version.Value].NixPackageName
+	scriptName := fmt.Sprintf("main.%s", languageConfig.Extension)
 	execReq.File = File{
 		Name:    scriptName,
 		Content: req.Code,
@@ -57,7 +124,8 @@ func (s *ExecutionService) prepareExecutionRequest(req *api.ExecutionRequest) (*
 	execReq.Args = req.Environment.Value.Args.Value
 	execReq.SystemDependencies = req.Environment.Value.SystemDependencies
 	execReq.LanguageDependencies = req.Environment.Value.LanguageDependencies
-	flake, err := s.convertExecSpecToFlake(execReq)
+
+	flake, err := s.convertExecSpecToFlake(execReq, languageVersionConfig)
 	if err != nil {
 		return nil, &ExecutionServiceError{
 			Type:    "flake",
@@ -65,7 +133,7 @@ func (s *ExecutionService) prepareExecutionRequest(req *api.ExecutionRequest) (*
 		}
 	}
 
-	nixScript, err := s.convertExecSpecToNixScript(execReq)
+	nixScript, err := s.convertExecSpecToNixScript(execReq, languageVersionConfig)
 	if err != nil {
 		return nil, &ExecutionServiceError{
 			Type:    "nix script",
@@ -77,9 +145,9 @@ func (s *ExecutionService) prepareExecutionRequest(req *api.ExecutionRequest) (*
 	return &execReq, nil
 }
 
-func (s *ExecutionService) convertExecSpecToFlake(execSpec ExecutionRequest) (string, error) {
+func (s *ExecutionService) convertExecSpecToFlake(execSpec ExecutionRequest, language LanguageVersion) (string, error) {
 	execSpec.IsFlake = true
-	tmplName := filepath.Join("templates", config.Languages[execSpec.Language]["template"])
+	tmplName := filepath.Join("templates", language.FlakeTemplate)
 
 	var res bytes.Buffer
 	tmpl, err := template.New("base.flake.tmpl").ParseFS(flakes, "templates/base.flake.tmpl", tmplName)
@@ -102,9 +170,9 @@ func (s *ExecutionService) convertExecSpecToFlake(execSpec ExecutionRequest) (st
 	return res.String(), nil
 }
 
-func (s *ExecutionService) convertExecSpecToNixScript(execSpec ExecutionRequest) (string, error) {
+func (s *ExecutionService) convertExecSpecToNixScript(execSpec ExecutionRequest, language LanguageVersion) (string, error) {
 	execSpec.IsFlake = false
-	tmplName := filepath.Join("templates", config.Languages[execSpec.Language]["template"])
+	tmplName := filepath.Join("templates", language.ScriptTemplate)
 
 	var res bytes.Buffer
 	tmpl, err := template.New(string("base.exec.tmpl")).ParseFS(
