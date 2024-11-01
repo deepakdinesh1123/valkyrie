@@ -39,6 +39,32 @@ export interface CancelExecutionJob200Response {
 /**
  * 
  * @export
+ * @interface CreateLanguage200Response
+ */
+export interface CreateLanguage200Response {
+    /**
+     * 
+     * @type {LanguageResponse}
+     * @memberof CreateLanguage200Response
+     */
+    'language': LanguageResponse;
+}
+/**
+ * 
+ * @export
+ * @interface CreateLanguageVersion200Response
+ */
+export interface CreateLanguageVersion200Response {
+    /**
+     * 
+     * @type {LanguageVersionResponse}
+     * @memberof CreateLanguageVersion200Response
+     */
+    'language': LanguageVersionResponse;
+}
+/**
+ * 
+ * @export
  * @interface EnvironmentVariable
  */
 export interface EnvironmentVariable {
@@ -190,6 +216,12 @@ export interface ExecutionRequest {
      * @memberof ExecutionRequest
      */
     'language': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ExecutionRequest
+     */
+    'version'?: string;
     /**
      * 
      * @type {number}
@@ -359,10 +391,23 @@ export interface GetAllExecutions200Response {
 export interface GetAllLanguages200Response {
     /**
      * 
-     * @type {Array<Language>}
+     * @type {Array<LanguageResponse>}
      * @memberof GetAllLanguages200Response
      */
-    'languages': Array<Language>;
+    'languages': Array<LanguageResponse>;
+}
+/**
+ * 
+ * @export
+ * @interface GetAllVersions200Response
+ */
+export interface GetAllVersions200Response {
+    /**
+     * 
+     * @type {Array<LanguageVersionResponse>}
+     * @memberof GetAllVersions200Response
+     */
+    'languageVersions': Array<LanguageVersionResponse>;
 }
 /**
  * 
@@ -446,35 +491,158 @@ export interface Job {
  */
 export interface Language {
     /**
-     * Name of the programming language
+     * Name of the language.
      * @type {string}
      * @memberof Language
      */
     'name': string;
     /**
-     * File extension for the programming language
+     * File extension for the language.
      * @type {string}
      * @memberof Language
      */
     'extension': string;
     /**
-     * Default code snippet for the programming language
+     * Monaco editor language identifier.
      * @type {string}
      * @memberof Language
      */
-    'defaultcode': string;
+    'monaco_language': string;
+}
+/**
+ * 
+ * @export
+ * @interface LanguageResponse
+ */
+export interface LanguageResponse {
     /**
-     * Monaco editor language setting for the programming language
+     * 
      * @type {string}
-     * @memberof Language
+     * @memberof LanguageResponse
      */
-    'monacolanguage': string;
+    'name': string;
     /**
-     * The search query to be passed to SearchLanguagePackages API for this language
+     * 
      * @type {string}
-     * @memberof Language
+     * @memberof LanguageResponse
      */
-    'searchquery': string;
+    'extension': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof LanguageResponse
+     */
+    'monaco_language': string;
+    /**
+     * Unique identifier for the language version
+     * @type {number}
+     * @memberof LanguageResponse
+     */
+    'id': number;
+}
+/**
+ * 
+ * @export
+ * @interface LanguageVersion
+ */
+export interface LanguageVersion {
+    /**
+     * Reference to the parent language
+     * @type {number}
+     * @memberof LanguageVersion
+     */
+    'language_id': number;
+    /**
+     * Version identifier of the language
+     * @type {string}
+     * @memberof LanguageVersion
+     */
+    'version': string;
+    /**
+     * Name of the Nix package
+     * @type {string}
+     * @memberof LanguageVersion
+     */
+    'nix_package_name': string;
+    /**
+     * path of template for the Nix flake
+     * @type {string}
+     * @memberof LanguageVersion
+     */
+    'flake_template': string;
+    /**
+     * path of template for scripts
+     * @type {string}
+     * @memberof LanguageVersion
+     */
+    'script_template': string;
+    /**
+     * Default code template
+     * @type {string}
+     * @memberof LanguageVersion
+     */
+    'default_code': string;
+    /**
+     * Search query string
+     * @type {string}
+     * @memberof LanguageVersion
+     */
+    'search_query': string;
+}
+/**
+ * 
+ * @export
+ * @interface LanguageVersionResponse
+ */
+export interface LanguageVersionResponse {
+    /**
+     * Reference to the parent language
+     * @type {number}
+     * @memberof LanguageVersionResponse
+     */
+    'language_id': number;
+    /**
+     * Version identifier of the language
+     * @type {string}
+     * @memberof LanguageVersionResponse
+     */
+    'version': string;
+    /**
+     * Name of the Nix package
+     * @type {string}
+     * @memberof LanguageVersionResponse
+     */
+    'nix_package_name': string;
+    /**
+     * path of template for the Nix flake
+     * @type {string}
+     * @memberof LanguageVersionResponse
+     */
+    'flake_template': string;
+    /**
+     * path of template for scripts
+     * @type {string}
+     * @memberof LanguageVersionResponse
+     */
+    'script_template': string;
+    /**
+     * Default code template
+     * @type {string}
+     * @memberof LanguageVersionResponse
+     */
+    'default_code': string;
+    /**
+     * Search query string
+     * @type {string}
+     * @memberof LanguageVersionResponse
+     */
+    'search_query': string;
+    /**
+     * Unique identifier for the language version
+     * @type {number}
+     * @memberof LanguageVersionResponse
+     */
+    'id': number;
 }
 /**
  * 
@@ -643,6 +811,88 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             };
         },
         /**
+         * Create a new language entry in the database.
+         * @summary Create a language
+         * @param {Language} language 
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        createLanguage: async (language: Language, xAuthToken?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'language' is not null or undefined
+            assertParamExists('createLanguage', 'language', language)
+            const localVarPath = `/languages/create`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (xAuthToken != null) {
+                localVarHeaderParameter['X-Auth-Token'] = String(xAuthToken);
+            }
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(language, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Create a new language version entry in the database.
+         * @summary Create a language version
+         * @param {LanguageVersion} languageVersion 
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        createLanguageVersion: async (languageVersion: LanguageVersion, xAuthToken?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'languageVersion' is not null or undefined
+            assertParamExists('createLanguageVersion', 'languageVersion', languageVersion)
+            const localVarPath = `/language-versions/create`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (xAuthToken != null) {
+                localVarHeaderParameter['X-Auth-Token'] = String(xAuthToken);
+            }
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(languageVersion, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * Delete execution job
          * @summary Delete execution job
          * @param {number} jobId 
@@ -709,6 +959,84 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (force !== undefined) {
                 localVarQueryParameter['force'] = force;
             }
+
+            if (xAuthToken != null) {
+                localVarHeaderParameter['X-Auth-Token'] = String(xAuthToken);
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Delete a specific language by its ID.
+         * @summary Delete a language
+         * @param {number} id ID of the language to delete.
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        deleteLanguage: async (id: number, xAuthToken?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('deleteLanguage', 'id', id)
+            const localVarPath = `/languages/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (xAuthToken != null) {
+                localVarHeaderParameter['X-Auth-Token'] = String(xAuthToken);
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Delete a specific language version by its ID.
+         * @summary Delete a language version
+         * @param {number} id ID of the language version to delete.
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        deleteLanguageVersion: async (id: number, xAuthToken?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('deleteLanguageVersion', 'id', id)
+            const localVarPath = `/language-versions/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             if (xAuthToken != null) {
                 localVarHeaderParameter['X-Auth-Token'] = String(xAuthToken);
@@ -857,7 +1185,42 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             };
         },
         /**
-         * Get all languages
+         * Retrieve a list of all language versions from the database.
+         * @summary Get all language versions
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getAllLanguageVersions: async (xAuthToken?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/language-versions`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (xAuthToken != null) {
+                localVarHeaderParameter['X-Auth-Token'] = String(xAuthToken);
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Retrieve a list of all languages from the database.
          * @summary Get all languages
          * @param {string} [xAuthToken] Authentication token
          * @param {*} [options] Override http request option.
@@ -865,6 +1228,45 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
          */
         getAllLanguages: async (xAuthToken?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/languages`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (xAuthToken != null) {
+                localVarHeaderParameter['X-Auth-Token'] = String(xAuthToken);
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Retrieve a list of all language versions from the database.
+         * @summary Get all language versions
+         * @param {number} id The ID of the language to retrieve versions.
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getAllVersions: async (id: number, xAuthToken?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('getAllVersions', 'id', id)
+            const localVarPath = `/languages/{id}/versions`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -1099,6 +1501,84 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             };
         },
         /**
+         * Retrieve a language entry from the database using its ID.
+         * @summary Get language by ID
+         * @param {number} id The ID of the language to retrieve.
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getLanguageById: async (id: number, xAuthToken?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('getLanguageById', 'id', id)
+            const localVarPath = `/languages/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (xAuthToken != null) {
+                localVarHeaderParameter['X-Auth-Token'] = String(xAuthToken);
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Retrieve a language version entry from the database using its ID.
+         * @summary Get language version by ID
+         * @param {number} id The ID of the language version to retrieve.
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getLanguageVersionById: async (id: number, xAuthToken?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('getLanguageVersionById', 'id', id)
+            const localVarPath = `/language-versions/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (xAuthToken != null) {
+                localVarHeaderParameter['X-Auth-Token'] = String(xAuthToken);
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * Get version
          * @summary Get version
          * @param {string} [xAuthToken] Authentication token
@@ -1144,7 +1624,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         packagesExist: async (packageExistRequest: PackageExistRequest, xAuthToken?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'packageExistRequest' is not null or undefined
             assertParamExists('packagesExist', 'packageExistRequest', packageExistRequest)
-            const localVarPath = `/packages/exist/`;
+            const localVarPath = `/packages/exist`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -1265,6 +1745,96 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 options: localVarRequestOptions,
             };
         },
+        /**
+         * Update the details of a specific language by its ID.
+         * @summary Update a language
+         * @param {number} id ID of the language to update.
+         * @param {Language} language 
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        updateLanguage: async (id: number, language: Language, xAuthToken?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('updateLanguage', 'id', id)
+            // verify required parameter 'language' is not null or undefined
+            assertParamExists('updateLanguage', 'language', language)
+            const localVarPath = `/languages/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (xAuthToken != null) {
+                localVarHeaderParameter['X-Auth-Token'] = String(xAuthToken);
+            }
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(language, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Update the details of a specific language version by its ID.
+         * @summary Update a language version
+         * @param {number} id ID of the language version to update.
+         * @param {LanguageVersion} languageVersion 
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        updateLanguageVersion: async (id: number, languageVersion: LanguageVersion, xAuthToken?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('updateLanguageVersion', 'id', id)
+            // verify required parameter 'languageVersion' is not null or undefined
+            assertParamExists('updateLanguageVersion', 'languageVersion', languageVersion)
+            const localVarPath = `/language-versions/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (xAuthToken != null) {
+                localVarHeaderParameter['X-Auth-Token'] = String(xAuthToken);
+            }
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(languageVersion, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
     }
 };
 
@@ -1287,6 +1857,34 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.cancelExecutionJob(jobId, xAuthToken, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.cancelExecutionJob']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Create a new language entry in the database.
+         * @summary Create a language
+         * @param {Language} language 
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async createLanguage(language: Language, xAuthToken?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CreateLanguage200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.createLanguage(language, xAuthToken, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.createLanguage']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Create a new language version entry in the database.
+         * @summary Create a language version
+         * @param {LanguageVersion} languageVersion 
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async createLanguageVersion(languageVersion: LanguageVersion, xAuthToken?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CreateLanguageVersion200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.createLanguageVersion(languageVersion, xAuthToken, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.createLanguageVersion']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -1316,6 +1914,34 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.deleteExecutionWorker(workerId, force, xAuthToken, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.deleteExecutionWorker']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Delete a specific language by its ID.
+         * @summary Delete a language
+         * @param {number} id ID of the language to delete.
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async deleteLanguage(id: number, xAuthToken?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CancelExecutionJob200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.deleteLanguage(id, xAuthToken, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.deleteLanguage']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Delete a specific language version by its ID.
+         * @summary Delete a language version
+         * @param {number} id ID of the language version to delete.
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async deleteLanguageVersion(id: number, xAuthToken?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CancelExecutionJob200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.deleteLanguageVersion(id, xAuthToken, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.deleteLanguageVersion']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -1363,7 +1989,20 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Get all languages
+         * Retrieve a list of all language versions from the database.
+         * @summary Get all language versions
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getAllLanguageVersions(xAuthToken?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GetAllVersions200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getAllLanguageVersions(xAuthToken, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.getAllLanguageVersions']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Retrieve a list of all languages from the database.
          * @summary Get all languages
          * @param {string} [xAuthToken] Authentication token
          * @param {*} [options] Override http request option.
@@ -1373,6 +2012,20 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getAllLanguages(xAuthToken, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.getAllLanguages']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Retrieve a list of all language versions from the database.
+         * @summary Get all language versions
+         * @param {number} id The ID of the language to retrieve versions.
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getAllVersions(id: number, xAuthToken?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GetAllVersions200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getAllVersions(id, xAuthToken, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.getAllVersions']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -1448,6 +2101,34 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
+         * Retrieve a language entry from the database using its ID.
+         * @summary Get language by ID
+         * @param {number} id The ID of the language to retrieve.
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getLanguageById(id: number, xAuthToken?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CreateLanguage200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getLanguageById(id, xAuthToken, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.getLanguageById']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Retrieve a language version entry from the database using its ID.
+         * @summary Get language version by ID
+         * @param {number} id The ID of the language version to retrieve.
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getLanguageVersionById(id: number, xAuthToken?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CreateLanguageVersion200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getLanguageVersionById(id, xAuthToken, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.getLanguageVersionById']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * Get version
          * @summary Get version
          * @param {string} [xAuthToken] Authentication token
@@ -1503,6 +2184,36 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.searchSystemPackages']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
+        /**
+         * Update the details of a specific language by its ID.
+         * @summary Update a language
+         * @param {number} id ID of the language to update.
+         * @param {Language} language 
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async updateLanguage(id: number, language: Language, xAuthToken?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CreateLanguage200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.updateLanguage(id, language, xAuthToken, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.updateLanguage']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Update the details of a specific language version by its ID.
+         * @summary Update a language version
+         * @param {number} id ID of the language version to update.
+         * @param {LanguageVersion} languageVersion 
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async updateLanguageVersion(id: number, languageVersion: LanguageVersion, xAuthToken?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CreateLanguageVersion200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.updateLanguageVersion(id, languageVersion, xAuthToken, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.updateLanguageVersion']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
     }
 };
 
@@ -1523,6 +2234,28 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         cancelExecutionJob(jobId: number, xAuthToken?: string, options?: RawAxiosRequestConfig): AxiosPromise<CancelExecutionJob200Response> {
             return localVarFp.cancelExecutionJob(jobId, xAuthToken, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Create a new language entry in the database.
+         * @summary Create a language
+         * @param {Language} language 
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        createLanguage(language: Language, xAuthToken?: string, options?: RawAxiosRequestConfig): AxiosPromise<CreateLanguage200Response> {
+            return localVarFp.createLanguage(language, xAuthToken, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Create a new language version entry in the database.
+         * @summary Create a language version
+         * @param {LanguageVersion} languageVersion 
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        createLanguageVersion(languageVersion: LanguageVersion, xAuthToken?: string, options?: RawAxiosRequestConfig): AxiosPromise<CreateLanguageVersion200Response> {
+            return localVarFp.createLanguageVersion(languageVersion, xAuthToken, options).then((request) => request(axios, basePath));
         },
         /**
          * Delete execution job
@@ -1546,6 +2279,28 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         deleteExecutionWorker(workerId: number, force?: boolean, xAuthToken?: string, options?: RawAxiosRequestConfig): AxiosPromise<CancelExecutionJob200Response> {
             return localVarFp.deleteExecutionWorker(workerId, force, xAuthToken, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Delete a specific language by its ID.
+         * @summary Delete a language
+         * @param {number} id ID of the language to delete.
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        deleteLanguage(id: number, xAuthToken?: string, options?: RawAxiosRequestConfig): AxiosPromise<CancelExecutionJob200Response> {
+            return localVarFp.deleteLanguage(id, xAuthToken, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Delete a specific language version by its ID.
+         * @summary Delete a language version
+         * @param {number} id ID of the language version to delete.
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        deleteLanguageVersion(id: number, xAuthToken?: string, options?: RawAxiosRequestConfig): AxiosPromise<CancelExecutionJob200Response> {
+            return localVarFp.deleteLanguageVersion(id, xAuthToken, options).then((request) => request(axios, basePath));
         },
         /**
          * Execute a script
@@ -1583,7 +2338,17 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
             return localVarFp.getAllExecutions(page, pageSize, xAuthToken, options).then((request) => request(axios, basePath));
         },
         /**
-         * Get all languages
+         * Retrieve a list of all language versions from the database.
+         * @summary Get all language versions
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getAllLanguageVersions(xAuthToken?: string, options?: RawAxiosRequestConfig): AxiosPromise<GetAllVersions200Response> {
+            return localVarFp.getAllLanguageVersions(xAuthToken, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Retrieve a list of all languages from the database.
          * @summary Get all languages
          * @param {string} [xAuthToken] Authentication token
          * @param {*} [options] Override http request option.
@@ -1591,6 +2356,17 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         getAllLanguages(xAuthToken?: string, options?: RawAxiosRequestConfig): AxiosPromise<GetAllLanguages200Response> {
             return localVarFp.getAllLanguages(xAuthToken, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Retrieve a list of all language versions from the database.
+         * @summary Get all language versions
+         * @param {number} id The ID of the language to retrieve versions.
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getAllVersions(id: number, xAuthToken?: string, options?: RawAxiosRequestConfig): AxiosPromise<GetAllVersions200Response> {
+            return localVarFp.getAllVersions(id, xAuthToken, options).then((request) => request(axios, basePath));
         },
         /**
          * Get execution config
@@ -1650,6 +2426,28 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
             return localVarFp.getExecutionsForJob(jobId, page, pageSize, xAuthToken, options).then((request) => request(axios, basePath));
         },
         /**
+         * Retrieve a language entry from the database using its ID.
+         * @summary Get language by ID
+         * @param {number} id The ID of the language to retrieve.
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getLanguageById(id: number, xAuthToken?: string, options?: RawAxiosRequestConfig): AxiosPromise<CreateLanguage200Response> {
+            return localVarFp.getLanguageById(id, xAuthToken, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Retrieve a language version entry from the database using its ID.
+         * @summary Get language version by ID
+         * @param {number} id The ID of the language version to retrieve.
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getLanguageVersionById(id: number, xAuthToken?: string, options?: RawAxiosRequestConfig): AxiosPromise<CreateLanguageVersion200Response> {
+            return localVarFp.getLanguageVersionById(id, xAuthToken, options).then((request) => request(axios, basePath));
+        },
+        /**
          * Get version
          * @summary Get version
          * @param {string} [xAuthToken] Authentication token
@@ -1693,6 +2491,30 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         searchSystemPackages(searchString: string, xAuthToken?: string, options?: RawAxiosRequestConfig): AxiosPromise<SearchSystemPackages200Response> {
             return localVarFp.searchSystemPackages(searchString, xAuthToken, options).then((request) => request(axios, basePath));
         },
+        /**
+         * Update the details of a specific language by its ID.
+         * @summary Update a language
+         * @param {number} id ID of the language to update.
+         * @param {Language} language 
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        updateLanguage(id: number, language: Language, xAuthToken?: string, options?: RawAxiosRequestConfig): AxiosPromise<CreateLanguage200Response> {
+            return localVarFp.updateLanguage(id, language, xAuthToken, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Update the details of a specific language version by its ID.
+         * @summary Update a language version
+         * @param {number} id ID of the language version to update.
+         * @param {LanguageVersion} languageVersion 
+         * @param {string} [xAuthToken] Authentication token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        updateLanguageVersion(id: number, languageVersion: LanguageVersion, xAuthToken?: string, options?: RawAxiosRequestConfig): AxiosPromise<CreateLanguageVersion200Response> {
+            return localVarFp.updateLanguageVersion(id, languageVersion, xAuthToken, options).then((request) => request(axios, basePath));
+        },
     };
 };
 
@@ -1714,6 +2536,32 @@ export class DefaultApi extends BaseAPI {
      */
     public cancelExecutionJob(jobId: number, xAuthToken?: string, options?: RawAxiosRequestConfig) {
         return DefaultApiFp(this.configuration).cancelExecutionJob(jobId, xAuthToken, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Create a new language entry in the database.
+     * @summary Create a language
+     * @param {Language} language 
+     * @param {string} [xAuthToken] Authentication token
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public createLanguage(language: Language, xAuthToken?: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).createLanguage(language, xAuthToken, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Create a new language version entry in the database.
+     * @summary Create a language version
+     * @param {LanguageVersion} languageVersion 
+     * @param {string} [xAuthToken] Authentication token
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public createLanguageVersion(languageVersion: LanguageVersion, xAuthToken?: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).createLanguageVersion(languageVersion, xAuthToken, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1741,6 +2589,32 @@ export class DefaultApi extends BaseAPI {
      */
     public deleteExecutionWorker(workerId: number, force?: boolean, xAuthToken?: string, options?: RawAxiosRequestConfig) {
         return DefaultApiFp(this.configuration).deleteExecutionWorker(workerId, force, xAuthToken, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Delete a specific language by its ID.
+     * @summary Delete a language
+     * @param {number} id ID of the language to delete.
+     * @param {string} [xAuthToken] Authentication token
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public deleteLanguage(id: number, xAuthToken?: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).deleteLanguage(id, xAuthToken, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Delete a specific language version by its ID.
+     * @summary Delete a language version
+     * @param {number} id ID of the language version to delete.
+     * @param {string} [xAuthToken] Authentication token
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public deleteLanguageVersion(id: number, xAuthToken?: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).deleteLanguageVersion(id, xAuthToken, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1785,7 +2659,19 @@ export class DefaultApi extends BaseAPI {
     }
 
     /**
-     * Get all languages
+     * Retrieve a list of all language versions from the database.
+     * @summary Get all language versions
+     * @param {string} [xAuthToken] Authentication token
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public getAllLanguageVersions(xAuthToken?: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).getAllLanguageVersions(xAuthToken, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Retrieve a list of all languages from the database.
      * @summary Get all languages
      * @param {string} [xAuthToken] Authentication token
      * @param {*} [options] Override http request option.
@@ -1794,6 +2680,19 @@ export class DefaultApi extends BaseAPI {
      */
     public getAllLanguages(xAuthToken?: string, options?: RawAxiosRequestConfig) {
         return DefaultApiFp(this.configuration).getAllLanguages(xAuthToken, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Retrieve a list of all language versions from the database.
+     * @summary Get all language versions
+     * @param {number} id The ID of the language to retrieve versions.
+     * @param {string} [xAuthToken] Authentication token
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public getAllVersions(id: number, xAuthToken?: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).getAllVersions(id, xAuthToken, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1864,6 +2763,32 @@ export class DefaultApi extends BaseAPI {
     }
 
     /**
+     * Retrieve a language entry from the database using its ID.
+     * @summary Get language by ID
+     * @param {number} id The ID of the language to retrieve.
+     * @param {string} [xAuthToken] Authentication token
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public getLanguageById(id: number, xAuthToken?: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).getLanguageById(id, xAuthToken, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Retrieve a language version entry from the database using its ID.
+     * @summary Get language version by ID
+     * @param {number} id The ID of the language version to retrieve.
+     * @param {string} [xAuthToken] Authentication token
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public getLanguageVersionById(id: number, xAuthToken?: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).getLanguageVersionById(id, xAuthToken, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
      * Get version
      * @summary Get version
      * @param {string} [xAuthToken] Authentication token
@@ -1913,6 +2838,34 @@ export class DefaultApi extends BaseAPI {
      */
     public searchSystemPackages(searchString: string, xAuthToken?: string, options?: RawAxiosRequestConfig) {
         return DefaultApiFp(this.configuration).searchSystemPackages(searchString, xAuthToken, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Update the details of a specific language by its ID.
+     * @summary Update a language
+     * @param {number} id ID of the language to update.
+     * @param {Language} language 
+     * @param {string} [xAuthToken] Authentication token
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public updateLanguage(id: number, language: Language, xAuthToken?: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).updateLanguage(id, language, xAuthToken, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Update the details of a specific language version by its ID.
+     * @summary Update a language version
+     * @param {number} id ID of the language version to update.
+     * @param {LanguageVersion} languageVersion 
+     * @param {string} [xAuthToken] Authentication token
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public updateLanguageVersion(id: number, languageVersion: LanguageVersion, xAuthToken?: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).updateLanguageVersion(id, languageVersion, xAuthToken, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

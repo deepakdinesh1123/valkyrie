@@ -1,34 +1,36 @@
 import React, { useState, useEffect } from "react";
 import Editor, { EditorProps } from "@monaco-editor/react";
-import { Language } from "@/api-client";
-import { getLanguagePrefix } from "@/utils/prefix";
+import { Language, LanguageVersion } from "@/api-client";
 
 
 interface CodeEditorProps {
-  languages: Language[];
   selectedLanguage: Language;
+  selectedVersion: LanguageVersion;
   onChange?: (content: string) => void;
   editorOptions?: EditorProps["options"];
 }
 
 const CodeEditor: React.FC<CodeEditorProps> = ({
   selectedLanguage,
+  selectedVersion,
   onChange,
   editorOptions,
 }) => {
-  const [content, setContent] = useState(selectedLanguage.defaultcode);
-  const [previousPrefix, setPreviousPrefix] = useState(
-    getLanguagePrefix(selectedLanguage.name)
-  );
+  const [content, setContent] = useState(selectedVersion.default_code);
+  // const [previousPrefix, setPreviousPrefix] = useState(
+  //   getLanguagePrefix(selectedLanguage.name)
+  // );
 
-  useEffect(() => {
-    const currentPrefix = getLanguagePrefix(selectedLanguage.name);
+  // useEffect(() => {
+  //   const currentPrefix = getLanguagePrefix(selectedLanguage.name);
 
-    if (currentPrefix !== previousPrefix) {
-      setContent(selectedLanguage.defaultcode);
-      setPreviousPrefix(currentPrefix);
-    }
-  }, [selectedLanguage]);
+  //   if (currentPrefix !== previousPrefix) {
+  //     setContent(selectedVersion.default_code); 
+  //     setPreviousPrefix(currentPrefix);
+  //   }
+  // }, [selectedLanguage]);
+  console.log(selectedLanguage);
+  
 
   const handleEditorChange = (newValue: string | undefined) => {
     const newContent = newValue ?? "";
@@ -56,7 +58,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
         <Editor
           height="100%"
           width="100%"
-          language={selectedLanguage.monacolanguage}
+          language={selectedLanguage.monaco_language}
           value={content}
           onChange={handleEditorChange}
           theme="vs-dark"

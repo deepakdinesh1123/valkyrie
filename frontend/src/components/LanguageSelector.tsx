@@ -1,97 +1,152 @@
-"use client";
-
 import * as React from "react";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
 } from "@/components/ui/command";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
 } from "@/components/ui/popover";
-import { Language } from '@/api-client';
+import { useLanguages } from "@/hooks/useLanguages";
+import { useLanguageVersions } from "@/hooks/useLanguageVersions";
+import { useEffect } from "react";
+import { CheckIcon, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-interface LanguageSelectorProps {
-    languages: Language[];
-    selectedLanguage: Language | null;
-    onLanguageChange: (language: Language) => void;
-    isLoading?: boolean;
-}
-
-export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
-    languages,
-    selectedLanguage,
-    onLanguageChange,
-}) => {
-    const [open, setOpen] = React.useState(false);
-    const [query, setQuery] = React.useState("");
+const LanguageSelector = () => {
+    const { languages, selectedLanguage, setSelectedLanguage } = useLanguages();
+    const { languageVersions, refetch } = useLanguageVersions(selectedLanguage?.id);
+    const [languageOpen, setLanguageOpen] = React.useState(false);
+    const [versionOpen, setVersionOpen] = React.useState(false);
+    const [selectedVersion, setSelectedVersion] = React.useState("");
 
     const sortedLanguages = [...languages].sort((a, b) =>
         a.name.localeCompare(b.name)
     );
 
-    const filteredLanguages =
-        query === ""
-            ? sortedLanguages
-            : sortedLanguages.filter((lang) =>
-                  lang.name.toLowerCase().includes(query.toLowerCase())
-              );
+    const sortedVersions = [...languageVersions].sort((a, b) =>
+        b.version.localeCompare(a.version, undefined, { numeric: true, sensitivity: 'base' })
+    );
+
+    useEffect(() => {
+        if (sortedLanguages.length && !selectedLanguage) {
+            setSelectedLanguage(sortedLanguages[0]);
+        }
+    }, [sortedLanguages, selectedLanguage, setSelectedLanguage]);
+
+    useEffect(() => {
+        if (selectedLanguage?.id) {
+            setSelectedVersion("");
+            refetch();
+        }
+    }, [selectedLanguage, refetch]);
+
+    useEffect(() => {
+        if (sortedVersions.length) {
+            setSelectedVersion(sortedVersions[0].version);
+        }
+    }, [sortedVersions, selectedLanguage]);
+
+    // Log selected language and version
+    // useEffect(() => {
+    //     if (selectedLanguage) {
+    //         console.log(`Selected Language: ${selectedLanguage.name}, Version: ${selectedVersion}`);
+    //     }
+    // }, [selectedLanguage, selectedVersion]);
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-                <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={open}
-                    className="w-[200px] justify-between bg-neutral-900 text-white hover:bg-neutral-900 hover:text-white"
-                >
-                    {selectedLanguage ? selectedLanguage.name : "Select language..."}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50 " />
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[200px] p-0">
-                <Command className="bg-neutral-900 text-white">
-                    <CommandInput 
-                        placeholder="Search language..."
-                        onValueChange={setQuery}
-                    />
-                    <CommandList>
-                        <CommandEmpty>No languages found.</CommandEmpty>
-                        <CommandGroup className="bg-neutral-900 text-white">
-                            {filteredLanguages.map((lang) => (
-                                <CommandItem
-                                    key={lang.name}
-                                    value={lang.name}
-                                    onSelect={(currentValue:string) => {
-                                        const language = filteredLanguages.find(l => l.name === currentValue);
-                                        if (language) {
-                                            onLanguageChange(language);
-                                        }
-                                        setOpen(false);
-                                    }}
-                                >
-                                    <Check
-                                        className={cn(
-                                            "mr-2 h-4 w-4",
-                                            selectedLanguage?.name === lang.name ? "opacity-100" : "opacity-0"
-                                        )}
-                                    />
-                                    {lang.name}
-                                </CommandItem>
-                            ))}
-                        </CommandGroup>
-                    </CommandList>
-                </Command>
-            </PopoverContent>
-        </Popover>
+        <div className="h-fit space-x-2">
+            <Popover open={languageOpen} onOpenChange={setLanguageOpen}>
+                <PopoverTrigger asChild>
+                    <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={languageOpen}
+                        className="w-[180px] justify-between bg-neutral-900 text-white hover:bg-neutral-700 hover:text-white"
+                    >
+                        {selectedLanguage?.name || "Select Language..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[180px] p-0 text-white bg-neutral-900">
+                    <Command className="text-white bg-neutral-900">
+                        <CommandInput placeholder="Search Language" className="h-9" />
+                        <CommandList>
+                            <CommandEmpty>No Language found.</CommandEmpty>
+                            <CommandGroup className="text-white bg-neutral-900">
+                                {sortedLanguages.map((language) => (
+                                    <CommandItem
+                                        key={language.name}
+                                        value={language.name}
+                                        onSelect={() => {
+                                            setSelectedLanguage(language);
+                                            setLanguageOpen(false);
+                                        }}
+                                    >
+                                        {language.name}
+                                        <CheckIcon
+                                            className={cn(
+                                                "ml-auto h-4 w-4",
+                                                selectedLanguage?.name === language.name ? "opacity-100" : "opacity-0"
+                                            )}
+                                        />
+                                    </CommandItem>
+                                ))}
+                            </CommandGroup>
+                        </CommandList>
+                    </Command>
+                </PopoverContent>
+            </Popover>
+
+            <Popover open={versionOpen} onOpenChange={setVersionOpen}>
+                <PopoverTrigger asChild>
+                    <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={versionOpen}
+                        className="w-[150px] justify-between bg-neutral-900 text-white hover:bg-neutral-700 hover:text-white"
+                    >
+                        {selectedVersion || "Select Version..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[150px] p-0 text-white bg-neutral-900">
+                    <Command className="text-white bg-neutral-900">
+                        <CommandInput placeholder="Search Version" className="h-9" />
+                        <CommandList>
+                            <CommandEmpty>No Version found.</CommandEmpty>
+                            <CommandGroup className="text-white bg-neutral-900">
+                                {sortedVersions.map((version) => (
+                                    <CommandItem
+                                        key={version.version}
+                                        value={version.version}
+                                        onSelect={() => {
+                                            setSelectedVersion(version.version);
+                                            setVersionOpen(false);
+                                        }}
+                                    >
+                                        {version.version}
+                                        <CheckIcon
+                                            className={cn(
+                                                "ml-auto h-4 w-4",
+                                                selectedVersion === version.version ? "opacity-100" : "opacity-0"
+                                            )}
+                                        />
+                                    </CommandItem>
+                                ))}
+                            </CommandGroup>
+                        </CommandList>
+                    </Command>
+                </PopoverContent>
+            </Popover>
+        </div>
     );
 };
+
+export default LanguageSelector;

@@ -14,7 +14,6 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     config.headers = config.headers || {};
-   config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${localStorage.getItem('jwtToken') || import.meta.env.VITE_AUTH_TOKEN}`;
     return config;
   },
