@@ -1,46 +1,26 @@
-# Variables
-HOST_UID := $(shell id -u)
-HOST_GID := $(shell id -g)
-HOST_USER := $(shell whoami)
-HOST_GROUP := $(shell whoami)
-DOCKER_IMAGE_UBUNTU := odin:ubuntu
-DOCKER_IMAGE_ALPINE := odin:alpine
-PODMAN_IMAGE := odin:latest
-DOCKERFILE_UBUNTU := build/platforms/ubuntu.dockerfile
-DOCKERFILE_ALPINE := build/platforms/alpine.dockerfile
-
 # Phony Targets
 .PHONY: all build-docker-image build-docker-image-alpine build-podman-image
 
 # Default target
-all: build-docker-image build-docker-image-alpine build-podman-image
+all: build-docker-image build-docker-image-ubuntu build-podman-image build-podman-image-ubuntu
 
-# Build Docker image for Ubuntu
+# Build Docker images
 build-docker-image:
 	docker build \
-		-t $(DOCKER_IMAGE_UBUNTU) \
-		--build-arg HOST_UID=$(HOST_UID) \
-		--build-arg HOST_GID=$(HOST_GID) \
-		--build-arg HOST_USER=$(HOST_USER) \
-		--build-arg HOST_GROUP=$(HOST_GROUP) \
-		-f $(DOCKERFILE_UBUNTU) .
+		-t odin:alpine \
+		-f build/platforms/alpine/Dockerfile .
 
-# Build Docker image for Alpine
-build-docker-image-alpine:
+build-docker-image-ubuntu:
 	docker build \
-		-t $(DOCKER_IMAGE_ALPINE) \
-		--build-arg HOST_UID=$(HOST_UID) \
-		--build-arg HOST_GID=$(HOST_GID) \
-		--build-arg HOST_USER=$(HOST_USER) \
-		--build-arg HOST_GROUP=$(HOST_GROUP) \
-		-f $(DOCKERFILE_ALPINE) .
+		-t odin:ubuntu \
+		-f build/platforms/ubuntu/Dockerfile .
 
-# Build Podman image
+build-podman-image-ubuntu:
+	podman build \
+		-t odin:ubuntu \
+		-f build/platforms/ubuntu/Containerfile .
+
 build-podman-image:
 	podman build \
-		-t $(PODMAN_IMAGE) \
-		--build-arg HOST_UID=$(HOST_UID) \
-		--build-arg HOST_GID=$(HOST_GID) \
-		--build-arg HOST_USER=$(HOST_USER) \
-		--build-arg HOST_GROUP=$(HOST_GROUP) \
-		-f $(DOCKERFILE_UBUNTU) .
+		-t odin:alpine \
+		-f build/platforms/alpine/Containerfile .

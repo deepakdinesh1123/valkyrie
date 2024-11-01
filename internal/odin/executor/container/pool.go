@@ -88,7 +88,6 @@ func constructor(ctx context.Context) (Container, error) {
 		if err != nil {
 			return Container{}, fmt.Errorf("could not create volume: %s", err)
 		}
-		fmt.Println("The podman image name is ", envConfig.ODIN_WORKER_PODMAN_IMAGE)
 		s := specgen.NewSpecGenerator(
 			envConfig.ODIN_WORKER_PODMAN_IMAGE,
 			false,
