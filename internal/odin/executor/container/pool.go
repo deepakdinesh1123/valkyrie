@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/containers/podman/v5/pkg/bindings/containers"
+	"github.com/containers/podman/v5/pkg/bindings/volumes"
+	"github.com/containers/podman/v5/pkg/domain/entities/types"
 	"github.com/containers/podman/v5/pkg/specgen"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/docker/docker/api/types/container"
@@ -77,6 +79,15 @@ func constructor(ctx context.Context) (Container, error) {
 		if connection == nil {
 			return Container{}, fmt.Errorf("could not get podman connection")
 		}
+
+		_, err := volumes.Create(connection, types.VolumeCreateOptions{
+			Name:           "shared-cache",
+			IgnoreIfExists: true,
+		}, &volumes.CreateOptions{})
+
+		if err != nil {
+			return Container{}, fmt.Errorf("could not create volume: %s", err)
+		}
 		s := specgen.NewSpecGenerator(
 			envConfig.ODIN_WORKER_PODMAN_IMAGE,
 			false,
@@ -94,6 +105,12 @@ func constructor(ctx context.Context) (Container, error) {
 			},
 		}
 
+		s.ContainerStorageConfig.Volumes = []*specgen.NamedVolume{
+			{
+				Dest: "/home/valnix/.cache/cached-nix-shell",
+				Name: "shared-cache",
+			},
+		}
 		s.ContainerStorageConfig.OverlayVolumes = []*specgen.OverlayVolume{
 			{
 				Destination: "/nix",
@@ -151,15 +168,15 @@ func constructor(ctx context.Context) (Container, error) {
 		pdContainer, err := containers.CreateWithSpec(connection, s, nil)
 		cont.ID = pdContainer.ID
 		if err != nil {
-			return Container{}, err
+			return Container{}, fmt.Errorf("could not create container: %s", err)
 		}
 		err = containers.Start(connection, pdContainer.ID, nil)
 		if err != nil {
-			return Container{}, err
+			return Container{}, fmt.Errorf("could not start container: %s", err)
 		}
 		contInfo, err := containers.Inspect(connection, pdContainer.ID, nil)
 		if err != nil {
-			return Container{}, err
+			return Container{}, fmt.Errorf("could not inspect container: %s", err)
 		}
 		cont.Name = contInfo.Name
 		cont.PID = contInfo.State.Pid
