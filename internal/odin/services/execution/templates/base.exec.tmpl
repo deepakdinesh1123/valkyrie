@@ -1,8 +1,12 @@
+{{- if  eq .ContainerEngine "podman" -}}
 #!/usr/bin/env cached-nix-shell
+{{- else -}}
+#!/usr/bin/env nix-shell
+{{- end }}
 #! nix-shell -i bash --pure
 #! nix-shell -p {{ block "LangSetup" . }}{{.LangNixPkg}}{{ end }}
 {{ if eq (len .SystemDependencies) 0 -}}
-{{else -}}
+{{ else -}}
 #! nix-shell -p {{ range .SystemDependencies }}{{.}} {{ end }}
 {{end -}}
 

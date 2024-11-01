@@ -11,7 +11,6 @@ import (
 	"github.com/containers/podman/v5/pkg/specgen"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/jackc/puddle/v2"
-	"github.com/opencontainers/runtime-spec/specs-go"
 )
 
 func constructor(ctx context.Context) (Container, error) {
@@ -76,24 +75,24 @@ func constructor(ctx context.Context) (Container, error) {
 		memunit := 1024 * 1024
 		mem := int64(envConfig.ODIN_WORKER_MEMORY_LIMIT * int64(memunit))
 
-		quota := int64(300000)
-		burst := uint64(100000)
-		period := uint64(1000000)
-		realTimeRuntime := int64(500000)
-		realTimePeriod := uint64(1000000)
+		// quota := int64(300000)
+		// burst := uint64(100000)
+		// period := uint64(1000000)
+		// realTimeRuntime := int64(500000)
+		// realTimePeriod := uint64(1000000)
 
-		s.ResourceLimits = &specs.LinuxResources{
-			Memory: &specs.LinuxMemory{
-				Limit: &mem,
-			},
-			CPU: &specs.LinuxCPU{
-				Quota:           &quota,
-				Burst:           &burst,
-				Period:          &period,
-				RealtimeRuntime: &realTimeRuntime,
-				RealtimePeriod:  &realTimePeriod,
-			},
-		}
+		// s.ResourceLimits = &specs.LinuxResources{
+		// 	Memory: &specs.LinuxMemory{
+		// 		Limit: &mem,
+		// 	},
+		// 	CPU: &specs.LinuxCPU{
+		// 		Quota:           &quota,
+		// 		Burst:           &burst,
+		// 		Period:          &period,
+		// 		RealtimeRuntime: &realTimeRuntime,
+		// 		RealtimePeriod:  &realTimePeriod,
+		// 	},
+		// }
 
 		containerRemove := true
 		s.Remove = &containerRemove
@@ -113,6 +112,7 @@ func constructor(ctx context.Context) (Container, error) {
 		}
 		cont.Name = contInfo.Name
 		cont.PID = contInfo.State.Pid
+		cont.Engine = "podman"
 	}
 
 	return cont, nil

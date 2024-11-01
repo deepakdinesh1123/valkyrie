@@ -17,5 +17,6 @@ type ExecutionRequest struct {
 	Args                 string   `json:"args"`
 
 	// internal variables used for converting this to flake or script
-	IsFlake bool
+	IsFlake         bool
+	ContainerEngine string
 }

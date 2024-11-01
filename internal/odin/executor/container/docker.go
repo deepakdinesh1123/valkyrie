@@ -205,3 +205,11 @@ func (d *DockerProvider) ReadExecLogs(ctx context.Context, containerID string) (
 	}
 	return string(out), nil
 }
+
+func KillDockerContainer(cont Container) error {
+	client := getDockerClient()
+	return client.ContainerRemove(context.TODO(), cont.ID, container.RemoveOptions{
+		Force:         true,
+		RemoveVolumes: true,
+	})
+}

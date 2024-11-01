@@ -48,6 +48,7 @@ func constructor(ctx context.Context) (Container, error) {
 		}
 		cont.Name = contInfo.Name
 		cont.PID = contInfo.State.Pid
+		cont.Engine = "docker"
 	case "podman":
 		return cont, fmt.Errorf("Podman is not supported")
 	}
@@ -57,7 +58,7 @@ func constructor(ctx context.Context) (Container, error) {
 
 func destructor(cont Container) {
 	fmt.Println("killing container", cont.Name)
-	KillContainer(cont.PID)
+	KillDockerContainer(cont)
 }
 
 func NewContainerPool(ctx context.Context, initPoolSize int32, maxPoolSize int32) (*puddle.Pool[Container], error) {

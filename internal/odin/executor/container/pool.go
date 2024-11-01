@@ -53,6 +53,7 @@ func constructor(ctx context.Context) (Container, error) {
 		}
 		cont.Name = contInfo.Name
 		cont.PID = contInfo.State.Pid
+		cont.Engine = "docker"
 	case "podman":
 		connection := getPodmanConnection()
 		if connection == nil {
@@ -159,6 +160,7 @@ func constructor(ctx context.Context) (Container, error) {
 		}
 		cont.Name = contInfo.Name
 		cont.PID = contInfo.State.Pid
+		cont.Engine = "podman"
 	}
 
 	return cont, nil
@@ -166,7 +168,11 @@ func constructor(ctx context.Context) (Container, error) {
 
 func destructor(cont Container) {
 	fmt.Println("killing container", cont.Name)
-	KillContainer(cont.PID)
+	if cont.Engine == "podman" {
+		KillContainer(cont.PID)
+	} else {
+		KillDockerContainer(cont)
+	}
 }
 
 func NewContainerPool(ctx context.Context, initPoolSize int32, maxPoolSize int32) (*puddle.Pool[Container], error) {

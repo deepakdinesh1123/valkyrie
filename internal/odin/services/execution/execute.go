@@ -57,6 +57,11 @@ func (s *ExecutionService) prepareExecutionRequest(req *api.ExecutionRequest) (*
 	execReq.Args = req.Environment.Value.Args.Value
 	execReq.SystemDependencies = req.Environment.Value.SystemDependencies
 	execReq.LanguageDependencies = req.Environment.Value.LanguageDependencies
+
+	if s.envConfig.ODIN_WORKER_EXECUTOR == "container" {
+		execReq.ContainerEngine = s.envConfig.ODIN_CONTAINER_ENGINE
+	}
+
 	flake, err := s.convertExecSpecToFlake(execReq)
 	if err != nil {
 		return nil, &ExecutionServiceError{

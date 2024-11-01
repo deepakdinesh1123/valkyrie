@@ -17,9 +17,10 @@ import (
 )
 
 type Container struct {
-	Name string
-	ID   string
-	PID  int
+	Name   string
+	ID     string
+	PID    int
+	Engine string
 }
 
 type ContainerExecutor struct {
