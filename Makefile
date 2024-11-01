@@ -1,17 +1,26 @@
-include .env oas/Makefile
+# Include other Makefiles
+include .env oas/Makefile build/Makefile testing/Makefile
 
+# PostgreSQL Connection URL
 POSTGRES_URL = postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=${POSTGRES_SSL_MODE}
 
-.PHONY: migrate
+# Phony Targets
+.PHONY: all migrate gq start-db clear-stdb start-observability odin docker-db add-pkgs run-pkgs store-pkgs dump
+
+# Default target
+all: odin migrate start-db start-observability
+
+# Run database migrations
 migrate:
+	@echo "Running database migrations..."
 	@migrate -path internal/odin/db/migrations -database ${POSTGRES_URL} up
 
-.PHONY: gq
+# Generate SQL code
 gq: start-db
-	# cd internal/odin/db && sqlc verify
-	cd internal/odin/db && sqlc generate
+	@echo "Generating SQL code..."
+	@cd internal/odin/db && sqlc generate
 
-.PHONY: start-db
+# Start the PostgreSQL database
 start-db:
 	@podman run -d \
 		--name postgres-container \
@@ -21,52 +30,26 @@ start-db:
 		-p 5432:5432 \
 		postgres
 
-.PHONY: migrate-db
-migrate-db:
-	migrate -path internal/odin/db/migrations -database ${POSTGRES_URL} up
-
-.PHONY: clear-stdb
+# Clear the state database
 clear-stdb:
-	rm -rf ~/.zango/data
+	@echo "Clearing state database..."
+	@rm -rf ~/.zango/data
 
-.PHONY: start-observability
+# Start observability services
 start-observability:
-	@docker compose up valkyrie-otel-collector jaeger prometheus -d
+	@echo "Starting observability services..."
+	@docker-compose up -d valkyrie-otel-collector jaeger prometheus
 
-.PHONY: build-docker-image
-build-docker-image:
-	docker build \
-		-t odin:alpine \
-		-f build/platforms/alpine/Dockerfile .
-
-.PHONY: build-docker-image-ubuntu
-build-docker-image-ubuntu:
-	docker build \
-		-t odin:ubuntu \
-		-f build/platforms/ubuntu/Dockerfile .
-
-.PHONY: build-podman-image
-build-podman-image:
-	podman build \
-		-t odin:alpine \
-		-f build/platforms/alpine/Containerfile .
-
-.PHONY: build-podman-image-ubuntu
-build-docker-image-ubuntu:
-	podman build \
-		-t odin:ubuntu \
-		-f build/platforms/ubuntu/Containerfile .
-
-.PHONY: odin
+# Build the odin binary
 odin:
 	go build -o odinb cmd/odin/main.go
 
-.PHONY: podman-db
-podman-db:
-	@podman compose -f docker-compose.yml up   postgres -d 
+# Start PostgreSQL with Docker and run migrations
+docker-db:
+	@docker-compose up -d postgres 
 	migrate -path internal/odin/db/migrations -database $(POSTGRES_URL) up
 
-.PHONY: add-pkgs run-pkgs
+# Add packages from a dump file
 add-pkgs:
 	@if [ -z "$(filter-out $@,$(MAKECMDGOALS))" ]; then \
 		echo "Error: Please provide the dump file name as an argument."; \
@@ -84,8 +67,9 @@ add-pkgs:
 	psql ${POSTGRES_URL} -c "UPDATE packages SET tsv_search = to_tsvector('english', COALESCE(name, '') || ' ' || COALESCE(version, '') || ' ' || COALESCE(language, ''));"; \
 	echo "Full-text search vectors generated successfully."; \
 	psql ${POSTGRES_URL} -c "CREATE INDEX IF NOT EXISTS idx_packages_tsv ON packages USING GIN(tsv_search);"; \
-	echo "GIN index for tsv_search created successfully.";
+	echo "GIN index for tsv_search created successfully."
 
+# Store packages in the database
 store-pkgs:
 	@packages=$$(psql ${POSTGRES_URL} -t -c "SELECT id, name, language FROM packages;"); \
 	if [ -z "$$packages" ]; then \
@@ -103,9 +87,9 @@ store-pkgs:
 			nix-shell -p $$language.$$name --run "exit"; \
 		fi; \
 	done <<< "$$packages"; \
-	echo "All packages processed successfully.";
+	echo "All packages processed successfully."
 
-.PHONY: dump
+# Dump package versions
 dump:
 	@if [ -z "$(filter-out $@,$(MAKECMDGOALS))" ]; then \
 		echo "Error: Please specify a version (e.g., make dump 24.05)"; \
@@ -113,5 +97,6 @@ dump:
 	fi
 	./hack/packages.sh $(filter-out $@,$(MAKECMDGOALS))
 
+# Catch-all target to suppress errors for non-existent targets
 %:
 	@:

@@ -8,11 +8,12 @@ import (
 	"syscall"
 
 	"github.com/containers/podman/v5/pkg/bindings/containers"
+	"github.com/containers/podman/v5/pkg/bindings/volumes"
+	"github.com/containers/podman/v5/pkg/domain/entities/types"
 	"github.com/containers/podman/v5/pkg/specgen"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/docker/docker/api/types/container"
 	"github.com/jackc/puddle/v2"
-	"github.com/opencontainers/runtime-spec/specs-go"
 )
 
 func constructor(ctx context.Context) (Container, error) {
@@ -57,6 +58,15 @@ func constructor(ctx context.Context) (Container, error) {
 		if connection == nil {
 			return Container{}, fmt.Errorf("could not get podman connection")
 		}
+
+		_, err := volumes.Create(connection, types.VolumeCreateOptions{
+			Name:           "shared-cache",
+			IgnoreIfExists: true,
+		}, &volumes.CreateOptions{})
+
+		if err != nil {
+			return Container{}, fmt.Errorf("could not create volume: %s", err)
+		}
 		s := specgen.NewSpecGenerator(
 			envConfig.ODIN_WORKER_PODMAN_IMAGE,
 			false,
@@ -74,6 +84,12 @@ func constructor(ctx context.Context) (Container, error) {
 			},
 		}
 
+		s.ContainerStorageConfig.Volumes = []*specgen.NamedVolume{
+			{
+				Dest: "/home/valnix/.cache/cached-nix-shell",
+				Name: "shared-cache",
+			},
+		}
 		s.ContainerStorageConfig.OverlayVolumes = []*specgen.OverlayVolume{
 			{
 				Destination: "/nix",
@@ -103,27 +119,27 @@ func constructor(ctx context.Context) (Container, error) {
 			},
 		}
 
-		memunit := 1024 * 1024
-		mem := int64(envConfig.ODIN_WORKER_MEMORY_LIMIT * int64(memunit))
+		// memunit := 1024 * 1024
+		// mem := int64(envConfig.ODIN_WORKER_MEMORY_LIMIT * int64(memunit))
 
-		quota := int64(300000)
-		burst := uint64(100000)
-		period := uint64(1000000)
-		realTimeRuntime := int64(500000)
-		realTimePeriod := uint64(1000000)
+		// quota := int64(300000)
+		// burst := uint64(100000)
+		// period := uint64(1000000)
+		// realTimeRuntime := int64(500000)
+		// realTimePeriod := uint64(1000000)
 
-		s.ResourceLimits = &specs.LinuxResources{
-			Memory: &specs.LinuxMemory{
-				Limit: &mem,
-			},
-			CPU: &specs.LinuxCPU{
-				Quota:           &quota,
-				Burst:           &burst,
-				Period:          &period,
-				RealtimeRuntime: &realTimeRuntime,
-				RealtimePeriod:  &realTimePeriod,
-			},
-		}
+		// s.ResourceLimits = &specs.LinuxResources{
+		// 	Memory: &specs.LinuxMemory{
+		// 		Limit: &mem,
+		// 	},
+		// 	CPU: &specs.LinuxCPU{
+		// 		Quota:           &quota,
+		// 		Burst:           &burst,
+		// 		Period:          &period,
+		// 		RealtimeRuntime: &realTimeRuntime,
+		// 		RealtimePeriod:  &realTimePeriod,
+		// 	},
+		// }
 
 		containerRemove := true
 		s.Remove = &containerRemove
@@ -131,15 +147,15 @@ func constructor(ctx context.Context) (Container, error) {
 		pdContainer, err := containers.CreateWithSpec(connection, s, nil)
 		cont.ID = pdContainer.ID
 		if err != nil {
-			return Container{}, err
+			return Container{}, fmt.Errorf("could not create container: %s", err)
 		}
 		err = containers.Start(connection, pdContainer.ID, nil)
 		if err != nil {
-			return Container{}, err
+			return Container{}, fmt.Errorf("could not start container: %s", err)
 		}
 		contInfo, err := containers.Inspect(connection, pdContainer.ID, nil)
 		if err != nil {
-			return Container{}, err
+			return Container{}, fmt.Errorf("could not inspect container: %s", err)
 		}
 		cont.Name = contInfo.Name
 		cont.PID = contInfo.State.Pid

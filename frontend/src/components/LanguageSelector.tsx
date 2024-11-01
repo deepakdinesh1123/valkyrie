@@ -1,6 +1,22 @@
-import React, { useEffect, useRef } from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+"use client";
+
+import * as React from "react";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Language } from '@/api-client';
 
 interface LanguageSelectorProps {
@@ -14,51 +30,68 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
     languages,
     selectedLanguage,
     onLanguageChange,
-    isLoading = false
 }) => {
-    const isInitialLoad = useRef(true);
+    const [open, setOpen] = React.useState(false);
+    const [query, setQuery] = React.useState("");
 
     const sortedLanguages = [...languages].sort((a, b) =>
         a.name.localeCompare(b.name)
     );
 
-    useEffect(() => {
-        if (isInitialLoad.current && sortedLanguages.length > 0) {
-            onLanguageChange(sortedLanguages[0]);
-            isInitialLoad.current = false;
-        }
-    }, [sortedLanguages, onLanguageChange]);
-
-    if (isLoading) {
-        return (
-            <div className="w-[180px] h-9 flex items-center justify-center bg-neutral-900 rounded-md">
-                <Loader2 className="h-4 w-4 text-white animate-spin" />
-            </div>
-        );
-    }
+    const filteredLanguages =
+        query === ""
+            ? sortedLanguages
+            : sortedLanguages.filter((lang) =>
+                  lang.name.toLowerCase().includes(query.toLowerCase())
+              );
 
     return (
-        <div className="language-selector focus:outline-none">
-            <Select
-                value={selectedLanguage?.name}
-                onValueChange={(value) => {
-                    const language = sortedLanguages.find((lang) => lang.name === value);
-                    if (language) {
-                        onLanguageChange(language);
-                    }
-                }}
-            >
-                <SelectTrigger className="w-[180px] outline-none bg-neutral-900 text-white rounded-md px-2 py-1 transition-colors duration-200 ease-in-out">
-                    <SelectValue placeholder="Select a language" />
-                </SelectTrigger>
-                <SelectContent className="bg-black text-white">
-                    {sortedLanguages.map((lang) => (
-                        <SelectItem key={lang.name} value={lang.name}>
-                            {lang.name}
-                        </SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
-        </div>
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={open}
+                    className="w-[200px] justify-between bg-neutral-900 text-white hover:bg-neutral-900 hover:text-white"
+                >
+                    {selectedLanguage ? selectedLanguage.name : "Select language..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50 " />
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[200px] p-0">
+                <Command className="bg-neutral-900 text-white">
+                    <CommandInput 
+                        placeholder="Search language..."
+                        onValueChange={setQuery}
+                    />
+                    <CommandList>
+                        <CommandEmpty>No languages found.</CommandEmpty>
+                        <CommandGroup className="bg-neutral-900 text-white">
+                            {filteredLanguages.map((lang) => (
+                                <CommandItem
+                                    key={lang.name}
+                                    value={lang.name}
+                                    onSelect={(currentValue:string) => {
+                                        const language = filteredLanguages.find(l => l.name === currentValue);
+                                        if (language) {
+                                            onLanguageChange(language);
+                                        }
+                                        setOpen(false);
+                                    }}
+                                >
+                                    <Check
+                                        className={cn(
+                                            "mr-2 h-4 w-4",
+                                            selectedLanguage?.name === lang.name ? "opacity-100" : "opacity-0"
+                                        )}
+                                    />
+                                    {lang.name}
+                                </CommandItem>
+                            ))}
+                        </CommandGroup>
+                    </CommandList>
+                </Command>
+            </PopoverContent>
+        </Popover>
     );
 };

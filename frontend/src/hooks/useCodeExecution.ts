@@ -5,7 +5,7 @@ export const useCodeExecution = () => {
   const [terminalOutput, setTerminalOutput] = useState<string[]>([]);
   const [eventSource, setEventSource] = useState<EventSource | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const eventPath = import.meta.env.VITE_EVENT_PATH;
+  const eventPath = import.meta.env.VITE_BASE_PATH;
 
   const executeCode = async (runData: {
     language: string;
@@ -21,7 +21,6 @@ export const useCodeExecution = () => {
       console.log(runData);
       setIsLoading(true); 
       const response = await api.execute(runData);
-      setTerminalOutput(['Processing...']);
 
       const source = new EventSource(`${eventPath}${response.data.events}`);
       setEventSource(source);
@@ -29,13 +28,20 @@ export const useCodeExecution = () => {
       source.onmessage = (event) => {
         const data = JSON.parse(event.data);
 
-        if (data.status === 'completed') {
-          setTerminalOutput((prev) => [
-            ...prev.slice(0, prev.length - 1),
-            data.logs || 'No logs available.',
-          ]);
-          setIsLoading(false); 
-          source.close();
+        switch (data.status) {
+          case 'pending':
+            setTerminalOutput([ 'Waiting for worker']);
+            break;
+          case 'scheduled':
+            setTerminalOutput([ 'Processing...']);
+            break;
+          case 'completed':
+            setTerminalOutput([data.logs || 'No logs available.',]);
+            setIsLoading(false); 
+            source.close();
+            break;
+          default:
+            break;
         }
       };
 
