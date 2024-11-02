@@ -58,7 +58,7 @@ func (ce *ContainerExecutor) Execute(ctx context.Context, wg *concurrency.SafeWa
 		return
 	}
 	logger.Debug().Msg("Got container")
-	// defer cont.Destroy()
+	defer cont.Destroy()
 	contInfo := cont.Value()
 	logger.Debug().Msg("Writing files")
 	err = cc.WriteFiles(tctx, contInfo.ID, os.TempDir(), job)

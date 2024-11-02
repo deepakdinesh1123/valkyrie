@@ -8,13 +8,11 @@ all: build-docker-image build-docker-image-ubuntu build-podman-image build-podma
 build-docker-image:
 	docker build \
 		-t odin:alpine \
-		--env-file .env
 		-f build/platforms/alpine/Dockerfile .
 
 build-docker-image-ubuntu:
 	docker build \
 		-t odin:ubuntu \
-		--env-file .env
 		-f build/platforms/ubuntu/Dockerfile .
 
 build-podman-image-ubuntu:

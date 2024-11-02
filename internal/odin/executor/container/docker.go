@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
@@ -203,7 +204,7 @@ func (d *DockerProvider) ReadExecLogs(ctx context.Context, containerID string) (
 			return "", fmt.Errorf("could not read from hijacked response: %s", err)
 		}
 	}
-	return string(out), nil
+	return stripCtlAndExtFromUTF8(string(out)), nil
 }
 
 func KillDockerContainer(cont Container) error {
@@ -212,4 +213,13 @@ func KillDockerContainer(cont Container) error {
 		Force:         true,
 		RemoveVolumes: true,
 	})
+}
+
+func stripCtlAndExtFromUTF8(str string) string {
+	return strings.Map(func(r rune) rune {
+		if r >= 32 && r < 127 || r == 10 {
+			return r
+		}
+		return -1
+	}, str)
 }
