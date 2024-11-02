@@ -37,8 +37,8 @@ var (
 
 func init() {
 	NixDumpCmd.Flags().StringP("channel", "c", "", "Nixpkgs channel")
-	NixDumpCmd.Flags().StringP("languages", "l", "languages.txt", "Path to the languages.txt file")
-	NixDumpCmd.Flags().StringP("systems", "s", "systempackages.txt", "Path to the systempackages.txt file")
+	NixDumpCmd.Flags().StringP("languages", "l", "configs/nix/languages.txt", "Path to the languages.txt file")
+	NixDumpCmd.Flags().StringP("systems", "s", "configs/nix/systempackages.txt", "Path to the systempackages.txt file")
 
 }
 

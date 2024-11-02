@@ -20,7 +20,8 @@
           go_1_22
           nodejs
           podman-compose
-          # caddy
+          caddy
+          postgresql_16
           pkg-config ] ++ lib.optionals stdenv.isLinux [ 
             gpgme 
             libgpg-error 

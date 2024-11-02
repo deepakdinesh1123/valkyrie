@@ -15,7 +15,14 @@ USER valnix
 RUN sh install_nix.sh --no-daemon
 ENV PATH="$PATH:/home/valnix/.nix-profile/bin"
 
+RUN nix-channel --remove nixpkgs
+RUN nix-channel --add https://nixos.org/channels/nixos-24.05 nixpkgs
+RUN nix-channel --update
+
 RUN mkdir ~/odin
+COPY hack/packages/store_packages.sh ~/odin/store_packages.sh
+RUN sh store_packages.sh
+
 COPY hack/execution/nix_run_docker.sh /home/valnix/nix_run.sh
 COPY hack/execution/nix_stop.sh /home/valnix/nix_stop.sh
 WORKDIR /home/valnix/odin

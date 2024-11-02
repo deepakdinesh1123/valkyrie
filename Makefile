@@ -51,43 +51,11 @@ docker-db:
 
 # Add packages from a dump file
 add-pkgs:
-	@if [ -z "$(filter-out $@,$(MAKECMDGOALS))" ]; then \
-		echo "Error: Please provide the dump file name as an argument."; \
-		exit 1; \
-	fi; \
-	dump_file=$(filter-out $@,$(MAKECMDGOALS)); \
-	dump_path=./dumps/$$dump_file; \
-	if [ ! -f "$$dump_path" ]; then \
-		echo "Error: Dump file '$$dump_file' does not exist in the dumps folder."; \
-		exit 1; \
-	fi; \
-	psql ${POSTGRES_URL} -c "DROP TABLE IF EXISTS packages CASCADE"; \
-	echo "Applying $$dump_file to database..."; \
-	psql ${POSTGRES_URL} -f $$dump_path; \
-	psql ${POSTGRES_URL} -c "UPDATE packages SET tsv_search = to_tsvector('english', COALESCE(name, '') || ' ' || COALESCE(version, '') || ' ' || COALESCE(language, ''));"; \
-	echo "Full-text search vectors generated successfully."; \
-	psql ${POSTGRES_URL} -c "CREATE INDEX IF NOT EXISTS idx_packages_tsv ON packages USING GIN(tsv_search);"; \
-	echo "GIN index for tsv_search created successfully."
+	bash hack/packages/add_packages.sh $(filter-out $@,$(MAKECMDGOALS))
 
 # Store packages in the database
 store-pkgs:
-	@packages=$$(psql ${POSTGRES_URL} -t -c "SELECT id, name, language FROM packages;"); \
-	if [ -z "$$packages" ]; then \
-		echo "No packages found in the database."; \
-		exit 0; \
-	fi; \
-	while IFS="|" read -r id name language; do \
-		name=$$(echo $$name | xargs); \
-		language=$$(echo $$language | xargs); \
-		if [ -z "$$language" ]; then \
-			echo "Running nix-shell for $$name (type: system)..."; \
-			nix-shell -p $$name --run "exit"; \
-		else \
-			echo "Running nix-shell for $$language.$$name (type: language)..."; \
-			nix-shell -p $$language.$$name --run "exit"; \
-		fi; \
-	done <<< "$$packages"; \
-	echo "All packages processed successfully."
+	bash hack/packages/store_packages.sh
 
 # Dump package versions
 dump:
@@ -95,7 +63,7 @@ dump:
 		echo "Error: Please specify a version (e.g., make dump 24.05)"; \
 		exit 1; \
 	fi
-	./hack/packages.sh $(filter-out $@,$(MAKECMDGOALS))
+	./hack/packages/dump_packages.sh $(filter-out $@,$(MAKECMDGOALS))
 
 # Catch-all target to suppress errors for non-existent targets
 %:
