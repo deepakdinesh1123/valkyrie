@@ -1,4 +1,4 @@
-//go:build sys
+//go:build system
 
 package executor
 

@@ -1,3 +1,5 @@
+//go:build system || all
+
 package system
 
 import (
@@ -81,7 +83,7 @@ func (s *SystemExecutor) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	}
 	defer cancel()
 
-	execCmd := exec.CommandContext(tctx, "nix", "run")
+	execCmd := exec.CommandContext(tctx, "./exec.sh")
 	execCmd.Cancel = func() error {
 		s.logger.Info().Msg("Task timed out. Terminating execution")
 		syscall.Kill(-execCmd.Process.Pid, syscall.SIGKILL)

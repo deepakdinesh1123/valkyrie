@@ -1,3 +1,5 @@
+//go:build system || all
+
 package system
 
 import (

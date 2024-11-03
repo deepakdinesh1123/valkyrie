@@ -1,4 +1,4 @@
-//go:build all && !darwin
+//go:build (all || container) && !darwin
 
 package container
 

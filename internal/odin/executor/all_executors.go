@@ -1,4 +1,4 @@
-//go:build container
+//go:build all && !darwin
 
 package executor
 
