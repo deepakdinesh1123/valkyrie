@@ -9,10 +9,6 @@ type DeleteExecutionJobRes interface {
 	deleteExecutionJobRes()
 }
 
-type DeleteExecutionWorkerRes interface {
-	deleteExecutionWorkerRes()
-}
-
 type ExecuteRes interface {
 	executeRes()
 }
@@ -39,10 +35,6 @@ type GetExecutionJobByIdRes interface {
 
 type GetExecutionResultByIdRes interface {
 	getExecutionResultByIdRes()
-}
-
-type GetExecutionWorkersRes interface {
-	getExecutionWorkersRes()
 }
 
 type GetExecutionsForJobRes interface {

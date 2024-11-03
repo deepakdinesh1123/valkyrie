@@ -16,7 +16,7 @@ migrate:
 	@migrate -path internal/odin/db/migrations -database ${POSTGRES_URL} up
 
 # Generate SQL code
-gq: start-db
+gq:
 	@echo "Generating SQL code..."
 	@cd internal/odin/db && sqlc generate
 

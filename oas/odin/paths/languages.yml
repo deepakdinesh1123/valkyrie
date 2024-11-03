@@ -17,6 +17,6 @@ get:
               languages:
                 type: array
                 items:
-                  type: string
+                  $ref: ../components/schemas/Language.yml
     '403':
       description: Forbidden

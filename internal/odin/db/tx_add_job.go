@@ -9,15 +9,20 @@ import (
 )
 
 type AddJobTxParams struct {
-	Code                string
-	Flake               string
-	NixScript           string
-	Hash                string
-	Args                string
-	Path                string
-	ProgrammingLanguage string
-	MaxRetries          int
-	Timeout             int32
+	Hash                 string
+	Code                 string
+	Flake                string
+	LanguageDependencies []string
+	SystemDependencies   []string
+	CmdLineArgs          string
+	CompileArgs          string
+	Files                []byte
+	Input                string
+	Command              string
+	ProgrammingLanguage  string
+	Setup                string
+	MaxRetries           int
+	Timeout              int32
 }
 
 type AddJobTxResult struct {
@@ -34,13 +39,16 @@ func (s *SQLStore) AddJobTx(ctx context.Context, arg AddJobTxParams) (AddJobTxRe
 			switch err {
 			case pgx.ErrNoRows:
 				execId, err = s.InsertExecRequest(ctx, InsertExecRequestParams{
-					Code:                arg.Code,
-					Flake:               arg.Flake,
-					NixScript:           arg.NixScript,
-					Hash:                arg.Hash,
-					Args:                pgtype.Text{String: arg.Args, Valid: true},
-					ProgrammingLanguage: pgtype.Text{String: arg.ProgrammingLanguage, Valid: true},
-					Path:                arg.Path,
+					Hash:                 arg.Hash,
+					Code:                 pgtype.Text{String: arg.Code, Valid: true},
+					LanguageDependencies: execReq.LanguageDependencies,
+					SystemDependencies:   execReq.SystemDependencies,
+					Flake:                arg.Flake,
+					CmdLineArgs:          pgtype.Text{String: arg.CmdLineArgs, Valid: true},
+					CompileArgs:          pgtype.Text{String: arg.CompileArgs, Valid: true},
+					Command:              pgtype.Text{String: arg.Command, Valid: true},
+					ProgrammingLanguage:  arg.ProgrammingLanguage,
+					Setup:                execReq.Setup,
 				})
 				if err != nil {
 					return err

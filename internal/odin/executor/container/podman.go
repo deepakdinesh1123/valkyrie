@@ -14,6 +14,7 @@ import (
 	"github.com/containers/podman/v5/pkg/bindings"
 	"github.com/containers/podman/v5/pkg/bindings/containers"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/services/execution"
 	"github.com/docker/docker/api/types/container"
 	"github.com/jackc/puddle/v2"
 )
@@ -55,9 +56,13 @@ func (p *PodmanClient) WriteFiles(ctx context.Context, containerID string, prepD
 	if err != nil {
 		return err
 	}
+	script, spec, err := execution.ConvertExecSpecToNixScript(execReq)
+	if err != nil {
+		return fmt.Errorf("error writing files: %s", err)
+	}
 	files := map[string]string{
-		"exec.sh":    execReq.NixScript,
-		execReq.Path: execReq.Code,
+		"exec.sh":       script,
+		spec.ScriptName: execReq.Code.String,
 	}
 
 	tarFilePath, err := CreateTarArchive(files, prepDir)

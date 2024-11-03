@@ -1,0 +1,53 @@
+post:
+  summary: Verify package list is available.
+  description: >-
+    Verify the package list is available for the language version while
+    switching between language versions.
+  operationId: PackagesExist
+  parameters:
+    - $ref: ../components/parameters/AuthHeader.yml
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../components/schemas/PackageExistRequest.yml
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - exists
+            properties:
+              exists:
+                type: boolean
+                description: Indicate all packages' existance for given language
+                example: false
+              nonExistingPackages:
+                type: array
+                description: List of packages that do not exist for the language
+                items:
+                  type: string
+                example:
+                  - nonexistent-package
+    '400':
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml
+    '403':
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml

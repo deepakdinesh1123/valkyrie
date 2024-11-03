@@ -1,18 +1,37 @@
 create table exec_request (
     id int primary key default nextval('exec_request_id_seq'),
     hash text not null,
-    code text not null,
-    path text not null,
+    code text,
     flake text not null,
-    args varchar(1024),
-    programming_language text
+    language_dependencies text[],
+    system_dependencies text[],
+    cmd_line_args varchar(1024),
+    compile_args varchar(1024),
+    files text,
+    input text,
+    command text,
+    setup text,
+    programming_language text not NULL default "bash"
 );
 
 -- name: InsertExecRequest :one
 insert into exec_request
-    (hash, code, path, flake, args, programming_language, nix_script)
+    (
+        hash, 
+        code, 
+        flake, 
+        language_dependencies, 
+        system_dependencies, 
+        cmd_line_args, 
+        compile_args,
+        files,
+        input,
+        command,
+        setup,
+        programming_language
+    )
 values
-    ($1, $2, $3, $4, $5, $6, $7)
+    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 returning id;
 
 -- name: GetExecRequest :one

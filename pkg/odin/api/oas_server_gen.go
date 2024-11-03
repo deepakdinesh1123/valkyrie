@@ -20,12 +20,6 @@ type Handler interface {
 	//
 	// DELETE /executions/jobs/{JobId}
 	DeleteExecutionJob(ctx context.Context, params DeleteExecutionJobParams) (DeleteExecutionJobRes, error)
-	// DeleteExecutionWorker implements deleteExecutionWorker operation.
-	//
-	// Delete execution worker.
-	//
-	// DELETE /executions/workers/{workerId}
-	DeleteExecutionWorker(ctx context.Context, params DeleteExecutionWorkerParams) (DeleteExecutionWorkerRes, error)
 	// Execute implements execute operation.
 	//
 	// Execute a script.
@@ -68,12 +62,6 @@ type Handler interface {
 	//
 	// GET /executions/{execId}
 	GetExecutionResultById(ctx context.Context, params GetExecutionResultByIdParams) (GetExecutionResultByIdRes, error)
-	// GetExecutionWorkers implements getExecutionWorkers operation.
-	//
-	// Get all execution workers.
-	//
-	// GET /executions/workers
-	GetExecutionWorkers(ctx context.Context, params GetExecutionWorkersParams) (GetExecutionWorkersRes, error)
 	// GetExecutionsForJob implements getExecutionsForJob operation.
 	//
 	// Get executions of given job.

@@ -31,6 +31,7 @@ type EnvConfig struct {
 	ODIN_WORKER_RUNTIME      string `mapstructure:"ODIN_WORKER_RUNTIME"`      // represents the default runtime for the worker containers (e.g. runc, crun).
 	ODIN_WORKER_PODMAN_IMAGE string `mapstructure:"ODIN_WORKER_PODMAN_IMAGE"` // represents the default image for the podman worker containers.
 	ODIN_WORKER_DOCKER_IMAGE string `mapstructure:"ODIN_WORKER_DOCKER_IMAGE"` // represents the default image for the docker worker containers.
+	ODIN_MAX_RETRIES         int    `mapstructure:"ODIN_MAX_RETRIES"`
 
 	ODIN_WORKER_MEMORY_LIMIT int64  `mapstructure:"ODIN_WORKER_MEMORY_LIMIT"`
 	ODIN_WORKER_CPU_LIMIT    string `mapstructure:"ODIN_WORKER_CPU_LIMIT"`
@@ -101,6 +102,7 @@ func GetEnvConfig() (*EnvConfig, error) {
 		viper.SetDefault("ODIN_WORKER_TASK_TIMEOUT", 120)
 		viper.SetDefault("ODIN_WORKER_POLL_FREQ", 1)
 		viper.SetDefault("ODIN_WORKER_RUNTIME", "runc")
+		viper.SetDefault("ODIN_MAX_RETRIES", 5)
 
 		viper.SetDefault("ODIN_WORKER_MEMORY_LIMIT", 500)
 
@@ -151,7 +153,7 @@ func GetEnvConfig() (*EnvConfig, error) {
 		} else {
 			home_dir, err := os.UserHomeDir()
 			if err != nil {
-
+				fmt.Println(".env file not found, using defaults")
 			}
 			envConfig.USER_HOME_DIR = home_dir
 		}

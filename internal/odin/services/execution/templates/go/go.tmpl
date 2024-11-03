@@ -1,1 +1,2 @@
-{{ define "execute" }} go run main.go {{ end }}
+{{ define "compile" }} go build main.go {{ .CompileArgs }}{{ end }}
+{{ define "execute" }} ./main {{ end }}

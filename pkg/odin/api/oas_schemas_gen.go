@@ -58,40 +58,6 @@ type DeleteExecutionJobOK struct{}
 
 func (*DeleteExecutionJobOK) deleteExecutionJobRes() {}
 
-type DeleteExecutionWorkerBadRequest Error
-
-func (*DeleteExecutionWorkerBadRequest) deleteExecutionWorkerRes() {}
-
-// DeleteExecutionWorkerForbidden is response for DeleteExecutionWorker operation.
-type DeleteExecutionWorkerForbidden struct{}
-
-func (*DeleteExecutionWorkerForbidden) deleteExecutionWorkerRes() {}
-
-type DeleteExecutionWorkerInternalServerError Error
-
-func (*DeleteExecutionWorkerInternalServerError) deleteExecutionWorkerRes() {}
-
-// DeleteExecutionWorkerNotFound is response for DeleteExecutionWorker operation.
-type DeleteExecutionWorkerNotFound struct{}
-
-func (*DeleteExecutionWorkerNotFound) deleteExecutionWorkerRes() {}
-
-type DeleteExecutionWorkerOK struct {
-	Message string `json:"message"`
-}
-
-// GetMessage returns the value of Message.
-func (s *DeleteExecutionWorkerOK) GetMessage() string {
-	return s.Message
-}
-
-// SetMessage sets the value of Message.
-func (s *DeleteExecutionWorkerOK) SetMessage(val string) {
-	s.Message = val
-}
-
-func (*DeleteExecutionWorkerOK) deleteExecutionWorkerRes() {}
-
 // Ref: #/components/schemas/EnvironmentVariable
 type EnvironmentVariable struct {
 	Key   OptString `json:"key"`
@@ -290,7 +256,7 @@ type ExecutionEnvironmentSpec struct {
 	EnvironmentVariables []EnvironmentVariable `json:"environment_variables"`
 	LanguageDependencies []string              `json:"languageDependencies"`
 	SystemDependencies   []string              `json:"systemDependencies"`
-	Args                 OptString             `json:"args"`
+	Setup                OptString             `json:"setup"`
 }
 
 // GetEnvironmentVariables returns the value of EnvironmentVariables.
@@ -308,9 +274,9 @@ func (s *ExecutionEnvironmentSpec) GetSystemDependencies() []string {
 	return s.SystemDependencies
 }
 
-// GetArgs returns the value of Args.
-func (s *ExecutionEnvironmentSpec) GetArgs() OptString {
-	return s.Args
+// GetSetup returns the value of Setup.
+func (s *ExecutionEnvironmentSpec) GetSetup() OptString {
+	return s.Setup
 }
 
 // SetEnvironmentVariables sets the value of EnvironmentVariables.
@@ -328,18 +294,23 @@ func (s *ExecutionEnvironmentSpec) SetSystemDependencies(val []string) {
 	s.SystemDependencies = val
 }
 
-// SetArgs sets the value of Args.
-func (s *ExecutionEnvironmentSpec) SetArgs(val OptString) {
-	s.Args = val
+// SetSetup sets the value of Setup.
+func (s *ExecutionEnvironmentSpec) SetSetup(val OptString) {
+	s.Setup = val
 }
 
 // Ref: #/components/schemas/ExecutionRequest
 type ExecutionRequest struct {
 	Environment OptExecutionEnvironmentSpec `json:"environment"`
-	Code        string                      `json:"code"`
-	Language    string                      `json:"language"`
+	Code        OptString                   `json:"code"`
+	Language    OptString                   `json:"language"`
 	MaxRetries  OptInt                      `json:"max_retries"`
 	Timeout     OptInt32                    `json:"timeout"`
+	CmdLineArgs OptString                   `json:"cmdLineArgs"`
+	CompileArgs OptString                   `json:"compileArgs"`
+	Command     OptString                   `json:"command"`
+	Files       []byte                      `json:"files"`
+	Input       OptString                   `json:"input"`
 }
 
 // GetEnvironment returns the value of Environment.
@@ -348,12 +319,12 @@ func (s *ExecutionRequest) GetEnvironment() OptExecutionEnvironmentSpec {
 }
 
 // GetCode returns the value of Code.
-func (s *ExecutionRequest) GetCode() string {
+func (s *ExecutionRequest) GetCode() OptString {
 	return s.Code
 }
 
 // GetLanguage returns the value of Language.
-func (s *ExecutionRequest) GetLanguage() string {
+func (s *ExecutionRequest) GetLanguage() OptString {
 	return s.Language
 }
 
@@ -367,18 +338,43 @@ func (s *ExecutionRequest) GetTimeout() OptInt32 {
 	return s.Timeout
 }
 
+// GetCmdLineArgs returns the value of CmdLineArgs.
+func (s *ExecutionRequest) GetCmdLineArgs() OptString {
+	return s.CmdLineArgs
+}
+
+// GetCompileArgs returns the value of CompileArgs.
+func (s *ExecutionRequest) GetCompileArgs() OptString {
+	return s.CompileArgs
+}
+
+// GetCommand returns the value of Command.
+func (s *ExecutionRequest) GetCommand() OptString {
+	return s.Command
+}
+
+// GetFiles returns the value of Files.
+func (s *ExecutionRequest) GetFiles() []byte {
+	return s.Files
+}
+
+// GetInput returns the value of Input.
+func (s *ExecutionRequest) GetInput() OptString {
+	return s.Input
+}
+
 // SetEnvironment sets the value of Environment.
 func (s *ExecutionRequest) SetEnvironment(val OptExecutionEnvironmentSpec) {
 	s.Environment = val
 }
 
 // SetCode sets the value of Code.
-func (s *ExecutionRequest) SetCode(val string) {
+func (s *ExecutionRequest) SetCode(val OptString) {
 	s.Code = val
 }
 
 // SetLanguage sets the value of Language.
-func (s *ExecutionRequest) SetLanguage(val string) {
+func (s *ExecutionRequest) SetLanguage(val OptString) {
 	s.Language = val
 }
 
@@ -392,11 +388,35 @@ func (s *ExecutionRequest) SetTimeout(val OptInt32) {
 	s.Timeout = val
 }
 
+// SetCmdLineArgs sets the value of CmdLineArgs.
+func (s *ExecutionRequest) SetCmdLineArgs(val OptString) {
+	s.CmdLineArgs = val
+}
+
+// SetCompileArgs sets the value of CompileArgs.
+func (s *ExecutionRequest) SetCompileArgs(val OptString) {
+	s.CompileArgs = val
+}
+
+// SetCommand sets the value of Command.
+func (s *ExecutionRequest) SetCommand(val OptString) {
+	s.Command = val
+}
+
+// SetFiles sets the value of Files.
+func (s *ExecutionRequest) SetFiles(val []byte) {
+	s.Files = val
+}
+
+// SetInput sets the value of Input.
+func (s *ExecutionRequest) SetInput(val OptString) {
+	s.Input = val
+}
+
 // Merged schema.
 // Ref: #/components/schemas/ExecutionResult
 type ExecutionResult struct {
-	JobId int64 `json:"jobId"`
-	// Merged property.
+	JobId  int64  `json:"jobId"`
 	Script string `json:"script"`
 	// Merged property.
 	Flake     string    `json:"flake"`
@@ -405,7 +425,6 @@ type ExecutionResult struct {
 	StartedAt  time.Time   `json:"started_at"`
 	UpdatedAt  OptDateTime `json:"updated_at"`
 	ExecId     int64       `json:"execId"`
-	Args       string      `json:"args"`
 	FinishedAt time.Time   `json:"finished_at"`
 	ExecLogs   string      `json:"exec_logs"`
 	NixLogs    OptString   `json:"nix_logs"`
@@ -444,11 +463,6 @@ func (s *ExecutionResult) GetUpdatedAt() OptDateTime {
 // GetExecId returns the value of ExecId.
 func (s *ExecutionResult) GetExecId() int64 {
 	return s.ExecId
-}
-
-// GetArgs returns the value of Args.
-func (s *ExecutionResult) GetArgs() string {
-	return s.Args
 }
 
 // GetFinishedAt returns the value of FinishedAt.
@@ -501,11 +515,6 @@ func (s *ExecutionResult) SetExecId(val int64) {
 	s.ExecId = val
 }
 
-// SetArgs sets the value of Args.
-func (s *ExecutionResult) SetArgs(val string) {
-	s.Args = val
-}
-
 // SetFinishedAt sets the value of FinishedAt.
 func (s *ExecutionResult) SetFinishedAt(val time.Time) {
 	s.FinishedAt = val
@@ -522,65 +531,6 @@ func (s *ExecutionResult) SetNixLogs(val OptString) {
 }
 
 func (*ExecutionResult) getExecutionResultByIdRes() {}
-
-// Ref: #/components/schemas/ExecutionWorker
-type ExecutionWorker struct {
-	ID        int32       `json:"id"`
-	Name      string      `json:"name"`
-	CreatedAt time.Time   `json:"created_at"`
-	Status    string      `json:"status"`
-	UpdatedAt OptDateTime `json:"updated_at"`
-}
-
-// GetID returns the value of ID.
-func (s *ExecutionWorker) GetID() int32 {
-	return s.ID
-}
-
-// GetName returns the value of Name.
-func (s *ExecutionWorker) GetName() string {
-	return s.Name
-}
-
-// GetCreatedAt returns the value of CreatedAt.
-func (s *ExecutionWorker) GetCreatedAt() time.Time {
-	return s.CreatedAt
-}
-
-// GetStatus returns the value of Status.
-func (s *ExecutionWorker) GetStatus() string {
-	return s.Status
-}
-
-// GetUpdatedAt returns the value of UpdatedAt.
-func (s *ExecutionWorker) GetUpdatedAt() OptDateTime {
-	return s.UpdatedAt
-}
-
-// SetID sets the value of ID.
-func (s *ExecutionWorker) SetID(val int32) {
-	s.ID = val
-}
-
-// SetName sets the value of Name.
-func (s *ExecutionWorker) SetName(val string) {
-	s.Name = val
-}
-
-// SetCreatedAt sets the value of CreatedAt.
-func (s *ExecutionWorker) SetCreatedAt(val time.Time) {
-	s.CreatedAt = val
-}
-
-// SetStatus sets the value of Status.
-func (s *ExecutionWorker) SetStatus(val string) {
-	s.Status = val
-}
-
-// SetUpdatedAt sets the value of UpdatedAt.
-func (s *ExecutionWorker) SetUpdatedAt(val OptDateTime) {
-	s.UpdatedAt = val
-}
 
 type GetAllExecutionJobsBadRequest Error
 
@@ -713,46 +663,6 @@ func (*GetExecutionResultByIdInternalServerError) getExecutionResultByIdRes() {}
 type GetExecutionResultByIdNotFound struct{}
 
 func (*GetExecutionResultByIdNotFound) getExecutionResultByIdRes() {}
-
-type GetExecutionWorkersBadRequest Error
-
-func (*GetExecutionWorkersBadRequest) getExecutionWorkersRes() {}
-
-// GetExecutionWorkersForbidden is response for GetExecutionWorkers operation.
-type GetExecutionWorkersForbidden struct{}
-
-func (*GetExecutionWorkersForbidden) getExecutionWorkersRes() {}
-
-type GetExecutionWorkersInternalServerError Error
-
-func (*GetExecutionWorkersInternalServerError) getExecutionWorkersRes() {}
-
-type GetExecutionWorkersOK struct {
-	Workers    []ExecutionWorker  `json:"workers"`
-	Pagination PaginationResponse `json:"pagination"`
-}
-
-// GetWorkers returns the value of Workers.
-func (s *GetExecutionWorkersOK) GetWorkers() []ExecutionWorker {
-	return s.Workers
-}
-
-// GetPagination returns the value of Pagination.
-func (s *GetExecutionWorkersOK) GetPagination() PaginationResponse {
-	return s.Pagination
-}
-
-// SetWorkers sets the value of Workers.
-func (s *GetExecutionWorkersOK) SetWorkers(val []ExecutionWorker) {
-	s.Workers = val
-}
-
-// SetPagination sets the value of Pagination.
-func (s *GetExecutionWorkersOK) SetPagination(val PaginationResponse) {
-	s.Pagination = val
-}
-
-func (*GetExecutionWorkersOK) getExecutionWorkersRes() {}
 
 type GetExecutionsForJobBadRequest Error
 

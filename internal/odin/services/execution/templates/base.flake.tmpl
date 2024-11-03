@@ -20,9 +20,16 @@
               {{ end }}
             ];
             shellHook = ''
+              {{ if .Setup -}}
+              {{ .Setup }}
+              {{ end -}}
+
+              {{ if .Command -}}
+              {{ .Command }}
+              {{ else -}}
               {{ block "compile" . }}{{ end }}
-              {{ block "execute" . }}{{ end }}{{ if ne .Args "" -}}{{ .Args -}}{{ end }}
-              exit
+              {{ if .Input }}cat input.txt | {{- end -}}{{ block "execute" . }}{{ end }}{{ if ne .CmdLineArgs "" }}{{ .CmdLineArgs -}}{{ end }}
+              {{ end -}}
             '';
           };
       });

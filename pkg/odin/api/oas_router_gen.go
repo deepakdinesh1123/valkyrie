@@ -182,56 +182,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 							}
 
 							elem = origElem
-						case 'w': // Prefix: "workers"
-							origElem := elem
-							if l := len("workers"); len(elem) >= l && elem[0:l] == "workers" {
-								elem = elem[l:]
-							} else {
-								break
-							}
-
-							if len(elem) == 0 {
-								switch r.Method {
-								case "GET":
-									s.handleGetExecutionWorkersRequest([0]string{}, elemIsEscaped, w, r)
-								default:
-									s.notAllowed(w, r, "GET")
-								}
-
-								return
-							}
-							switch elem[0] {
-							case '/': // Prefix: "/"
-								origElem := elem
-								if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
-									elem = elem[l:]
-								} else {
-									break
-								}
-
-								// Param: "workerId"
-								// Leaf parameter
-								args[0] = elem
-								elem = ""
-
-								if len(elem) == 0 {
-									// Leaf node.
-									switch r.Method {
-									case "DELETE":
-										s.handleDeleteExecutionWorkerRequest([1]string{
-											args[0],
-										}, elemIsEscaped, w, r)
-									default:
-										s.notAllowed(w, r, "DELETE")
-									}
-
-									return
-								}
-
-								elem = origElem
-							}
-
-							elem = origElem
 						}
 						// Param: "execId"
 						// Leaf parameter
@@ -687,62 +637,6 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								default:
 									return
 								}
-							}
-
-							elem = origElem
-						case 'w': // Prefix: "workers"
-							origElem := elem
-							if l := len("workers"); len(elem) >= l && elem[0:l] == "workers" {
-								elem = elem[l:]
-							} else {
-								break
-							}
-
-							if len(elem) == 0 {
-								switch method {
-								case "GET":
-									r.name = "GetExecutionWorkers"
-									r.summary = "Get all execution workers"
-									r.operationID = "getExecutionWorkers"
-									r.pathPattern = "/executions/workers"
-									r.args = args
-									r.count = 0
-									return r, true
-								default:
-									return
-								}
-							}
-							switch elem[0] {
-							case '/': // Prefix: "/"
-								origElem := elem
-								if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
-									elem = elem[l:]
-								} else {
-									break
-								}
-
-								// Param: "workerId"
-								// Leaf parameter
-								args[0] = elem
-								elem = ""
-
-								if len(elem) == 0 {
-									// Leaf node.
-									switch method {
-									case "DELETE":
-										r.name = "DeleteExecutionWorker"
-										r.summary = "Delete execution worker"
-										r.operationID = "deleteExecutionWorker"
-										r.pathPattern = "/executions/workers/{workerId}"
-										r.args = args
-										r.count = 1
-										return r, true
-									default:
-										return
-									}
-								}
-
-								elem = origElem
 							}
 
 							elem = origElem

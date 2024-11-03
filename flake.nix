@@ -12,13 +12,13 @@
         pkgs = import nixpkgs { inherit system; };
       in
       rec {
-
         docsDependencies = with pkgs; [ python312Packages.mkdocs-material redocly ];
+        loadTestDependencies = with pkgs; [ jmeter ];
         devDependencies = with pkgs; [ 
           sqlc 
           go-migrate 
           go_1_22
-          nodejs
+          nodejs_20
           podman-compose
           caddy
           postgresql_16
@@ -37,10 +37,16 @@
 
         devShells = {
           default = pkgs.mkShell {
+            buildInputs = devDependencies ++ loadTestDependencies ++ docsDependencies;
+          };
+          dev = pkgs.mkShell {
             buildInputs = devDependencies;
           };
           load-test = pkgs.mkShell {
-            buildInputs = with pkgs; [ k6 openapi-generator-cli go_1_22 ];
+            buildInputs = loadTestDependencies;
+          };
+          docs = pkgs.mkShell {
+            buildInputs = docsDependencies;
           };
         };
     }

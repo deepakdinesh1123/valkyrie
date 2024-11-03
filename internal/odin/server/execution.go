@@ -241,9 +241,6 @@ func (s *OdinServer) GetAllExecutions(ctx context.Context, params api.GetAllExec
 			JobId:      int64(execution.ExecRequestID.Int32),
 			ExecLogs:   execution.ExecLogs,
 			NixLogs:    api.OptString{Value: execution.NixLogs.String, Set: true},
-			Script:     execution.Code,
-			Flake:      execution.Flake,
-			Args:       execution.Args.String,
 			StartedAt:  execution.StartedAt.Time,
 			FinishedAt: execution.FinishedAt.Time,
 		})
@@ -281,9 +278,6 @@ func (s *OdinServer) GetExecutionsForJob(ctx context.Context, params api.GetExec
 			ExecId:     int64(execution.ID),
 			ExecLogs:   execution.ExecLogs,
 			NixLogs:    api.OptString{Value: execution.NixLogs.String, Set: true},
-			Script:     execution.Code,
-			Flake:      execution.Flake,
-			Args:       execution.Args.String,
 			StartedAt:  execution.StartedAt.Time,
 			FinishedAt: execution.FinishedAt.Time,
 		})
@@ -322,7 +316,6 @@ func (s *OdinServer) GetAllExecutionJobs(ctx context.Context, params api.GetAllE
 	for _, job := range executionsDB {
 		jobs = append(jobs, api.Job{
 			JobId:     job.JobID,
-			Script:    job.Code,
 			Flake:     job.Flake,
 			CreatedAt: job.UpdatedAt.Time,
 			StartedAt: api.OptDateTime{Value: job.StartedAt.Time, Set: true},
@@ -331,40 +324,6 @@ func (s *OdinServer) GetAllExecutionJobs(ctx context.Context, params api.GetAllE
 	}
 	resp := api.GetAllExecutionJobsOK{
 		Jobs: jobs,
-		Pagination: api.PaginationResponse{
-			Total: total,
-		},
-	}
-	return &resp, nil
-}
-
-func (s *OdinServer) GetExecutionWorkers(ctx context.Context, params api.GetExecutionWorkersParams) (api.GetExecutionWorkersRes, error) {
-	workersDB, err := s.queries.GetAllWorkers(ctx, db.GetAllWorkersParams{
-		Limit:  params.PageSize.Value,
-		Offset: params.PageSize.Value * params.Page.Value,
-	})
-	if err != nil {
-		return &api.GetExecutionWorkersInternalServerError{
-			Message: fmt.Sprintf("Failed to get workers: %v", err),
-		}, nil
-	}
-	total, err := s.queries.GetTotalWorkers(ctx)
-	if err != nil {
-		return &api.GetExecutionWorkersInternalServerError{
-			Message: fmt.Sprintf("Failed to get total workers: %v", err),
-		}, nil
-	}
-	var workers []api.ExecutionWorker
-	for _, worker := range workersDB {
-		workers = append(workers, api.ExecutionWorker{
-			ID:        worker.ID,
-			Name:      worker.Name,
-			CreatedAt: worker.CreatedAt.Time,
-			Status:    "status",
-		})
-	}
-	resp := api.GetExecutionWorkersOK{
-		Workers: workers,
 		Pagination: api.PaginationResponse{
 			Total: total,
 		},
@@ -436,14 +395,11 @@ func (s *OdinServer) GetExecutionResultById(ctx context.Context, params api.GetE
 
 	return &api.ExecutionResult{
 		JobId:      int64(execution.ExecRequestID.Int32),
-		Script:     execution.Code,
-		Flake:      execution.Flake,
 		CreatedAt:  execution.CreatedAt.Time,
 		StartedAt:  execution.StartedAt.Time,
 		FinishedAt: execution.FinishedAt.Time,
 		ExecId:     int64(execution.ID),
 		ExecLogs:   execution.ExecLogs,
-		Args:       execution.Args.String,
 	}, nil
 }
 
@@ -461,8 +417,6 @@ func (s *OdinServer) GetExecutionJobById(ctx context.Context, params api.GetExec
 	}
 	return &api.Job{
 		JobId:     int64(job.ID),
-		Script:    job.Code,
-		Flake:     job.Flake,
 		CreatedAt: job.CreatedAt.Time,
 		StartedAt: api.OptDateTime{Value: job.StartedAt.Time, Set: true},
 		UpdatedAt: api.OptDateTime{Value: job.UpdatedAt.Time, Set: true},

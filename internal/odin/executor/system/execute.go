@@ -2,6 +2,7 @@ package system
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/deepakdinesh1123/valkyrie/internal/concurrency"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/services/execution"
 	"github.com/rs/zerolog"
 )
 
@@ -144,9 +146,13 @@ func (s *SystemExecutor) writeFiles(ctx context.Context, dir string, job db.Job)
 	if err != nil {
 		return err
 	}
+	script, spec, err := execution.ConvertExecSpecToNixScript(execReq)
+	if err != nil {
+		return fmt.Errorf("error writing files: %s", err)
+	}
 	files := map[string]string{
-		"flake.nix":  execReq.Flake,
-		execReq.Path: execReq.Code,
+		"exec.sh":       script,
+		spec.ScriptName: execReq.Code.String,
 	}
 
 	for name, content := range files {

@@ -1,0 +1,25 @@
+type: object
+required:
+  - name
+  - extension
+  - defaultcode
+  - monacolanguage
+  - searchquery
+properties:
+  name:
+    type: string
+    description: Name of the programming language
+  extension:
+    type: string
+    description: File extension for the programming language
+  defaultcode:
+    type: string
+    description: Default code snippet for the programming language
+  monacolanguage:
+    type: string
+    description: Monaco editor language setting for the programming language
+  searchquery:
+    type: string
+    description: >-
+      The search query to be passed to SearchLanguagePackages API for this
+      language

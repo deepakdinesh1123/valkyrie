@@ -1,7 +1,4 @@
 type: object
-required:
-  - code
-  - language
 properties:
   environment:
     $ref: ./ExecutionEnvironmentSpec.yml
@@ -9,6 +6,7 @@ properties:
     type: string
   language:
     type: string
+    default: bash
   max_retries:
     type: integer
     format: int4
@@ -17,3 +15,14 @@ properties:
     type: integer
     format: int32
     default: -1
+  cmdLineArgs:
+    type: string
+  compileArgs:
+    type: string
+  command:
+    type: string
+  files:
+    type: string
+    format: byte
+  input:
+    type: string

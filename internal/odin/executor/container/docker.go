@@ -12,6 +12,7 @@ import (
 	"sync"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/services/execution"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -55,9 +56,13 @@ func (d *DockerProvider) WriteFiles(ctx context.Context, containerID string, pre
 	if err != nil {
 		return err
 	}
+	script, spec, err := execution.ConvertExecSpecToNixScript(execReq)
+	if err != nil {
+		return fmt.Errorf("error writing files: %s", err)
+	}
 	files := map[string]string{
-		"exec.sh":    execReq.NixScript,
-		execReq.Path: execReq.Code,
+		"exec.sh":       script,
+		spec.ScriptName: execReq.Code.String,
 	}
 
 	tarFilePath, err := CreateTarArchive(files, prepDir)
