@@ -22,6 +22,8 @@ type Querier interface {
 	DeleteLanguageVersion(ctx context.Context, id int64) (int64, error)
 	DeleteWorker(ctx context.Context, id int32) error
 	FetchJob(ctx context.Context, workerID pgtype.Int4) (Job, error)
+	FetchLanguagePackages(ctx context.Context, language pgtype.Text) ([]FetchLanguagePackagesRow, error)
+	FetchSystemPackages(ctx context.Context) ([]FetchSystemPackagesRow, error)
 	GetAllExecutions(ctx context.Context, arg GetAllExecutionsParams) ([]GetAllExecutionsRow, error)
 	GetAllJobs(ctx context.Context, arg GetAllJobsParams) ([]GetAllJobsRow, error)
 	GetAllLanguageVersions(ctx context.Context) ([]LanguageVersion, error)

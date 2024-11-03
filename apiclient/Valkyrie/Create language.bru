@@ -1,0 +1,19 @@
+meta {
+  name: Create language
+  type: http
+  seq: 16
+}
+
+post {
+  url: {{BASE_URL}}/api/languages/create
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name":"python",
+    "extension":"py",
+    "monaco_language":"python"
+  }
+}

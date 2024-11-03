@@ -5,31 +5,18 @@ import { Language, LanguageVersion } from "@/api-client";
 
 interface CodeEditorProps {
   selectedLanguage: Language;
-  selectedVersion: LanguageVersion;
+  selectedLanguageVersion: LanguageVersion;
   onChange?: (content: string) => void;
   editorOptions?: EditorProps["options"];
 }
 
 const CodeEditor: React.FC<CodeEditorProps> = ({
   selectedLanguage,
-  selectedVersion,
+  selectedLanguageVersion,
   onChange,
   editorOptions,
 }) => {
-  const [content, setContent] = useState(selectedVersion.default_code);
-  // const [previousPrefix, setPreviousPrefix] = useState(
-  //   getLanguagePrefix(selectedLanguage.name)
-  // );
-
-  // useEffect(() => {
-  //   const currentPrefix = getLanguagePrefix(selectedLanguage.name);
-
-  //   if (currentPrefix !== previousPrefix) {
-  //     setContent(selectedVersion.default_code); 
-  //     setPreviousPrefix(currentPrefix);
-  //   }
-  // }, [selectedLanguage]);
-  console.log(selectedLanguage);
+  const [content, setContent] = useState(selectedLanguageVersion.default_code);
   
 
   const handleEditorChange = (newValue: string | undefined) => {
@@ -37,6 +24,11 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     setContent(newContent);
     onChange?.(newContent);
   };
+  
+  useEffect(() => {
+    setContent(selectedLanguageVersion.default_code);
+  }, [selectedLanguage]);
+
 
   return (
     <div className="flex flex-col h-screen bg-[#1E1E1E] text-white">

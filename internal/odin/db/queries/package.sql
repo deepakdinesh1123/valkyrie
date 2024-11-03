@@ -21,6 +21,24 @@ WHERE
 ORDER BY name ASC
 LIMIT 50;
 
+-- name: FetchSystemPackages :many
+SELECT
+    name,
+    version
+FROM packages
+WHERE
+    pkgType = 'system'
+LIMIT 10;
+
+-- name: FetchLanguagePackages :many
+SELECT
+    name,
+    version
+FROM packages
+WHERE
+    language = $1
+LIMIT 10;
+
 -- name: SearchLanguagePackages :many
 SELECT
     name,

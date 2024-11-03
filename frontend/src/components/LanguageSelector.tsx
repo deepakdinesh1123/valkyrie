@@ -18,13 +18,26 @@ import { useLanguageVersions } from "@/hooks/useLanguageVersions";
 import { useEffect } from "react";
 import { CheckIcon, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LanguageResponse, LanguageVersion } from "@/api-client";
 
-const LanguageSelector = () => {
-    const { languages, selectedLanguage, setSelectedLanguage } = useLanguages();
+interface LanguageSelectorProps {
+    selectedLanguage: LanguageResponse;
+    selectedLanguageVersion: LanguageVersion;
+    onLanguageChange: (language: LanguageResponse) => void;
+    onVersionChange: (version: LanguageVersion) => void;
+    isLoading?: boolean;
+}
+
+export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
+    selectedLanguage,
+    selectedLanguageVersion,
+    onLanguageChange,
+    onVersionChange,
+}) => {
+    const { languages, setSelectedLanguage } = useLanguages();
     const { languageVersions, refetch } = useLanguageVersions(selectedLanguage?.id);
     const [languageOpen, setLanguageOpen] = React.useState(false);
     const [versionOpen, setVersionOpen] = React.useState(false);
-    const [selectedVersion, setSelectedVersion] = React.useState("");
 
     const sortedLanguages = [...languages].sort((a, b) =>
         a.name.localeCompare(b.name)
@@ -36,29 +49,27 @@ const LanguageSelector = () => {
 
     useEffect(() => {
         if (sortedLanguages.length && !selectedLanguage) {
-            setSelectedLanguage(sortedLanguages[0]);
+            const initialLanguage = sortedLanguages[0];
+            setSelectedLanguage(initialLanguage);
+            onLanguageChange(initialLanguage);
         }
-    }, [sortedLanguages, selectedLanguage, setSelectedLanguage]);
+    }, [sortedLanguages, selectedLanguage, setSelectedLanguage, onLanguageChange]);
 
     useEffect(() => {
         if (selectedLanguage?.id) {
-            setSelectedVersion("");
-            refetch();
+            refetch().then(() => {
+                if (sortedVersions.length) {
+                    onVersionChange(sortedVersions[0]);
+                }
+            });
         }
-    }, [selectedLanguage, refetch]);
+    }, [selectedLanguage, refetch, sortedVersions, onVersionChange]);
 
-    useEffect(() => {
-        if (sortedVersions.length) {
-            setSelectedVersion(sortedVersions[0].version);
-        }
-    }, [sortedVersions, selectedLanguage]);
-
-    // Log selected language and version
-    // useEffect(() => {
-    //     if (selectedLanguage) {
-    //         console.log(`Selected Language: ${selectedLanguage.name}, Version: ${selectedVersion}`);
-    //     }
-    // }, [selectedLanguage, selectedVersion]);
+    const handleLanguageChange = (language: LanguageResponse) => {
+        setSelectedLanguage(language);
+        setLanguageOpen(false);
+        onLanguageChange(language);
+    };
 
     return (
         <div className="h-fit space-x-2">
@@ -84,10 +95,7 @@ const LanguageSelector = () => {
                                     <CommandItem
                                         key={language.name}
                                         value={language.name}
-                                        onSelect={() => {
-                                            setSelectedLanguage(language);
-                                            setLanguageOpen(false);
-                                        }}
+                                        onSelect={() => handleLanguageChange(language)}
                                     >
                                         {language.name}
                                         <CheckIcon
@@ -112,7 +120,7 @@ const LanguageSelector = () => {
                         aria-expanded={versionOpen}
                         className="w-[150px] justify-between bg-neutral-900 text-white hover:bg-neutral-700 hover:text-white"
                     >
-                        {selectedVersion || "Select Version..."}
+                        {selectedLanguageVersion?.version || "Select Version..."}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                 </PopoverTrigger>
@@ -127,15 +135,15 @@ const LanguageSelector = () => {
                                         key={version.version}
                                         value={version.version}
                                         onSelect={() => {
-                                            setSelectedVersion(version.version);
                                             setVersionOpen(false);
+                                            onVersionChange(version);
                                         }}
                                     >
                                         {version.version}
                                         <CheckIcon
                                             className={cn(
                                                 "ml-auto h-4 w-4",
-                                                selectedVersion === version.version ? "opacity-100" : "opacity-0"
+                                                selectedLanguageVersion?.version === version.version ? "opacity-100" : "opacity-0"
                                             )}
                                         />
                                     </CommandItem>
