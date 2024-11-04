@@ -76,5 +76,6 @@ create table if not exists packages (
     version text not null,
     pkgType text not null,
     language text,
+    store_path text,
     tsv_search TSVECTOR
 )
