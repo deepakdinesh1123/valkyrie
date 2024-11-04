@@ -41,11 +41,12 @@ done
 echo "Creating table..."
 docker exec -i nixos-packages-db psql -U thors -d nixos_packages <<-EOSQL
 CREATE TABLE IF NOT EXISTS packages (
-    id SERIAL PRIMARY KEY,
+    package_id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     version VARCHAR(255) NOT NULL,
     pkgType VARCHAR(255),
     language VARCHAR(255),
+    store_path VARCHAR(255),
     tsv_search TSVECTOR
 );
 EOSQL
