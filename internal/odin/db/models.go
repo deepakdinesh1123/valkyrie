@@ -62,6 +62,7 @@ type Language struct {
 	Name           string `db:"name" json:"name"`
 	Extension      string `db:"extension" json:"extension"`
 	MonacoLanguage string `db:"monaco_language" json:"monaco_language"`
+	DefaultCode    string `db:"default_code" json:"default_code"`
 }
 
 type LanguageVersion struct {
@@ -71,7 +72,6 @@ type LanguageVersion struct {
 	NixPackageName string `db:"nix_package_name" json:"nix_package_name"`
 	FlakeTemplate  string `db:"flake_template" json:"flake_template"`
 	ScriptTemplate string `db:"script_template" json:"script_template"`
-	DefaultCode    string `db:"default_code" json:"default_code"`
 	SearchQuery    string `db:"search_query" json:"search_query"`
 }
 
@@ -81,7 +81,7 @@ type Package struct {
 	Version   string      `db:"version" json:"version"`
 	Pkgtype   string      `db:"pkgtype" json:"pkgtype"`
 	Language  pgtype.Text `db:"language" json:"language"`
-	StorePath string      `db:"store_path" json:"store_path"`
+	StorePath pgtype.Text `db:"store_path" json:"store_path"`
 	TsvSearch interface{} `db:"tsv_search" json:"tsv_search"`
 }
 

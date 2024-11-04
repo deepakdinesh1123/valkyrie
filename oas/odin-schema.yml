@@ -447,7 +447,46 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  
+
+  /fetch/system:
+    get:
+      summary: Fetch inital list of available system packages
+      description: Initialize the search results content with a default set of system packages
+      operationId: FetchSystemPackages
+      parameters:
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - packages
+                properties:
+                  packages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Package'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/Error'
   /search/system:
     get:
       summary: Search for system packages
@@ -482,6 +521,48 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+
+  /fetch/language:
+    get:
+      summary: Fetch inital list of available language packages
+      description: Initialize the search results content with a default set of language specific packages
+      operationId: FetchLanguagePackages
+      parameters:
+        - $ref: '#/components/parameters/AuthHeader'
+        - $ref: '#/components/parameters/Language'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - packages
+                properties:
+                  packages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Package'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/Error'
+
   /search/language:
     get:
       summary: Search for language specific packages
@@ -1354,6 +1435,7 @@ components:
         - name
         - extension
         - monaco_language
+        - default_code
       properties:
         name:
           type: string
@@ -1367,6 +1449,10 @@ components:
           type: string
           description: Monaco editor language identifier.
           example: python
+        default_code:
+          type: string
+          description: Default code for the language.
+          example: print('Hello, World!')
 
     LanguageResponse:
       allOf:
@@ -1377,6 +1463,7 @@ components:
             - name
             - extension
             - monaco_language
+            - default_code
           properties:
             id:
               type: integer
@@ -1392,6 +1479,9 @@ components:
             monaco_language:
               type: string
               example: python
+            default_code:
+              type: string
+              example: print('Hello, World!')
 
     LanguageVersion:
       type: object
@@ -1401,7 +1491,6 @@ components:
         - nix_package_name
         - flake_template
         - script_template
-        - default_code
         - search_query
       properties:
         language_id:
@@ -1425,10 +1514,6 @@ components:
           type: string
           description: path of template for scripts
           example: python/python.script.tmpl
-        default_code:
-          type: string
-          description: Default code template
-          example: "print('Hello, World!')"
         search_query:
           type: string
           description: Search query string

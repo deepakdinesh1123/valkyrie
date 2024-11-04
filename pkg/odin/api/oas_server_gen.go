@@ -56,6 +56,18 @@ type Handler interface {
 	//
 	// POST /executions/execute
 	Execute(ctx context.Context, req *ExecutionRequest, params ExecuteParams) (ExecuteRes, error)
+	// FetchLanguagePackages implements FetchLanguagePackages operation.
+	//
+	// Initialize the search results content with a default set of language specific packages.
+	//
+	// GET /fetch/language
+	FetchLanguagePackages(ctx context.Context, params FetchLanguagePackagesParams) (FetchLanguagePackagesRes, error)
+	// FetchSystemPackages implements FetchSystemPackages operation.
+	//
+	// Initialize the search results content with a default set of system packages.
+	//
+	// GET /fetch/system
+	FetchSystemPackages(ctx context.Context, params FetchSystemPackagesParams) (FetchSystemPackagesRes, error)
 	// GetAllExecutionJobs implements getAllExecutionJobs operation.
 	//
 	// Get all execution jobs.

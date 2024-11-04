@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/popover";
 import { useLanguages } from "@/hooks/useLanguages";
 import { useLanguageVersions } from "@/hooks/useLanguageVersions";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { CheckIcon, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LanguageResponse, LanguageVersion } from "@/api-client";
@@ -24,7 +24,7 @@ interface LanguageSelectorProps {
     selectedLanguage: LanguageResponse;
     selectedLanguageVersion: LanguageVersion;
     onLanguageChange: (language: LanguageResponse) => void;
-    onVersionChange: (version: LanguageVersion) => void;
+    onVersionChange: (version: LanguageVersion) => void
     isLoading?: boolean;
 }
 
@@ -32,12 +32,12 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
     selectedLanguage,
     selectedLanguageVersion,
     onLanguageChange,
-    onVersionChange,
+    onVersionChange
 }) => {
     const { languages, setSelectedLanguage } = useLanguages();
-    const { languageVersions, refetch } = useLanguageVersions(selectedLanguage?.id);
-    const [languageOpen, setLanguageOpen] = React.useState(false);
-    const [versionOpen, setVersionOpen] = React.useState(false);
+    const { languageVersions, setSelectedLanguageVersion } = useLanguageVersions(selectedLanguage?.id);
+    const [languageOpen, setLanguageOpen] = useState(false);
+    const [versionOpen, setVersionOpen] = useState(false);
 
     const sortedLanguages = [...languages].sort((a, b) =>
         a.name.localeCompare(b.name)
@@ -55,20 +55,17 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         }
     }, [sortedLanguages, selectedLanguage, setSelectedLanguage, onLanguageChange]);
 
-    useEffect(() => {
-        if (selectedLanguage?.id) {
-            refetch().then(() => {
-                if (sortedVersions.length) {
-                    onVersionChange(sortedVersions[0]);
-                }
-            });
-        }
-    }, [selectedLanguage, refetch, sortedVersions, onVersionChange]);
 
     const handleLanguageChange = (language: LanguageResponse) => {
         setSelectedLanguage(language);
         setLanguageOpen(false);
         onLanguageChange(language);
+    };
+
+    const handleVersionChange = (version: LanguageVersion) => {
+        setSelectedLanguageVersion(version);
+        setVersionOpen(false);
+        onVersionChange(version);
     };
 
     return (
@@ -135,8 +132,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
                                         key={version.version}
                                         value={version.version}
                                         onSelect={() => {
-                                            setVersionOpen(false);
-                                            onVersionChange(version);
+                                            handleVersionChange(version);
                                         }}
                                     >
                                         {version.version}

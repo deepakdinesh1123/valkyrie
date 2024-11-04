@@ -7,8 +7,6 @@ package db
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const fetchLanguagePackages = `-- name: FetchLanguagePackages :many
@@ -17,7 +15,7 @@ SELECT
     version
 FROM packages
 WHERE
-    language = $1
+    language = $1::text
 LIMIT 10
 `
 
@@ -26,7 +24,7 @@ type FetchLanguagePackagesRow struct {
 	Version string `db:"version" json:"version"`
 }
 
-func (q *Queries) FetchLanguagePackages(ctx context.Context, language pgtype.Text) ([]FetchLanguagePackagesRow, error) {
+func (q *Queries) FetchLanguagePackages(ctx context.Context, language string) ([]FetchLanguagePackagesRow, error) {
 	rows, err := q.db.Query(ctx, fetchLanguagePackages, language)
 	if err != nil {
 		return nil, err
@@ -123,8 +121,8 @@ FROM packages
 WHERE
     language = $1::text  
     AND (
-        tsv_search @@ plainto_tsquery('english', $2::text) OR  -- Full-text search
-        name ILIKE '%' || $2::text || '%'                       -- Contains search
+        tsv_search @@ plainto_tsquery('english', $2::text) OR  
+        name ILIKE '%' || $2::text || '%'                     
     )
 ORDER BY name ASC
 LIMIT 50
@@ -168,8 +166,8 @@ FROM packages
 WHERE
     pkgType = 'system'
     AND (
-        tsv_search @@ plainto_tsquery('english', $1) OR  -- Full-text search
-        name ILIKE '%' || $1 || '%'                       -- Contains search
+        tsv_search @@ plainto_tsquery('english', $1) OR  
+        name ILIKE '%' || $1 || '%'                       
     )
 ORDER BY name ASC
 LIMIT 50

@@ -33,6 +33,14 @@ type ExecuteRes interface {
 	executeRes()
 }
 
+type FetchLanguagePackagesRes interface {
+	fetchLanguagePackagesRes()
+}
+
+type FetchSystemPackagesRes interface {
+	fetchSystemPackagesRes()
+}
+
 type GetAllExecutionJobsRes interface {
 	getAllExecutionJobsRes()
 }

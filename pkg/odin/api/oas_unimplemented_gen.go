@@ -85,6 +85,24 @@ func (UnimplementedHandler) Execute(ctx context.Context, req *ExecutionRequest, 
 	return r, ht.ErrNotImplemented
 }
 
+// FetchLanguagePackages implements FetchLanguagePackages operation.
+//
+// Initialize the search results content with a default set of language specific packages.
+//
+// GET /fetch/language
+func (UnimplementedHandler) FetchLanguagePackages(ctx context.Context, params FetchLanguagePackagesParams) (r FetchLanguagePackagesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// FetchSystemPackages implements FetchSystemPackages operation.
+//
+// Initialize the search results content with a default set of system packages.
+//
+// GET /fetch/system
+func (UnimplementedHandler) FetchSystemPackages(ctx context.Context, params FetchSystemPackagesParams) (r FetchSystemPackagesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetAllExecutionJobs implements getAllExecutionJobs operation.
 //
 // Get all execution jobs.

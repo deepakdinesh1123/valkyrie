@@ -25,6 +25,7 @@ func (s *OdinServer) CreateLanguage(ctx context.Context, req *api.Language, para
 		Name:           req.Name,
 		Extension:      req.Extension,
 		MonacoLanguage: req.MonacoLanguage,
+		DefaultCode:    req.DefaultCode,
 	}
 
 	id, err := s.queries.CreateLanguage(ctx, dbParams)
@@ -38,6 +39,7 @@ func (s *OdinServer) CreateLanguage(ctx context.Context, req *api.Language, para
 			Name:           req.Name,
 			Extension:      req.Extension,
 			MonacoLanguage: req.MonacoLanguage,
+			DefaultCode:    req.DefaultCode,
 		},
 	}, nil
 }
@@ -60,7 +62,6 @@ func (s *OdinServer) CreateLanguageVersion(ctx context.Context, req *api.Languag
 		NixPackageName: req.NixPackageName,
 		FlakeTemplate:  req.FlakeTemplate,
 		ScriptTemplate: req.ScriptTemplate,
-		DefaultCode:    req.DefaultCode,
 		SearchQuery:    req.SearchQuery,
 	}
 
@@ -77,7 +78,6 @@ func (s *OdinServer) CreateLanguageVersion(ctx context.Context, req *api.Languag
 			NixPackageName: req.NixPackageName,
 			FlakeTemplate:  req.FlakeTemplate,
 			ScriptTemplate: req.ScriptTemplate,
-			DefaultCode:    req.DefaultCode,
 			SearchQuery:    req.SearchQuery,
 		},
 	}, nil
@@ -154,6 +154,7 @@ func (s *OdinServer) GetAllLanguages(ctx context.Context, params api.GetAllLangu
 			Name:           lang.Name,
 			Extension:      lang.Extension,
 			MonacoLanguage: lang.MonacoLanguage,
+			DefaultCode:    lang.DefaultCode,
 		})
 	}
 
@@ -188,7 +189,6 @@ func (s *OdinServer) GetAllLanguageVersions(ctx context.Context, params api.GetA
 			NixPackageName: version.NixPackageName,
 			FlakeTemplate:  version.FlakeTemplate,
 			ScriptTemplate: version.ScriptTemplate,
-			DefaultCode:    version.DefaultCode,
 			SearchQuery:    version.SearchQuery,
 		})
 	}
@@ -210,18 +210,17 @@ func (s *OdinServer) GetLanguageById(ctx context.Context, params api.GetLanguage
 	}
 
 	if language.ID == 0 {
-		// Return a not found response if the language does not exist
 		return &api.GetLanguageByIdNotFound{
 			Message: fmt.Sprintf("Language with ID %d not found.", params.ID),
 		}, nil
 	}
 
-	// Construct the response
 	response := api.LanguageResponse{
 		ID:             language.ID,
 		Name:           language.Name,
 		Extension:      language.Extension,
 		MonacoLanguage: language.MonacoLanguage,
+		DefaultCode:    language.DefaultCode,
 	}
 
 	return &api.GetLanguageByIdOK{
@@ -253,7 +252,6 @@ func (s *OdinServer) GetLanguageVersionById(ctx context.Context, params api.GetL
 		NixPackageName: version.NixPackageName,
 		FlakeTemplate:  version.FlakeTemplate,
 		ScriptTemplate: version.ScriptTemplate,
-		DefaultCode:    version.DefaultCode,
 		SearchQuery:    version.SearchQuery,
 	}
 
@@ -269,6 +267,7 @@ func (s *OdinServer) UpdateLanguage(ctx context.Context, req *api.Language, para
 		Name:           req.Name,
 		Extension:      req.Extension,
 		MonacoLanguage: req.MonacoLanguage,
+		DefaultCode:    req.DefaultCode,
 	}
 
 	id, err := s.queries.UpdateLanguage(ctx, dbParams)
@@ -289,6 +288,7 @@ func (s *OdinServer) UpdateLanguage(ctx context.Context, req *api.Language, para
 		Name:           req.Name,
 		Extension:      req.Extension,
 		MonacoLanguage: req.MonacoLanguage,
+		DefaultCode:    req.DefaultCode,
 	}
 
 	return &api.UpdateLanguageOK{
@@ -305,7 +305,6 @@ func (s *OdinServer) UpdateLanguageVersion(ctx context.Context, req *api.Languag
 		NixPackageName: req.NixPackageName,
 		FlakeTemplate:  req.FlakeTemplate,
 		ScriptTemplate: req.ScriptTemplate,
-		DefaultCode:    req.DefaultCode,
 		SearchQuery:    req.SearchQuery,
 	}
 
@@ -329,7 +328,6 @@ func (s *OdinServer) UpdateLanguageVersion(ctx context.Context, req *api.Languag
 		NixPackageName: req.NixPackageName,
 		FlakeTemplate:  req.FlakeTemplate,
 		ScriptTemplate: req.ScriptTemplate,
-		DefaultCode:    req.DefaultCode,
 		SearchQuery:    req.SearchQuery,
 	}
 
@@ -364,7 +362,6 @@ func (s *OdinServer) GetAllVersions(ctx context.Context, params api.GetAllVersio
 			NixPackageName: version.NixPackageName,
 			FlakeTemplate:  version.FlakeTemplate,
 			ScriptTemplate: version.ScriptTemplate,
-			DefaultCode:    version.DefaultCode,
 			SearchQuery:    version.SearchQuery,
 		})
 	}

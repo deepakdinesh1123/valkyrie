@@ -8,6 +8,7 @@ const initlanguage: LanguageResponse =
     name: "python",
     extension: "py",
     monaco_language: "python",
+    default_code: "print('hello world')",
   }
 
 export const useLanguages = () => {
@@ -23,6 +24,7 @@ export const useLanguages = () => {
           name: lang.name,
           extension: lang.extension,
           monaco_language: lang.monaco_language,
+          default_code: lang.default_code,
         }));
         setLanguages(languageList);
       } catch (error) {

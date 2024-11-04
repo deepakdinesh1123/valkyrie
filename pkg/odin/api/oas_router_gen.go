@@ -259,6 +259,63 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				}
 
 				elem = origElem
+			case 'f': // Prefix: "fetch/"
+				origElem := elem
+				if l := len("fetch/"); len(elem) >= l && elem[0:l] == "fetch/" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					break
+				}
+				switch elem[0] {
+				case 'l': // Prefix: "language"
+					origElem := elem
+					if l := len("language"); len(elem) >= l && elem[0:l] == "language" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch r.Method {
+						case "GET":
+							s.handleFetchLanguagePackagesRequest([0]string{}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, "GET")
+						}
+
+						return
+					}
+
+					elem = origElem
+				case 's': // Prefix: "system"
+					origElem := elem
+					if l := len("system"); len(elem) >= l && elem[0:l] == "system" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch r.Method {
+						case "GET":
+							s.handleFetchSystemPackagesRequest([0]string{}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, "GET")
+						}
+
+						return
+					}
+
+					elem = origElem
+				}
+
+				elem = origElem
 			case 'j': // Prefix: "jobs/"
 				origElem := elem
 				if l := len("jobs/"); len(elem) >= l && elem[0:l] == "jobs/" {
@@ -959,6 +1016,71 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						}
 
 						elem = origElem
+					}
+
+					elem = origElem
+				}
+
+				elem = origElem
+			case 'f': // Prefix: "fetch/"
+				origElem := elem
+				if l := len("fetch/"); len(elem) >= l && elem[0:l] == "fetch/" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					break
+				}
+				switch elem[0] {
+				case 'l': // Prefix: "language"
+					origElem := elem
+					if l := len("language"); len(elem) >= l && elem[0:l] == "language" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch method {
+						case "GET":
+							r.name = "FetchLanguagePackages"
+							r.summary = "Fetch inital list of available language packages"
+							r.operationID = "FetchLanguagePackages"
+							r.pathPattern = "/fetch/language"
+							r.args = args
+							r.count = 0
+							return r, true
+						default:
+							return
+						}
+					}
+
+					elem = origElem
+				case 's': // Prefix: "system"
+					origElem := elem
+					if l := len("system"); len(elem) >= l && elem[0:l] == "system" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch method {
+						case "GET":
+							r.name = "FetchSystemPackages"
+							r.summary = "Fetch inital list of available system packages"
+							r.operationID = "FetchSystemPackages"
+							r.pathPattern = "/fetch/system"
+							r.args = args
+							r.count = 0
+							return r, true
+						default:
+							return
+						}
 					}
 
 					elem = origElem

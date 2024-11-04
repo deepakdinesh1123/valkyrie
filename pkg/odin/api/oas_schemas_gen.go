@@ -713,6 +713,62 @@ func (s *ExecutionWorker) SetUpdatedAt(val OptDateTime) {
 	s.UpdatedAt = val
 }
 
+type FetchLanguagePackagesBadRequest Error
+
+func (*FetchLanguagePackagesBadRequest) fetchLanguagePackagesRes() {}
+
+type FetchLanguagePackagesForbidden Error
+
+func (*FetchLanguagePackagesForbidden) fetchLanguagePackagesRes() {}
+
+type FetchLanguagePackagesInternalServerError Error
+
+func (*FetchLanguagePackagesInternalServerError) fetchLanguagePackagesRes() {}
+
+type FetchLanguagePackagesOK struct {
+	Packages []Package `json:"packages"`
+}
+
+// GetPackages returns the value of Packages.
+func (s *FetchLanguagePackagesOK) GetPackages() []Package {
+	return s.Packages
+}
+
+// SetPackages sets the value of Packages.
+func (s *FetchLanguagePackagesOK) SetPackages(val []Package) {
+	s.Packages = val
+}
+
+func (*FetchLanguagePackagesOK) fetchLanguagePackagesRes() {}
+
+type FetchSystemPackagesBadRequest Error
+
+func (*FetchSystemPackagesBadRequest) fetchSystemPackagesRes() {}
+
+type FetchSystemPackagesForbidden Error
+
+func (*FetchSystemPackagesForbidden) fetchSystemPackagesRes() {}
+
+type FetchSystemPackagesInternalServerError Error
+
+func (*FetchSystemPackagesInternalServerError) fetchSystemPackagesRes() {}
+
+type FetchSystemPackagesOK struct {
+	Packages []Package `json:"packages"`
+}
+
+// GetPackages returns the value of Packages.
+func (s *FetchSystemPackagesOK) GetPackages() []Package {
+	return s.Packages
+}
+
+// SetPackages sets the value of Packages.
+func (s *FetchSystemPackagesOK) SetPackages(val []Package) {
+	s.Packages = val
+}
+
+func (*FetchSystemPackagesOK) fetchSystemPackagesRes() {}
+
 type GetAllExecutionJobsBadRequest Error
 
 func (*GetAllExecutionJobsBadRequest) getAllExecutionJobsRes() {}
@@ -1128,6 +1184,8 @@ type Language struct {
 	Extension string `json:"extension"`
 	// Monaco editor language identifier.
 	MonacoLanguage string `json:"monaco_language"`
+	// Default code for the language.
+	DefaultCode string `json:"default_code"`
 }
 
 // GetName returns the value of Name.
@@ -1145,6 +1203,11 @@ func (s *Language) GetMonacoLanguage() string {
 	return s.MonacoLanguage
 }
 
+// GetDefaultCode returns the value of DefaultCode.
+func (s *Language) GetDefaultCode() string {
+	return s.DefaultCode
+}
+
 // SetName sets the value of Name.
 func (s *Language) SetName(val string) {
 	s.Name = val
@@ -1160,6 +1223,11 @@ func (s *Language) SetMonacoLanguage(val string) {
 	s.MonacoLanguage = val
 }
 
+// SetDefaultCode sets the value of DefaultCode.
+func (s *Language) SetDefaultCode(val string) {
+	s.DefaultCode = val
+}
+
 // Merged schema.
 // Ref: #/components/schemas/LanguageResponse
 type LanguageResponse struct {
@@ -1169,6 +1237,8 @@ type LanguageResponse struct {
 	Extension string `json:"extension"`
 	// Merged property.
 	MonacoLanguage string `json:"monaco_language"`
+	// Merged property.
+	DefaultCode string `json:"default_code"`
 	// Unique identifier for the language version.
 	ID int64 `json:"id"`
 }
@@ -1186,6 +1256,11 @@ func (s *LanguageResponse) GetExtension() string {
 // GetMonacoLanguage returns the value of MonacoLanguage.
 func (s *LanguageResponse) GetMonacoLanguage() string {
 	return s.MonacoLanguage
+}
+
+// GetDefaultCode returns the value of DefaultCode.
+func (s *LanguageResponse) GetDefaultCode() string {
+	return s.DefaultCode
 }
 
 // GetID returns the value of ID.
@@ -1208,6 +1283,11 @@ func (s *LanguageResponse) SetMonacoLanguage(val string) {
 	s.MonacoLanguage = val
 }
 
+// SetDefaultCode sets the value of DefaultCode.
+func (s *LanguageResponse) SetDefaultCode(val string) {
+	s.DefaultCode = val
+}
+
 // SetID sets the value of ID.
 func (s *LanguageResponse) SetID(val int64) {
 	s.ID = val
@@ -1225,8 +1305,6 @@ type LanguageVersion struct {
 	FlakeTemplate string `json:"flake_template"`
 	// Path of template for scripts.
 	ScriptTemplate string `json:"script_template"`
-	// Default code template.
-	DefaultCode string `json:"default_code"`
 	// Search query string.
 	SearchQuery string `json:"search_query"`
 }
@@ -1254,11 +1332,6 @@ func (s *LanguageVersion) GetFlakeTemplate() string {
 // GetScriptTemplate returns the value of ScriptTemplate.
 func (s *LanguageVersion) GetScriptTemplate() string {
 	return s.ScriptTemplate
-}
-
-// GetDefaultCode returns the value of DefaultCode.
-func (s *LanguageVersion) GetDefaultCode() string {
-	return s.DefaultCode
 }
 
 // GetSearchQuery returns the value of SearchQuery.
@@ -1291,11 +1364,6 @@ func (s *LanguageVersion) SetScriptTemplate(val string) {
 	s.ScriptTemplate = val
 }
 
-// SetDefaultCode sets the value of DefaultCode.
-func (s *LanguageVersion) SetDefaultCode(val string) {
-	s.DefaultCode = val
-}
-
 // SetSearchQuery sets the value of SearchQuery.
 func (s *LanguageVersion) SetSearchQuery(val string) {
 	s.SearchQuery = val
@@ -1314,8 +1382,6 @@ type LanguageVersionResponse struct {
 	FlakeTemplate string `json:"flake_template"`
 	// Path of template for scripts.
 	ScriptTemplate string `json:"script_template"`
-	// Default code template.
-	DefaultCode string `json:"default_code"`
 	// Search query string.
 	SearchQuery string `json:"search_query"`
 	// Unique identifier for the language version.
@@ -1345,11 +1411,6 @@ func (s *LanguageVersionResponse) GetFlakeTemplate() string {
 // GetScriptTemplate returns the value of ScriptTemplate.
 func (s *LanguageVersionResponse) GetScriptTemplate() string {
 	return s.ScriptTemplate
-}
-
-// GetDefaultCode returns the value of DefaultCode.
-func (s *LanguageVersionResponse) GetDefaultCode() string {
-	return s.DefaultCode
 }
 
 // GetSearchQuery returns the value of SearchQuery.
@@ -1385,11 +1446,6 @@ func (s *LanguageVersionResponse) SetFlakeTemplate(val string) {
 // SetScriptTemplate sets the value of ScriptTemplate.
 func (s *LanguageVersionResponse) SetScriptTemplate(val string) {
 	s.ScriptTemplate = val
-}
-
-// SetDefaultCode sets the value of DefaultCode.
-func (s *LanguageVersionResponse) SetDefaultCode(val string) {
-	s.DefaultCode = val
 }
 
 // SetSearchQuery sets the value of SearchQuery.

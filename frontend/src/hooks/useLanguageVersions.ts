@@ -8,7 +8,6 @@ const initLanguageVersion: LanguageVersion = {
   nix_package_name: "python310",
   flake_template: "python/python.flake.tmpl",
   script_template: "python/python.script.tmpl",
-  default_code: "print('Hello, World!')",
   search_query: "python310Packages",
 };
 
@@ -27,7 +26,6 @@ export const useLanguageVersions = (languageId: number) => {
         nix_package_name: lang.nix_package_name,
         flake_template: lang.flake_template,
         script_template: lang.script_template,
-        default_code: lang.default_code,
         search_query: lang.search_query,
       }));
       setLanguageVersions(LanguageVersionList);

@@ -24,23 +24,6 @@ type ExecutionService struct {
 	envConfig *config.EnvConfig
 	logger    *zerolog.Logger
 }
-type Language struct {
-	ID             int64
-	Name           string
-	Extension      string
-	MonacoLanguage string
-}
-
-type LanguageVersion struct {
-	ID             int64
-	LanguageID     int64
-	Version        string
-	NixPackageName string
-	FlakeTemplate  string
-	ScriptTemplate string
-	DefaultCode    string
-	SearchQuery    string
-}
 
 func NewExecutionService(queries db.Store, envConfig *config.EnvConfig, logger *zerolog.Logger) *ExecutionService {
 	return &ExecutionService{
@@ -67,12 +50,13 @@ func (s *ExecutionService) prepareExecutionRequest(req *api.ExecutionRequest) (*
 		}
 	}
 
-	languages := make(map[string]Language)
+	languages := make(map[string]api.LanguageResponse)
 	for _, lang := range languageData {
-		languages[lang.Name] = Language{
-			ID:        lang.ID,
-			Name:      lang.Name,
-			Extension: lang.Extension,
+		languages[lang.Name] = api.LanguageResponse{
+			ID:          lang.ID,
+			Name:        lang.Name,
+			Extension:   lang.Extension,
+			DefaultCode: lang.DefaultCode,
 		}
 	}
 
@@ -91,16 +75,15 @@ func (s *ExecutionService) prepareExecutionRequest(req *api.ExecutionRequest) (*
 		}
 	}
 
-	languageVersions := make(map[string]LanguageVersion)
+	languageVersions := make(map[string]api.LanguageVersionResponse)
 	for _, lang := range languageVersionData {
-		languageVersions[lang.Version] = LanguageVersion{
+		languageVersions[lang.Version] = api.LanguageVersionResponse{
 			ID:             lang.ID,
 			LanguageID:     lang.LanguageID,
 			Version:        lang.Version,
 			NixPackageName: lang.NixPackageName,
 			FlakeTemplate:  lang.FlakeTemplate,
 			ScriptTemplate: lang.ScriptTemplate,
-			DefaultCode:    lang.DefaultCode,
 			SearchQuery:    lang.SearchQuery,
 		}
 	}
@@ -145,7 +128,7 @@ func (s *ExecutionService) prepareExecutionRequest(req *api.ExecutionRequest) (*
 	return &execReq, nil
 }
 
-func (s *ExecutionService) convertExecSpecToFlake(execSpec ExecutionRequest, language LanguageVersion) (string, error) {
+func (s *ExecutionService) convertExecSpecToFlake(execSpec ExecutionRequest, language api.LanguageVersionResponse) (string, error) {
 	execSpec.IsFlake = true
 	tmplName := filepath.Join("templates", language.FlakeTemplate)
 
@@ -170,7 +153,7 @@ func (s *ExecutionService) convertExecSpecToFlake(execSpec ExecutionRequest, lan
 	return res.String(), nil
 }
 
-func (s *ExecutionService) convertExecSpecToNixScript(execSpec ExecutionRequest, language LanguageVersion) (string, error) {
+func (s *ExecutionService) convertExecSpecToNixScript(execSpec ExecutionRequest, language api.LanguageVersionResponse) (string, error) {
 	execSpec.IsFlake = false
 	tmplName := filepath.Join("templates", language.ScriptTemplate)
 

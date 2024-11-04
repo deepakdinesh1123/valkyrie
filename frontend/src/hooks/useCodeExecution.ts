@@ -9,6 +9,7 @@ export const useCodeExecution = () => {
 
   const executeCode = async (runData: {
     language: string;
+    version: string;
     code: string;
     environment: {
       systemDependencies: string[];
