@@ -65,7 +65,7 @@ func (p *PodmanClient) WriteFiles(ctx context.Context, containerID string, prepD
 		spec.ScriptName: execReq.Code.String,
 	}
 
-	tarFilePath, err := CreateTarArchive(files, prepDir)
+	tarFilePath, err := CreateTarArchive(files, execReq.Files, prepDir)
 	if err != nil {
 		return err
 	}

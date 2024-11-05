@@ -49,6 +49,7 @@ func (s *SQLStore) AddJobTx(ctx context.Context, arg AddJobTxParams) (AddJobTxRe
 					Command:              pgtype.Text{String: arg.Command, Valid: true},
 					ProgrammingLanguage:  arg.ProgrammingLanguage,
 					Setup:                execReq.Setup,
+					Files:                arg.Files,
 				})
 				if err != nil {
 					return err

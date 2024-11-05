@@ -95,7 +95,7 @@ type GetAllExecutionsRow struct {
 	SystemDependencies   []string           `db:"system_dependencies" json:"system_dependencies"`
 	CmdLineArgs          pgtype.Text        `db:"cmd_line_args" json:"cmd_line_args"`
 	CompileArgs          pgtype.Text        `db:"compile_args" json:"compile_args"`
-	Files                pgtype.Text        `db:"files" json:"files"`
+	Files                []byte             `db:"files" json:"files"`
 	Input                pgtype.Text        `db:"input" json:"input"`
 	Command              pgtype.Text        `db:"command" json:"command"`
 	Setup                pgtype.Text        `db:"setup" json:"setup"`
@@ -177,7 +177,7 @@ type GetAllJobsRow struct {
 	SystemDependencies   []string           `db:"system_dependencies" json:"system_dependencies"`
 	CmdLineArgs          pgtype.Text        `db:"cmd_line_args" json:"cmd_line_args"`
 	CompileArgs          pgtype.Text        `db:"compile_args" json:"compile_args"`
-	Files                pgtype.Text        `db:"files" json:"files"`
+	Files                []byte             `db:"files" json:"files"`
 	Input                pgtype.Text        `db:"input" json:"input"`
 	Command              pgtype.Text        `db:"command" json:"command"`
 	Setup                pgtype.Text        `db:"setup" json:"setup"`
@@ -253,7 +253,7 @@ type GetExecutionRow struct {
 	SystemDependencies   []string           `db:"system_dependencies" json:"system_dependencies"`
 	CmdLineArgs          pgtype.Text        `db:"cmd_line_args" json:"cmd_line_args"`
 	CompileArgs          pgtype.Text        `db:"compile_args" json:"compile_args"`
-	Files                pgtype.Text        `db:"files" json:"files"`
+	Files                []byte             `db:"files" json:"files"`
 	Input                pgtype.Text        `db:"input" json:"input"`
 	Command              pgtype.Text        `db:"command" json:"command"`
 	Setup                pgtype.Text        `db:"setup" json:"setup"`
@@ -324,7 +324,7 @@ type GetExecutionsForJobRow struct {
 	SystemDependencies   []string           `db:"system_dependencies" json:"system_dependencies"`
 	CmdLineArgs          pgtype.Text        `db:"cmd_line_args" json:"cmd_line_args"`
 	CompileArgs          pgtype.Text        `db:"compile_args" json:"compile_args"`
-	Files                pgtype.Text        `db:"files" json:"files"`
+	Files                []byte             `db:"files" json:"files"`
 	Input                pgtype.Text        `db:"input" json:"input"`
 	Command              pgtype.Text        `db:"command" json:"command"`
 	Setup                pgtype.Text        `db:"setup" json:"setup"`
@@ -398,7 +398,7 @@ type GetJobRow struct {
 	SystemDependencies   []string           `db:"system_dependencies" json:"system_dependencies"`
 	CmdLineArgs          pgtype.Text        `db:"cmd_line_args" json:"cmd_line_args"`
 	CompileArgs          pgtype.Text        `db:"compile_args" json:"compile_args"`
-	Files                pgtype.Text        `db:"files" json:"files"`
+	Files                []byte             `db:"files" json:"files"`
 	Input                pgtype.Text        `db:"input" json:"input"`
 	Command              pgtype.Text        `db:"command" json:"command"`
 	Setup                pgtype.Text        `db:"setup" json:"setup"`

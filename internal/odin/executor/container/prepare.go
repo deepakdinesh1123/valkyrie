@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func CreateTarArchive(files map[string]string, dir string) (string, error) {
+func CreateTarArchive(files map[string]string, additional_files []byte, dir string) (string, error) {
 	tarFilePath := filepath.Join(dir, fmt.Sprintf("%d.tar", time.Now().UnixNano()))
 	tarFile, err := os.Create(tarFilePath)
 	if err != nil {
@@ -30,6 +30,9 @@ func CreateTarArchive(files map[string]string, dir string) (string, error) {
 		if _, err := tw.Write([]byte(content)); err != nil {
 			return "", err
 		}
+	}
+	if _, err := tw.Write(additional_files); err != nil {
+		return "", err
 	}
 	return tarFilePath, nil
 }
