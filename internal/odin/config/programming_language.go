@@ -352,4 +352,13 @@ var Languages map[string]map[string]string = map[string]map[string]string{
 		"defaultCode":    "const std = @import(\"std\");\n\npub fn main() !void {\n    const stdout = std.io.getStdOut().writer();\n    try stdout.print(\"Hello, World!\\n\", .{});\n}",
 		"searchquery":    "zig",
 	},
+	"java": {
+		"nixPackageName": "jdk22_headless",
+		"version":        "22.0.2",
+		"extension":      "java",
+		"template":       "java/java.tmpl",
+		"monacoLanguage": "java",
+		"defaultCode":    "class Main {\n    public static void main(String[] args) {\n        System.out.println(\"Hello World!\");\n    }\n}",
+		"searchquery":    "javaPackages",
+	},
 }
