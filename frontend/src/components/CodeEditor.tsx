@@ -8,13 +8,15 @@ interface CodeEditorProps {
   onChange?: (content: string) => void;
   editorOptions?: EditorProps["options"];
   value?: string; 
+  height: string;
 }
 
 const CodeEditor: React.FC<CodeEditorProps> = ({
   selectedLanguage,
   onChange,
   editorOptions,
-  value, 
+  value,
+  height, 
 }) => {
   const handleEditorChange = (newValue: string | undefined) => {
     const newContent = newValue ?? "";
@@ -35,7 +37,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
       </div>
       <div className="flex-grow mt-0">
         <Editor
-          height="100%"
+          height={height}
           width="100%"
           language={selectedLanguage.monaco_language}
           value={value ?? selectedLanguage.default_code} 

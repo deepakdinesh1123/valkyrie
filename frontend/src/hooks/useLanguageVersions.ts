@@ -4,11 +4,11 @@ import { LanguageVersion } from '@/api-client';
 
 const initLanguageVersion: LanguageVersion = {
   language_id: 1,
-  version: "3.10",
-  nix_package_name: "python310",
+  version: "3.11",
+  nix_package_name: "python311",
   flake_template: "python/python.flake.tmpl",
   script_template: "python/python.script.tmpl",
-  search_query: "python310Packages",
+  search_query: "python311Packages",
 };
 
 export const useLanguageVersions = (languageId: number) => {

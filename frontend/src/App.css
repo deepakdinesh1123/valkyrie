@@ -127,7 +127,7 @@ body,
   display: flex;
   flex-direction: column;
   border: 1px solid #1e1e1e; /* Border around the terminal */
-  height: calc(100vh); /* 90% of remaining screen height */
+  height: 100vh;
   overflow: hidden;
   padding-bottom: 0;
 }

@@ -11,6 +11,7 @@ import { useCodeExecution } from "@/hooks/useCodeExecution";
 import Terminal from "@/components/Terminal";
 import HelpModal from "@/components/HelpModal";
 import RequestPackageModal from "@/components/RequestModal";
+import Announcement from "@/components/Announcement";
 import PackageIcon from '@/assets/package.svg'
 import HelpIcon from '@/assets/help.svg'
 import ValkyrieIcon from '@/assets/valkyrie.svg'
@@ -18,11 +19,12 @@ import ListBuilder from "@/components/ListBuilder";
 import { useSystemPackages } from "@/hooks/useSystemPackages";
 import { useLanguagePackages } from "@/hooks/useLanguagePackages";
 import { usePackagesExist } from "@/hooks/usePackageExists";
+import { useDefaultPackages } from "@/hooks/useDefaultPackages";
 
 const App: React.FC = () => {
   const [args, setArgs] = useState<string>("");
-  const { selectedLanguage, setSelectedLanguage} = useLanguages();
-  const { selectedLanguageVersion, setSelectedLanguageVersion} = useLanguageVersions(selectedLanguage?.id);
+  const { selectedLanguage, setSelectedLanguage } = useLanguages();
+  const { selectedLanguageVersion, setSelectedLanguageVersion } = useLanguageVersions(selectedLanguage?.id);
   const [codeContent, setCodeContent] = useState<string>("");
   const { terminalOutput, executeCode, isLoading } = useCodeExecution();
   const [selectedLanguageDependencies, setSelectedLanguageDependencies] = useState<string[]>([]);
@@ -33,21 +35,27 @@ const App: React.FC = () => {
   const [languageSearchString, setLanguageSearchString] = useState<string>("");
   const [isRequestModalOpen, setIsRequestModalOpen] = useState<boolean>(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState<boolean>(false);
+  const calculatedHeight = `calc(100% - ${terminalHeight}px)`;
+  const [isAnnouncmentModalOpen, setIsAnnouncementModalOpen] = useState<boolean>(true);
   const { systemPackages } = useSystemPackages(systemSearchString);
   const { languagePackages, resetLanguagePackages } = useLanguagePackages(languageSearchString, selectedLanguageVersion?.search_query);
-  const [pendingVersionChange, setpendingVersionChange] = useState<any>(null);
+  const { defaultSystemPackages, defaultLanguagePackages} = useDefaultPackages(selectedLanguageVersion?.search_query);
+  const [pendingVersionChange, setPendingVersionChange] = useState<any>(null);
   const [resetLanguageDependencies, setResetLanguageDependencies] = useState({});
   const { existsResponse } = usePackagesExist(
     pendingVersionChange?.search_query || "",
     selectedLanguageDependencies
-  );
+  );  
+  const finalSystemPackages = systemPackages.length > 0 ? systemPackages : defaultSystemPackages;
+  const finalLanguagePackages = languagePackages.length > 0 ? languagePackages : defaultLanguagePackages;
 
+ 
   useEffect(() => {
     if (pendingVersionChange && existsResponse) {
       handleLanguageChangeEffect(pendingVersionChange, existsResponse);
-      setpendingVersionChange(null);
+      setPendingVersionChange(null);
     }
-  }, [pendingVersionChange, existsResponse]);
+  }, [pendingVersionChange, existsResponse, defaultLanguagePackages]);
 
   const resetOnNewLanguage = useCallback((language: LanguageResponse) => {
     setSelectedLanguage(language);
@@ -59,13 +67,13 @@ const App: React.FC = () => {
   }, [setSelectedLanguage, resetLanguagePackages]);
 
   const handleLanguageChangeEffect = useCallback(
-    ( version: any, existsResponse: any) => {
-       if (version !== selectedLanguageVersion) {
+    (version: any, existsResponse: any) => {
+      if (version !== selectedLanguageVersion) {
         if (existsResponse.exists) {
           setSelectedLanguageVersion(version);
         } else {
           const nonExistingPackages = existsResponse.nonExistingPackages;
-          setSelectedLanguageDependencies(prev => 
+          setSelectedLanguageDependencies(prev =>
             prev.filter(dep => !nonExistingPackages.includes(dep))
           );
           setSelectedLanguageVersion(version);
@@ -80,7 +88,7 @@ const App: React.FC = () => {
       setSelectedLanguageVersion
     ]
   );
-  
+
 
   useEffect(() => {
     if (selectedLanguage) {
@@ -98,6 +106,7 @@ const App: React.FC = () => {
 
   const handleVersionChange = useCallback((version: LanguageVersion) => {
     setSelectedLanguageVersion(version);
+    setPendingVersionChange(version);
   }, []);
 
   const handleRunCode = useCallback(() => {
@@ -120,57 +129,64 @@ const App: React.FC = () => {
     setTerminalHeight(height);
   }, []);
 
-  
+
   return (
     <div className="flex h-screen overflow-hidden relative">
       <div className="absolute top-0 right-0">
         <img src={ValkyrieIcon} className="h-14 p-1 pr-16 pt-4" alt="Valkyrie" />
       </div>
-    <div className="editor-container flex-1 w-full">
-      <div className="top-bar flex flex-wrap justify-between items-center p-2 bg-transparent mr-44">
-        <div className="flex flex-wrap items-center w-full sm:w-auto mb-2 sm:mb-0">
-          <div className="w-full sm:w-auto mb-2 sm:mb-0 sm:mr-2 border-none">
-            <LanguageSelector
-              onLanguageChange={handleLanguageChange}
-              selectedLanguage={selectedLanguage}
-              selectedLanguageVersion={selectedLanguageVersion}
-              onVersionChange={handleVersionChange}
+      <div className="editor-container flex-1 w-full">
+        <div className="top-bar flex flex-wrap justify-between items-center p-2 bg-transparent mr-44">
+          <div className="flex flex-wrap items-center w-full sm:w-auto mb-2 sm:mb-0">
+            <div className="w-full sm:w-auto mb-2 sm:mb-0 sm:mr-2 border-none">
+              <LanguageSelector
+                onLanguageChange={handleLanguageChange}
+                selectedLanguage={selectedLanguage}
+                selectedLanguageVersion={selectedLanguageVersion}
+                onVersionChange={handleVersionChange}
+              />
+            </div>
+            <Input
+              type="text"
+              placeholder="Args"
+              value={args}
+              onChange={(e) => setArgs(e.target.value)}
+              className="args-input w-full sm:w-36 mr-1 bg-neutral-900 text-white border-opacity-100 focus:ring-0"
             />
           </div>
-          <Input
-            type="text"
-            placeholder="Args"
-            value={args}
-            onChange={(e) => setArgs(e.target.value)}
-            className="args-input w-full sm:w-36 mr-1 bg-neutral-900 text-white border-opacity-100 focus:ring-0"
-          />
-        </div>
-        <div className="flex items-center w-full sm:w-auto justify-end">
-          <Button
-            onClick={handleRunCode}
-            disabled={isLoading || !codeContent}
-            className={`run-code-btn mr-2 ${isLoading ? 'loading' : ''} w-1/2 sm:w-auto bg-neutral-900 transition-colors hover:bg-stone-600 text-sm active:bg-neutral-900`}
-          >
-            {isLoading ? "": 'Run Code'}
-          </Button>
-          <Button
+          <div className="flex items-center w-full sm:w-auto justify-end">
+            <Button
+              onClick={handleRunCode}
+              disabled={isLoading || !codeContent}
+              className={`run-code-btn mr-2 ${isLoading ? 'loading' : ''} w-1/2 sm:w-auto bg-neutral-900 transition-colors hover:bg-stone-600 text-sm active:bg-neutral-900`}
+            >
+              {isLoading ? "" : 'Run Code'}
+            </Button>
+            <Button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className="menu-toggle-btn w-1/2 sm:w-auto bg-neutral-900 transition-colors hover:bg-stone-600 text-sm active:bg-neutral-900"
             >
               {isSidebarOpen ? "Menu" : "Menu"}
             </Button>
+          </div>
         </div>
-      </div>
-      <div className="flex-grow overflow-hidden" style={{ height: `calc(100% - ${terminalHeight}px - 4rem)` }}>
+        <div
+        className="flex-grow overflow-hidden transition-all duration-300 ease-in-out"
+        style={{
+          height: calculatedHeight, 
+          width: isSidebarOpen ? '74%' : '100%', 
+        }}
+      >
         <CodeEditor
           selectedLanguage={selectedLanguage}
           selectedLanguageVersion={selectedLanguageVersion}
           onChange={handleEditorChange}
           value={codeContent}
           editorOptions={{ wordWrap: "on" }}
+          height={calculatedHeight} 
         />
       </div>
-      <div className="relative" style={{ height: `${terminalHeight}px` }}>
+        <div className="relative" style={{ height: `${terminalHeight}px` }}>
           <div
             className="absolute top-0 left-0 right-0 h-1 bg-gray-600 cursor-n-resize"
             onMouseDown={(e) => {
@@ -194,9 +210,9 @@ const App: React.FC = () => {
           </div>
         </div>
       </div>
-      
-     {/* Overlay Sidebar */}
-     <div
+
+      {/* Overlay Sidebar */}
+      <div
         className={`fixed top-0 right-0 h-full w-full md:w-1/3 lg:w-1/4 bg-neutral-800 text-white p-2 
           flex flex-col justify-between transition-transform duration-300 ease-in-out z-50
           ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}
@@ -208,7 +224,7 @@ const App: React.FC = () => {
               <span className="">System Dependencies</span>
               <div className="flex-1 mt-2 rounded-md min-h-[14rem]">
                 <ListBuilder
-                  items={systemPackages}
+                  items={finalSystemPackages}
                   onSelectionChange={setSelectedSystemDependencies}
                   onSearchChange={setSystemSearchString}
                 />
@@ -219,7 +235,7 @@ const App: React.FC = () => {
               <span className="">Language Dependencies</span>
               <div className="flex-1 mt-2 rounded-md min-h-[14rem]">
                 <ListBuilder
-                  items={languagePackages}
+                  items={finalLanguagePackages}
                   onSelectionChange={setSelectedLanguageDependencies}
                   onSearchChange={setLanguageSearchString}
                   resetTrigger={resetLanguageDependencies}
@@ -277,6 +293,11 @@ const App: React.FC = () => {
       <RequestPackageModal
         isOpen={isRequestModalOpen}
         onClose={() => setIsRequestModalOpen(false)}
+      />
+
+      <Announcement
+        isOpen={isAnnouncmentModalOpen}
+        onClose={() => setIsAnnouncementModalOpen(false)}
       />
     </div>
   );
