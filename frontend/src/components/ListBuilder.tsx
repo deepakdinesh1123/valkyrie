@@ -57,6 +57,7 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
     if (resetTrigger !== undefined) {
       setSelectedItems([]);
       setSearchTerm("");
+      setIsSearching(false);
       setShowNoResults(false);
       onSelectionChange([]);
       onSearchChange("");
@@ -73,6 +74,7 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
         onSelectionChange(updatedSelectedItems);
         setSearchTerm("");
       }
+      nonExistingPackages = [];
     }
   }, [nonExistingPackages, selectedItems, onSelectionChange]);
 
@@ -121,6 +123,7 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
           size={20}
         />
       </div>
+      
       <div className="mb-4 flex flex-wrap gap-2">
         {selectedItems.map((itemName) => (
           <Badge
@@ -135,11 +138,12 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
               onClick={() => handleRemove(itemName)}
               className="h-5 w-5 p-0 hover:bg-red-100 hover:text-black rounded-full bg-neutral-800"
             >
-              <X size={14} className="text-gray-500 hover:text-black-500" />
+              <X size={14} className="text-gray-500 hover:text-black" />
             </Button>
           </Badge>
         ))}
       </div>
+
       {items.length === 0 ? (
         <div className="pl-2">No Packages Available..</div>
       ) : searchTerm !== "" || filteredItems.length > 0 ? (
@@ -153,9 +157,9 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
               {filteredItems.map((item) => (
                 <li
                   key={item.name}
-                  className={`px-4 py-2 cursor-pointer ${selectedItems.includes(item.name)
+                  className={`px-4 py-2 ${selectedItems.includes(item.name)
                       ? "text-gray-400 cursor-not-allowed bg-stone-700"
-                      : "hover:bg-gray-200 hover:text-black"
+                      : "hover:bg-gray-200 hover:text-black cursor-pointer"
                     }`}
                   onClick={() =>
                     !selectedItems.includes(item.name) && handleSelect(item)

@@ -39,7 +39,7 @@ const App: React.FC = () => {
   const [isAnnouncmentModalOpen, setIsAnnouncementModalOpen] = useState<boolean>(true);
   const { systemPackages } = useSystemPackages(systemSearchString);
   const { languagePackages, resetLanguagePackages } = useLanguagePackages(languageSearchString, selectedLanguageVersion?.search_query);
-  const { defaultSystemPackages, defaultLanguagePackages} = useDefaultPackages(selectedLanguageVersion?.search_query);
+  const { defaultSystemPackages, defaultLanguagePackages } = useDefaultPackages(selectedLanguageVersion?.search_query);
   const [pendingVersionChange, setPendingVersionChange] = useState<any>(null);
   const [resetLanguageDependencies, setResetLanguageDependencies] = useState({});
   const { existsResponse } = usePackagesExist(
@@ -49,21 +49,21 @@ const App: React.FC = () => {
   const finalSystemPackages = systemPackages.length > 0 ? systemPackages : defaultSystemPackages;
   const finalLanguagePackages = languagePackages.length > 0 ? languagePackages : defaultLanguagePackages;
 
- 
+
   useEffect(() => {
     if (pendingVersionChange && existsResponse) {
       handleLanguageChangeEffect(pendingVersionChange, existsResponse);
-      setPendingVersionChange(null);
+      setPendingVersionChange(null); 
     }
-  }, [pendingVersionChange, existsResponse, defaultLanguagePackages]);
+  }, [pendingVersionChange, existsResponse]); 
+  
 
   const resetOnNewLanguage = useCallback((language: LanguageResponse) => {
     setSelectedLanguage(language);
     setCodeContent(language.default_code);
-    setLanguageSearchString("");
     setSelectedLanguageDependencies([]);
-    setResetLanguageDependencies({});
     resetLanguagePackages();
+    setResetLanguageDependencies({});
   }, [setSelectedLanguage, resetLanguagePackages]);
 
   const handleLanguageChangeEffect = useCallback(
@@ -101,13 +101,23 @@ const App: React.FC = () => {
   }, []);
 
   const handleLanguageChange = useCallback((language: LanguageResponse) => {
-    setSelectedLanguage(language);
-  }, []);
+    resetOnNewLanguage(language);
+  }, [resetOnNewLanguage]);
+
+  useEffect(() => {
+    console.log("Updated existsResponse:", existsResponse);
+  }, [existsResponse]);
+  
 
   const handleVersionChange = useCallback((version: LanguageVersion) => {
-    setSelectedLanguageVersion(version);
-    setPendingVersionChange(version);
-  }, []);
+    if (version !== selectedLanguageVersion) {
+      setPendingVersionChange(version); 
+      const nonExistingPackages = existsResponse?.nonExistingPackages || [];
+      setSelectedLanguageVersion(version);
+      setSelectedLanguageDependencies((prev) => prev.filter(dep => !nonExistingPackages.includes(dep)));
+    }
+  }, [selectedLanguageVersion, existsResponse]); 
+  
 
   const handleRunCode = useCallback(() => {
     if (selectedLanguage && codeContent) {
@@ -171,21 +181,21 @@ const App: React.FC = () => {
           </div>
         </div>
         <div
-        className="flex-grow overflow-hidden transition-all duration-300 ease-in-out"
-        style={{
-          height: calculatedHeight, 
-          width: isSidebarOpen ? '74%' : '100%', 
-        }}
-      >
-        <CodeEditor
-          selectedLanguage={selectedLanguage}
-          selectedLanguageVersion={selectedLanguageVersion}
-          onChange={handleEditorChange}
-          value={codeContent}
-          editorOptions={{ wordWrap: "on" }}
-          height={calculatedHeight} 
-        />
-      </div>
+          className="flex-grow overflow-hidden transition-all duration-300 ease-in-out"
+          style={{
+            height: calculatedHeight,
+            width: isSidebarOpen ? '74%' : '100%',
+          }}
+        >
+          <CodeEditor
+            selectedLanguage={selectedLanguage}
+            selectedLanguageVersion={selectedLanguageVersion}
+            onChange={handleEditorChange}
+            value={codeContent}
+            editorOptions={{ wordWrap: "on" }}
+            height={calculatedHeight}
+          />
+        </div>
         <div className="relative" style={{ height: `${terminalHeight}px` }}>
           <div
             className="absolute top-0 left-0 right-0 h-1 bg-gray-600 cursor-n-resize"
@@ -205,7 +215,7 @@ const App: React.FC = () => {
               document.addEventListener('mouseup', handleMouseUp);
             }}
           />
-          <div className="terminal-container" style={{ height: 'calc(100%)' }}>
+          <div className="terminal-container transition-all duration-300 ease-in-out mr-0" style={{ height: 'calc(100%)', width: isSidebarOpen ? '75%' : '100%' }}>
             <Terminal output={terminalOutput} tabName="Output" />
           </div>
         </div>
