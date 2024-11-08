@@ -134,6 +134,19 @@ func processPaths(envConfig *config.EnvConfig) error {
 	}
 	defer db.Close()
 
+	package_file, err := os.Create("configs/nix/packages.csv")
+	if err != nil {
+		return fmt.Errorf("error creating packages file")
+	}
+	defer package_file.Close()
+
+	writer := csv.NewWriter(package_file)
+	defer writer.Flush()
+
+	package_data := [][]string{
+		{"name", "type", "language"},
+	}
+
 	reader := csv.NewReader(file)
 	for {
 		record, err := reader.Read()
@@ -152,6 +165,14 @@ func processPaths(envConfig *config.EnvConfig) error {
 			if err != nil {
 				log.Printf("Error inserting package: %v\n", err)
 			}
+			package_data = append(package_data, []string{pkg.Name, pkg.pkgType, pkg.Language})
+		}
+	}
+
+	for _, row := range package_data {
+		err := writer.Write(row)
+		if err != nil {
+			log.Printf("Erorr while inserting row: %s", row)
 		}
 	}
 

@@ -29,7 +29,7 @@ func GetExecutor(ctx context.Context, queries db.Store, workerId int32, tp trace
 		if _, err := os.Stat(envConfig.ODIN_SYSTEM_EXECUTOR_BASE_DIR); os.IsNotExist(err) {
 			err = os.Mkdir(envConfig.ODIN_SYSTEM_EXECUTOR_BASE_DIR, os.ModePerm)
 			if err != nil {
-				return nil, fmt.Errorf("failed to create system Executor base directory")
+				return nil, fmt.Errorf("failed to create system Executor base directory: %s", err)
 			}
 		}
 		Executor, err = system.NewSystemExecutor(ctx, envConfig, queries, workerId, tp, mp, logger)

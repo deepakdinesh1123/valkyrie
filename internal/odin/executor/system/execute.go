@@ -8,62 +8,88 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"syscall"
 	"time"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/concurrency"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/services/execution"
 	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/trace"
 )
 
-func (s *SystemExecutor) Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, job db.Job, logger zerolog.Logger) {
-	tracer := s.tp.Tracer("Execute")
-	_, span := tracer.Start(ctx, "Execute")
-	defer span.End()
+type SystemExecutor struct {
+	envConfig *config.EnvConfig
+	queries   db.Store
+	logger    *zerolog.Logger
+	tp        trace.TracerProvider
+	mp        metric.MeterProvider
+	workerId  int32
+}
 
-	span.AddEvent("Executing job")
+func NewSystemExecutor(ctx context.Context, envConfig *config.EnvConfig, queries db.Store, workerId int32, tp trace.TracerProvider, mp metric.MeterProvider, logger *zerolog.Logger) (*SystemExecutor, error) {
+	return &SystemExecutor{
+		envConfig: envConfig,
+		queries:   queries,
+		workerId:  workerId,
+		logger:    logger,
+		tp:        tp,
+		mp:        mp,
+	}, nil
+}
 
-	start := time.Now()
+type SystemExecutionClient interface {
+	GetExecCmd(ctx context.Context, outFile *os.File, errFile *os.File, dir string, execReq *db.ExecRequest) (*exec.Cmd, error)
+}
+
+func (s *SystemExecutor) Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, job *db.Job, logger zerolog.Logger) {
+	startTime := time.Now()
 	defer wg.Done()
 	dir := filepath.Join(s.envConfig.ODIN_SYSTEM_EXECUTOR_BASE_DIR, job.CreatedAt.Time.Format("20060102150405"))
-	s.logger.Info().Str("dir", dir).Msg("Executing job")
+	s.logger.Info().Str("dir", dir).Msg("Executing execReq")
 	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-		s.logger.Err(err).Msg("Failed to create directory")
-		err := s.updateJob(ctx, &job, start, false)
-		if err != nil {
-			s.logger.Err(err).Msg("Failed to update job")
-		}
+		s.logger.Err(err)
 		return
 	}
-	if err := s.writeFiles(ctx, dir, job); err != nil {
-		s.logger.Err(err).Msg("Failed to write files")
-		err := s.updateJob(ctx, &job, start, false)
-		if err != nil {
-			s.logger.Err(err).Msg("Failed to update job")
-		}
+
+	s.logger.Info().Msg("getting exec request")
+	res, err := s.queries.GetTotalJobs(ctx)
+	s.logger.Info().Int64("id", res).Msg("Log")
+	execReq, err := s.queries.GetExecRequest(ctx, job.ExecRequestID.Int32)
+	if err != nil {
+		s.logger.Err(err)
+		return
+	}
+
+	s.logger.Info().Msg("writing files")
+	if err := s.writeFiles(ctx, dir, &execReq); err != nil {
+		s.logger.Err(err).Msg("Failed to update execReq")
 		return
 	}
 	outFile, err := os.Create(filepath.Join(dir, "output.txt"))
 	if err != nil {
-		s.logger.Err(err).Msg("Failed to create output file")
-		err := s.updateJob(ctx, &job, start, false)
-		if err != nil {
-			s.logger.Err(err).Msg("Failed to update job")
-		}
+		s.logger.Err(err)
 		return
 	}
 	defer outFile.Close()
-	errFile, err := os.Create(filepath.Join(dir, "error.txt"))
-	if err != nil {
-		s.logger.Err(err).Msg("Failed to create error file")
-		err := s.updateJob(ctx, &job, start, false)
-		if err != nil {
-			s.logger.Err(err).Msg("Failed to update job")
-		}
-		return
+	// errFile, err := os.Create(filepath.Join(dir, "error.txt"))
+	// if err != nil {
+	// 	s.logger.Err(err)
+	// 	return
+	// }
+	// defer errFile.Close()
+
+	jobRes := db.UpdateJobResultTxParams{
+		StartTime: startTime,
+		Job:       job,
+		Retry:     true,
+		Success:   false,
+		WorkerId:  s.workerId,
 	}
-	defer errFile.Close()
+	if job.Retries.Int32+1 >= job.MaxRetries.Int32 {
+		jobRes.Retry = false
+	}
 
 	var timeout int
 	if job.TimeOut.Int32 > 0 { // By default, timeout is set to -1
@@ -77,29 +103,27 @@ func (s *SystemExecutor) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	var tctx context.Context
 	var cancel context.CancelFunc
 	if timeout > 0 {
-		tctx, cancel = context.WithTimeout(context.TODO(), time.Duration(timeout)*time.Second)
+		tctx, cancel = context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
 	} else {
-		tctx, cancel = context.WithCancel(context.TODO())
+		tctx, cancel = context.WithCancel(ctx)
 	}
 	defer cancel()
 
-	execCmd := exec.CommandContext(tctx, "./exec.sh")
-	execCmd.Cancel = func() error {
-		s.logger.Info().Msg("Task timed out. Terminating execution")
-		syscall.Kill(-execCmd.Process.Pid, syscall.SIGKILL)
-		return nil
-	}
-	execCmd.Dir = dir
-	execCmd.Stdout = outFile
-	execCmd.Stderr = errFile
-	execCmd.SysProcAttr = &syscall.SysProcAttr{
-		Setpgid: true,
+	sc, err := getSystemExecutorClient(ctx, s)
+	if err != nil {
+		s.logger.Err(err).Msg("could not get client")
+		return
 	}
 
 	done := make(chan bool, 1)
 
+	execCmd, err := sc.GetExecCmd(tctx, outFile, outFile, dir, &execReq)
+	if err != nil {
+		s.logger.Err(err).Msg("could not get exec command")
+		return
+	}
+
 	go func() {
-		s.logger.Info().Msg("Executing nix run command")
 		if err := execCmd.Run(); err != nil {
 			if tctx.Err() != nil {
 				switch tctx.Err() {
@@ -108,11 +132,7 @@ func (s *SystemExecutor) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 					return
 				}
 			}
-			s.logger.Err(err).Msg("Failed to execute command")
-			err := s.updateJob(ctx, &job, start, false)
-			if err != nil {
-				s.logger.Err(err).Msg("Failed to update job")
-			}
+			s.checkFailed(s.queries.UpdateJobResultTx(ctx, jobRes))
 			done <- true
 			return
 		}
@@ -123,31 +143,55 @@ func (s *SystemExecutor) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 		case <-ctx.Done():
 			switch ctx.Err() {
 			case context.Canceled:
-				s.logger.Info().Msg("context canceled wating for process to exit")
-				<-done
-				s.updateJob(context.TODO(), &job, start, true)
+				err := execCmd.Process.Kill()
+				if err != nil {
+					s.logger.Err(err).Msg("error killing process")
+				}
+				out, err := s.ReadOutput(dir)
+				if err != nil {
+					s.logger.Err(err).Msg("error reading output")
+					return
+				}
+				jobRes.ExecLogs = string(out)
+				s.logger.Debug().Bytes("output", out).Msg("Exec Result")
+				s.checkFailed(s.queries.UpdateJobResultTx(ctx, jobRes))
 				return
 			default:
-				s.logger.Info().Msg("context error killing process")
 				err := execCmd.Process.Kill()
 				if err != nil {
 					s.logger.Err(err).Msg("Failed to send kill signal")
 				}
-				s.updateJob(context.TODO(), &job, start, false)
+				out, err := s.ReadOutput(dir)
+				if err != nil {
+					s.logger.Err(err).Msg("Error reading output")
+				}
+				jobRes.ExecLogs = string(out)
+				s.logger.Debug().Bytes("output", out).Msg("Exec Result")
+				s.checkFailed(s.queries.UpdateJobResultTx(ctx, jobRes))
 				return
 			}
 		case <-done:
-			s.updateJob(context.TODO(), &job, start, true)
+			out, err := s.ReadOutput(dir)
+			if err != nil {
+				s.logger.Err(err).Msg("Error reading output")
+			}
+			jobRes.ExecLogs = string(out)
+			jobRes.Retry = false
+			jobRes.Success = true
+			s.logger.Debug().Bytes("output", out).Msg("Exec Result")
+			s.checkFailed(s.queries.UpdateJobResultTx(ctx, jobRes))
 			return
 		}
 	}
 }
 
-func (s *SystemExecutor) writeFiles(ctx context.Context, dir string, job db.Job) error {
-	execReq, err := s.queries.GetExecRequest(ctx, job.ExecRequestID.Int32)
+func (s *SystemExecutor) checkFailed(_ db.UpdateJobTxResult, err error) {
 	if err != nil {
-		return err
+		s.logger.Error().Err(err).Stack().Msgf("An error occurred %s: ", err)
 	}
+}
+
+func (s *SystemExecutor) writeFiles(ctx context.Context, dir string, execReq *db.ExecRequest) error {
 	script, spec, err := execution.ConvertExecSpecToNixScript(execReq)
 	if err != nil {
 		return fmt.Errorf("error writing files: %s", err)
@@ -164,33 +208,8 @@ func (s *SystemExecutor) writeFiles(ctx context.Context, dir string, job db.Job)
 	}
 	return nil
 }
-
-func (s *SystemExecutor) updateJob(ctx context.Context, job *db.Job, startTime time.Time, success bool) error {
-	dir := filepath.Join(s.envConfig.ODIN_SYSTEM_EXECUTOR_BASE_DIR, job.CreatedAt.Time.Format("20060102150405"))
-	out, err := os.ReadFile(filepath.Join(dir, "output.txt"))
-	if err != nil {
-		return err
-	}
-	stderr, err := os.ReadFile(filepath.Join(dir, "error.txt"))
-	if err != nil {
-		return err
-	}
-	retry := true
-	if job.Retries.Int32+1 >= job.MaxRetries.Int32 || success {
-		retry = false
-	}
-	if _, err := s.queries.UpdateJobResultTx(ctx, db.UpdateJobResultTxParams{
-		StartTime: startTime,
-		Job:       *job,
-		Success:   success,
-		WorkerId:  s.workerId,
-		Retry:     retry,
-		ExecLogs:  string(out),
-		NixLogs:   string(stderr),
-	}); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (s *SystemExecutor) Cleanup() {}
+
+func (s *SystemExecutor) ReadOutput(dir string) ([]byte, error) {
+	return os.ReadFile(filepath.Join(dir, "output.txt"))
+}

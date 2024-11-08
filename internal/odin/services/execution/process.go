@@ -14,7 +14,7 @@ import (
 )
 
 //go:embed templates
-var flakes embed.FS
+var ExecTemplates embed.FS
 
 type ExecutionService struct {
 	queries   db.Store

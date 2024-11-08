@@ -1,6 +1,6 @@
 //go:build docker || all
 
-package container
+package docker
 
 import (
 	"context"
@@ -9,54 +9,57 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/executor/container/common"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/pool"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/services/execution"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/jackc/puddle/v2"
+	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type DockerProvider struct {
-	client *client.Client
-	*ContainerExecutor
+	client    *client.Client
+	queries   db.Store
+	envConfig *config.EnvConfig
+	workerId  int32
+	logger    *zerolog.Logger
+	tp        trace.TracerProvider
+	mp        metric.MeterProvider
+	// user          string
+	containerPool *puddle.Pool[pool.Container]
 }
 
-var getDockerClientOnce sync.Once
-var dockerclient *client.Client
-
-func GetDockerProvider(ce *ContainerExecutor) (*DockerProvider, error) {
-	client := getDockerClient()
+func GetDockerProvider(envConfig *config.EnvConfig, queries db.Store, workerId int32, tp trace.TracerProvider, mp metric.MeterProvider, logger *zerolog.Logger, containerPool *puddle.Pool[pool.Container]) (*DockerProvider, error) {
+	client := pool.GetDockerClient()
 	if client == nil {
 		return nil, fmt.Errorf("could not get docker client")
 	}
 	return &DockerProvider{
-		client:            client,
-		ContainerExecutor: ce,
+		client:    client,
+		queries:   queries,
+		envConfig: envConfig,
+		workerId:  workerId,
+		logger:    logger,
+		tp:        tp,
+		mp:        mp,
+		// user:      user,
+		containerPool: containerPool,
 	}, nil
 }
 
-func getDockerClient() *client.Client {
-	getDockerClientOnce.Do(
-		func() {
-			c, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-			if err != nil {
-				return
-			}
-			dockerclient = c
-		},
-	)
-	return dockerclient
-}
-
-func (d *DockerProvider) WriteFiles(ctx context.Context, containerID string, prepDir string, job db.Job) error {
+func (d *DockerProvider) WriteFiles(ctx context.Context, containerID string, prepDir string, job *db.Job) error {
 	execReq, err := d.queries.GetExecRequest(ctx, job.ExecRequestID.Int32)
 	if err != nil {
 		return err
 	}
-	script, spec, err := execution.ConvertExecSpecToNixScript(execReq)
+	script, spec, err := execution.ConvertExecSpecToNixScript(&execReq)
 	if err != nil {
 		return fmt.Errorf("error writing files: %s", err)
 	}
@@ -65,7 +68,7 @@ func (d *DockerProvider) WriteFiles(ctx context.Context, containerID string, pre
 		spec.ScriptName: execReq.Code.String,
 	}
 
-	tarFilePath, err := CreateTarArchive(files, execReq.Files, prepDir)
+	tarFilePath, err := common.CreateTarArchive(files, execReq.Files, prepDir)
 	if err != nil {
 		return err
 	}
@@ -91,12 +94,12 @@ func (d *DockerProvider) WriteFiles(ctx context.Context, containerID string, pre
 	return nil
 }
 
-func (d *DockerProvider) GetContainer(ctx context.Context) (*puddle.Resource[Container], error) {
-	cont, err := d.ContainerExecutor.pool.Acquire(ctx)
+func (d *DockerProvider) GetContainer(ctx context.Context) (*puddle.Resource[pool.Container], error) {
+	cont, err := d.containerPool.Acquire(ctx)
 	if err != nil {
 		return nil, err
 	}
-	err = d.pool.CreateResource(ctx)
+	err = d.containerPool.CreateResource(ctx)
 	if err != nil {
 		d.logger.Debug().Msg("Container pool might be full")
 	}
@@ -210,14 +213,6 @@ func (d *DockerProvider) ReadExecLogs(ctx context.Context, containerID string) (
 		}
 	}
 	return stripCtlAndExtFromUTF8(string(out)), nil
-}
-
-func KillDockerContainer(cont Container) error {
-	client := getDockerClient()
-	return client.ContainerRemove(context.TODO(), cont.ID, container.RemoveOptions{
-		Force:         true,
-		RemoveVolumes: true,
-	})
 }
 
 func stripCtlAndExtFromUTF8(str string) string {

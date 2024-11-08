@@ -1,9 +1,10 @@
-create table packages (
+create table if not exists packages (
     package_id bigint primary key default nextval('packages_id_seq'),
     name text not null,
     version text not null,
     pkgType text not null,
     language text,
+    store_path text,
     tsv_search TSVECTOR
 );
 
@@ -51,5 +52,10 @@ SELECT
         SELECT name FROM existing_packages
     )::text[] AS nonexisting_packages
 FROM existing_packages;
+
+-- name: GetPackageStorePaths :many
+SELECT name, store_path
+FROM packages
+WHERE name = ANY(@packages::text[]);
 
 

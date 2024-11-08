@@ -21,10 +21,13 @@ RUN nix-channel --update
 
 RUN mkdir ~/odin
 
-RUN nix-shell -p rustc --run "exit"
+COPY configs/nix/packages.csv /tmp/packages.csv
 
 COPY hack/execution/nix_run_docker.sh /home/valnix/nix_run.sh
 COPY hack/execution/nix_stop.sh /home/valnix/nix_stop.sh
+COPY hack/packages/store_packages_docker.sh /home/valnix/store_packages.sh
 WORKDIR /home/valnix/
+
+RUN sh store_packages.sh
 
 CMD [ "/bin/sh", "-c", "sleep infinity" ]

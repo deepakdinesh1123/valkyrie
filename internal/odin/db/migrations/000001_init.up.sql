@@ -78,4 +78,4 @@ create table if not exists packages (
     language text,
     store_path text,
     tsv_search TSVECTOR
-)
+);

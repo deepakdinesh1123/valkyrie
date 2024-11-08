@@ -10,7 +10,7 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 )
 
-func ConvertExecSpecToNixScript(execReq db.ExecRequest) (string, *ExecutionRequest, error) {
+func ConvertExecSpecToNixScript(execReq *db.ExecRequest) (string, *ExecutionRequest, error) {
 	execSpec := ExecutionRequest{}
 	execSpec.LanguageDependencies = execReq.LanguageDependencies
 	execSpec.SystemDependencies = execReq.SystemDependencies
@@ -29,7 +29,7 @@ func ConvertExecSpecToNixScript(execReq db.ExecRequest) (string, *ExecutionReque
 
 	var res bytes.Buffer
 	tmpl, err := template.New(string("base.exec.tmpl")).ParseFS(
-		flakes,
+		ExecTemplates,
 		"templates/base.exec.tmpl",
 		tmplName,
 	)
@@ -49,7 +49,7 @@ func (s *ExecutionService) convertExecSpecToFlake(execSpec ExecutionRequest) (st
 	tmplName := filepath.Join("templates", config.Languages[execSpec.Language]["template"])
 
 	var res bytes.Buffer
-	tmpl, err := template.New("base.flake.tmpl").ParseFS(flakes, "templates/base.flake.tmpl", tmplName)
+	tmpl, err := template.New("base.flake.tmpl").ParseFS(ExecTemplates, "templates/base.flake.tmpl", tmplName)
 	if err != nil {
 		s.logger.Err(err).Msg("failed to parse template")
 		return "", &ExecutionServiceError{

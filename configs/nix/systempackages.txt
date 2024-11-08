@@ -20,11 +20,4 @@ duckdb
 httpie
 newman
 hurl
-curlie
-grpcurl
-protobuf_26
-valgrind
-valgrind-light
-jmespath
-fx
-yq
+bash

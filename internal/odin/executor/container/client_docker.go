@@ -5,20 +5,26 @@ package container
 import (
 	"context"
 	"fmt"
+
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/executor/container/docker"
 )
 
-func GetContainerClient(ctx context.Context, cp *ContainerExecutor) (ContainerClient, error) {
-	switch cp.envConfig.ODIN_CONTAINER_ENGINE {
+func GetContainerClient(ctx context.Context, ce *ContainerExecutor) (ContainerClient, error) {
+	switch ce.EnvConfig.ODIN_CONTAINER_ENGINE {
 	case "docker":
-		containerClient, err := GetDockerProvider(cp)
+		containerClient, err := docker.GetDockerProvider(
+			ce.EnvConfig,
+			ce.Queries,
+			ce.WorkerId,
+			ce.Tp, ce.Mp,
+			ce.Logger,
+			ce.Pool,
+		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create docker containerClient")
 		}
 		return containerClient, nil
-	case " podman":
-		return nil, fmt.Errorf("podman engine not supported")
-	case "default":
-		return nil, fmt.Errorf("invalid client")
+	default:
+		return nil, fmt.Errorf("engine not supported")
 	}
-	return nil, nil
 }

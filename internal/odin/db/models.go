@@ -68,6 +68,7 @@ type Package struct {
 	Version   string      `db:"version" json:"version"`
 	Pkgtype   string      `db:"pkgtype" json:"pkgtype"`
 	Language  pgtype.Text `db:"language" json:"language"`
+	StorePath pgtype.Text `db:"store_path" json:"store_path"`
 	TsvSearch interface{} `db:"tsv_search" json:"tsv_search"`
 }
 

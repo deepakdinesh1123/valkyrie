@@ -51,7 +51,8 @@ while IFS="|" read -r package_id name language; do
 
         if [ ! -z "$pkg_path" ]; then
             echo "Found path: $pkg_path for $name"
-            if ! psql ${POSTGRES_URL} -c "UPDATE packages SET store_path='$pkg_path' WHERE package_id='$package_id'" 2>/dev/null; then
+            pkg_dir=$(dirname $pkg_path)
+            if ! psql ${POSTGRES_URL} -c "UPDATE packages SET store_path='$pkg_dir' WHERE package_id='$package_id'" 2>/dev/null; then
                 db_update_failed+=("$name")
             fi
         else
