@@ -1384,8 +1384,7 @@ components:
         - language_id
         - version
         - nix_package_name
-        - flake_template
-        - script_template
+        - template
         - search_query
       properties:
         language_id:
@@ -1401,14 +1400,8 @@ components:
           type: string
           description: Name of the Nix package
           example: "python310"
-        flake_template:
+        template:
           type: string
-          description: path of template for the Nix flake
-          example: python/python.flake.tmpl
-        script_template:
-          type: string
-          description: path of template for scripts
-          example: python/python.script.tmpl
         search_query:
           type: string
           description: Search query string

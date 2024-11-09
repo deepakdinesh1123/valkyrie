@@ -87,11 +87,11 @@ func (ns *NSJailExecutor) GetExecCmd(ctx context.Context, outFile *os.File, errF
 		return nil, fmt.Errorf("could not write config.proto file: %s", err)
 	}
 
-	var jailExec bytes.Buffer
-	tmplName := filepath.Join("templates", config.Languages[execReq.ProgrammingLanguage]["template"])
+	langVersion, err := ns.queries.GetLanguageVersionByID(ctx, execReq.LanguageVersion)
+	language, err := ns.queries.GetLanguageByID(ctx, langVersion.LanguageID)
 
-	ns.logger.Info().Str("name", execReq.ProgrammingLanguage).Msg("Programming language")
-	ns.logger.Info().Str("Name", tmplName).Msg("go template")
+	var jailExec bytes.Buffer
+	tmplName := filepath.Join("templates", language.Name, langVersion.Template)
 
 	execTmpl, err := template.New(string("base.nsexec.tmpl")).ParseFS(
 		execution.ExecTemplates,
@@ -139,7 +139,7 @@ func (ns *NSJailExecutor) GetExecCmd(ctx context.Context, outFile *os.File, errF
 		}
 	}
 
-	languageStorePaths, err := ns.queries.GetPackageStorePaths(ctx, []string{execReq.ProgrammingLanguage})
+	languageStorePaths, err := ns.queries.GetPackageStorePaths(ctx, []string{langVersion.NixPackageName})
 	if err != nil {
 		return nil, fmt.Errorf("error while fetching language store paths: %s", err)
 	}

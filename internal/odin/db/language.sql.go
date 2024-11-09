@@ -36,9 +36,9 @@ func (q *Queries) CreateLanguage(ctx context.Context, arg CreateLanguageParams) 
 
 const createLanguageVersion = `-- name: CreateLanguageVersion :one
 INSERT INTO language_versions (
-    language_id, version, nix_package_name, flake_template, script_template, search_query
+    language_id, version, nix_package_name, template, search_query
 ) 
-VALUES ($1, $2, $3, $4, $5, $6) 
+VALUES ($1, $2, $3, $4, $5) 
 RETURNING id
 `
 
@@ -46,8 +46,7 @@ type CreateLanguageVersionParams struct {
 	LanguageID     int64  `db:"language_id" json:"language_id"`
 	Version        string `db:"version" json:"version"`
 	NixPackageName string `db:"nix_package_name" json:"nix_package_name"`
-	FlakeTemplate  string `db:"flake_template" json:"flake_template"`
-	ScriptTemplate string `db:"script_template" json:"script_template"`
+	Template       string `db:"template" json:"template"`
 	SearchQuery    string `db:"search_query" json:"search_query"`
 }
 
@@ -56,8 +55,7 @@ func (q *Queries) CreateLanguageVersion(ctx context.Context, arg CreateLanguageV
 		arg.LanguageID,
 		arg.Version,
 		arg.NixPackageName,
-		arg.FlakeTemplate,
-		arg.ScriptTemplate,
+		arg.Template,
 		arg.SearchQuery,
 	)
 	var id int64
@@ -104,7 +102,7 @@ func (q *Queries) DeleteLanguageVersion(ctx context.Context, id int64) (int64, e
 }
 
 const getAllLanguageVersions = `-- name: GetAllLanguageVersions :many
-SELECT id, language_id, version, nix_package_name, flake_template, script_template, search_query 
+SELECT id, language_id, version, nix_package_name, template, search_query 
 FROM language_versions
 `
 
@@ -122,8 +120,7 @@ func (q *Queries) GetAllLanguageVersions(ctx context.Context) ([]LanguageVersion
 			&i.LanguageID,
 			&i.Version,
 			&i.NixPackageName,
-			&i.FlakeTemplate,
-			&i.ScriptTemplate,
+			&i.Template,
 			&i.SearchQuery,
 		); err != nil {
 			return nil, err
@@ -186,8 +183,25 @@ func (q *Queries) GetLanguageByID(ctx context.Context, id int64) (Language, erro
 	return i, err
 }
 
+const getLanguageByName = `-- name: GetLanguageByName :one
+SELECT id, name, extension, monaco_language, default_code from languages WHERE name = $1
+`
+
+func (q *Queries) GetLanguageByName(ctx context.Context, name string) (Language, error) {
+	row := q.db.QueryRow(ctx, getLanguageByName, name)
+	var i Language
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Extension,
+		&i.MonacoLanguage,
+		&i.DefaultCode,
+	)
+	return i, err
+}
+
 const getLanguageVersion = `-- name: GetLanguageVersion :one
-SELECT id, language_id, version, nix_package_name, flake_template, script_template, search_query 
+SELECT id, language_id, version, nix_package_name, template, search_query 
 FROM language_versions 
 WHERE language_id = $1 AND version = $2
 `
@@ -205,15 +219,14 @@ func (q *Queries) GetLanguageVersion(ctx context.Context, arg GetLanguageVersion
 		&i.LanguageID,
 		&i.Version,
 		&i.NixPackageName,
-		&i.FlakeTemplate,
-		&i.ScriptTemplate,
+		&i.Template,
 		&i.SearchQuery,
 	)
 	return i, err
 }
 
 const getLanguageVersionByID = `-- name: GetLanguageVersionByID :one
-SELECT id, language_id, version, nix_package_name, flake_template, script_template, search_query  
+SELECT id, language_id, version, nix_package_name, template, search_query  
 FROM language_versions 
 WHERE id = $1
 `
@@ -226,15 +239,14 @@ func (q *Queries) GetLanguageVersionByID(ctx context.Context, id int64) (Languag
 		&i.LanguageID,
 		&i.Version,
 		&i.NixPackageName,
-		&i.FlakeTemplate,
-		&i.ScriptTemplate,
+		&i.Template,
 		&i.SearchQuery,
 	)
 	return i, err
 }
 
 const getVersionsByLanguageID = `-- name: GetVersionsByLanguageID :many
-SELECT id, language_id, version, nix_package_name, flake_template, script_template, search_query 
+SELECT id, language_id, version, nix_package_name, template, search_query 
 FROM language_versions 
 WHERE language_id = $1
 `
@@ -253,8 +265,7 @@ func (q *Queries) GetVersionsByLanguageID(ctx context.Context, languageID int64)
 			&i.LanguageID,
 			&i.Version,
 			&i.NixPackageName,
-			&i.FlakeTemplate,
-			&i.ScriptTemplate,
+			&i.Template,
 			&i.SearchQuery,
 		); err != nil {
 			return nil, err
@@ -297,7 +308,7 @@ func (q *Queries) UpdateLanguage(ctx context.Context, arg UpdateLanguageParams) 
 
 const updateLanguageVersion = `-- name: UpdateLanguageVersion :one
 UPDATE language_versions 
-SET language_id = $2, nix_package_name = $3, flake_template = $4, script_template = $5, search_query = $6, version = $7
+SET language_id = $2, nix_package_name = $3, template = $4, search_query = $5, version = $6
 WHERE id = $1 
 returning id
 `
@@ -306,8 +317,7 @@ type UpdateLanguageVersionParams struct {
 	ID             int64  `db:"id" json:"id"`
 	LanguageID     int64  `db:"language_id" json:"language_id"`
 	NixPackageName string `db:"nix_package_name" json:"nix_package_name"`
-	FlakeTemplate  string `db:"flake_template" json:"flake_template"`
-	ScriptTemplate string `db:"script_template" json:"script_template"`
+	Template       string `db:"template" json:"template"`
 	SearchQuery    string `db:"search_query" json:"search_query"`
 	Version        string `db:"version" json:"version"`
 }
@@ -317,8 +327,7 @@ func (q *Queries) UpdateLanguageVersion(ctx context.Context, arg UpdateLanguageV
 		arg.ID,
 		arg.LanguageID,
 		arg.NixPackageName,
-		arg.FlakeTemplate,
-		arg.ScriptTemplate,
+		arg.Template,
 		arg.SearchQuery,
 		arg.Version,
 	)

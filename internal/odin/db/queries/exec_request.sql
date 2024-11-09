@@ -11,7 +11,7 @@ create table exec_request (
     input text,
     command text,
     setup text,
-    programming_language text not NULL default "bash"
+    language_version BIGINT NOT NULL REFERENCES language_versions(id) ON DELETE SET NULL
 );
 
 -- name: InsertExecRequest :one
@@ -28,7 +28,7 @@ insert into exec_request
         input,
         command,
         setup,
-        programming_language
+        language_version
     )
 values
     ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)

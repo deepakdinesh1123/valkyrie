@@ -15,6 +15,9 @@ migrate:
 	@echo "Running database migrations..."
 	@migrate -path internal/odin/db/migrations -database ${POSTGRES_URL} up
 
+migrate-down:
+	@migrate -path internal/odin/db/migrations -database ${POSTGRES_URL} down
+
 # Generate SQL code
 gq:
 	@echo "Generating SQL code..."

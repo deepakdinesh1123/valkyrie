@@ -19,10 +19,10 @@ type AddJobTxParams struct {
 	Files                []byte
 	Input                string
 	Command              string
-	ProgrammingLanguage  string
 	Setup                string
 	MaxRetries           int
 	Timeout              int32
+	LangVersion          int64
 }
 
 type AddJobTxResult struct {
@@ -47,7 +47,7 @@ func (s *SQLStore) AddJobTx(ctx context.Context, arg AddJobTxParams) (AddJobTxRe
 					CmdLineArgs:          pgtype.Text{String: arg.CmdLineArgs, Valid: true},
 					CompileArgs:          pgtype.Text{String: arg.CompileArgs, Valid: true},
 					Command:              pgtype.Text{String: arg.Command, Valid: true},
-					ProgrammingLanguage:  arg.ProgrammingLanguage,
+					LanguageVersion:      arg.LangVersion,
 					Setup:                execReq.Setup,
 					Files:                arg.Files,
 				})

@@ -134,6 +134,14 @@ func processPaths(envConfig *config.EnvConfig) error {
 	}
 	defer db.Close()
 
+	_, err = os.Stat("configs/nix/packages.csv")
+	if err == nil {
+		err = os.Remove("configs/nix/packages.csv")
+		if err != nil {
+			return err
+		}
+	}
+
 	package_file, err := os.Create("configs/nix/packages.csv")
 	if err != nil {
 		return fmt.Errorf("error creating packages file")

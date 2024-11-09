@@ -60,8 +60,7 @@ func (s *OdinServer) CreateLanguageVersion(ctx context.Context, req *api.Languag
 		LanguageID:     req.LanguageID,
 		Version:        req.Version,
 		NixPackageName: req.NixPackageName,
-		FlakeTemplate:  req.FlakeTemplate,
-		ScriptTemplate: req.ScriptTemplate,
+		Template:       req.Template,
 		SearchQuery:    req.SearchQuery,
 	}
 
@@ -76,8 +75,7 @@ func (s *OdinServer) CreateLanguageVersion(ctx context.Context, req *api.Languag
 			LanguageID:     req.LanguageID,
 			Version:        req.Version,
 			NixPackageName: req.NixPackageName,
-			FlakeTemplate:  req.FlakeTemplate,
-			ScriptTemplate: req.ScriptTemplate,
+			Template:       req.Template,
 			SearchQuery:    req.SearchQuery,
 		},
 	}, nil
@@ -187,8 +185,7 @@ func (s *OdinServer) GetAllLanguageVersions(ctx context.Context, params api.GetA
 			LanguageID:     version.LanguageID,
 			Version:        version.Version,
 			NixPackageName: version.NixPackageName,
-			FlakeTemplate:  version.FlakeTemplate,
-			ScriptTemplate: version.ScriptTemplate,
+			Template:       version.Template,
 			SearchQuery:    version.SearchQuery,
 		})
 	}
@@ -250,8 +247,7 @@ func (s *OdinServer) GetLanguageVersionById(ctx context.Context, params api.GetL
 		LanguageID:     version.LanguageID,
 		Version:        version.Version,
 		NixPackageName: version.NixPackageName,
-		FlakeTemplate:  version.FlakeTemplate,
-		ScriptTemplate: version.ScriptTemplate,
+		Template:       version.Template,
 		SearchQuery:    version.SearchQuery,
 	}
 
@@ -303,8 +299,7 @@ func (s *OdinServer) UpdateLanguageVersion(ctx context.Context, req *api.Languag
 		LanguageID:     req.LanguageID,
 		Version:        req.Version,
 		NixPackageName: req.NixPackageName,
-		FlakeTemplate:  req.FlakeTemplate,
-		ScriptTemplate: req.ScriptTemplate,
+		Template:       req.Template,
 		SearchQuery:    req.SearchQuery,
 	}
 
@@ -326,8 +321,7 @@ func (s *OdinServer) UpdateLanguageVersion(ctx context.Context, req *api.Languag
 		LanguageID:     params.ID,
 		Version:        req.Version,
 		NixPackageName: req.NixPackageName,
-		FlakeTemplate:  req.FlakeTemplate,
-		ScriptTemplate: req.ScriptTemplate,
+		Template:       req.Template,
 		SearchQuery:    req.SearchQuery,
 	}
 
@@ -360,8 +354,7 @@ func (s *OdinServer) GetAllVersions(ctx context.Context, params api.GetAllVersio
 			LanguageID:     version.LanguageID,
 			Version:        version.Version,
 			NixPackageName: version.NixPackageName,
-			FlakeTemplate:  version.FlakeTemplate,
-			ScriptTemplate: version.ScriptTemplate,
+			Template:       version.Template,
 			SearchQuery:    version.SearchQuery,
 		})
 	}

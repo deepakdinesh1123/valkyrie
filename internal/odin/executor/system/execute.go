@@ -192,7 +192,7 @@ func (s *SystemExecutor) checkFailed(_ db.UpdateJobTxResult, err error) {
 }
 
 func (s *SystemExecutor) writeFiles(ctx context.Context, dir string, execReq *db.ExecRequest) error {
-	script, spec, err := execution.ConvertExecSpecToNixScript(execReq)
+	script, spec, err := execution.ConvertExecSpecToNixScript(ctx, execReq, s.queries)
 	if err != nil {
 		return fmt.Errorf("error writing files: %s", err)
 	}

@@ -1,0 +1,27 @@
+type: object
+required:
+  - language_id
+  - version
+  - nix_package_name
+  - template
+  - search_query
+properties:
+  language_id:
+    type: integer
+    format: int64
+    description: Reference to the parent language
+    example: 1
+  version:
+    type: string
+    description: Version identifier of the language
+    example: 3.1.0
+  nix_package_name:
+    type: string
+    description: Name of the Nix package
+    example: python310
+  template:
+    type: string
+  search_query:
+    type: string
+    description: Search query string
+    example: python310Packages

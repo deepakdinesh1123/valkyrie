@@ -36,7 +36,7 @@ func NewSystemExecutor(ctx context.Context, envConfig *config.EnvConfig, queries
 }
 
 func (s *SystemExecutor) GetExecCmd(ctx context.Context, outFile *os.File, errFile *os.File, dir string, execReq *db.ExecRequest) (*exec.Cmd, error) {
-	execCmd := exec.CommandContext(ctx, "sh", "exec.sh")
+	execCmd := exec.CommandContext(ctx, "./exec.sh")
 	execCmd.Cancel = func() error {
 		s.logger.Info().Msg("Task timed out. Terminating execution")
 		syscall.Kill(-execCmd.Process.Pid, syscall.SIGKILL)

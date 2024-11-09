@@ -58,7 +58,7 @@ func (p *PodmanClient) WriteFiles(ctx context.Context, containerID string, prepD
 	if err != nil {
 		return err
 	}
-	script, spec, err := execution.ConvertExecSpecToNixScript(&execReq)
+	script, spec, err := execution.ConvertExecSpecToNixScript(ctx, &execReq, p.queries)
 	if err != nil {
 		return fmt.Errorf("error writing files: %s", err)
 	}

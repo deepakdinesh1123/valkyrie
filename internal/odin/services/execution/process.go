@@ -30,24 +30,25 @@ func NewExecutionService(queries db.Store, envConfig *config.EnvConfig, logger *
 	}
 }
 
-func (s *ExecutionService) prepareExecutionRequest(req *api.ExecutionRequest) (*ExecutionRequest, error) {
-	language := req.Language.Value
+func (s *ExecutionService) prepareExecutionRequest(ctx context.Context, req *api.ExecutionRequest) (*ExecutionRequest, error) {
 	execReq := ExecutionRequest{}
-	if req.Timeout.Value > 180 {
-		return nil, &ExecutionServiceError{
-			Type:    "timeout",
-			Message: "Timeout cannot be more than 180 seconds",
-		}
+
+	lang, err := s.queries.GetLanguageByName(ctx, req.Language.Value)
+	if err != nil {
+		return nil, err
 	}
-	if config.Languages[language] == nil {
-		return nil, &ExecutionServiceError{
-			Type:    "language",
-			Message: "Language not supported",
-		}
+
+	langVersion, err := s.queries.GetLanguageVersion(ctx, db.GetLanguageVersionParams{
+		LanguageID: lang.ID,
+		Version:    req.Version.Value,
+	})
+
+	if err != nil {
+		return nil, err
 	}
-	execReq.Language = language
-	execReq.LangNixPkg = config.Languages[language]["nixPackageName"]
-	scriptName := fmt.Sprintf("main.%s", config.Languages[language]["extension"])
+
+	execReq.LangNixPkg = langVersion.NixPackageName
+	execReq.Language = req.Language.Value
 	execReq.Code = req.Code.Value
 	execReq.CmdLineArgs = req.CmdLineArgs.Value
 	execReq.CompileArgs = req.CompileArgs.Value
@@ -56,7 +57,9 @@ func (s *ExecutionService) prepareExecutionRequest(req *api.ExecutionRequest) (*
 	execReq.SystemDependencies = req.Environment.Value.SystemDependencies
 	execReq.LanguageDependencies = req.Environment.Value.LanguageDependencies
 	execReq.Setup = req.Environment.Value.Setup.Value
-	execReq.ScriptName = scriptName
+	execReq.ScriptName = fmt.Sprintf("main.%s", lang.Extension)
+	execReq.Template = langVersion.Template
+	execReq.LangVersion = langVersion.ID
 
 	flake, err := s.convertExecSpecToFlake(execReq)
 	if err != nil {
@@ -70,7 +73,7 @@ func (s *ExecutionService) prepareExecutionRequest(req *api.ExecutionRequest) (*
 }
 
 func (s *ExecutionService) AddJob(ctx context.Context, req *api.ExecutionRequest) (int64, error) {
-	execReq, err := s.prepareExecutionRequest(req)
+	execReq, err := s.prepareExecutionRequest(ctx, req)
 	if err != nil {
 		return 0, err
 	}
@@ -84,7 +87,9 @@ func (s *ExecutionService) AddJob(ctx context.Context, req *api.ExecutionRequest
 	jobParams.Files = req.Files
 	jobParams.Input = execReq.Input
 	jobParams.Command = execReq.Command
-	jobParams.ProgrammingLanguage = execReq.Language
+	jobParams.LangVersion = execReq.LangVersion
+
+	s.logger.Debug().Int64("Version", jobParams.LangVersion).Msg("Language")
 
 	if !req.MaxRetries.Set {
 		jobParams.MaxRetries = s.envConfig.ODIN_MAX_RETRIES

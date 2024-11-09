@@ -2,24 +2,22 @@ type: object
 required:
   - name
   - extension
-  - defaultcode
-  - monacolanguage
-  - searchquery
+  - monaco_language
+  - default_code
 properties:
   name:
     type: string
-    description: Name of the programming language
+    description: Name of the language.
+    example: python-3.10
   extension:
     type: string
-    description: File extension for the programming language
-  defaultcode:
+    description: File extension for the language.
+    example: py
+  monaco_language:
     type: string
-    description: Default code snippet for the programming language
-  monacolanguage:
+    description: Monaco editor language identifier.
+    example: python
+  default_code:
     type: string
-    description: Monaco editor language setting for the programming language
-  searchquery:
-    type: string
-    description: >-
-      The search query to be passed to SearchLanguagePackages API for this
-      language
+    description: Default code for the language.
+    example: print('Hello, World!')
