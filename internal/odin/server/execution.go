@@ -440,22 +440,6 @@ func (s *OdinServer) GetExecutionConfig(ctx context.Context, params api.GetExecu
 	}, nil
 }
 
-func (s *OdinServer) GetAllLanguages(ctx context.Context, params api.GetAllLanguagesParams) (api.GetAllLanguagesRes, error) {
-	var languages []api.Language
-	for lang, details := range config.Languages {
-		languages = append(languages, api.Language{
-			Name:           lang,
-			Extension:      details["extension"],
-			Defaultcode:    details["defaultCode"],
-			Monacolanguage: details["monacoLanguage"],
-			Searchquery:    details["searchquery"],
-		})
-	}
-	return &api.GetAllLanguagesOK{
-		Languages: languages,
-	}, nil
-}
-
 func sendSSEMessage(w http.ResponseWriter, flusher http.Flusher, message SSEMessage) {
 	data, err := json.Marshal(message)
 	if err != nil {

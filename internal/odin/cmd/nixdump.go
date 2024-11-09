@@ -182,13 +182,13 @@ func processPaths(envConfig *config.EnvConfig) error {
 func parseLine(name, version string) *Package {
 	for language, packages := range languagePackages {
 		for _, pkg := range packages {
-			fullPackageName := fmt.Sprintf("%sPackages.%s", language, pkg)
+			fullPackageName := fmt.Sprintf("%s.%s", language, pkg)
 			if name == fullPackageName {
 				return &Package{
 					Name:     pkg,
 					Version:  version,
 					pkgType:  "language",
-					Language: fmt.Sprintf("%sPackages", language),
+					Language: language,
 				}
 			}
 		}
