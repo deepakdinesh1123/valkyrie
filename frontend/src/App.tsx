@@ -128,8 +128,8 @@ const App: React.FC = () => {
         environment: {
           systemDependencies: selectedSystemDependencies,
           languageDependencies: selectedLanguageDependencies,
-          args: args
-        }
+        },
+        cmdLineArgs:args
       });
     } else {
     }

@@ -77,6 +77,7 @@ type LanguageVersion struct {
 	NixPackageName string `db:"nix_package_name" json:"nix_package_name"`
 	Template       string `db:"template" json:"template"`
 	SearchQuery    string `db:"search_query" json:"search_query"`
+	DefaultVersion bool   `db:"default_version" json:"default_version"`
 }
 
 type Package struct {
