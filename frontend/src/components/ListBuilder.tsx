@@ -45,7 +45,7 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
       debouncedSearchChange(searchTerm);
       noResultsTimer = setTimeout(() => {
         setShowNoResults(true);
-      }, 1000); // Delay of 1 second before showing "No results"
+      }, 500);
     }
     return () => {
       debouncedSearchChange.cancel();
@@ -57,6 +57,7 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
     if (resetTrigger !== undefined) {
       setSelectedItems([]);
       setSearchTerm("");
+      setIsSearching(false);
       setShowNoResults(false);
       onSelectionChange([]);
       onSearchChange("");
@@ -73,24 +74,28 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
         onSelectionChange(updatedSelectedItems);
         setSearchTerm("");
       }
+      nonExistingPackages = [];
     }
   }, [nonExistingPackages, selectedItems, onSelectionChange]);
 
   const filteredItems = useMemo(() => {
-    if (searchTerm === "") {
-      return items.filter(item => !selectedItems.includes(item.name));
+    let baseItems = items;
+
+    if (searchTerm) {
+      baseItems = items.filter(item =>
+        item.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
-    return items.filter(
-      (item) =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !selectedItems.includes(item.name)
-    );
-  }, [items, searchTerm, selectedItems]);
+
+    return baseItems;
+  }, [items, searchTerm]);
 
   const handleSelect = (item: { name: string; version: string }) => {
-    const newSelectedItems = [...selectedItems, item.name];
-    setSelectedItems(newSelectedItems);
-    onSelectionChange(newSelectedItems);
+    if (!selectedItems.includes(item.name)) {
+      const newSelectedItems = [...selectedItems, item.name];
+      setSelectedItems(newSelectedItems);
+      onSelectionChange(newSelectedItems);
+    }
   };
 
   const handleRemove = (itemName: string) => {
@@ -118,6 +123,7 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
           size={20}
         />
       </div>
+      
       <div className="mb-4 flex flex-wrap gap-2">
         {selectedItems.map((itemName) => (
           <Badge
@@ -132,32 +138,42 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
               onClick={() => handleRemove(itemName)}
               className="h-5 w-5 p-0 hover:bg-red-100 hover:text-black rounded-full bg-neutral-800"
             >
-              <X size={14} className="text-gray-500 hover:text-black-500" />
+              <X size={14} className="text-gray-500 hover:text-black" />
             </Button>
           </Badge>
         ))}
       </div>
-      {searchTerm !== "" && (
+
+      {items.length === 0 ? (
+        <div className="pl-2">No Packages Available..</div>
+      ) : searchTerm !== "" || filteredItems.length > 0 ? (
         isSearching ? (
           <div className="pl-2">Searching...</div>
         ) : filteredItems.length === 0 && showNoResults ? (
-          <div className="pl-2">No results...</div>
-        ) : filteredItems.length > 0 && (
+          <div className="pl-2">No results found</div>
+        ) : (
           <div className="bg-neutral-900 text-white shadow-md rounded-md overflow-hidden">
             <ul className="max-h-40 overflow-y-auto">
               {filteredItems.map((item) => (
                 <li
                   key={item.name}
-                  className="px-4 py-2 hover:bg-gray-200 hover:text-black cursor-pointer"
-                  onClick={() => handleSelect(item)}
+                  className={`px-4 py-2 ${selectedItems.includes(item.name)
+                      ? "text-gray-400 cursor-not-allowed bg-stone-700"
+                      : "hover:bg-gray-200 hover:text-black cursor-pointer"
+                    }`}
+                  onClick={() =>
+                    !selectedItems.includes(item.name) && handleSelect(item)
+                  }
                 >
-                  {`${item.name}`}
+                  <div className="flex items-center gap-2 justify-between">
+                    {item.name} <span style={{ fontSize: '0.9em' }}>{item.version}</span>
+                  </div>
                 </li>
               ))}
             </ul>
           </div>
         )
-      )}
+      ) : null}
     </div>
   );
 };

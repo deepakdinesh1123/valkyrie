@@ -71,5 +71,29 @@ create table if not exists packages (
     version text not null,
     pkgType text not null,
     language text,
+    store_path text,
     tsv_search TSVECTOR
-)
+);
+
+create sequence languages_id_seq as bigint;
+
+CREATE TABLE languages (
+    id bigint PRIMARY KEY DEFAULT nextval('languages_id_seq'),
+    name TEXT NOT NULL UNIQUE,                  
+    extension TEXT NOT NULL,                    
+    monaco_language TEXT NOT NULL,
+    default_code TEXT NOT NULL                    
+);
+
+create sequence language_versions_id_seq as bigint;
+
+CREATE TABLE language_versions (
+    id bigint PRIMARY KEY DEFAULT nextval('language_versions_id_seq'),
+    language_id BIGINT NOT NULL REFERENCES languages (id) ON DELETE CASCADE,
+    version TEXT NOT NULL,
+    nix_package_name TEXT NOT NULL,             
+    flake_template TEXT NOT NULL,
+    script_template TEXT NOT NULL,                                                  
+    search_query TEXT NOT NULL,                           
+    UNIQUE (language_id, version)               
+);

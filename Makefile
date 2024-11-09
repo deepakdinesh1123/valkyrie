@@ -71,23 +71,7 @@ add-pkgs:
 
 # Store packages in the database
 store-pkgs:
-	@packages=$$(psql ${POSTGRES_URL} -t -c "SELECT id, name, language FROM packages;"); \
-	if [ -z "$$packages" ]; then \
-		echo "No packages found in the database."; \
-		exit 0; \
-	fi; \
-	while IFS="|" read -r id name language; do \
-		name=$$(echo $$name | xargs); \
-		language=$$(echo $$language | xargs); \
-		if [ -z "$$language" ]; then \
-			echo "Running nix-shell for $$name (type: system)..."; \
-			nix-shell -p $$name --run "exit"; \
-		else \
-			echo "Running nix-shell for $$language.$$name (type: language)..."; \
-			nix-shell -p $$language.$$name --run "exit"; \
-		fi; \
-	done <<< "$$packages"; \
-	echo "All packages processed successfully."
+	@hack/store-pkgs.sh
 
 # Dump package versions
 dump:
@@ -95,7 +79,7 @@ dump:
 		echo "Error: Please specify a version (e.g., make dump 24.05)"; \
 		exit 1; \
 	fi
-	./hack/packages.sh $(filter-out $@,$(MAKECMDGOALS))
+	@hack/packages.sh $(filter-out $@,$(MAKECMDGOALS))
 
 # Catch-all target to suppress errors for non-existent targets
 %:

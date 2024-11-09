@@ -22,6 +22,24 @@ func (UnimplementedHandler) CancelExecutionJob(ctx context.Context, params Cance
 	return r, ht.ErrNotImplemented
 }
 
+// CreateLanguage implements createLanguage operation.
+//
+// Create a new language entry in the database.
+//
+// POST /languages/create
+func (UnimplementedHandler) CreateLanguage(ctx context.Context, req *Language, params CreateLanguageParams) (r CreateLanguageRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// CreateLanguageVersion implements createLanguageVersion operation.
+//
+// Create a new language version entry in the database.
+//
+// POST /language-versions/create
+func (UnimplementedHandler) CreateLanguageVersion(ctx context.Context, req *LanguageVersion, params CreateLanguageVersionParams) (r CreateLanguageVersionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // DeleteExecutionJob implements deleteExecutionJob operation.
 //
 // Delete execution job.
@@ -40,12 +58,48 @@ func (UnimplementedHandler) DeleteExecutionWorker(ctx context.Context, params De
 	return r, ht.ErrNotImplemented
 }
 
+// DeleteLanguage implements deleteLanguage operation.
+//
+// Delete a specific language by its ID.
+//
+// DELETE /languages/{id}
+func (UnimplementedHandler) DeleteLanguage(ctx context.Context, params DeleteLanguageParams) (r DeleteLanguageRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// DeleteLanguageVersion implements deleteLanguageVersion operation.
+//
+// Delete a specific language version by its ID.
+//
+// DELETE /language-versions/{id}
+func (UnimplementedHandler) DeleteLanguageVersion(ctx context.Context, params DeleteLanguageVersionParams) (r DeleteLanguageVersionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // Execute implements execute operation.
 //
 // Execute a script.
 //
 // POST /executions/execute
 func (UnimplementedHandler) Execute(ctx context.Context, req *ExecutionRequest, params ExecuteParams) (r ExecuteRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// FetchLanguagePackages implements FetchLanguagePackages operation.
+//
+// Initialize the search results content with a default set of language specific packages.
+//
+// GET /fetch/language
+func (UnimplementedHandler) FetchLanguagePackages(ctx context.Context, params FetchLanguagePackagesParams) (r FetchLanguagePackagesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// FetchSystemPackages implements FetchSystemPackages operation.
+//
+// Initialize the search results content with a default set of system packages.
+//
+// GET /fetch/system
+func (UnimplementedHandler) FetchSystemPackages(ctx context.Context, params FetchSystemPackagesParams) (r FetchSystemPackagesRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -67,12 +121,30 @@ func (UnimplementedHandler) GetAllExecutions(ctx context.Context, params GetAllE
 	return r, ht.ErrNotImplemented
 }
 
+// GetAllLanguageVersions implements getAllLanguageVersions operation.
+//
+// Retrieve a list of all language versions from the database.
+//
+// GET /language-versions
+func (UnimplementedHandler) GetAllLanguageVersions(ctx context.Context, params GetAllLanguageVersionsParams) (r GetAllLanguageVersionsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetAllLanguages implements getAllLanguages operation.
 //
-// Get all languages.
+// Retrieve a list of all languages from the database.
 //
 // GET /languages
 func (UnimplementedHandler) GetAllLanguages(ctx context.Context, params GetAllLanguagesParams) (r GetAllLanguagesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetAllVersions implements getAllVersions operation.
+//
+// Retrieve a list of all language versions from the database.
+//
+// GET /languages/{id}/versions
+func (UnimplementedHandler) GetAllVersions(ctx context.Context, params GetAllVersionsParams) (r GetAllVersionsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -121,6 +193,24 @@ func (UnimplementedHandler) GetExecutionsForJob(ctx context.Context, params GetE
 	return r, ht.ErrNotImplemented
 }
 
+// GetLanguageById implements getLanguageById operation.
+//
+// Retrieve a language entry from the database using its ID.
+//
+// GET /languages/{id}
+func (UnimplementedHandler) GetLanguageById(ctx context.Context, params GetLanguageByIdParams) (r GetLanguageByIdRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetLanguageVersionById implements getLanguageVersionById operation.
+//
+// Retrieve a language version entry from the database using its ID.
+//
+// GET /language-versions/{id}
+func (UnimplementedHandler) GetLanguageVersionById(ctx context.Context, params GetLanguageVersionByIdParams) (r GetLanguageVersionByIdRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetVersion implements getVersion operation.
 //
 // Get version.
@@ -135,7 +225,7 @@ func (UnimplementedHandler) GetVersion(ctx context.Context, params GetVersionPar
 // Verify the package list is available for the language version while switching between language
 // versions.
 //
-// POST /packages/exist/
+// POST /packages/exist
 func (UnimplementedHandler) PackagesExist(ctx context.Context, req *PackageExistRequest, params PackagesExistParams) (r PackagesExistRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
@@ -155,5 +245,23 @@ func (UnimplementedHandler) SearchLanguagePackages(ctx context.Context, params S
 //
 // GET /search/system
 func (UnimplementedHandler) SearchSystemPackages(ctx context.Context, params SearchSystemPackagesParams) (r SearchSystemPackagesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UpdateLanguage implements updateLanguage operation.
+//
+// Update the details of a specific language by its ID.
+//
+// PUT /languages/{id}
+func (UnimplementedHandler) UpdateLanguage(ctx context.Context, req *Language, params UpdateLanguageParams) (r UpdateLanguageRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UpdateLanguageVersion implements updateLanguageVersion operation.
+//
+// Update the details of a specific language version by its ID.
+//
+// PUT /language-versions/{id}
+func (UnimplementedHandler) UpdateLanguageVersion(ctx context.Context, req *LanguageVersion, params UpdateLanguageVersionParams) (r UpdateLanguageVersionRes, _ error) {
 	return r, ht.ErrNotImplemented
 }

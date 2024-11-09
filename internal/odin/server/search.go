@@ -72,3 +72,42 @@ func (s *OdinServer) PackagesExist(ctx context.Context, req *api.PackageExistReq
 
 	return &response, nil
 }
+
+// FetchLanguagePackages implements api.Handler.
+func (s *OdinServer) FetchLanguagePackages(ctx context.Context, params api.FetchLanguagePackagesParams) (api.FetchLanguagePackagesRes, error) {
+	packages, err := s.queries.FetchLanguagePackages(ctx, params.Language)
+	if err != nil {
+		return &api.FetchLanguagePackagesBadRequest{}, err
+	}
+
+	results := make([]api.Package, len(packages))
+	for i, pkg := range packages {
+		results[i] = api.Package{
+			Name:    pkg.Name,
+			Version: pkg.Version,
+		}
+	}
+
+	return &api.FetchLanguagePackagesOK{
+		Packages: results,
+	}, nil
+}
+
+// FetchSystemPackages implements api.Handler.
+func (s *OdinServer) FetchSystemPackages(ctx context.Context, params api.FetchSystemPackagesParams) (api.FetchSystemPackagesRes, error) {
+	packages, err := s.queries.FetchSystemPackages(ctx)
+	if err != nil {
+		return &api.FetchSystemPackagesBadRequest{}, err
+	}
+
+	results := make([]api.Package, len(packages))
+	for i, pkg := range packages {
+		results[i] = api.Package{
+			Name:    pkg.Name,
+			Version: pkg.Version,
+		}
+	}
+	return &api.FetchSystemPackagesOK{
+		Packages: results,
+	}, nil
+}

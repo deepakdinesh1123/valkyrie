@@ -259,6 +259,63 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				}
 
 				elem = origElem
+			case 'f': // Prefix: "fetch/"
+				origElem := elem
+				if l := len("fetch/"); len(elem) >= l && elem[0:l] == "fetch/" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					break
+				}
+				switch elem[0] {
+				case 'l': // Prefix: "language"
+					origElem := elem
+					if l := len("language"); len(elem) >= l && elem[0:l] == "language" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch r.Method {
+						case "GET":
+							s.handleFetchLanguagePackagesRequest([0]string{}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, "GET")
+						}
+
+						return
+					}
+
+					elem = origElem
+				case 's': // Prefix: "system"
+					origElem := elem
+					if l := len("system"); len(elem) >= l && elem[0:l] == "system" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch r.Method {
+						case "GET":
+							s.handleFetchSystemPackagesRequest([0]string{}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, "GET")
+						}
+
+						return
+					}
+
+					elem = origElem
+				}
+
+				elem = origElem
 			case 'j': // Prefix: "jobs/"
 				origElem := elem
 				if l := len("jobs/"); len(elem) >= l && elem[0:l] == "jobs/" {
@@ -332,30 +389,220 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				}
 
 				elem = origElem
-			case 'l': // Prefix: "languages"
+			case 'l': // Prefix: "language"
 				origElem := elem
-				if l := len("languages"); len(elem) >= l && elem[0:l] == "languages" {
+				if l := len("language"); len(elem) >= l && elem[0:l] == "language" {
 					elem = elem[l:]
 				} else {
 					break
 				}
 
 				if len(elem) == 0 {
-					// Leaf node.
-					switch r.Method {
-					case "GET":
-						s.handleGetAllLanguagesRequest([0]string{}, elemIsEscaped, w, r)
-					default:
-						s.notAllowed(w, r, "GET")
+					break
+				}
+				switch elem[0] {
+				case '-': // Prefix: "-versions"
+					origElem := elem
+					if l := len("-versions"); len(elem) >= l && elem[0:l] == "-versions" {
+						elem = elem[l:]
+					} else {
+						break
 					}
 
-					return
+					if len(elem) == 0 {
+						switch r.Method {
+						case "GET":
+							s.handleGetAllLanguageVersionsRequest([0]string{}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, "GET")
+						}
+
+						return
+					}
+					switch elem[0] {
+					case '/': // Prefix: "/"
+						origElem := elem
+						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							break
+						}
+						switch elem[0] {
+						case 'c': // Prefix: "create"
+							origElem := elem
+							if l := len("create"); len(elem) >= l && elem[0:l] == "create" {
+								elem = elem[l:]
+							} else {
+								break
+							}
+
+							if len(elem) == 0 {
+								// Leaf node.
+								switch r.Method {
+								case "POST":
+									s.handleCreateLanguageVersionRequest([0]string{}, elemIsEscaped, w, r)
+								default:
+									s.notAllowed(w, r, "POST")
+								}
+
+								return
+							}
+
+							elem = origElem
+						}
+						// Param: "id"
+						// Leaf parameter
+						args[0] = elem
+						elem = ""
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch r.Method {
+							case "DELETE":
+								s.handleDeleteLanguageVersionRequest([1]string{
+									args[0],
+								}, elemIsEscaped, w, r)
+							case "GET":
+								s.handleGetLanguageVersionByIdRequest([1]string{
+									args[0],
+								}, elemIsEscaped, w, r)
+							case "PUT":
+								s.handleUpdateLanguageVersionRequest([1]string{
+									args[0],
+								}, elemIsEscaped, w, r)
+							default:
+								s.notAllowed(w, r, "DELETE,GET,PUT")
+							}
+
+							return
+						}
+
+						elem = origElem
+					}
+
+					elem = origElem
+				case 's': // Prefix: "s"
+					origElem := elem
+					if l := len("s"); len(elem) >= l && elem[0:l] == "s" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						switch r.Method {
+						case "GET":
+							s.handleGetAllLanguagesRequest([0]string{}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, "GET")
+						}
+
+						return
+					}
+					switch elem[0] {
+					case '/': // Prefix: "/"
+						origElem := elem
+						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							break
+						}
+						switch elem[0] {
+						case 'c': // Prefix: "create"
+							origElem := elem
+							if l := len("create"); len(elem) >= l && elem[0:l] == "create" {
+								elem = elem[l:]
+							} else {
+								break
+							}
+
+							if len(elem) == 0 {
+								// Leaf node.
+								switch r.Method {
+								case "POST":
+									s.handleCreateLanguageRequest([0]string{}, elemIsEscaped, w, r)
+								default:
+									s.notAllowed(w, r, "POST")
+								}
+
+								return
+							}
+
+							elem = origElem
+						}
+						// Param: "id"
+						// Match until "/"
+						idx := strings.IndexByte(elem, '/')
+						if idx < 0 {
+							idx = len(elem)
+						}
+						args[0] = elem[:idx]
+						elem = elem[idx:]
+
+						if len(elem) == 0 {
+							switch r.Method {
+							case "DELETE":
+								s.handleDeleteLanguageRequest([1]string{
+									args[0],
+								}, elemIsEscaped, w, r)
+							case "GET":
+								s.handleGetLanguageByIdRequest([1]string{
+									args[0],
+								}, elemIsEscaped, w, r)
+							case "PUT":
+								s.handleUpdateLanguageRequest([1]string{
+									args[0],
+								}, elemIsEscaped, w, r)
+							default:
+								s.notAllowed(w, r, "DELETE,GET,PUT")
+							}
+
+							return
+						}
+						switch elem[0] {
+						case '/': // Prefix: "/versions"
+							origElem := elem
+							if l := len("/versions"); len(elem) >= l && elem[0:l] == "/versions" {
+								elem = elem[l:]
+							} else {
+								break
+							}
+
+							if len(elem) == 0 {
+								// Leaf node.
+								switch r.Method {
+								case "GET":
+									s.handleGetAllVersionsRequest([1]string{
+										args[0],
+									}, elemIsEscaped, w, r)
+								default:
+									s.notAllowed(w, r, "GET")
+								}
+
+								return
+							}
+
+							elem = origElem
+						}
+
+						elem = origElem
+					}
+
+					elem = origElem
 				}
 
 				elem = origElem
-			case 'p': // Prefix: "packages/exist/"
+			case 'p': // Prefix: "packages/exist"
 				origElem := elem
-				if l := len("packages/exist/"); len(elem) >= l && elem[0:l] == "packages/exist/" {
+				if l := len("packages/exist"); len(elem) >= l && elem[0:l] == "packages/exist" {
 					elem = elem[l:]
 				} else {
 					break
@@ -775,6 +1022,71 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 				}
 
 				elem = origElem
+			case 'f': // Prefix: "fetch/"
+				origElem := elem
+				if l := len("fetch/"); len(elem) >= l && elem[0:l] == "fetch/" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					break
+				}
+				switch elem[0] {
+				case 'l': // Prefix: "language"
+					origElem := elem
+					if l := len("language"); len(elem) >= l && elem[0:l] == "language" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch method {
+						case "GET":
+							r.name = "FetchLanguagePackages"
+							r.summary = "Fetch inital list of available language packages"
+							r.operationID = "FetchLanguagePackages"
+							r.pathPattern = "/fetch/language"
+							r.args = args
+							r.count = 0
+							return r, true
+						default:
+							return
+						}
+					}
+
+					elem = origElem
+				case 's': // Prefix: "system"
+					origElem := elem
+					if l := len("system"); len(elem) >= l && elem[0:l] == "system" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch method {
+						case "GET":
+							r.name = "FetchSystemPackages"
+							r.summary = "Fetch inital list of available system packages"
+							r.operationID = "FetchSystemPackages"
+							r.pathPattern = "/fetch/system"
+							r.args = args
+							r.count = 0
+							return r, true
+						default:
+							return
+						}
+					}
+
+					elem = origElem
+				}
+
+				elem = origElem
 			case 'j': // Prefix: "jobs/"
 				origElem := elem
 				if l := len("jobs/"); len(elem) >= l && elem[0:l] == "jobs/" {
@@ -854,34 +1166,258 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 				}
 
 				elem = origElem
-			case 'l': // Prefix: "languages"
+			case 'l': // Prefix: "language"
 				origElem := elem
-				if l := len("languages"); len(elem) >= l && elem[0:l] == "languages" {
+				if l := len("language"); len(elem) >= l && elem[0:l] == "language" {
 					elem = elem[l:]
 				} else {
 					break
 				}
 
 				if len(elem) == 0 {
-					// Leaf node.
-					switch method {
-					case "GET":
-						r.name = "GetAllLanguages"
-						r.summary = "Get all languages"
-						r.operationID = "getAllLanguages"
-						r.pathPattern = "/languages"
-						r.args = args
-						r.count = 0
-						return r, true
-					default:
-						return
+					break
+				}
+				switch elem[0] {
+				case '-': // Prefix: "-versions"
+					origElem := elem
+					if l := len("-versions"); len(elem) >= l && elem[0:l] == "-versions" {
+						elem = elem[l:]
+					} else {
+						break
 					}
+
+					if len(elem) == 0 {
+						switch method {
+						case "GET":
+							r.name = "GetAllLanguageVersions"
+							r.summary = "Get all language versions"
+							r.operationID = "getAllLanguageVersions"
+							r.pathPattern = "/language-versions"
+							r.args = args
+							r.count = 0
+							return r, true
+						default:
+							return
+						}
+					}
+					switch elem[0] {
+					case '/': // Prefix: "/"
+						origElem := elem
+						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							break
+						}
+						switch elem[0] {
+						case 'c': // Prefix: "create"
+							origElem := elem
+							if l := len("create"); len(elem) >= l && elem[0:l] == "create" {
+								elem = elem[l:]
+							} else {
+								break
+							}
+
+							if len(elem) == 0 {
+								// Leaf node.
+								switch method {
+								case "POST":
+									r.name = "CreateLanguageVersion"
+									r.summary = "Create a language version"
+									r.operationID = "createLanguageVersion"
+									r.pathPattern = "/language-versions/create"
+									r.args = args
+									r.count = 0
+									return r, true
+								default:
+									return
+								}
+							}
+
+							elem = origElem
+						}
+						// Param: "id"
+						// Leaf parameter
+						args[0] = elem
+						elem = ""
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch method {
+							case "DELETE":
+								r.name = "DeleteLanguageVersion"
+								r.summary = "Delete a language version"
+								r.operationID = "deleteLanguageVersion"
+								r.pathPattern = "/language-versions/{id}"
+								r.args = args
+								r.count = 1
+								return r, true
+							case "GET":
+								r.name = "GetLanguageVersionById"
+								r.summary = "Get language version by ID"
+								r.operationID = "getLanguageVersionById"
+								r.pathPattern = "/language-versions/{id}"
+								r.args = args
+								r.count = 1
+								return r, true
+							case "PUT":
+								r.name = "UpdateLanguageVersion"
+								r.summary = "Update a language version"
+								r.operationID = "updateLanguageVersion"
+								r.pathPattern = "/language-versions/{id}"
+								r.args = args
+								r.count = 1
+								return r, true
+							default:
+								return
+							}
+						}
+
+						elem = origElem
+					}
+
+					elem = origElem
+				case 's': // Prefix: "s"
+					origElem := elem
+					if l := len("s"); len(elem) >= l && elem[0:l] == "s" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						switch method {
+						case "GET":
+							r.name = "GetAllLanguages"
+							r.summary = "Get all languages"
+							r.operationID = "getAllLanguages"
+							r.pathPattern = "/languages"
+							r.args = args
+							r.count = 0
+							return r, true
+						default:
+							return
+						}
+					}
+					switch elem[0] {
+					case '/': // Prefix: "/"
+						origElem := elem
+						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							break
+						}
+						switch elem[0] {
+						case 'c': // Prefix: "create"
+							origElem := elem
+							if l := len("create"); len(elem) >= l && elem[0:l] == "create" {
+								elem = elem[l:]
+							} else {
+								break
+							}
+
+							if len(elem) == 0 {
+								// Leaf node.
+								switch method {
+								case "POST":
+									r.name = "CreateLanguage"
+									r.summary = "Create a language"
+									r.operationID = "createLanguage"
+									r.pathPattern = "/languages/create"
+									r.args = args
+									r.count = 0
+									return r, true
+								default:
+									return
+								}
+							}
+
+							elem = origElem
+						}
+						// Param: "id"
+						// Match until "/"
+						idx := strings.IndexByte(elem, '/')
+						if idx < 0 {
+							idx = len(elem)
+						}
+						args[0] = elem[:idx]
+						elem = elem[idx:]
+
+						if len(elem) == 0 {
+							switch method {
+							case "DELETE":
+								r.name = "DeleteLanguage"
+								r.summary = "Delete a language"
+								r.operationID = "deleteLanguage"
+								r.pathPattern = "/languages/{id}"
+								r.args = args
+								r.count = 1
+								return r, true
+							case "GET":
+								r.name = "GetLanguageById"
+								r.summary = "Get language by ID"
+								r.operationID = "getLanguageById"
+								r.pathPattern = "/languages/{id}"
+								r.args = args
+								r.count = 1
+								return r, true
+							case "PUT":
+								r.name = "UpdateLanguage"
+								r.summary = "Update a language"
+								r.operationID = "updateLanguage"
+								r.pathPattern = "/languages/{id}"
+								r.args = args
+								r.count = 1
+								return r, true
+							default:
+								return
+							}
+						}
+						switch elem[0] {
+						case '/': // Prefix: "/versions"
+							origElem := elem
+							if l := len("/versions"); len(elem) >= l && elem[0:l] == "/versions" {
+								elem = elem[l:]
+							} else {
+								break
+							}
+
+							if len(elem) == 0 {
+								// Leaf node.
+								switch method {
+								case "GET":
+									r.name = "GetAllVersions"
+									r.summary = "Get all language versions"
+									r.operationID = "getAllVersions"
+									r.pathPattern = "/languages/{id}/versions"
+									r.args = args
+									r.count = 1
+									return r, true
+								default:
+									return
+								}
+							}
+
+							elem = origElem
+						}
+
+						elem = origElem
+					}
+
+					elem = origElem
 				}
 
 				elem = origElem
-			case 'p': // Prefix: "packages/exist/"
+			case 'p': // Prefix: "packages/exist"
 				origElem := elem
-				if l := len("packages/exist/"); len(elem) >= l && elem[0:l] == "packages/exist/" {
+				if l := len("packages/exist"); len(elem) >= l && elem[0:l] == "packages/exist" {
 					elem = elem[l:]
 				} else {
 					break
@@ -894,7 +1430,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						r.name = "PackagesExist"
 						r.summary = "Verify package list is available."
 						r.operationID = "PackagesExist"
-						r.pathPattern = "/packages/exist/"
+						r.pathPattern = "/packages/exist"
 						r.args = args
 						r.count = 0
 						return r, true
