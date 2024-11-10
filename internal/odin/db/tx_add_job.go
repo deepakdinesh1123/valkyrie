@@ -41,14 +41,14 @@ func (s *SQLStore) AddJobTx(ctx context.Context, arg AddJobTxParams) (AddJobTxRe
 				execId, err = s.InsertExecRequest(ctx, InsertExecRequestParams{
 					Hash:                 arg.Hash,
 					Code:                 pgtype.Text{String: arg.Code, Valid: true},
-					LanguageDependencies: execReq.LanguageDependencies,
-					SystemDependencies:   execReq.SystemDependencies,
+					LanguageDependencies: arg.LanguageDependencies,
+					SystemDependencies:   arg.SystemDependencies,
 					Flake:                arg.Flake,
 					CmdLineArgs:          pgtype.Text{String: arg.CmdLineArgs, Valid: true},
 					CompileArgs:          pgtype.Text{String: arg.CompileArgs, Valid: true},
 					Command:              pgtype.Text{String: arg.Command, Valid: true},
 					LanguageVersion:      arg.LangVersion,
-					Setup:                execReq.Setup,
+					Setup:                pgtype.Text{String: arg.Setup, Valid: true},
 					Files:                arg.Files,
 				})
 				if err != nil {

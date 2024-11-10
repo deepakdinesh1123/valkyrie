@@ -142,7 +142,11 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 					Status: "scheduled",
 					ExecID: execId,
 				})
-
+			case "cancelled":
+				sendSSEMessage(w, flusher, SSEMessage{
+					Status: "canceled",
+					ExecID: execId,
+				})
 			default:
 				s.logger.Warn().Str("status", job.CurrentState).Msg("Unknown status")
 			}

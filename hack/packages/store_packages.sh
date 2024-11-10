@@ -9,6 +9,9 @@ get_command_name() {
     local pkg_name=$1
     case $pkg_name in
         "nodejs_22"|"nodejs_20"|"nodejs_18") echo "node" ;;
+        "go_1_23" | "go_1_22" | "go_1_21") echo "go" ;;
+        "php83" | "php81") echo "php" ;;
+        "ruby_3_2"  | "ruby_3_3") echo "ruby" ;;
         "gnutar") echo "tar" ;;
         "gnused") echo "sed" ;;
         "gnumake") echo "make" ;;

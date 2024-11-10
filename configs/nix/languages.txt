@@ -1,0 +1,5 @@
+python311Packages, requests, numpy,openai,opencv4,openllm,openapi3,openaiauth,openapi-core,openllm-client,sshtunnel,sslib, mathlibtools,random2,stringly,stringcase,stringparser,stringbrewer,datauri,datatable,dataproperty,html5lib,html5tagger,html-tag-names,html-text,beautifulsoup4,selenium,selenium-wire pandas, scipy, scikit-learn, matplotlib, tensorflow, pytorch-lightning, statsmodels, nltk, gensim, openpyxl, lxml, sqlalchemy, pyyAML, pytest, pydantic, asyncio, regex, tqdm, jinja2, attrs, jsonschema, cryptography, cx_Oracle, pymongo, h5py, pytest-bdd, fastparquet
+lua52Packages, luazip,say,toml,lpeg,fifo,luxio,luuid,ldbus,cosmo,cjson,sqlite
+rubyPackages, sqlite3,os,uri,nap,re2,git,ffi,json,redis,uuid4r
+rubyPackages_3_3, sqlite3,os,uri,nap,re2,git,ffi,json,redis,uuid4r
+rubyPackages_3_2, sqlite3,os,uri,nap,re2,git,ffi,json,redis,uuid4r

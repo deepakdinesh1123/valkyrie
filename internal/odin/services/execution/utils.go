@@ -51,6 +51,9 @@ func ConvertExecSpecToNixScript(ctx context.Context, execReq *db.ExecRequest, qu
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to execute template")
 	}
+
+	fmt.Println("The nix script is\n", res.String())
+
 	return res.String(), &execSpec, nil
 }
 
