@@ -1,2 +1,2 @@
-{{ define "compile" }} rustc main.rs {{ end }} 
+{{ define "compile" }} rustc main.rs {{ .CompileArgs }} {{ end }} 
 {{ define "execute" }} ./main {{ end }}

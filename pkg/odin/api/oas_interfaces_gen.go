@@ -17,10 +17,6 @@ type DeleteExecutionJobRes interface {
 	deleteExecutionJobRes()
 }
 
-type DeleteExecutionWorkerRes interface {
-	deleteExecutionWorkerRes()
-}
-
 type DeleteLanguageRes interface {
 	deleteLanguageRes()
 }
@@ -71,10 +67,6 @@ type GetExecutionJobByIdRes interface {
 
 type GetExecutionResultByIdRes interface {
 	getExecutionResultByIdRes()
-}
-
-type GetExecutionWorkersRes interface {
-	getExecutionWorkersRes()
 }
 
 type GetExecutionsForJobRes interface {

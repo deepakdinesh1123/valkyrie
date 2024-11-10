@@ -104,11 +104,6 @@ const App: React.FC = () => {
     resetOnNewLanguage(language);
   }, [resetOnNewLanguage]);
 
-  useEffect(() => {
-    console.log("Updated existsResponse:", existsResponse);
-  }, [existsResponse]);
-  
-
   const handleVersionChange = useCallback((version: LanguageVersion) => {
     if (version !== selectedLanguageVersion) {
       setPendingVersionChange(version); 
@@ -128,8 +123,8 @@ const App: React.FC = () => {
         environment: {
           systemDependencies: selectedSystemDependencies,
           languageDependencies: selectedLanguageDependencies,
-          args: args
-        }
+        },
+        cmdLineArgs:args
       });
     } else {
     }

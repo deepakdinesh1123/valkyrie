@@ -9,6 +9,9 @@ get_command_name() {
     local pkg_name=$1
     case $pkg_name in
         "nodejs_22"|"nodejs_20"|"nodejs_18") echo "node" ;;
+        "go_1_23" | "go_1_22" | "go_1_21") echo "go" ;;
+        "php83" | "php81") echo "php" ;;
+        "ruby_3_2"  | "ruby_3_3") echo "ruby" ;;
         "gnutar") echo "tar" ;;
         "gnused") echo "sed" ;;
         "gnumake") echo "make" ;;
@@ -18,6 +21,11 @@ get_command_name() {
         "sqlite") echo "sqlite3" ;;
         "rocksdb") echo "ldb" ;;
         "jmespath") echo "jp" ;;
+        "lua" | "lua5_4_compat" | "lua5_3_compat") echo "lua" ;;
+        "python311" | "python312") echo "python" ;;
+        "crystal" | "crystal_1_9") echo "crystal" ;;
+        "julia" | "julia_1_9") echo "julia" ;;
+        "perl" | "perl536") echo "perl" ;;
         *) echo "$pkg_name" ;;
     esac
 }
@@ -51,7 +59,8 @@ while IFS="|" read -r package_id name language; do
 
         if [ ! -z "$pkg_path" ]; then
             echo "Found path: $pkg_path for $name"
-            if ! psql ${POSTGRES_URL} -c "UPDATE packages SET store_path='$pkg_path' WHERE package_id='$package_id'" 2>/dev/null; then
+            pkg_dir=$(dirname $pkg_path)
+            if ! psql ${POSTGRES_URL} -c "UPDATE packages SET store_path='$pkg_dir' WHERE package_id='$package_id'" 2>/dev/null; then
                 db_update_failed+=("$name")
             fi
         else

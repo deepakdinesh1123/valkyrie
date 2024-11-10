@@ -9,14 +9,19 @@ import (
 )
 
 type ExecRequest struct {
-	ID                  int32       `db:"id" json:"id"`
-	Hash                string      `db:"hash" json:"hash"`
-	Code                string      `db:"code" json:"code"`
-	Path                string      `db:"path" json:"path"`
-	Flake               string      `db:"flake" json:"flake"`
-	NixScript           string      `db:"nix_script" json:"nix_script"`
-	Args                pgtype.Text `db:"args" json:"args"`
-	ProgrammingLanguage pgtype.Text `db:"programming_language" json:"programming_language"`
+	ID                   int32       `db:"id" json:"id"`
+	Hash                 string      `db:"hash" json:"hash"`
+	Code                 pgtype.Text `db:"code" json:"code"`
+	Flake                string      `db:"flake" json:"flake"`
+	LanguageDependencies []string    `db:"language_dependencies" json:"language_dependencies"`
+	SystemDependencies   []string    `db:"system_dependencies" json:"system_dependencies"`
+	CmdLineArgs          pgtype.Text `db:"cmd_line_args" json:"cmd_line_args"`
+	CompileArgs          pgtype.Text `db:"compile_args" json:"compile_args"`
+	Files                []byte      `db:"files" json:"files"`
+	Input                pgtype.Text `db:"input" json:"input"`
+	Command              pgtype.Text `db:"command" json:"command"`
+	Setup                pgtype.Text `db:"setup" json:"setup"`
+	LanguageVersion      int64       `db:"language_version" json:"language_version"`
 }
 
 type Execution struct {
@@ -70,9 +75,9 @@ type LanguageVersion struct {
 	LanguageID     int64  `db:"language_id" json:"language_id"`
 	Version        string `db:"version" json:"version"`
 	NixPackageName string `db:"nix_package_name" json:"nix_package_name"`
-	FlakeTemplate  string `db:"flake_template" json:"flake_template"`
-	ScriptTemplate string `db:"script_template" json:"script_template"`
+	Template       string `db:"template" json:"template"`
 	SearchQuery    string `db:"search_query" json:"search_query"`
+	DefaultVersion bool   `db:"default_version" json:"default_version"`
 }
 
 type Package struct {

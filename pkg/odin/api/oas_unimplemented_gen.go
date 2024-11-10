@@ -49,15 +49,6 @@ func (UnimplementedHandler) DeleteExecutionJob(ctx context.Context, params Delet
 	return r, ht.ErrNotImplemented
 }
 
-// DeleteExecutionWorker implements deleteExecutionWorker operation.
-//
-// Delete execution worker.
-//
-// DELETE /executions/workers/{workerId}
-func (UnimplementedHandler) DeleteExecutionWorker(ctx context.Context, params DeleteExecutionWorkerParams) (r DeleteExecutionWorkerRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
 // DeleteLanguage implements deleteLanguage operation.
 //
 // Delete a specific language by its ID.
@@ -172,15 +163,6 @@ func (UnimplementedHandler) GetExecutionJobById(ctx context.Context, params GetE
 //
 // GET /executions/{execId}
 func (UnimplementedHandler) GetExecutionResultById(ctx context.Context, params GetExecutionResultByIdParams) (r GetExecutionResultByIdRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
-// GetExecutionWorkers implements getExecutionWorkers operation.
-//
-// Get all execution workers.
-//
-// GET /executions/workers
-func (UnimplementedHandler) GetExecutionWorkers(ctx context.Context, params GetExecutionWorkersParams) (r GetExecutionWorkersRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

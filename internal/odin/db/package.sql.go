@@ -7,6 +7,8 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const fetchLanguagePackages = `-- name: FetchLanguagePackages :many
@@ -69,6 +71,37 @@ func (q *Queries) FetchSystemPackages(ctx context.Context) ([]FetchSystemPackage
 	for rows.Next() {
 		var i FetchSystemPackagesRow
 		if err := rows.Scan(&i.Name, &i.Version); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getPackageStorePaths = `-- name: GetPackageStorePaths :many
+SELECT name, store_path
+FROM packages
+WHERE name = ANY($1::text[])
+`
+
+type GetPackageStorePathsRow struct {
+	Name      string      `db:"name" json:"name"`
+	StorePath pgtype.Text `db:"store_path" json:"store_path"`
+}
+
+func (q *Queries) GetPackageStorePaths(ctx context.Context, packages []string) ([]GetPackageStorePathsRow, error) {
+	rows, err := q.db.Query(ctx, getPackageStorePaths, packages)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetPackageStorePathsRow
+	for rows.Next() {
+		var i GetPackageStorePathsRow
+		if err := rows.Scan(&i.Name, &i.StorePath); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

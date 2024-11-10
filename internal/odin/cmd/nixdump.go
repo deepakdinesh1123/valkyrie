@@ -37,8 +37,8 @@ var (
 
 func init() {
 	NixDumpCmd.Flags().StringP("channel", "c", "", "Nixpkgs channel")
-	NixDumpCmd.Flags().StringP("languages", "l", "languages.txt", "Path to the languages.txt file")
-	NixDumpCmd.Flags().StringP("systems", "s", "systempackages.txt", "Path to the systempackages.txt file")
+	NixDumpCmd.Flags().StringP("languages", "l", "configs/nix/languages.txt", "Path to the languages.txt file")
+	NixDumpCmd.Flags().StringP("systems", "s", "configs/nix/systempackages.txt", "Path to the systempackages.txt file")
 
 }
 
@@ -134,6 +134,27 @@ func processPaths(envConfig *config.EnvConfig) error {
 	}
 	defer db.Close()
 
+	_, err = os.Stat("configs/nix/packages.csv")
+	if err == nil {
+		err = os.Remove("configs/nix/packages.csv")
+		if err != nil {
+			return err
+		}
+	}
+
+	package_file, err := os.Create("configs/nix/packages.csv")
+	if err != nil {
+		return fmt.Errorf("error creating packages file")
+	}
+	defer package_file.Close()
+
+	writer := csv.NewWriter(package_file)
+	defer writer.Flush()
+
+	package_data := [][]string{
+		{"name", "type", "language"},
+	}
+
 	reader := csv.NewReader(file)
 	for {
 		record, err := reader.Read()
@@ -152,6 +173,14 @@ func processPaths(envConfig *config.EnvConfig) error {
 			if err != nil {
 				log.Printf("Error inserting package: %v\n", err)
 			}
+			package_data = append(package_data, []string{pkg.Name, pkg.pkgType, pkg.Language})
+		}
+	}
+
+	for _, row := range package_data {
+		err := writer.Write(row)
+		if err != nil {
+			log.Printf("Erorr while inserting row: %s", row)
 		}
 	}
 

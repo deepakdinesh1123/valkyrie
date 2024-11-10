@@ -3,9 +3,6 @@ allOf:
   - type: object
     required:
       - execId
-      - script
-      - flake
-      - args
       - started_at
       - finished_at
       - exec_logs
@@ -13,11 +10,7 @@ allOf:
       execId:
         type: integer
         format: int64
-      script:
-        type: string
       flake:
-        type: string
-      args:
         type: string
       started_at:
         type: string

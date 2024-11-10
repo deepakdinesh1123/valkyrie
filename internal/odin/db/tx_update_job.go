@@ -9,7 +9,7 @@ import (
 
 type UpdateJobResultTxParams struct {
 	StartTime time.Time
-	Job       Job
+	Job       *Job
 	WorkerId  int32
 	ExecLogs  string
 	NixLogs   string

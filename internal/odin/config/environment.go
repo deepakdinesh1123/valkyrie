@@ -22,15 +22,17 @@ type EnvConfig struct {
 	ODIN_SERVER_HOST string `mapstructure:"ODIN_SERVER_HOST"` // represents the host on which the Odin server will listen.
 	ODIN_SERVER_PORT string `mapstructure:"ODIN_SERVER_PORT"` // represents the port on which the Odin server will listen.
 
-	ODIN_CONTAINER_ENGINE    string `mapstructure:"ODIN_CONTAINER_ENGINE"`    // represents the container engine used to execute code.
-	ODIN_WORKER_EXECUTOR     string `mapstructure:"ODIN_WORKER_EXECUTOR"`     // represents the worker provider.
-	ODIN_WORKER_CONCURRENCY  int32  `mapstructure:"ODIN_WORKER_CONCURRENCY"`  // represents the concurrency level for the worker.
-	ODIN_HOT_CONTAINER       int    `mapstructure:"ODIN_HOT_CONTAINER"`       // represents the buffer size for the worker.
-	ODIN_WORKER_TASK_TIMEOUT int    `mapstructure:"ODIN_WORKER_TASK_TIMEOUT"` // represents the task timeout.
-	ODIN_WORKER_POLL_FREQ    int    `mapstructure:"ODIN_WORKER_POLL_FREQ"`    // represents the polling frequency for the worker in seconds.
-	ODIN_WORKER_RUNTIME      string `mapstructure:"ODIN_WORKER_RUNTIME"`      // represents the default runtime for the worker containers (e.g. runc, crun).
-	ODIN_WORKER_PODMAN_IMAGE string `mapstructure:"ODIN_WORKER_PODMAN_IMAGE"` // represents the default image for the podman worker containers.
-	ODIN_WORKER_DOCKER_IMAGE string `mapstructure:"ODIN_WORKER_DOCKER_IMAGE"` // represents the default image for the docker worker containers.
+	ODIN_CONTAINER_ENGINE       string `mapstructure:"ODIN_CONTAINER_ENGINE"` // represents the container engine used to execute code.
+	ODIN_WORKER_EXECUTOR        string `mapstructure:"ODIN_WORKER_EXECUTOR"`  // represents the worker provider.
+	ODIN_WORKER_SYSTEM_EXECUTOR string `mapstructure:"ODIN_WORKER_SYSTEM_EXECUTOR"`
+	ODIN_WORKER_CONCURRENCY     int32  `mapstructure:"ODIN_WORKER_CONCURRENCY"`  // represents the concurrency level for the worker.
+	ODIN_HOT_CONTAINER          int    `mapstructure:"ODIN_HOT_CONTAINER"`       // represents the buffer size for the worker.
+	ODIN_WORKER_TASK_TIMEOUT    int    `mapstructure:"ODIN_WORKER_TASK_TIMEOUT"` // represents the task timeout.
+	ODIN_WORKER_POLL_FREQ       int    `mapstructure:"ODIN_WORKER_POLL_FREQ"`    // represents the polling frequency for the worker in seconds.
+	ODIN_WORKER_RUNTIME         string `mapstructure:"ODIN_WORKER_RUNTIME"`      // represents the default runtime for the worker containers (e.g. runc, crun).
+	ODIN_WORKER_PODMAN_IMAGE    string `mapstructure:"ODIN_WORKER_PODMAN_IMAGE"` // represents the default image for the podman worker containers.
+	ODIN_WORKER_DOCKER_IMAGE    string `mapstructure:"ODIN_WORKER_DOCKER_IMAGE"` // represents the default image for the docker worker containers.
+	ODIN_MAX_RETRIES            int    `mapstructure:"ODIN_MAX_RETRIES"`
 
 	ODIN_WORKER_MEMORY_LIMIT int64  `mapstructure:"ODIN_WORKER_MEMORY_LIMIT"`
 	ODIN_WORKER_CPU_LIMIT    string `mapstructure:"ODIN_WORKER_CPU_LIMIT"`
@@ -51,7 +53,7 @@ type EnvConfig struct {
 
 	ODIN_JOB_PRUNE_FREQ int `mapstructure:"ODIN_JOB_PRUNE_FREQ"` // represents the job prune frequency in hours.
 
-	ODIN_SYSTEM_EXECUTOR_BASE_DIR string `mapstructure:"ODIN_SYSTEM_PROVIDER_BASE_DIR"` // represents the base directory for the system provider.
+	ODIN_SYSTEM_EXECUTOR_BASE_DIR string `mapstructure:"ODIN_SYSTEM_EXECUTOR_BASE_DIR"` // represents the base directory for the system provider.
 	ODIN_SYSTEM_EXECUTOR_CLEAN_UP bool   `mapstructure:"ODIN_SYSTEM_PROVIDER_CLEAN_UP"` // represents whether to clean up direcories created by the system provider.
 
 	ODIN_USER_TOKEN  string `mapstructure:"ODIN_USER_TOKEN"`  // represents the secret key for the server.
@@ -96,11 +98,13 @@ func GetEnvConfig() (*EnvConfig, error) {
 
 		viper.SetDefault("ODIN_CONTAINER_ENGINE", "podman")
 		viper.SetDefault("ODIN_WORKER_EXECUTOR", "system")
+		viper.SetDefault("ODIN_WORKER_SYSTEM_EXECUTOR", "native")
 		viper.SetDefault("ODIN_WORKER_CONCURRENCY", 10)
 		viper.SetDefault("ODIN_HOT_CONTAINER", 5)
 		viper.SetDefault("ODIN_WORKER_TASK_TIMEOUT", 120)
 		viper.SetDefault("ODIN_WORKER_POLL_FREQ", 1)
 		viper.SetDefault("ODIN_WORKER_RUNTIME", "runc")
+		viper.SetDefault("ODIN_MAX_RETRIES", 5)
 
 		viper.SetDefault("ODIN_WORKER_MEMORY_LIMIT", 500)
 
@@ -119,7 +123,7 @@ func GetEnvConfig() (*EnvConfig, error) {
 
 		viper.SetDefault("ODIN_LOG_LEVEL", "info")
 
-		viper.SetDefault("ODIN_WORKER_DOCKER_IMAGE", "odin")
+		viper.SetDefault("ODIN_WORKER_DOCKER_IMAGE", "odin:alpine")
 		viper.SetDefault("ODIN_WORKER_PODMAN_IMAGE", "odin:alpine")
 
 		viper.SetDefault("NIXOS_VERSION", "24.05")
@@ -151,7 +155,7 @@ func GetEnvConfig() (*EnvConfig, error) {
 		} else {
 			home_dir, err := os.UserHomeDir()
 			if err != nil {
-
+				fmt.Println(".env file not found, using defaults")
 			}
 			envConfig.USER_HOME_DIR = home_dir
 		}

@@ -1,4 +1,6 @@
-package container
+//go:build !darwin && (podman || all)
+
+package podman
 
 import (
 	"bytes"
@@ -6,59 +8,66 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sync"
 
 	"github.com/containers/podman/v5/pkg/api/handlers"
-	"github.com/containers/podman/v5/pkg/bindings"
 	"github.com/containers/podman/v5/pkg/bindings/containers"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/executor/container/common"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/pool"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/services/execution"
 	"github.com/docker/docker/api/types/container"
 	"github.com/jackc/puddle/v2"
+	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type PodmanClient struct {
 	connection context.Context
-	*ContainerExecutor
+	queries    db.Store
+	envConfig  *config.EnvConfig
+	workerId   int32
+	logger     *zerolog.Logger
+	tp         trace.TracerProvider
+	mp         metric.MeterProvider
+	// user          string
+	containerPool *puddle.Pool[pool.Container]
 }
 
-var getPodmanConnectionOnce sync.Once
-var podmanConnection context.Context
-
-func GetPodmanClient(cp *ContainerExecutor) (*PodmanClient, error) {
-	connection := getPodmanConnection()
+func GetPodmanClient(envConfig *config.EnvConfig, queries db.Store, workerId int32, tp trace.TracerProvider, mp metric.MeterProvider, logger *zerolog.Logger, containerPool *puddle.Pool[pool.Container]) (*PodmanClient, error) {
+	connection := pool.GetPodmanConnection()
 	if connection == nil {
 		return nil, fmt.Errorf("could not get podman connection")
 	}
 	return &PodmanClient{
-		connection:        connection,
-		ContainerExecutor: cp,
+		connection: connection,
+		queries:    queries,
+		envConfig:  envConfig,
+		workerId:   workerId,
+		logger:     logger,
+		tp:         tp,
+		mp:         mp,
+		// user:      user,
+		containerPool: containerPool,
 	}, nil
 }
 
-func getPodmanConnection() context.Context {
-	getPodmanConnectionOnce.Do(func() {
-		sock_dir := os.Getenv("XDG_RUNTIME_DIR")
-		socket := "unix:" + sock_dir + "/podman/podman.sock"
-		pc, err := bindings.NewConnection(context.Background(), socket)
-		if err != nil {
-			return
-		}
-		podmanConnection = pc
-	})
-	return podmanConnection
-}
-
-func (p *PodmanClient) WriteFiles(ctx context.Context, containerID string, prepDir string, job db.Job) error {
+func (p *PodmanClient) WriteFiles(ctx context.Context, containerID string, prepDir string, job *db.Job) error {
 	execReq, err := p.queries.GetExecRequest(ctx, job.ExecRequestID.Int32)
 	if err != nil {
 		return err
 	}
+	script, spec, err := execution.ConvertExecSpecToNixScript(ctx, &execReq, p.queries)
+	if err != nil {
+		return fmt.Errorf("error writing files: %s", err)
+	}
 	files := map[string]string{
-		"exec.sh":    execReq.NixScript,
-		execReq.Path: execReq.Code,
+		"exec.sh":       script,
+		spec.ScriptName: execReq.Code.String,
 	}
 
-	tarFilePath, err := CreateTarArchive(files, prepDir)
+	tarFilePath, err := common.CreateTarArchive(files, execReq.Files, prepDir)
 	if err != nil {
 		return err
 	}
@@ -86,13 +95,13 @@ func (p *PodmanClient) WriteFiles(ctx context.Context, containerID string, prepD
 	return nil
 }
 
-func (p *PodmanClient) GetContainer(ctx context.Context) (*puddle.Resource[Container], error) {
-	cont, err := p.ContainerExecutor.pool.Acquire(ctx)
+func (p *PodmanClient) GetContainer(ctx context.Context) (*puddle.Resource[pool.Container], error) {
+	cont, err := p.containerPool.Acquire(ctx)
 	if err != nil {
 		p.logger.Err(err).Msg("Error when acquiring container")
 		return nil, err
 	}
-	go p.pool.CreateResource(ctx)
+	go p.containerPool.CreateResource(ctx)
 	return cont, nil
 }
 

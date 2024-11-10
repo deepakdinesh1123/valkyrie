@@ -5,17 +5,18 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
 )
 
 // CreateLanguage implements api.Handler.
 func (s *OdinServer) CreateLanguage(ctx context.Context, req *api.Language, params api.CreateLanguageParams) (api.CreateLanguageRes, error) {
-	// user := ctx.Value(config.UserKey).(string)
+	user := ctx.Value(config.UserKey).(string)
 
-	// if user != "admin" {
-	// 	return &api.CreateLanguageForbidden{}, nil
-	// }
+	if user != "admin" {
+		return &api.CreateLanguageForbidden{}, nil
+	}
 
 	if req == nil {
 		return &api.CreateLanguageBadRequest{}, errors.New("invalid request: language is required")
@@ -46,11 +47,11 @@ func (s *OdinServer) CreateLanguage(ctx context.Context, req *api.Language, para
 
 // CreateLanguageVersion implements api.Handler.
 func (s *OdinServer) CreateLanguageVersion(ctx context.Context, req *api.LanguageVersion, params api.CreateLanguageVersionParams) (api.CreateLanguageVersionRes, error) {
-	// user := ctx.Value(config.UserKey).(string)
+	user := ctx.Value(config.UserKey).(string)
 
-	// if user != "admin" {
-	// 	return &api.CreateLanguageVersionForbidden{}, nil
-	// }
+	if user != "admin" {
+		return &api.CreateLanguageVersionForbidden{}, nil
+	}
 
 	if req == nil {
 		return &api.CreateLanguageVersionBadRequest{}, errors.New("invalid request: language is required")
@@ -60,9 +61,9 @@ func (s *OdinServer) CreateLanguageVersion(ctx context.Context, req *api.Languag
 		LanguageID:     req.LanguageID,
 		Version:        req.Version,
 		NixPackageName: req.NixPackageName,
-		FlakeTemplate:  req.FlakeTemplate,
-		ScriptTemplate: req.ScriptTemplate,
+		Template:       req.Template,
 		SearchQuery:    req.SearchQuery,
+		DefaultVersion: req.DefaultVersion,
 	}
 
 	id, err := s.queries.CreateLanguageVersion(ctx, dbParams)
@@ -76,20 +77,20 @@ func (s *OdinServer) CreateLanguageVersion(ctx context.Context, req *api.Languag
 			LanguageID:     req.LanguageID,
 			Version:        req.Version,
 			NixPackageName: req.NixPackageName,
-			FlakeTemplate:  req.FlakeTemplate,
-			ScriptTemplate: req.ScriptTemplate,
+			Template:       req.Template,
 			SearchQuery:    req.SearchQuery,
+			DefaultVersion: req.DefaultVersion,
 		},
 	}, nil
 }
 
 // DeleteLanguage implements api.Handler.
 func (s *OdinServer) DeleteLanguage(ctx context.Context, params api.DeleteLanguageParams) (api.DeleteLanguageRes, error) {
-	// user := ctx.Value(config.UserKey).(string)
+	user := ctx.Value(config.UserKey).(string)
 
-	// if user != "admin" {
-	// 	return &api.DeleteLanguageForbidden{}, nil
-	// }
+	if user != "admin" {
+		return &api.DeleteLanguageForbidden{}, nil
+	}
 
 	id, err := s.queries.DeleteLanguage(ctx, params.ID)
 	if id == 0 {
@@ -109,11 +110,11 @@ func (s *OdinServer) DeleteLanguage(ctx context.Context, params api.DeleteLangua
 
 // DeleteLanguageVersion implements api.Handler.
 func (s *OdinServer) DeleteLanguageVersion(ctx context.Context, params api.DeleteLanguageVersionParams) (api.DeleteLanguageVersionRes, error) {
-	// user := ctx.Value(config.UserKey).(string)
+	user := ctx.Value(config.UserKey).(string)
 
-	// if user != "admin" {
-	// 	return &api.DeleteLanguageVersionForbidden{}, nil
-	// }
+	if user != "admin" {
+		return &api.DeleteLanguageVersionForbidden{}, nil
+	}
 
 	id, err := s.queries.DeleteLanguageVersion(ctx, params.ID)
 	if id == 0 {
@@ -187,9 +188,9 @@ func (s *OdinServer) GetAllLanguageVersions(ctx context.Context, params api.GetA
 			LanguageID:     version.LanguageID,
 			Version:        version.Version,
 			NixPackageName: version.NixPackageName,
-			FlakeTemplate:  version.FlakeTemplate,
-			ScriptTemplate: version.ScriptTemplate,
+			Template:       version.Template,
 			SearchQuery:    version.SearchQuery,
+			DefaultVersion: version.DefaultVersion,
 		})
 	}
 
@@ -250,9 +251,9 @@ func (s *OdinServer) GetLanguageVersionById(ctx context.Context, params api.GetL
 		LanguageID:     version.LanguageID,
 		Version:        version.Version,
 		NixPackageName: version.NixPackageName,
-		FlakeTemplate:  version.FlakeTemplate,
-		ScriptTemplate: version.ScriptTemplate,
+		Template:       version.Template,
 		SearchQuery:    version.SearchQuery,
+		DefaultVersion: version.DefaultVersion,
 	}
 
 	return &api.GetLanguageVersionByIdOK{
@@ -303,9 +304,9 @@ func (s *OdinServer) UpdateLanguageVersion(ctx context.Context, req *api.Languag
 		LanguageID:     req.LanguageID,
 		Version:        req.Version,
 		NixPackageName: req.NixPackageName,
-		FlakeTemplate:  req.FlakeTemplate,
-		ScriptTemplate: req.ScriptTemplate,
+		Template:       req.Template,
 		SearchQuery:    req.SearchQuery,
+		DefaultVersion: req.DefaultVersion,
 	}
 
 	id, err := s.queries.UpdateLanguageVersion(ctx, dbParams)
@@ -326,9 +327,9 @@ func (s *OdinServer) UpdateLanguageVersion(ctx context.Context, req *api.Languag
 		LanguageID:     params.ID,
 		Version:        req.Version,
 		NixPackageName: req.NixPackageName,
-		FlakeTemplate:  req.FlakeTemplate,
-		ScriptTemplate: req.ScriptTemplate,
+		Template:       req.Template,
 		SearchQuery:    req.SearchQuery,
+		DefaultVersion: req.DefaultVersion,
 	}
 
 	return &api.UpdateLanguageVersionOK{
@@ -360,9 +361,9 @@ func (s *OdinServer) GetAllVersions(ctx context.Context, params api.GetAllVersio
 			LanguageID:     version.LanguageID,
 			Version:        version.Version,
 			NixPackageName: version.NixPackageName,
-			FlakeTemplate:  version.FlakeTemplate,
-			ScriptTemplate: version.ScriptTemplate,
+			Template:       version.Template,
 			SearchQuery:    version.SearchQuery,
+			DefaultVersion: version.DefaultVersion,
 		})
 	}
 

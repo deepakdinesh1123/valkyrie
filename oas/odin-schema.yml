@@ -6,7 +6,7 @@ info:
     name: MIT
     url: https://github.com/deepakdinesh1123/valkyrie/blob/main/LICENSE
 servers:
-  - url: http://usevalkyrie.odin.org/api/v1
+  - url: http://backend.evnix.cloud/api
 paths:
   /executions/execute:
     post:
@@ -313,93 +313,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /executions/workers:
-    get:
-      summary: Get all execution workers
-      description: Get all execution workers
-      operationId: getExecutionWorkers
-      parameters:
-        - $ref: '#/components/parameters/PageNumber'
-        - $ref: '#/components/parameters/PageSize'
-        - $ref: '#/components/parameters/AuthHeader'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - workers
-                  - pagination
-                properties:
-                  workers:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/ExecutionWorker'
-                  pagination:
-                    $ref: '#/components/schemas/PaginationResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-  /executions/workers/{workerId}:
-    delete:
-      summary: Delete execution worker
-      description: Delete execution worker
-      operationId: deleteExecutionWorker
-      parameters:
-        - name: workerId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: force
-          in: query
-          required: false
-          schema:
-            type: boolean
-            default: false
-        - $ref: '#/components/parameters/AuthHeader'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - message
-                properties:
-                  message:
-                    type: string
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden
-        '404':
-          description: Execution worker not found
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
   /version:
     get:
       summary: Get version
@@ -447,7 +360,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
   /fetch/system:
     get:
       summary: Fetch inital list of available system packages
@@ -479,13 +391,13 @@ paths:
           description: Forbidden
           content:
             application/json:
-              schema: 
+              schema:
                 $ref: '#/components/schemas/Error'
         '500':
           description: Internal Server Error
           content:
             application/json:
-              schema: 
+              schema:
                 $ref: '#/components/schemas/Error'
   /search/system:
     get:
@@ -521,7 +433,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
   /fetch/language:
     get:
       summary: Fetch inital list of available language packages
@@ -554,15 +465,14 @@ paths:
           description: Forbidden
           content:
             application/json:
-              schema: 
+              schema:
                 $ref: '#/components/schemas/Error'
         '500':
           description: Internal Server Error
           content:
             application/json:
-              schema: 
+              schema:
                 $ref: '#/components/schemas/Error'
-
   /search/language:
     get:
       summary: Search for language specific packages
@@ -630,7 +540,8 @@ paths:
                     description: List of packages that do not exist for the language
                     items:
                       type: string
-                    example: ["nonexistent-package"]
+                    example:
+                      - nonexistent-package
         '400':
           description: Bad request
           content:
@@ -649,7 +560,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-    
   /languages/{id}/versions:
     get:
       summary: Get all language versions
@@ -689,9 +599,8 @@ paths:
           description: Internal Server Error
           content:
             application/json:
-              schema: 
-                $ref: '#/components/schemas/Error'  
-
+              schema:
+                $ref: '#/components/schemas/Error'
   /languages:
     get:
       summary: Get all languages
@@ -727,7 +636,6 @@ paths:
               schema:
                 type: object
                 $ref: '#/components/schemas/Error'
-
   /languages/create:
     post:
       summary: Create a language
@@ -772,8 +680,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
-
   /languages/{id}:
     get:
       summary: Get language by ID
@@ -802,14 +708,14 @@ paths:
                   language:
                     type: object
                     $ref: '#/components/schemas/LanguageResponse'
-        '404':
-          description: Language not found
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden
+        '404':
+          description: Language not found
           content:
             application/json:
               schema:
@@ -859,14 +765,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        '404':
-          description: Language not found
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden
+        '404':
+          description: Language not found
           content:
             application/json:
               schema:
@@ -909,14 +815,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        '404':
-          description: Language not found
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden
+        '404':
+          description: Language not found
           content:
             application/json:
               schema:
@@ -927,7 +833,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  
   /language-versions:
     get:
       summary: Get all language versions
@@ -961,7 +866,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
   /language-versions/create:
     post:
       summary: Create a language version
@@ -1006,7 +910,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
   /language-versions/{id}:
     get:
       summary: Get language version by ID
@@ -1035,14 +938,14 @@ paths:
                   language:
                     type: object
                     $ref: '#/components/schemas/LanguageVersionResponse'
-        '404':
-          description: Language version not found
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden
+        '404':
+          description: Language version not found
           content:
             application/json:
               schema:
@@ -1053,7 +956,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
     put:
       summary: Update a language version
       description: Update the details of a specific language version by its ID.
@@ -1093,14 +995,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        '404':
-          description: Language version not found
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden
+        '404':
+          description: Language version not found
           content:
             application/json:
               schema:
@@ -1111,7 +1013,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
     delete:
       summary: Delete a language version
       description: Delete a specific language version by its ID.
@@ -1144,14 +1045,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        '404':
-          description: Language version not found
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden
+        '404':
+          description: Language version not found
           content:
             application/json:
               schema:
@@ -1162,8 +1063,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-    
-
 components:
   parameters:
     AuthHeader:
@@ -1191,17 +1090,17 @@ components:
         type: integer
         format: int32
         default: 20
-    Language:
-      name: language
-      in: query
-      description: The language for which the package is searched.
-      required: true
-      schema:
-        type: string
     SearchString:
       name: searchString
       in: query
       description: The string to be searched.
+      required: true
+      schema:
+        type: string
+    Language:
+      name: language
+      in: query
+      description: The language for which the package is searched.
       required: true
       schema:
         type: string
@@ -1228,13 +1127,10 @@ components:
           type: array
           items:
             type: string
-        args:
+        setup:
           type: string
     ExecutionRequest:
       type: object
-      required:
-        - code
-        - language
       properties:
         environment:
           $ref: '#/components/schemas/ExecutionEnvironmentSpec'
@@ -1242,7 +1138,8 @@ components:
           type: string
         language:
           type: string
-        version:  
+          default: bash
+        version:
           type: string
         max_retries:
           type: integer
@@ -1252,6 +1149,17 @@ components:
           type: integer
           format: int32
           default: -1
+        cmdLineArgs:
+          type: string
+        compileArgs:
+          type: string
+        command:
+          type: string
+        files:
+          type: string
+          format: byte
+        input:
+          type: string
     Error:
       type: object
       required:
@@ -1314,9 +1222,6 @@ components:
         - type: object
           required:
             - execId
-            - script
-            - flake
-            - args
             - started_at
             - finished_at
             - exec_logs
@@ -1324,11 +1229,7 @@ components:
             execId:
               type: integer
               format: int64
-            script:
-              type: string
             flake:
-              type: string
-            args:
               type: string
             started_at:
               type: string
@@ -1340,27 +1241,6 @@ components:
               type: string
             nix_logs:
               type: string
-    ExecutionWorker:
-      type: object
-      required:
-        - id
-        - name
-        - status
-        - created_at
-      properties:
-        id:
-          type: integer
-          format: int32
-        name:
-          type: string
-        created_at:
-          type: string
-          format: date-time
-        status:
-          type: string
-        updated_at:
-          type: string
-          format: date-time
     ExecutionConfig:
       type: object
       required:
@@ -1422,13 +1302,61 @@ components:
         language:
           type: string
           description: The language to check the packages against
-          example: "python311Packages"
+          example: python311Packages
         packages:
           type: array
           description: List of packages to verify.
           items:
             type: string
-          example: ["requests", "numpy", "nonexistent-pkg"]
+          example:
+            - requests
+            - numpy
+            - nonexistent-pkg
+    LanguageVersion:
+      type: object
+      required:
+        - language_id
+        - version
+        - nix_package_name
+        - template
+        - search_query
+        - default_version
+      properties:
+        language_id:
+          type: integer
+          format: int64
+          description: Reference to the parent language
+          example: 1
+        version:
+          type: string
+          description: Version identifier of the language
+          example: 3.1.0
+        nix_package_name:
+          type: string
+          description: Name of the Nix package
+          example: python310
+        template:
+          type: string
+        search_query:
+          type: string
+          description: Search query string
+          example: python310Packages
+        default_version:
+          type: boolean
+          description: Whether this is the default version of the language
+          example: true
+    LanguageVersionResponse:
+      allOf:
+        - $ref: '#/components/schemas/LanguageVersion'
+        - type: object
+          required:
+            - id
+          properties:
+            id:
+              type: integer
+              format: int64
+              description: Unique identifier for the language version
+              example: 1
     Language:
       type: object
       required:
@@ -1453,7 +1381,6 @@ components:
           type: string
           description: Default code for the language.
           example: print('Hello, World!')
-
     LanguageResponse:
       allOf:
         - $ref: '#/components/schemas/Language'
@@ -1482,54 +1409,3 @@ components:
             default_code:
               type: string
               example: print('Hello, World!')
-
-    LanguageVersion:
-      type: object
-      required:
-        - language_id
-        - version
-        - nix_package_name
-        - flake_template
-        - script_template
-        - search_query
-      properties:
-        language_id:
-          type: integer
-          format: int64
-          description: Reference to the parent language
-          example: 1
-        version:
-          type: string
-          description: Version identifier of the language
-          example: "3.1.0"
-        nix_package_name:
-          type: string
-          description: Name of the Nix package
-          example: "python310"
-        flake_template:
-          type: string
-          description: path of template for the Nix flake
-          example: python/python.flake.tmpl
-        script_template:
-          type: string
-          description: path of template for scripts
-          example: python/python.script.tmpl
-        search_query:
-          type: string
-          description: Search query string
-          example: "python310Packages"
-
-    LanguageVersionResponse:
-      allOf:
-        - $ref: '#/components/schemas/LanguageVersion'
-        - type: object
-          required:
-            - id
-          properties:
-            id:
-              type: integer
-              format: int64
-              description: Unique identifier for the language version
-              example: 1
-
-        

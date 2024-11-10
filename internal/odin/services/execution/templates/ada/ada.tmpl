@@ -1,3 +1,3 @@
-{{ define "compile" }} gnatmake main.adb {{ end }}
+{{ define "compile" }} gnatmake main.adb {{ .CompileArgs }}{{ end }}
 
 {{ define "execute" }} ./main {{ end }}

@@ -169,29 +169,6 @@ func (s *GetAllVersionsOK) Validate() error {
 	return nil
 }
 
-func (s *GetExecutionWorkersOK) Validate() error {
-	if s == nil {
-		return validate.ErrNilPointer
-	}
-
-	var failures []validate.FieldError
-	if err := func() error {
-		if s.Workers == nil {
-			return errors.New("nil is invalid value")
-		}
-		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "workers",
-			Error: err,
-		})
-	}
-	if len(failures) > 0 {
-		return &validate.Error{Fields: failures}
-	}
-	return nil
-}
-
 func (s *GetExecutionsForJobOK) Validate() error {
 	if s == nil {
 		return validate.ErrNilPointer
