@@ -6,9 +6,9 @@ const initLanguageVersion: LanguageVersion = {
   language_id: 1,
   version: "3.11",
   nix_package_name: "python311",
-  flake_template: "python/python.flake.tmpl",
-  script_template: "python/python.script.tmpl",
+  template: "python/python.script.tmpl",
   search_query: "python311Packages",
+  default_version: true,
 };
 
 export const useLanguageVersions = (languageId: number) => {
@@ -24,9 +24,9 @@ export const useLanguageVersions = (languageId: number) => {
         language_id: lang.language_id,
         version: lang.version,
         nix_package_name: lang.nix_package_name,
-        flake_template: lang.flake_template,
-        script_template: lang.script_template,
+        template: lang.template,
         search_query: lang.search_query,
+        default_version: lang.default_version,
       }));
       setLanguageVersions(LanguageVersionList);
       setSelectedLanguageVersion(LanguageVersionList[0]);
