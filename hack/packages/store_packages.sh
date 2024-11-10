@@ -21,6 +21,11 @@ get_command_name() {
         "sqlite") echo "sqlite3" ;;
         "rocksdb") echo "ldb" ;;
         "jmespath") echo "jp" ;;
+        "lua" | "lua5_4_compat" | "lua5_3_compat") echo "lua" ;;
+        "python311" | "python312") echo "python" ;;
+        "crystal" | "crystal_1_9") echo "crystal" ;;
+        "julia" | "julia_1_9") echo "julia" ;;
+        "perl" | "perl536") echo "perl" ;;
         *) echo "$pkg_name" ;;
     esac
 }

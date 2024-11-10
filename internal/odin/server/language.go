@@ -5,17 +5,18 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
 )
 
 // CreateLanguage implements api.Handler.
 func (s *OdinServer) CreateLanguage(ctx context.Context, req *api.Language, params api.CreateLanguageParams) (api.CreateLanguageRes, error) {
-	// user := ctx.Value(config.UserKey).(string)
+	user := ctx.Value(config.UserKey).(string)
 
-	// if user != "admin" {
-	// 	return &api.CreateLanguageForbidden{}, nil
-	// }
+	if user != "admin" {
+		return &api.CreateLanguageForbidden{}, nil
+	}
 
 	if req == nil {
 		return &api.CreateLanguageBadRequest{}, errors.New("invalid request: language is required")
@@ -46,11 +47,11 @@ func (s *OdinServer) CreateLanguage(ctx context.Context, req *api.Language, para
 
 // CreateLanguageVersion implements api.Handler.
 func (s *OdinServer) CreateLanguageVersion(ctx context.Context, req *api.LanguageVersion, params api.CreateLanguageVersionParams) (api.CreateLanguageVersionRes, error) {
-	// user := ctx.Value(config.UserKey).(string)
+	user := ctx.Value(config.UserKey).(string)
 
-	// if user != "admin" {
-	// 	return &api.CreateLanguageVersionForbidden{}, nil
-	// }
+	if user != "admin" {
+		return &api.CreateLanguageVersionForbidden{}, nil
+	}
 
 	if req == nil {
 		return &api.CreateLanguageVersionBadRequest{}, errors.New("invalid request: language is required")
@@ -85,11 +86,11 @@ func (s *OdinServer) CreateLanguageVersion(ctx context.Context, req *api.Languag
 
 // DeleteLanguage implements api.Handler.
 func (s *OdinServer) DeleteLanguage(ctx context.Context, params api.DeleteLanguageParams) (api.DeleteLanguageRes, error) {
-	// user := ctx.Value(config.UserKey).(string)
+	user := ctx.Value(config.UserKey).(string)
 
-	// if user != "admin" {
-	// 	return &api.DeleteLanguageForbidden{}, nil
-	// }
+	if user != "admin" {
+		return &api.DeleteLanguageForbidden{}, nil
+	}
 
 	id, err := s.queries.DeleteLanguage(ctx, params.ID)
 	if id == 0 {
@@ -109,11 +110,11 @@ func (s *OdinServer) DeleteLanguage(ctx context.Context, params api.DeleteLangua
 
 // DeleteLanguageVersion implements api.Handler.
 func (s *OdinServer) DeleteLanguageVersion(ctx context.Context, params api.DeleteLanguageVersionParams) (api.DeleteLanguageVersionRes, error) {
-	// user := ctx.Value(config.UserKey).(string)
+	user := ctx.Value(config.UserKey).(string)
 
-	// if user != "admin" {
-	// 	return &api.DeleteLanguageVersionForbidden{}, nil
-	// }
+	if user != "admin" {
+		return &api.DeleteLanguageVersionForbidden{}, nil
+	}
 
 	id, err := s.queries.DeleteLanguageVersion(ctx, params.ID)
 	if id == 0 {

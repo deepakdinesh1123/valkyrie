@@ -137,79 +137,97 @@ VALUES
 
 
 
-INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query) 
+INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) 
 VALUES 
-    (1, '3.11', 'python3' , 'python.tmpl', 'python311Packages'),
-    (2, '1.22.6', 'go_1_22', 'go.tmpl', 'goPackages'),
-    (3, '13.2.0', 'gnat13',  'ada.tmpl', 'adaPackages'),
-    (4, '2.16.03', 'nasm', 'assembly.tmpl', 'assemblyPackages'),
-    (5, '5.2p32', 'bash', 'bash.tmpl', 'bashPackages'),
-    (6, '1.18', 'bun', 'bun.tmpl', 'bunPackages'),
-    (7, '1.11.2',  'crystal', 'crystal.tmpl', 'crystalPackages'),
-    (8, '3.3.4', 'dart', 'dart.tmpl', 'dartPackages');
+    (1, '3.11', 'python3' , 'python.tmpl', 'python311Packages',TRUE),
+    (1, '3.12', 'python312' , 'python.tmpl', 'python312Packages',FALSE),
+
+    (2, '1.21.13', 'go_1_21', 'go.tmpl', 'goPackages', FALSE),
+    (2, '1.23.1', 'go_1_23', 'go.tmpl', 'goPackages', TRUE),
+    (2, '1.22.8', 'go', 'go.tmpl', 'goPackages', FALSE),
+
+    (3, '13.2.0', 'gnat13',  'ada.tmpl', 'adaPackages', FALSE),
+    (3, '12.3.0', 'gnat',  'ada.tmpl', 'adaPackages', FALSE),
+    (3, '14.1.0', 'gnat14',  'ada.tmpl', 'adaPackages', TRUE),
+
+    (4, '2.16.03', 'nasm', 'assembly.tmpl', 'assemblyPackages', TRUE),
+
+    (5, '5.2p32', 'bash', 'bash.tmpl', 'bashPackages', TRUE),
+
+    (6, '1.18', 'bun', 'bun.tmpl', 'bunPackages', TRUE),
+
+    (7, '1.11.2',  'crystal', 'crystal.tmpl', 'crystalPackages', TRUE),
+    (7, '1.9.2',  'crystal_1_9', 'crystal.tmpl', 'crystalPackages', FALSE),
+
+    (8, '3.3.4', 'dart', 'dart.tmpl', 'dartPackages', TRUE);
 
 -- Deno versions
-INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query) VALUES
-(9, '1.44.3', 'deno', 'deno.tmpl', 'deno');
+INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) VALUES
+(9, '1.44.3', 'deno', 'deno.tmpl', 'deno', TRUE);
 
 -- Fortran versions
-INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query) VALUES
-(10, '13.2.0', 'gfortran', 'fortran.tmpl', 'fortran'),
-(10, '12.3.0', 'gfortran12', 'fortran.tmpl', 'fortran');
+INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query , default_version) VALUES
+(10, '13.2.0', 'gfortran', 'fortran.tmpl', 'fortran', TRUE),
+(10, '12.3.0', 'gfortran12', 'fortran.tmpl', 'fortran', FALSE);
 
 -- Groovy version
-INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query) VALUES
-(11, '3.0.11', 'groovy', 'groovy.tmpl', 'groovy');
+INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) VALUES
+(11, '3.0.11', 'groovy', 'groovy.tmpl', 'groovy', TRUE);
 
 -- Julia version
-INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query) VALUES
-(12, '1.10.3', 'julia', 'julia.tmpl', 'julia');
+INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) VALUES
+(12, '1.10.3', 'julia', 'julia.tmpl', 'julia',  TRUE);
+(12, '1.9.4', 'julia_19', 'julia.tmpl', 'julia',  FALSE);
 
 -- Lua version
-INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query) VALUES
-(13, '5.2.4', 'lua', 'lua.tmpl', 'lua');
+INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) VALUES
+(13, '5.2.4', 'lua', 'lua.tmpl', 'lua', TRUE);
+(13, '5.4.6', 'lua5_4_compat', 'lua.tmpl', 'lua', FALSE);
+(13, '5.3.6', 'lua5_3_compat', 'lua.tmpl', 'lua', FALSE);
 
 -- Nim version
-INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query) VALUES
-(14, '2.0.4', 'nim', 'nim.tmpl', 'nim');
+INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) VALUES
+(14, '2.0.4', 'nim', 'nim.tmpl', 'nim', TRUE);
+(14, '1.6.20', 'nim1', 'nim.tmpl', 'nim', FALSE);
 
 -- Node.js versions
-INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query) VALUES
-(15, '22.4.1', 'nodejs_22', 'node.tmpl', 'nodePackages'),
-(15, '20.15.1', 'nodejs_20', 'node.tmpl', 'nodePackages'),
-(15, '18.20.4', 'nodejs_18', 'node.tmpl', 'nodePackages');
+INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) VALUES
+(15, '22.4.1', 'nodejs_22', 'node.tmpl', 'nodePackages', TRUE),
+(15, '20.15.1', 'nodejs_20', 'node.tmpl', 'nodePackages', FALSE),
+(15, '18.20.4', 'nodejs_18', 'node.tmpl', 'nodePackages',  FALSE);
 
 -- Perl version
-INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query) VALUES
-(16, '5.38.2', 'perl', 'perl.tmpl', 'perl');
+INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) VALUES
+(16, '5.38.2', 'perl', 'perl.tmpl', 'perl', TRUE);
+(16, '5.36.3', 'perl536', 'perl.tmpl', 'perl', TRUE);
 
 -- PHP versions
-INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query) VALUES
-(17, '8.2.24', 'php', 'php.tmpl', 'php'),
-(17, '8.3.12', 'php83', 'php.tmpl', 'php'),
-(17, '8.1.30', 'php81', 'php.tmpl', 'php');
+INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) VALUES
+(17, '8.2.24', 'php', 'php.tmpl', 'php', TRUE),
+(17, '8.3.12', 'php83', 'php.tmpl', 'php', FALSE),
+(17, '8.1.30', 'php81', 'php.tmpl', 'php', FALSE);
 
 -- Rust version
-INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query) VALUES
-(18, '1.77.1', 'rustc', 'rust.tmpl', 'rust');
+INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) VALUES
+(18, '1.77.1', 'rustc', 'rust.tmpl', 'rust', TRUE);
 
 -- Ruby versions
-INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query) VALUES
-(19, '3.1.6', 'ruby', 'ruby.tmpl', 'ruby'),
-(19, '3.2.4', 'ruby_3_2', 'ruby.tmpl', 'ruby'),
-(19, '3.3.5', 'ruby_3_3', 'ruby.tmpl', 'ruby');
+INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) VALUES
+(19, '3.1.6', 'ruby', 'ruby.tmpl', 'ruby', TRUE),
+(19, '3.2.4', 'ruby_3_2', 'ruby.tmpl', 'ruby', FALSE),
+(19, '3.3.5', 'ruby_3_3', 'ruby.tmpl', 'ruby', FALSE);
 
 -- SQL version
-INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query) VALUES
-(20, '3.45.3', 'sqlite', 'sql.tmpl', 'sql');
+INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) VALUES
+(20, '3.45.3', 'sqlite', 'sql.tmpl', 'sql', TRUE);
 
 -- -- Swift version
 -- INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query) VALUES
 -- (21, '5.8', 'swift', 'swift.tmpl', 'swift');
 
 -- Zig version
-INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query) VALUES
-(21, '3.45.3', 'zig', 'zig.tmpl', 'zig');
+INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) VALUES
+(21, '3.45.3', 'zig', 'zig.tmpl', 'zig', TRUE);
 
 
 
