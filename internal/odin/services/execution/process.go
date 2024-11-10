@@ -38,10 +38,16 @@ func (s *ExecutionService) prepareExecutionRequest(ctx context.Context, req *api
 		return nil, err
 	}
 
-	langVersion, err := s.queries.GetLanguageVersion(ctx, db.GetLanguageVersionParams{
-		LanguageID: lang.ID,
-		Version:    req.Version.Value,
-	})
+	var langVersion db.LanguageVersion
+
+	if req.Version.Value != "" {
+		langVersion, err = s.queries.GetLanguageVersion(ctx, db.GetLanguageVersionParams{
+			LanguageID: lang.ID,
+			Version:    req.Version.Value,
+		})
+	} else {
+		langVersion, err = s.queries.GetDefaultVersion(ctx, lang.ID)
+	}
 
 	if err != nil {
 		return nil, err

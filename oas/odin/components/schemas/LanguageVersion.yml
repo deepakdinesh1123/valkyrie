@@ -5,6 +5,7 @@ required:
   - nix_package_name
   - template
   - search_query
+  - default_version
 properties:
   language_id:
     type: integer
@@ -25,3 +26,7 @@ properties:
     type: string
     description: Search query string
     example: python310Packages
+  default_version:
+    type: boolean 
+    description: Whether this is the default version of the language
+    example: true

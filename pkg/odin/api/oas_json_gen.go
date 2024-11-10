@@ -5168,14 +5168,19 @@ func (s *LanguageVersion) encodeFields(e *jx.Encoder) {
 		e.FieldStart("search_query")
 		e.Str(s.SearchQuery)
 	}
+	{
+		e.FieldStart("default_version")
+		e.Bool(s.DefaultVersion)
+	}
 }
 
-var jsonFieldsNameOfLanguageVersion = [5]string{
+var jsonFieldsNameOfLanguageVersion = [6]string{
 	0: "language_id",
 	1: "version",
 	2: "nix_package_name",
 	3: "template",
 	4: "search_query",
+	5: "default_version",
 }
 
 // Decode decodes LanguageVersion from json.
@@ -5247,6 +5252,18 @@ func (s *LanguageVersion) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"search_query\"")
 			}
+		case "default_version":
+			requiredBitSet[0] |= 1 << 5
+			if err := func() error {
+				v, err := d.Bool()
+				s.DefaultVersion = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"default_version\"")
+			}
 		default:
 			return d.Skip()
 		}
@@ -5257,7 +5274,7 @@ func (s *LanguageVersion) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00011111,
+		0b00111111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -5333,18 +5350,23 @@ func (s *LanguageVersionResponse) encodeFields(e *jx.Encoder) {
 		e.Str(s.SearchQuery)
 	}
 	{
+		e.FieldStart("default_version")
+		e.Bool(s.DefaultVersion)
+	}
+	{
 		e.FieldStart("id")
 		e.Int64(s.ID)
 	}
 }
 
-var jsonFieldsNameOfLanguageVersionResponse = [6]string{
+var jsonFieldsNameOfLanguageVersionResponse = [7]string{
 	0: "language_id",
 	1: "version",
 	2: "nix_package_name",
 	3: "template",
 	4: "search_query",
-	5: "id",
+	5: "default_version",
+	6: "id",
 }
 
 // Decode decodes LanguageVersionResponse from json.
@@ -5416,8 +5438,20 @@ func (s *LanguageVersionResponse) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"search_query\"")
 			}
-		case "id":
+		case "default_version":
 			requiredBitSet[0] |= 1 << 5
+			if err := func() error {
+				v, err := d.Bool()
+				s.DefaultVersion = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"default_version\"")
+			}
+		case "id":
+			requiredBitSet[0] |= 1 << 6
 			if err := func() error {
 				v, err := d.Int64()
 				s.ID = int64(v)
@@ -5438,7 +5472,7 @@ func (s *LanguageVersionResponse) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00111111,
+		0b01111111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.

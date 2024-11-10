@@ -28,9 +28,14 @@ CREATE TABLE language_versions (
     version TEXT NOT NULL,
     nix_package_name TEXT NOT NULL,             
     template TEXT NOT NULL,                                                 
-    search_query TEXT NOT NULL,                           
+    search_query TEXT NOT NULL, 
+    default_version BOOLEAN NOT NULL DEFAULT false,                          
     UNIQUE (language_id, version)               
 );
+
+CREATE UNIQUE INDEX unique_default_version_per_language 
+ON language_versions (language_id) 
+WHERE default_version = true;
 
 create sequence exec_request_id_seq as int;
 

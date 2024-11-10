@@ -29,6 +29,7 @@ type Querier interface {
 	GetAllLanguageVersions(ctx context.Context) ([]LanguageVersion, error)
 	GetAllLanguages(ctx context.Context) ([]Language, error)
 	GetAllWorkers(ctx context.Context, arg GetAllWorkersParams) ([]Worker, error)
+	GetDefaultVersion(ctx context.Context, languageID int64) (LanguageVersion, error)
 	GetExecRequest(ctx context.Context, id int32) (ExecRequest, error)
 	GetExecRequestByHash(ctx context.Context, hash string) (ExecRequest, error)
 	GetExecution(ctx context.Context, execID int64) (GetExecutionRow, error)
