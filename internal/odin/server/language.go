@@ -62,6 +62,7 @@ func (s *OdinServer) CreateLanguageVersion(ctx context.Context, req *api.Languag
 		NixPackageName: req.NixPackageName,
 		Template:       req.Template,
 		SearchQuery:    req.SearchQuery,
+		DefaultVersion: req.DefaultVersion,
 	}
 
 	id, err := s.queries.CreateLanguageVersion(ctx, dbParams)
@@ -77,6 +78,7 @@ func (s *OdinServer) CreateLanguageVersion(ctx context.Context, req *api.Languag
 			NixPackageName: req.NixPackageName,
 			Template:       req.Template,
 			SearchQuery:    req.SearchQuery,
+			DefaultVersion: req.DefaultVersion,
 		},
 	}, nil
 }
@@ -187,6 +189,7 @@ func (s *OdinServer) GetAllLanguageVersions(ctx context.Context, params api.GetA
 			NixPackageName: version.NixPackageName,
 			Template:       version.Template,
 			SearchQuery:    version.SearchQuery,
+			DefaultVersion: version.DefaultVersion,
 		})
 	}
 
@@ -249,6 +252,7 @@ func (s *OdinServer) GetLanguageVersionById(ctx context.Context, params api.GetL
 		NixPackageName: version.NixPackageName,
 		Template:       version.Template,
 		SearchQuery:    version.SearchQuery,
+		DefaultVersion: version.DefaultVersion,
 	}
 
 	return &api.GetLanguageVersionByIdOK{
@@ -301,6 +305,7 @@ func (s *OdinServer) UpdateLanguageVersion(ctx context.Context, req *api.Languag
 		NixPackageName: req.NixPackageName,
 		Template:       req.Template,
 		SearchQuery:    req.SearchQuery,
+		DefaultVersion: req.DefaultVersion,
 	}
 
 	id, err := s.queries.UpdateLanguageVersion(ctx, dbParams)
@@ -323,6 +328,7 @@ func (s *OdinServer) UpdateLanguageVersion(ctx context.Context, req *api.Languag
 		NixPackageName: req.NixPackageName,
 		Template:       req.Template,
 		SearchQuery:    req.SearchQuery,
+		DefaultVersion: req.DefaultVersion,
 	}
 
 	return &api.UpdateLanguageVersionOK{
@@ -356,6 +362,7 @@ func (s *OdinServer) GetAllVersions(ctx context.Context, params api.GetAllVersio
 			NixPackageName: version.NixPackageName,
 			Template:       version.Template,
 			SearchQuery:    version.SearchQuery,
+			DefaultVersion: version.DefaultVersion,
 		})
 	}
 

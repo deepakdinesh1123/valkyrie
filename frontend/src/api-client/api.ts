@@ -190,7 +190,7 @@ export interface ExecutionEnvironmentSpec {
      * @type {string}
      * @memberof ExecutionEnvironmentSpec
      */
-    'args'?: string;
+    'setup'?: string;
 }
 /**
  * 
@@ -209,13 +209,13 @@ export interface ExecutionRequest {
      * @type {string}
      * @memberof ExecutionRequest
      */
-    'code': string;
+    'code'?: string;
     /**
      * 
      * @type {string}
      * @memberof ExecutionRequest
      */
-    'language': string;
+    'language'?: string;
     /**
      * 
      * @type {string}
@@ -234,6 +234,36 @@ export interface ExecutionRequest {
      * @memberof ExecutionRequest
      */
     'timeout'?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof ExecutionRequest
+     */
+    'cmdLineArgs'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ExecutionRequest
+     */
+    'compileArgs'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ExecutionRequest
+     */
+    'command'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ExecutionRequest
+     */
+    'files'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ExecutionRequest
+     */
+    'input'?: string;
 }
 /**
  * 
@@ -288,12 +318,6 @@ export interface ExecutionResult {
      * @type {string}
      * @memberof ExecutionResult
      */
-    'args': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExecutionResult
-     */
     'finished_at': string;
     /**
      * 
@@ -307,43 +331,6 @@ export interface ExecutionResult {
      * @memberof ExecutionResult
      */
     'nix_logs'?: string;
-}
-/**
- * 
- * @export
- * @interface ExecutionWorker
- */
-export interface ExecutionWorker {
-    /**
-     * 
-     * @type {number}
-     * @memberof ExecutionWorker
-     */
-    'id': number;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExecutionWorker
-     */
-    'name': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExecutionWorker
-     */
-    'created_at': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExecutionWorker
-     */
-    'status': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExecutionWorker
-     */
-    'updated_at'?: string;
 }
 /**
  * 
@@ -421,25 +408,6 @@ export interface GetAllVersions200Response {
      * @memberof GetAllVersions200Response
      */
     'languageVersions': Array<LanguageVersionResponse>;
-}
-/**
- * 
- * @export
- * @interface GetExecutionWorkers200Response
- */
-export interface GetExecutionWorkers200Response {
-    /**
-     * 
-     * @type {Array<ExecutionWorker>}
-     * @memberof GetExecutionWorkers200Response
-     */
-    'workers': Array<ExecutionWorker>;
-    /**
-     * 
-     * @type {PaginationResponse}
-     * @memberof GetExecutionWorkers200Response
-     */
-    'pagination': PaginationResponse;
 }
 /**
  * 
@@ -590,23 +558,23 @@ export interface LanguageVersion {
      */
     'nix_package_name': string;
     /**
-     * path of template for the Nix flake
+     * 
      * @type {string}
      * @memberof LanguageVersion
      */
-    'flake_template': string;
-    /**
-     * path of template for scripts
-     * @type {string}
-     * @memberof LanguageVersion
-     */
-    'script_template': string;
+    'template': string;
     /**
      * Search query string
      * @type {string}
      * @memberof LanguageVersion
      */
     'search_query': string;
+    /**
+     * Whether this is the default version of the language
+     * @type {boolean}
+     * @memberof LanguageVersion
+     */
+    'default_version': boolean;
 }
 /**
  * 
@@ -633,23 +601,23 @@ export interface LanguageVersionResponse {
      */
     'nix_package_name': string;
     /**
-     * path of template for the Nix flake
+     * 
      * @type {string}
      * @memberof LanguageVersionResponse
      */
-    'flake_template': string;
-    /**
-     * path of template for scripts
-     * @type {string}
-     * @memberof LanguageVersionResponse
-     */
-    'script_template': string;
+    'template': string;
     /**
      * Search query string
      * @type {string}
      * @memberof LanguageVersionResponse
      */
     'search_query': string;
+    /**
+     * Whether this is the default version of the language
+     * @type {boolean}
+     * @memberof LanguageVersionResponse
+     */
+    'default_version': boolean;
     /**
      * Unique identifier for the language version
      * @type {number}
@@ -915,50 +883,6 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
-
-            if (xAuthToken != null) {
-                localVarHeaderParameter['X-Auth-Token'] = String(xAuthToken);
-            }
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * Delete execution worker
-         * @summary Delete execution worker
-         * @param {number} workerId 
-         * @param {boolean} [force] 
-         * @param {string} [xAuthToken] Authentication token
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        deleteExecutionWorker: async (workerId: number, force?: boolean, xAuthToken?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'workerId' is not null or undefined
-            assertParamExists('deleteExecutionWorker', 'workerId', workerId)
-            const localVarPath = `/executions/workers/{workerId}`
-                .replace(`{${"workerId"}}`, encodeURIComponent(String(workerId)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            if (force !== undefined) {
-                localVarQueryParameter['force'] = force;
-            }
 
             if (xAuthToken != null) {
                 localVarHeaderParameter['X-Auth-Token'] = String(xAuthToken);
@@ -1484,51 +1408,6 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             };
         },
         /**
-         * Get all execution workers
-         * @summary Get all execution workers
-         * @param {number} [page] The page number to retrieve.
-         * @param {number} [pageSize] The number of items per page.
-         * @param {string} [xAuthToken] Authentication token
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        getExecutionWorkers: async (page?: number, pageSize?: number, xAuthToken?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/executions/workers`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            if (page !== undefined) {
-                localVarQueryParameter['page'] = page;
-            }
-
-            if (pageSize !== undefined) {
-                localVarQueryParameter['pageSize'] = pageSize;
-            }
-
-            if (xAuthToken != null) {
-                localVarHeaderParameter['X-Auth-Token'] = String(xAuthToken);
-            }
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
          * Get executions of given job
          * @summary Get executions of given job
          * @param {number} jobId 
@@ -1979,21 +1858,6 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Delete execution worker
-         * @summary Delete execution worker
-         * @param {number} workerId 
-         * @param {boolean} [force] 
-         * @param {string} [xAuthToken] Authentication token
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async deleteExecutionWorker(workerId: number, force?: boolean, xAuthToken?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CancelExecutionJob200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.deleteExecutionWorker(workerId, force, xAuthToken, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DefaultApi.deleteExecutionWorker']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
          * Delete a specific language by its ID.
          * @summary Delete a language
          * @param {number} id ID of the language to delete.
@@ -2171,21 +2035,6 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getExecutionResultById(execId, xAuthToken, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.getExecutionResultById']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * Get all execution workers
-         * @summary Get all execution workers
-         * @param {number} [page] The page number to retrieve.
-         * @param {number} [pageSize] The number of items per page.
-         * @param {string} [xAuthToken] Authentication token
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async getExecutionWorkers(page?: number, pageSize?: number, xAuthToken?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GetExecutionWorkers200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.getExecutionWorkers(page, pageSize, xAuthToken, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DefaultApi.getExecutionWorkers']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -2373,18 +2222,6 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
             return localVarFp.deleteExecutionJob(jobId, xAuthToken, options).then((request) => request(axios, basePath));
         },
         /**
-         * Delete execution worker
-         * @summary Delete execution worker
-         * @param {number} workerId 
-         * @param {boolean} [force] 
-         * @param {string} [xAuthToken] Authentication token
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        deleteExecutionWorker(workerId: number, force?: boolean, xAuthToken?: string, options?: RawAxiosRequestConfig): AxiosPromise<CancelExecutionJob200Response> {
-            return localVarFp.deleteExecutionWorker(workerId, force, xAuthToken, options).then((request) => request(axios, basePath));
-        },
-        /**
          * Delete a specific language by its ID.
          * @summary Delete a language
          * @param {number} id ID of the language to delete.
@@ -2524,18 +2361,6 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         getExecutionResultById(execId: number, xAuthToken?: string, options?: RawAxiosRequestConfig): AxiosPromise<ExecutionResult> {
             return localVarFp.getExecutionResultById(execId, xAuthToken, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * Get all execution workers
-         * @summary Get all execution workers
-         * @param {number} [page] The page number to retrieve.
-         * @param {number} [pageSize] The number of items per page.
-         * @param {string} [xAuthToken] Authentication token
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        getExecutionWorkers(page?: number, pageSize?: number, xAuthToken?: string, options?: RawAxiosRequestConfig): AxiosPromise<GetExecutionWorkers200Response> {
-            return localVarFp.getExecutionWorkers(page, pageSize, xAuthToken, options).then((request) => request(axios, basePath));
         },
         /**
          * Get executions of given job
@@ -2703,20 +2528,6 @@ export class DefaultApi extends BaseAPI {
     }
 
     /**
-     * Delete execution worker
-     * @summary Delete execution worker
-     * @param {number} workerId 
-     * @param {boolean} [force] 
-     * @param {string} [xAuthToken] Authentication token
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof DefaultApi
-     */
-    public deleteExecutionWorker(workerId: number, force?: boolean, xAuthToken?: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).deleteExecutionWorker(workerId, force, xAuthToken, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
      * Delete a specific language by its ID.
      * @summary Delete a language
      * @param {number} id ID of the language to delete.
@@ -2881,20 +2692,6 @@ export class DefaultApi extends BaseAPI {
      */
     public getExecutionResultById(execId: number, xAuthToken?: string, options?: RawAxiosRequestConfig) {
         return DefaultApiFp(this.configuration).getExecutionResultById(execId, xAuthToken, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * Get all execution workers
-     * @summary Get all execution workers
-     * @param {number} [page] The page number to retrieve.
-     * @param {number} [pageSize] The number of items per page.
-     * @param {string} [xAuthToken] Authentication token
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof DefaultApi
-     */
-    public getExecutionWorkers(page?: number, pageSize?: number, xAuthToken?: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).getExecutionWorkers(page, pageSize, xAuthToken, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

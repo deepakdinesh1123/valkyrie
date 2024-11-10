@@ -1214,6 +1214,8 @@ type LanguageVersion struct {
 	Template       string `json:"template"`
 	// Search query string.
 	SearchQuery string `json:"search_query"`
+	// Whether this is the default version of the language.
+	DefaultVersion bool `json:"default_version"`
 }
 
 // GetLanguageID returns the value of LanguageID.
@@ -1241,6 +1243,11 @@ func (s *LanguageVersion) GetSearchQuery() string {
 	return s.SearchQuery
 }
 
+// GetDefaultVersion returns the value of DefaultVersion.
+func (s *LanguageVersion) GetDefaultVersion() bool {
+	return s.DefaultVersion
+}
+
 // SetLanguageID sets the value of LanguageID.
 func (s *LanguageVersion) SetLanguageID(val int64) {
 	s.LanguageID = val
@@ -1266,6 +1273,11 @@ func (s *LanguageVersion) SetSearchQuery(val string) {
 	s.SearchQuery = val
 }
 
+// SetDefaultVersion sets the value of DefaultVersion.
+func (s *LanguageVersion) SetDefaultVersion(val bool) {
+	s.DefaultVersion = val
+}
+
 // Merged schema.
 // Ref: #/components/schemas/LanguageVersionResponse
 type LanguageVersionResponse struct {
@@ -1278,6 +1290,8 @@ type LanguageVersionResponse struct {
 	Template       string `json:"template"`
 	// Search query string.
 	SearchQuery string `json:"search_query"`
+	// Whether this is the default version of the language.
+	DefaultVersion bool `json:"default_version"`
 	// Unique identifier for the language version.
 	ID int64 `json:"id"`
 }
@@ -1305,6 +1319,11 @@ func (s *LanguageVersionResponse) GetTemplate() string {
 // GetSearchQuery returns the value of SearchQuery.
 func (s *LanguageVersionResponse) GetSearchQuery() string {
 	return s.SearchQuery
+}
+
+// GetDefaultVersion returns the value of DefaultVersion.
+func (s *LanguageVersionResponse) GetDefaultVersion() bool {
+	return s.DefaultVersion
 }
 
 // GetID returns the value of ID.
@@ -1335,6 +1354,11 @@ func (s *LanguageVersionResponse) SetTemplate(val string) {
 // SetSearchQuery sets the value of SearchQuery.
 func (s *LanguageVersionResponse) SetSearchQuery(val string) {
 	s.SearchQuery = val
+}
+
+// SetDefaultVersion sets the value of DefaultVersion.
+func (s *LanguageVersionResponse) SetDefaultVersion(val bool) {
+	s.DefaultVersion = val
 }
 
 // SetID sets the value of ID.

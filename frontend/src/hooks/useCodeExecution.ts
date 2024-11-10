@@ -14,8 +14,8 @@ export const useCodeExecution = () => {
     environment: {
       systemDependencies: string[];
       languageDependencies: string[];
-      args: string;
-    }
+    },
+    cmdLineArgs: string;
     
   }) => {
     try {
