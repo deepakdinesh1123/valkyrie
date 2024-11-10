@@ -1,4 +1,4 @@
-//go:build sys
+//go:build system
 
 package executor
 
@@ -21,12 +21,13 @@ func GetExecutor(ctx context.Context, queries db.Store, workerId int32, tp trace
 	switch envConfig.ODIN_WORKER_EXECUTOR {
 	case "system":
 		if _, err := os.Stat(envConfig.ODIN_SYSTEM_EXECUTOR_BASE_DIR); os.IsNotExist(err) {
+			logger.Debug().Msgf("Odin base dir: %s", envConfig.ODIN_SYSTEM_EXECUTOR_BASE_DIR)
 			err = os.Mkdir(envConfig.ODIN_SYSTEM_EXECUTOR_BASE_DIR, os.ModePerm)
 			if err != nil {
-				return nil, fmt.Errorf("Failed to create system Executor base directory")
+				return nil, fmt.Errorf("Failed to create system Executor base directory: %s", err)
 			}
 		}
-		Executor, err = system.NewSystemExecutor(envConfig, queries, workerId, tp, mp, logger)
+		Executor, err = system.NewSystemExecutor(ctx, envConfig, queries, workerId, tp, mp, logger)
 		if err != nil {
 			return nil, fmt.Errorf("Error while creating Executor")
 		}

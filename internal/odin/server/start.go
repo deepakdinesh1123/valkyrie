@@ -32,7 +32,7 @@ func (s *OdinServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 	corsOptions := handlers.AllowedOrigins([]string{"*"})
 	corsMethods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"})
-	corsHeaders := handlers.AllowedHeaders([]string{"Content-Type", "Authorization"})
+	corsHeaders := handlers.AllowedHeaders([]string{"Content-Type", "Authorization", "X-Auth-Token"})
 
 	server = &http.Server{
 		ReadHeaderTimeout: time.Second * 5,

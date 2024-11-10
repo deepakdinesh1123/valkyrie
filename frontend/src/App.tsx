@@ -1,119 +1,154 @@
 import React, { useCallback, useEffect, useState } from "react";
-import CodeEditor from "@/components/CodeEditor";
-import ListBuilder from "@/components/ListBuilder";
-import Terminal from "@/components/Terminal";
-import { Button } from "@/components/ui/button";
+import LanguageSelector from "@/components/LanguageSelector";
+import '@/App.css';
 import { Input } from "@/components/ui/input";
-import "@/App.css";
-import { useLanguages } from '@/hooks/useLanguages';
-import { useCodeExecution } from '@/hooks/useCodeExecution';
-import { useSystemPackages } from '@/hooks/useSystemPackages';
-import { useLanguagePackages } from '@/hooks/useLanguagePackages';
-import { LanguageSelector } from '@/components/LanguageSelector';
-import { usePackagesExist } from "@/hooks/usePackageExists";
+import CodeEditor from "@/components/CodeEditor";
+import { useLanguages } from "@/hooks/useLanguages";
+import { useLanguageVersions } from "@/hooks/useLanguageVersions";
+import { LanguageResponse, LanguageVersion } from "@/api-client";
+import { Button } from "@/components/ui/button";
+import { useCodeExecution } from "@/hooks/useCodeExecution";
+import Terminal from "@/components/Terminal";
 import HelpModal from "@/components/HelpModal";
 import RequestPackageModal from "@/components/RequestModal";
+import Announcement from "@/components/Announcement";
 import PackageIcon from '@/assets/package.svg'
 import HelpIcon from '@/assets/help.svg'
 import ValkyrieIcon from '@/assets/valkyrie.svg'
+import ListBuilder from "@/components/ListBuilder";
+import { useSystemPackages } from "@/hooks/useSystemPackages";
+import { useLanguagePackages } from "@/hooks/useLanguagePackages";
+import { usePackagesExist } from "@/hooks/usePackageExists";
+import { useDefaultPackages } from "@/hooks/useDefaultPackages";
 
 const App: React.FC = () => {
-  const { languages, selectedLanguage, setSelectedLanguage } = useLanguages();
-  const { terminalOutput, executeCode, isLoading } = useCodeExecution();
-  const [terminalHeight, setTerminalHeight] = useState<number>(300);
-  const [codeContent, setCodeContent] = useState<string>("");
   const [args, setArgs] = useState<string>("");
+  const { selectedLanguage, setSelectedLanguage } = useLanguages();
+  const { selectedLanguageVersion, setSelectedLanguageVersion } = useLanguageVersions(selectedLanguage?.id);
+  const [codeContent, setCodeContent] = useState<string>("");
+  const { terminalOutput, executeCode, isLoading } = useCodeExecution();
   const [selectedLanguageDependencies, setSelectedLanguageDependencies] = useState<string[]>([]);
   const [selectedSystemDependencies, setSelectedSystemDependencies] = useState<string[]>([]);
+  const [terminalHeight, setTerminalHeight] = useState<number>(300);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [systemSearchString, setSystemSearchString] = useState<string>("");
   const [languageSearchString, setLanguageSearchString] = useState<string>("");
-  const [resetLanguageDependencies, setResetLanguageDependencies] = useState({});
-  const { systemPackages } = useSystemPackages(systemSearchString);
-  const { languagePackages, resetLanguagePackages } = useLanguagePackages(languageSearchString, selectedLanguage?.searchquery);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [selectedLanguagePrefix, setSelectedLanguagePrefix] = useState<string>("");
-  const [pendingLanguageChange, setPendingLanguageChange] = useState<any>(null);
-  const { existsResponse } = usePackagesExist(
-    pendingLanguageChange?.searchquery || "",
-    selectedLanguageDependencies
-  );
   const [isRequestModalOpen, setIsRequestModalOpen] = useState<boolean>(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState<boolean>(false);
+  const calculatedHeight = `calc(100% - ${terminalHeight}px)`;
+  const [isAnnouncmentModalOpen, setIsAnnouncementModalOpen] = useState<boolean>(true);
+  const { systemPackages } = useSystemPackages(systemSearchString);
+  const { languagePackages, resetLanguagePackages } = useLanguagePackages(languageSearchString, selectedLanguageVersion?.search_query);
+  const { defaultSystemPackages, defaultLanguagePackages } = useDefaultPackages(selectedLanguageVersion?.search_query);
+  const [pendingVersionChange, setPendingVersionChange] = useState<any>(null);
+  const [resetLanguageDependencies, setResetLanguageDependencies] = useState({});
+  const { existsResponse } = usePackagesExist(
+    pendingVersionChange?.search_query || "",
+    selectedLanguageDependencies
+  );  
+  const finalSystemPackages = systemPackages.length > 0 ? systemPackages : defaultSystemPackages;
+  const finalLanguagePackages = languagePackages.length > 0 ? languagePackages : defaultLanguagePackages;
+
 
   useEffect(() => {
-    if (pendingLanguageChange && existsResponse) {
-      handleLanguageChangeEffect(pendingLanguageChange, existsResponse);
-      setPendingLanguageChange(null);
+    if (pendingVersionChange && existsResponse) {
+      handleLanguageChangeEffect(pendingVersionChange, existsResponse);
+      setPendingVersionChange(null); 
     }
-  }, [pendingLanguageChange, existsResponse]);
+  }, [pendingVersionChange, existsResponse]); 
+  
 
-  const handleTerminalResize = useCallback((height: number) => {
-    setTerminalHeight(height);
-  }, []);
+  const resetOnNewLanguage = useCallback((language: LanguageResponse) => {
+    setSelectedLanguage(language);
+    setCodeContent(language.default_code);
+    setSelectedLanguageDependencies([]);
+    resetLanguagePackages();
+    setResetLanguageDependencies({});
+  }, [setSelectedLanguage, resetLanguagePackages]);
+
+  const handleLanguageChangeEffect = useCallback(
+    (version: any, existsResponse: any) => {
+      if (version !== selectedLanguageVersion) {
+        if (existsResponse.exists) {
+          setSelectedLanguageVersion(version);
+        } else {
+          const nonExistingPackages = existsResponse.nonExistingPackages;
+          setSelectedLanguageDependencies(prev =>
+            prev.filter(dep => !nonExistingPackages.includes(dep))
+          );
+          setSelectedLanguageVersion(version);
+        }
+      }
+    },
+    [
+      selectedLanguage,
+      selectedLanguageVersion,
+      resetOnNewLanguage,
+      setSelectedLanguage,
+      setSelectedLanguageVersion
+    ]
+  );
+
+
+  useEffect(() => {
+    if (selectedLanguage) {
+      setCodeContent(selectedLanguage.default_code);
+    }
+  }, [selectedLanguage]);
 
   const handleEditorChange = useCallback((content: string) => {
     setCodeContent(content);
   }, []);
 
+  const handleLanguageChange = useCallback((language: LanguageResponse) => {
+    resetOnNewLanguage(language);
+  }, [resetOnNewLanguage]);
+
+  const handleVersionChange = useCallback((version: LanguageVersion) => {
+    if (version !== selectedLanguageVersion) {
+      setPendingVersionChange(version); 
+      const nonExistingPackages = existsResponse?.nonExistingPackages || [];
+      setSelectedLanguageVersion(version);
+      setSelectedLanguageDependencies((prev) => prev.filter(dep => !nonExistingPackages.includes(dep)));
+    }
+  }, [selectedLanguageVersion, existsResponse]); 
+  
+
   const handleRunCode = useCallback(() => {
-    if (selectedLanguage) {
+    if (selectedLanguage && codeContent) {
       executeCode({
         language: selectedLanguage.name,
+        version: selectedLanguageVersion.version,
         code: codeContent,
         environment: {
           systemDependencies: selectedSystemDependencies,
           languageDependencies: selectedLanguageDependencies,
-          args: args
-        }
+        },
+        cmdLineArgs:args
       });
+    } else {
     }
-  }, [selectedLanguage, codeContent, selectedSystemDependencies, selectedLanguageDependencies, args, executeCode]);
+  }, [selectedLanguage, codeContent, args, executeCode, selectedLanguageDependencies, selectedSystemDependencies]);
 
-  const resetOnNewLanguage = useCallback((language: any) => {
-    setSelectedLanguage(language);
-    setCodeContent(language.defaultcode);
-    setLanguageSearchString("");
-    setSelectedLanguageDependencies([]);
-    setResetLanguageDependencies({});
-    resetLanguagePackages();
-  }, [setSelectedLanguage, resetLanguagePackages]);
-
-  const handleLanguageChangeEffect = useCallback((language: any, existsResponse: any) => {
-    const newPrefix = language.name.split("-")[0];
-
-    if (newPrefix !== selectedLanguagePrefix) {
-      setSelectedLanguagePrefix(newPrefix);
-      resetOnNewLanguage(language);
-    } else if (language.name !== selectedLanguage?.name) {
-      if (existsResponse.exists) {
-        setSelectedLanguage(language);
-      } else {
-        const nonExistingPackages = existsResponse.nonExistingPackages;
-        setSelectedLanguageDependencies(prev => prev.filter(dep => !nonExistingPackages.includes(dep)));
-        setSelectedLanguage(language);
-      }
-    }
-  }, [selectedLanguagePrefix, selectedLanguage, resetOnNewLanguage, setSelectedLanguage]);
-
-  const handleLanguageChange = useCallback((language: any) => {
-    setPendingLanguageChange(language);
+  const handleTerminalResize = useCallback((height: number) => {
+    setTerminalHeight(height);
   }, []);
+
 
   return (
     <div className="flex h-screen overflow-hidden relative">
       <div className="absolute top-0 right-0">
         <img src={ValkyrieIcon} className="h-14 p-1 pr-16 pt-4" alt="Valkyrie" />
       </div>
-
-      {/* Editor Container */}
       <div className="editor-container flex-1 w-full">
-        <div className="top-bar flex flex-wrap justify-between items-center p-2 bg-transparent mr-28">
+        <div className="top-bar flex flex-wrap justify-between items-center p-2 bg-transparent mr-44">
           <div className="flex flex-wrap items-center w-full sm:w-auto mb-2 sm:mb-0">
             <div className="w-full sm:w-auto mb-2 sm:mb-0 sm:mr-2 border-none">
               <LanguageSelector
-                languages={languages}
-                selectedLanguage={selectedLanguage}
                 onLanguageChange={handleLanguageChange}
+                selectedLanguage={selectedLanguage}
+                selectedLanguageVersion={selectedLanguageVersion}
+                onVersionChange={handleVersionChange}
               />
             </div>
             <Input
@@ -127,10 +162,10 @@ const App: React.FC = () => {
           <div className="flex items-center w-full sm:w-auto justify-end">
             <Button
               onClick={handleRunCode}
-              disabled={isLoading}
+              disabled={isLoading || !codeContent}
               className={`run-code-btn mr-2 ${isLoading ? 'loading' : ''} w-1/2 sm:w-auto bg-neutral-900 transition-colors hover:bg-stone-600 text-sm active:bg-neutral-900`}
             >
-              {isLoading ? '' : 'Run Code'}
+              {isLoading ? "" : 'Run Code'}
             </Button>
             <Button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -140,16 +175,22 @@ const App: React.FC = () => {
             </Button>
           </div>
         </div>
-
-        <div className="flex-grow overflow-hidden" style={{ height: `calc(100% - ${terminalHeight}px - 4rem)` }}>
+        <div
+          className="flex-grow overflow-hidden transition-all duration-300 ease-in-out"
+          style={{
+            height: calculatedHeight,
+            width: isSidebarOpen ? '74%' : '100%',
+          }}
+        >
           <CodeEditor
-            languages={languages}
             selectedLanguage={selectedLanguage}
+            selectedLanguageVersion={selectedLanguageVersion}
             onChange={handleEditorChange}
+            value={codeContent}
             editorOptions={{ wordWrap: "on" }}
+            height={calculatedHeight}
           />
         </div>
-
         <div className="relative" style={{ height: `${terminalHeight}px` }}>
           <div
             className="absolute top-0 left-0 right-0 h-1 bg-gray-600 cursor-n-resize"
@@ -169,7 +210,7 @@ const App: React.FC = () => {
               document.addEventListener('mouseup', handleMouseUp);
             }}
           />
-          <div className="terminal-container" style={{ height: 'calc(100%)' }}>
+          <div className="terminal-container transition-all duration-300 ease-in-out mr-0" style={{ height: 'calc(100%)', width: isSidebarOpen ? '75%' : '100%' }}>
             <Terminal output={terminalOutput} tabName="Output" />
           </div>
         </div>
@@ -188,7 +229,7 @@ const App: React.FC = () => {
               <span className="">System Dependencies</span>
               <div className="flex-1 mt-2 rounded-md min-h-[14rem]">
                 <ListBuilder
-                  items={systemPackages}
+                  items={finalSystemPackages}
                   onSelectionChange={setSelectedSystemDependencies}
                   onSearchChange={setSystemSearchString}
                 />
@@ -199,7 +240,7 @@ const App: React.FC = () => {
               <span className="">Language Dependencies</span>
               <div className="flex-1 mt-2 rounded-md min-h-[14rem]">
                 <ListBuilder
-                  items={languagePackages}
+                  items={finalLanguagePackages}
                   onSelectionChange={setSelectedLanguageDependencies}
                   onSearchChange={setLanguageSearchString}
                   resetTrigger={resetLanguageDependencies}
@@ -257,6 +298,11 @@ const App: React.FC = () => {
       <RequestPackageModal
         isOpen={isRequestModalOpen}
         onClose={() => setIsRequestModalOpen(false)}
+      />
+
+      <Announcement
+        isOpen={isAnnouncmentModalOpen}
+        onClose={() => setIsAnnouncementModalOpen(false)}
       />
     </div>
   );

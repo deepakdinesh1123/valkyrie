@@ -9,14 +9,19 @@ import (
 )
 
 type ExecRequest struct {
-	ID                  int32       `db:"id" json:"id"`
-	Hash                string      `db:"hash" json:"hash"`
-	Code                string      `db:"code" json:"code"`
-	Path                string      `db:"path" json:"path"`
-	Flake               string      `db:"flake" json:"flake"`
-	NixScript           string      `db:"nix_script" json:"nix_script"`
-	Args                pgtype.Text `db:"args" json:"args"`
-	ProgrammingLanguage pgtype.Text `db:"programming_language" json:"programming_language"`
+	ID                   int32       `db:"id" json:"id"`
+	Hash                 string      `db:"hash" json:"hash"`
+	Code                 pgtype.Text `db:"code" json:"code"`
+	Flake                string      `db:"flake" json:"flake"`
+	LanguageDependencies []string    `db:"language_dependencies" json:"language_dependencies"`
+	SystemDependencies   []string    `db:"system_dependencies" json:"system_dependencies"`
+	CmdLineArgs          pgtype.Text `db:"cmd_line_args" json:"cmd_line_args"`
+	CompileArgs          pgtype.Text `db:"compile_args" json:"compile_args"`
+	Files                []byte      `db:"files" json:"files"`
+	Input                pgtype.Text `db:"input" json:"input"`
+	Command              pgtype.Text `db:"command" json:"command"`
+	Setup                pgtype.Text `db:"setup" json:"setup"`
+	LanguageVersion      int64       `db:"language_version" json:"language_version"`
 }
 
 type Execution struct {
@@ -57,12 +62,31 @@ type JobType struct {
 	CreatedAt pgtype.Timestamptz `db:"created_at" json:"created_at"`
 }
 
+type Language struct {
+	ID             int64  `db:"id" json:"id"`
+	Name           string `db:"name" json:"name"`
+	Extension      string `db:"extension" json:"extension"`
+	MonacoLanguage string `db:"monaco_language" json:"monaco_language"`
+	DefaultCode    string `db:"default_code" json:"default_code"`
+}
+
+type LanguageVersion struct {
+	ID             int64  `db:"id" json:"id"`
+	LanguageID     int64  `db:"language_id" json:"language_id"`
+	Version        string `db:"version" json:"version"`
+	NixPackageName string `db:"nix_package_name" json:"nix_package_name"`
+	Template       string `db:"template" json:"template"`
+	SearchQuery    string `db:"search_query" json:"search_query"`
+	DefaultVersion bool   `db:"default_version" json:"default_version"`
+}
+
 type Package struct {
 	PackageID int64       `db:"package_id" json:"package_id"`
 	Name      string      `db:"name" json:"name"`
 	Version   string      `db:"version" json:"version"`
 	Pkgtype   string      `db:"pkgtype" json:"pkgtype"`
 	Language  pgtype.Text `db:"language" json:"language"`
+	StorePath pgtype.Text `db:"store_path" json:"store_path"`
 	TsvSearch interface{} `db:"tsv_search" json:"tsv_search"`
 }
 

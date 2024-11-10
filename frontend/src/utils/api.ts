@@ -8,14 +8,15 @@ const config = new Configuration({
 const axiosInstance = axios.create({
   baseURL: config.basePath,
   timeout: 30000,
-
 });
 
 axiosInstance.interceptors.request.use(
   (config) => {
     config.headers = config.headers || {};
-   config.headers = config.headers || {};
-    config.headers.Authorization = `Bearer ${localStorage.getItem('jwtToken') || import.meta.env.VITE_AUTH_TOKEN}`;
+    config.headers['Content-Type'] = 'application/json';
+    config.headers['X-Auth-Token'] = import.meta.env.VITE_AUTH_TOKEN;
+    console.log(config);
+    
     return config;
   },
   (error) => Promise.reject(error)

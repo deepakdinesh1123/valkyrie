@@ -1,44 +1,30 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Editor, { EditorProps } from "@monaco-editor/react";
-import { Language } from "@/api-client";
-import { getLanguagePrefix } from "@/utils/prefix";
-
+import { Language, LanguageVersion } from "@/api-client";
 
 interface CodeEditorProps {
-  languages: Language[];
   selectedLanguage: Language;
+  selectedLanguageVersion: LanguageVersion;
   onChange?: (content: string) => void;
   editorOptions?: EditorProps["options"];
+  value?: string; 
+  height: string;
 }
 
 const CodeEditor: React.FC<CodeEditorProps> = ({
   selectedLanguage,
   onChange,
   editorOptions,
+  value,
+  height, 
 }) => {
-  const [content, setContent] = useState(selectedLanguage.defaultcode);
-  const [previousPrefix, setPreviousPrefix] = useState(
-    getLanguagePrefix(selectedLanguage.name)
-  );
-
-  useEffect(() => {
-    const currentPrefix = getLanguagePrefix(selectedLanguage.name);
-
-    if (currentPrefix !== previousPrefix) {
-      setContent(selectedLanguage.defaultcode);
-      setPreviousPrefix(currentPrefix);
-    }
-  }, [selectedLanguage]);
-
   const handleEditorChange = (newValue: string | undefined) => {
     const newContent = newValue ?? "";
-    setContent(newContent);
     onChange?.(newContent);
   };
 
   return (
     <div className="flex flex-col h-screen bg-[#1E1E1E] text-white">
-      {/* VS Code-style filename tab */}
       <div className="flex h-14 px-4 border-b border-stone-700 pb-0 mb-0 pt-3">
         <div
           className="inline-block px-4 py-2 border border-stone-700 min-w-20"
@@ -48,16 +34,13 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
             {`main.${selectedLanguage.extension}`}
           </button>
         </div>
-
       </div>
-
-      {/* Editor Section */}
       <div className="flex-grow mt-0">
         <Editor
-          height="100%"
+          height={height}
           width="100%"
-          language={selectedLanguage.monacolanguage}
-          value={content}
+          language={selectedLanguage.monaco_language}
+          value={value ?? selectedLanguage.default_code} 
           onChange={handleEditorChange}
           theme="vs-dark"
           options={{

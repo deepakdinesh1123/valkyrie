@@ -1,0 +1,11 @@
+type: object
+required:
+  - name
+  - version
+properties:
+  name:
+    type: string
+    description: Name of the package
+  version:
+    type: string
+    description: Version of the package

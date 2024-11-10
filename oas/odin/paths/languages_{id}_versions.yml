@@ -1,20 +1,16 @@
-delete:
-  summary: Delete execution worker
-  description: Delete execution worker
-  operationId: deleteExecutionWorker
+get:
+  summary: Get all language versions
+  description: Retrieve a list of all language versions from the database.
+  operationId: getAllVersions
   parameters:
-    - name: workerId
+    - name: id
       in: path
       required: true
+      description: The ID of the language to retrieve versions.
       schema:
         type: integer
         format: int64
-    - name: force
-      in: query
-      required: false
-      schema:
-        type: boolean
-        default: false
+        example: 1
     - $ref: ../components/parameters/AuthHeader.yml
   responses:
     '200':
@@ -24,20 +20,18 @@ delete:
           schema:
             type: object
             required:
-              - message
+              - languageVersions
             properties:
-              message:
-                type: string
-    '400':
-      description: Bad Request
+              languageVersions:
+                type: array
+                items:
+                  $ref: ../components/schemas/LanguageVersionResponse.yml
+    '403':
+      description: Forbidden
       content:
         application/json:
           schema:
             $ref: ../components/schemas/Error.yml
-    '403':
-      description: Forbidden
-    '404':
-      description: Execution worker not found
     '500':
       description: Internal Server Error
       content:

@@ -1,6 +1,6 @@
 get:
   summary: Get all languages
-  description: Get all languages
+  description: Retrieve a list of all languages from the database.
   operationId: getAllLanguages
   parameters:
     - $ref: ../components/parameters/AuthHeader.yml
@@ -17,6 +17,18 @@ get:
               languages:
                 type: array
                 items:
-                  type: string
+                  $ref: ../components/schemas/LanguageResponse.yml
     '403':
       description: Forbidden
+      content:
+        application/json:
+          schema:
+            type: object
+            $ref: ../components/schemas/Error.yml
+    '500':
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            type: object
+            $ref: ../components/schemas/Error.yml

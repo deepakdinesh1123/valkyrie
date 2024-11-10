@@ -1,5 +1,5 @@
 {{ define "compile" }}
-nasm -f elf64 main.asm -o main.o
+nasm -f elf64 main.asm -o main.o {{ .CompileArgs }}
 ld -o main main.o
 {{ end }}
 

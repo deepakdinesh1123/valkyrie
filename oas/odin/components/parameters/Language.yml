@@ -1,0 +1,6 @@
+name: language
+in: query
+description: The language for which the package is searched.
+required: true
+schema:
+  type: string
