@@ -136,10 +136,15 @@ const App: React.FC = () => {
 
 
   return (
-    <div className="flex h-screen overflow-hidden relative">
-      <div className="absolute top-0 right-0">
-        <img src={ValkyrieIcon} className="h-14 p-1 pr-16 pt-4" alt="Valkyrie" />
-      </div>
+    <div className="flex h-screen relative">
+      <div className="absolute top-0 right-0 z-10 ">
+    <img
+      src={ValkyrieIcon}
+      className="h-12 object-cove mr-2 pt-3 pr-20"
+      alt="Valkyrie"
+      style={{ objectPosition: 'top' }} 
+    />
+  </div>
       <div className="editor-container flex-1 w-full">
         <div className="top-bar flex flex-wrap justify-between items-center p-2 bg-transparent mr-44">
           <div className="flex flex-wrap items-center w-full sm:w-auto mb-2 sm:mb-0">

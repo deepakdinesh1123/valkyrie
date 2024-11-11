@@ -14,9 +14,7 @@ axiosInstance.interceptors.request.use(
   (config) => {
     config.headers = config.headers || {};
     config.headers['Content-Type'] = 'application/json';
-    config.headers['X-Auth-Token'] = import.meta.env.VITE_AUTH_TOKEN;
-    console.log(config);
-    
+    config.headers['X-Auth-Token'] = import.meta.env.VITE_AUTH_TOKEN;    
     return config;
   },
   (error) => Promise.reject(error)
