@@ -6,7 +6,7 @@ info:
     name: MIT
     url: https://github.com/deepakdinesh1123/valkyrie/blob/main/LICENSE
 servers:
-  - url: http://backend.evnix.cloud/api
+  - url: http://usevalkyrie.odin.org/api/v1
 paths:
   /executions/execute:
     post:
@@ -1062,6 +1062,44 @@ paths:
           content:
             application/json:
               schema:
+                $ref: '#/components/schemas/Error'
+  /flake/{jobId}:
+    get:
+      summary: Fetch Flake
+      description: Fetches flake of a given job
+      parameters:
+        - in: path
+          name: jobId
+          schema:
+            type: integer
+            format: int64
+          required: true
+          description: Job ID
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - flake
+                properties:
+                  flake:
+                    type: string
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
                 $ref: '#/components/schemas/Error'
 components:
   parameters:

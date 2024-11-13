@@ -37,6 +37,10 @@ type FetchSystemPackagesRes interface {
 	fetchSystemPackagesRes()
 }
 
+type FlakeJobIdGetRes interface {
+	flakeJobIdGetRes()
+}
+
 type GetAllExecutionJobsRes interface {
 	getAllExecutionJobsRes()
 }

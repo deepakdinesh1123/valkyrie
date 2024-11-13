@@ -455,3 +455,14 @@ func sendSSEMessage(w http.ResponseWriter, flusher http.Flusher, message SSEMess
 	fmt.Fprintf(w, "data: %s\n\n", data)
 	flusher.Flush()
 }
+
+// FlakeJobIdGet implements api.Handler.
+func (s *OdinServer) FlakeJobIdGet(ctx context.Context, params api.FlakeJobIdGetParams) (api.FlakeJobIdGetRes, error) {
+	flake, err := s.queries.GetFlake(ctx, params.JobId)
+	if err != nil {
+		return &api.FlakeJobIdGetInternalServerError{}, err
+	}
+	return &api.FlakeJobIdGetOK{
+		Flake: flake,
+	}, nil
+}

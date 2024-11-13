@@ -24,6 +24,25 @@ create table executions (
     success boolean
 );
 
+create table exec_request (
+    id int primary key default nextval('exec_request_id_seq'),
+    hash text not null,
+    code text,
+    flake text not null,
+    language_dependencies text[],
+    system_dependencies text[],
+    cmd_line_args varchar(1024),
+    compile_args varchar(1024),
+    files bytea,
+    input text,
+    command text,
+    setup text,
+    language_version BIGINT NOT NULL REFERENCES language_versions(id) ON DELETE SET NULL
+);
+
+-- name: GetFlake :one
+select flake from exec_request where id = (select exec_request_id from jobs where job_id = $1);
+
 -- name: FetchJob :one
 update jobs set current_state = 'scheduled', started_at = now(), worker_id = $1, updated_at = now()
 where job_id = (
@@ -149,3 +168,6 @@ set
     updated_at = now()
 where current_state = 'scheduled' 
   and worker_id = $1;
+
+
+

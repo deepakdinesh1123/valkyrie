@@ -719,6 +719,30 @@ func (s *FetchSystemPackagesOK) SetPackages(val []Package) {
 
 func (*FetchSystemPackagesOK) fetchSystemPackagesRes() {}
 
+type FlakeJobIdGetForbidden Error
+
+func (*FlakeJobIdGetForbidden) flakeJobIdGetRes() {}
+
+type FlakeJobIdGetInternalServerError Error
+
+func (*FlakeJobIdGetInternalServerError) flakeJobIdGetRes() {}
+
+type FlakeJobIdGetOK struct {
+	Flake string `json:"flake"`
+}
+
+// GetFlake returns the value of Flake.
+func (s *FlakeJobIdGetOK) GetFlake() string {
+	return s.Flake
+}
+
+// SetFlake sets the value of Flake.
+func (s *FlakeJobIdGetOK) SetFlake(val string) {
+	s.Flake = val
+}
+
+func (*FlakeJobIdGetOK) flakeJobIdGetRes() {}
+
 type GetAllExecutionJobsBadRequest Error
 
 func (*GetAllExecutionJobsBadRequest) getAllExecutionJobsRes() {}

@@ -34,6 +34,7 @@ type Querier interface {
 	GetExecRequestByHash(ctx context.Context, hash string) (ExecRequest, error)
 	GetExecution(ctx context.Context, execID int64) (GetExecutionRow, error)
 	GetExecutionsForJob(ctx context.Context, arg GetExecutionsForJobParams) ([]GetExecutionsForJobRow, error)
+	GetFlake(ctx context.Context, jobID int64) (string, error)
 	GetJob(ctx context.Context, jobID int64) (GetJobRow, error)
 	GetJobState(ctx context.Context, jobID int64) (string, error)
 	GetLanguageByID(ctx context.Context, id int64) (Language, error)
