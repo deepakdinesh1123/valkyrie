@@ -5,9 +5,13 @@ meta {
 }
 
 delete {
-  url: {{BASE_URL}}/api/language-versions/4
+  url: {{BASE_URL}}/api/flake/7
   body: json
   auth: none
+}
+
+headers {
+  X-Auth-Token: abcd
 }
 
 body:json {

@@ -6,7 +6,7 @@ info:
     name: MIT
     url: https://github.com/deepakdinesh1123/valkyrie/blob/main/LICENSE
 servers:
-  - url: http://usevalkyrie.odin.org/api/v1
+  - url: https://backend.evnix.cloud/api
 paths:
   /executions/execute:
     $ref: paths/executions_execute.yml
