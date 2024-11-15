@@ -375,6 +375,17 @@ func (q *Queries) GetExecutionsForJob(ctx context.Context, arg GetExecutionsForJ
 	return items, nil
 }
 
+const getFlake = `-- name: GetFlake :one
+select flake from exec_request where id = (select exec_request_id from jobs where job_id = $1)
+`
+
+func (q *Queries) GetFlake(ctx context.Context, jobID int64) (string, error) {
+	row := q.db.QueryRow(ctx, getFlake, jobID)
+	var flake string
+	err := row.Scan(&flake)
+	return flake, err
+}
+
 const getJob = `-- name: GetJob :one
 select job_id, created_at, updated_at, time_out, started_at, exec_request_id, current_state, retries, max_retries, worker_id, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, language_version from jobs inner join exec_request on jobs.exec_request_id = exec_request.id where jobs.job_id = $1
 `

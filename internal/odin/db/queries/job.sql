@@ -24,6 +24,10 @@ create table executions (
     success boolean
 );
 
+
+-- name: GetFlake :one
+select flake from exec_request where id = (select exec_request_id from jobs where job_id = $1);
+
 -- name: FetchJob :one
 update jobs set current_state = 'scheduled', started_at = now(), worker_id = $1, updated_at = now()
 where job_id = (
@@ -149,3 +153,6 @@ set
     updated_at = now()
 where current_state = 'scheduled' 
   and worker_id = $1;
+
+
+

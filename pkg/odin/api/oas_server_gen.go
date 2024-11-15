@@ -62,6 +62,12 @@ type Handler interface {
 	//
 	// GET /fetch/system
 	FetchSystemPackages(ctx context.Context, params FetchSystemPackagesParams) (FetchSystemPackagesRes, error)
+	// FlakeJobIdGet implements GET /flake/{jobId} operation.
+	//
+	// Fetches flake of a given job.
+	//
+	// GET /flake/{jobId}
+	FlakeJobIdGet(ctx context.Context, params FlakeJobIdGetParams) (FlakeJobIdGetRes, error)
 	// GetAllExecutionJobs implements getAllExecutionJobs operation.
 	//
 	// Get all execution jobs.
