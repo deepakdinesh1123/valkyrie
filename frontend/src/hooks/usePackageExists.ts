@@ -24,7 +24,6 @@ export const usePackagesExist = (language: string, packages: string[]) => {
         exists: response.data.exists,
         nonExistingPackages: response.data.nonExistingPackages || [],
       });
-      console.log("existsResponse updated:", response.data);
     } catch (err) {
       console.error('Error checking package existence:', err);
       setError('Failed to check package existence.');
