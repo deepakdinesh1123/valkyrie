@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"sync"
 	"syscall"
@@ -74,10 +75,20 @@ func PodConstructor(ctx context.Context) (Container, error) {
 	// 		Name: "shared-cache",
 	// 	},
 	// }
+
+	userHome, err := os.UserHomeDir()
+	if err != nil {
+		return Container{}, fmt.Errorf("error getting home directory")
+	}
+
 	s.ContainerStorageConfig.OverlayVolumes = []*specgen.OverlayVolume{
 		{
 			Destination: "/nix",
 			Source:      envConfig.ODIN_NIX_STORE,
+		},
+		{
+			Destination: "/home/valnix/.cache/cached-nix-shell/",
+			Source:      filepath.Join(userHome, ".cache/cached-nix-shell/"),
 		},
 	}
 
