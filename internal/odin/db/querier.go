@@ -28,6 +28,7 @@ type Querier interface {
 	GetAllJobs(ctx context.Context, arg GetAllJobsParams) ([]GetAllJobsRow, error)
 	GetAllLanguageVersions(ctx context.Context) ([]LanguageVersion, error)
 	GetAllLanguages(ctx context.Context) ([]Language, error)
+	GetAllPackages(ctx context.Context) ([]GetAllPackagesRow, error)
 	GetAllWorkers(ctx context.Context, arg GetAllWorkersParams) ([]Worker, error)
 	GetDefaultVersion(ctx context.Context, languageID int64) (LanguageVersion, error)
 	GetExecRequest(ctx context.Context, id int32) (ExecRequest, error)
@@ -52,6 +53,9 @@ type Querier interface {
 	InsertExecRequest(ctx context.Context, arg InsertExecRequestParams) (int32, error)
 	InsertExecution(ctx context.Context, arg InsertExecutionParams) (Execution, error)
 	InsertJob(ctx context.Context, arg InsertJobParams) (Job, error)
+	InsertLanguageVersions(ctx context.Context, arg []InsertLanguageVersionsParams) (int64, error)
+	InsertLanguages(ctx context.Context, arg []InsertLanguagesParams) (int64, error)
+	InsertPackages(ctx context.Context, arg []InsertPackagesParams) (int64, error)
 	InsertWorker(ctx context.Context, arg InsertWorkerParams) (Worker, error)
 	ListExecRequests(ctx context.Context, arg ListExecRequestsParams) ([]ExecRequest, error)
 	PackagesExist(ctx context.Context, arg PackagesExistParams) (PackagesExistRow, error)
@@ -62,10 +66,14 @@ type Querier interface {
 	SearchLanguagePackages(ctx context.Context, arg SearchLanguagePackagesParams) ([]SearchLanguagePackagesRow, error)
 	SearchSystemPackages(ctx context.Context, plaintoTsquery string) ([]SearchSystemPackagesRow, error)
 	StopJob(ctx context.Context, jobID int64) error
+	TruncateLanguageVersions(ctx context.Context) error
+	TruncateLanguages(ctx context.Context) error
+	TruncatePackages(ctx context.Context) error
 	UpdateHeartbeat(ctx context.Context, id int32) error
 	UpdateJobCompleted(ctx context.Context, jobID int64) error
 	UpdateLanguage(ctx context.Context, arg UpdateLanguageParams) (int64, error)
 	UpdateLanguageVersion(ctx context.Context, arg UpdateLanguageVersionParams) (int64, error)
+	UpdateTextSearchVector(ctx context.Context) error
 	WorkerTaskCount(ctx context.Context, workerID pgtype.Int4) (int64, error)
 	updateJobFailed(ctx context.Context, jobID int64) error
 }

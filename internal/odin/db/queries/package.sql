@@ -8,6 +8,9 @@ create table if not exists packages (
     tsv_search TSVECTOR
 );
 
+-- name: TruncatePackages :exec
+TRUNCATE TABLE packages  CASCADE;
+
 -- name: SearchSystemPackages :many
 SELECT
     name,
@@ -76,4 +79,11 @@ SELECT name, store_path
 FROM packages
 WHERE name = ANY(@packages::text[]);
 
+-- name: InsertPackages :copyfrom
+INSERT INTO packages (name, version, pkgType, language, store_path) VALUES ($1, $2, $3, $4, $5);
 
+-- name: UpdateTextSearchVector :exec
+UPDATE packages SET tsv_search = to_tsvector('english', COALESCE(name, '') || ' ' || COALESCE(version, '') || ' ' || COALESCE(language, ''));
+
+-- name: GetAllPackages :many
+SELECT name, version, pkgType, language, store_path FROM packages;

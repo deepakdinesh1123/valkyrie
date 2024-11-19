@@ -25,6 +25,12 @@ CREATE UNIQUE INDEX unique_default_version_per_language
 ON language_versions (language_id) 
 WHERE default_version = true;
 
+-- name: TruncateLanguages :exec
+TRUNCATE TABLE languages CASCADE;
+
+-- name: TruncateLanguageVersions :exec
+TRUNCATE TABLE language_versions CASCADE;
+
 -- name: CreateLanguage :one
 INSERT INTO languages (name, extension, monaco_language, default_code) 
 VALUES ($1, $2, $3, $4) 
@@ -97,3 +103,9 @@ SELECT * from languages WHERE name = $1;
 
 -- name: GetDefaultVersion :one
 SELECT * FROM language_versions WHERE default_version = true AND language_id = $1;
+
+-- name: InsertLanguages :copyfrom
+INSERT INTO languages (name, extension, monaco_language, default_code) VALUES ($1, $2, $3, $4);
+
+-- name: InsertLanguageVersions :copyfrom
+INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) VALUES ($1, $2, $3, $4, $5, $6);
