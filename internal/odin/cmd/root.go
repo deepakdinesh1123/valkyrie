@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/cmd/server"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/cmd/store"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/cmd/worker"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 )
@@ -36,7 +37,7 @@ func init() {
 	RootCmd.AddCommand(server.ServerCmd)
 	RootCmd.AddCommand(worker.WorkerCmd)
 	RootCmd.AddCommand(StandaloneCmd)
-	RootCmd.AddCommand(NixDumpCmd)
+	RootCmd.AddCommand(store.StoreCmd)
 
 	createDirs(envConfig)
 }

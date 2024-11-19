@@ -81,6 +81,44 @@ func (q *Queries) FetchSystemPackages(ctx context.Context) ([]FetchSystemPackage
 	return items, nil
 }
 
+const getAllPackages = `-- name: GetAllPackages :many
+SELECT name, version, pkgType, language, store_path FROM packages
+`
+
+type GetAllPackagesRow struct {
+	Name      string      `db:"name" json:"name"`
+	Version   string      `db:"version" json:"version"`
+	Pkgtype   string      `db:"pkgtype" json:"pkgtype"`
+	Language  pgtype.Text `db:"language" json:"language"`
+	StorePath pgtype.Text `db:"store_path" json:"store_path"`
+}
+
+func (q *Queries) GetAllPackages(ctx context.Context) ([]GetAllPackagesRow, error) {
+	rows, err := q.db.Query(ctx, getAllPackages)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAllPackagesRow
+	for rows.Next() {
+		var i GetAllPackagesRow
+		if err := rows.Scan(
+			&i.Name,
+			&i.Version,
+			&i.Pkgtype,
+			&i.Language,
+			&i.StorePath,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getPackageStorePaths = `-- name: GetPackageStorePaths :many
 SELECT name, store_path
 FROM packages
@@ -110,6 +148,14 @@ func (q *Queries) GetPackageStorePaths(ctx context.Context, packages []string) (
 		return nil, err
 	}
 	return items, nil
+}
+
+type InsertPackagesParams struct {
+	Name      string      `db:"name" json:"name"`
+	Version   string      `db:"version" json:"version"`
+	Pkgtype   string      `db:"pkgtype" json:"pkgtype"`
+	Language  pgtype.Text `db:"language" json:"language"`
+	StorePath pgtype.Text `db:"store_path" json:"store_path"`
 }
 
 const packagesExist = `-- name: PackagesExist :one
@@ -229,4 +275,22 @@ func (q *Queries) SearchSystemPackages(ctx context.Context, plaintoTsquery strin
 		return nil, err
 	}
 	return items, nil
+}
+
+const truncatePackages = `-- name: TruncatePackages :exec
+TRUNCATE TABLE packages  CASCADE
+`
+
+func (q *Queries) TruncatePackages(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, truncatePackages)
+	return err
+}
+
+const updateTextSearchVector = `-- name: UpdateTextSearchVector :exec
+UPDATE packages SET tsv_search = to_tsvector('english', COALESCE(name, '') || ' ' || COALESCE(version, '') || ' ' || COALESCE(language, ''))
+`
+
+func (q *Queries) UpdateTextSearchVector(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, updateTextSearchVector)
+	return err
 }

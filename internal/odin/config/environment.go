@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -142,7 +143,7 @@ func GetEnvConfig() (*EnvConfig, error) {
 		// Unmarshal configuration into EnvConfig struct
 		err := viper.Unmarshal(&envConfig)
 		if err != nil {
-			return
+			log.Default().Print(".env not found using defaults")
 		}
 
 		usr, err := user.Current()

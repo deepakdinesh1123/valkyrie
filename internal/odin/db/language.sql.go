@@ -303,6 +303,40 @@ func (q *Queries) GetVersionsByLanguageID(ctx context.Context, languageID int64)
 	return items, nil
 }
 
+type InsertLanguageVersionsParams struct {
+	LanguageID     int64  `db:"language_id" json:"language_id"`
+	Version        string `db:"version" json:"version"`
+	NixPackageName string `db:"nix_package_name" json:"nix_package_name"`
+	Template       string `db:"template" json:"template"`
+	SearchQuery    string `db:"search_query" json:"search_query"`
+	DefaultVersion bool   `db:"default_version" json:"default_version"`
+}
+
+type InsertLanguagesParams struct {
+	Name           string `db:"name" json:"name"`
+	Extension      string `db:"extension" json:"extension"`
+	MonacoLanguage string `db:"monaco_language" json:"monaco_language"`
+	DefaultCode    string `db:"default_code" json:"default_code"`
+}
+
+const truncateLanguageVersions = `-- name: TruncateLanguageVersions :exec
+TRUNCATE TABLE language_versions CASCADE
+`
+
+func (q *Queries) TruncateLanguageVersions(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, truncateLanguageVersions)
+	return err
+}
+
+const truncateLanguages = `-- name: TruncateLanguages :exec
+TRUNCATE TABLE languages CASCADE
+`
+
+func (q *Queries) TruncateLanguages(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, truncateLanguages)
+	return err
+}
+
 const updateLanguage = `-- name: UpdateLanguage :one
 UPDATE languages 
 SET name = $2, extension = $3, monaco_language = $4, default_code = $5
