@@ -4,6 +4,7 @@ required:
   - extension
   - monaco_language
   - default_code
+  - template
 properties:
   name:
     type: string
@@ -21,3 +22,8 @@ properties:
     type: string
     description: Default code for the language.
     example: print('Hello, World!')
+  template:
+    type: string
+    description: The default template for the language
+    example: |
+      {{ define "execute" }} go run main.go {{ if .Args }}{{ .Args }}{{ end }} {{ end }}

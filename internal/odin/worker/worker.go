@@ -177,7 +177,7 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 	}
 	defer infLock.Unlock()
 	var swg concurrency.SafeWaitGroup
-	fetchJobTicker := time.NewTicker(time.Duration(w.envConfig.ODIN_WORKER_POLL_FREQ) * time.Second)
+	fetchJobTicker := time.NewTicker(time.Duration(w.envConfig.ODIN_WORKER_POLL_FREQ) * time.Millisecond)
 	heartBeatTicker := time.NewTicker(time.Duration(5) * time.Second)
 	for {
 		select {

@@ -87,7 +87,9 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 			}
 			return
 		default:
+			s.logger.Debug().Msg("getting job")
 			job, err := s.queries.GetJob(ctx, execId)
+			s.logger.Debug().Msg("got job")
 			if err != nil {
 				s.logger.Error().Stack().Err(err).Msg("Failed to get job")
 				sendSSEMessage(w, flusher, SSEMessage{
@@ -102,11 +104,13 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 
 			switch job.CurrentState {
 			case "completed":
+				s.logger.Debug().Msg("Getting executions")
 				res, err := s.queries.GetExecutionsForJob(ctx, db.GetExecutionsForJobParams{
 					JobID:  pgtype.Int8{Int64: execId, Valid: true},
 					Limit:  1,
 					Offset: 0,
 				})
+				s.logger.Debug().Msg("got executions")
 				if err != nil {
 					s.logger.Error().Stack().Err(err).Msg("Failed to get execution logs")
 					sendSSEMessage(w, flusher, SSEMessage{
@@ -116,12 +120,13 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 					})
 					return
 				}
-
+				s.logger.Debug().Msg("sending completed")
 				sendSSEMessage(w, flusher, SSEMessage{
 					Status: "completed",
 					ExecID: execId,
 					Logs:   res[0].ExecLogs,
 				})
+				s.logger.Debug().Msg("completed sent")
 				return
 
 			case "failed":
@@ -132,16 +137,19 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 				return
 
 			case "pending":
+				s.logger.Debug().Msg("sending pending")
 				sendSSEMessage(w, flusher, SSEMessage{
 					Status: "pending",
 					ExecID: execId,
 				})
-
+				s.logger.Debug().Msg("pending sent")
 			case "scheduled":
+				s.logger.Debug().Msg("sending scheduled")
 				sendSSEMessage(w, flusher, SSEMessage{
 					Status: "scheduled",
 					ExecID: execId,
 				})
+				s.logger.Debug().Msg("scheduled sent")
 			case "cancelled":
 				sendSSEMessage(w, flusher, SSEMessage{
 					Status: "canceled",
@@ -151,7 +159,7 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 				s.logger.Warn().Str("status", job.CurrentState).Msg("Unknown status")
 			}
 
-			time.Sleep(3 * time.Second)
+			time.Sleep(30 * time.Millisecond)
 		}
 	}
 }

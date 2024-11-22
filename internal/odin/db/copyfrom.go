@@ -70,6 +70,7 @@ func (r iteratorForInsertLanguages) Values() ([]interface{}, error) {
 		r.rows[0].Extension,
 		r.rows[0].MonacoLanguage,
 		r.rows[0].DefaultCode,
+		r.rows[0].Template,
 	}, nil
 }
 
@@ -78,7 +79,7 @@ func (r iteratorForInsertLanguages) Err() error {
 }
 
 func (q *Queries) InsertLanguages(ctx context.Context, arg []InsertLanguagesParams) (int64, error) {
-	return q.db.CopyFrom(ctx, []string{"languages"}, []string{"name", "extension", "monaco_language", "default_code"}, &iteratorForInsertLanguages{rows: arg})
+	return q.db.CopyFrom(ctx, []string{"languages"}, []string{"name", "extension", "monaco_language", "default_code", "template"}, &iteratorForInsertLanguages{rows: arg})
 }
 
 // iteratorForInsertPackages implements pgx.CopyFromSource.

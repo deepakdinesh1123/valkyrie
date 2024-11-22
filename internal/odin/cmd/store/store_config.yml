@@ -13,7 +13,7 @@ languages:
       - nixPackage: "python310"
         version: "3.10"
     template: |
-      {{ define "execute" }} python main.py {{ if .Args }}{{ .Args }}{{ end }} {{ end }}
+      {{ define "execute" }} python main.py {{ end }}
     deps:
       - numpy
       - tensorflow
@@ -23,6 +23,7 @@ languages:
       - openai
     defaultCode: |
       print("Hello World")
+
   - name: go
     extension: go
     monacoLanguage: go
@@ -33,7 +34,7 @@ languages:
         version: "1.21"
         default: true
     template: |
-      {{ define "execute" }} go run main.go {{ if .Args }}{{ .Args }}{{ end }} {{ end }}
+      {{ define "execute" }} go run main.go {{ end }}
     defaultCode: |
       package main
       import "fmt"

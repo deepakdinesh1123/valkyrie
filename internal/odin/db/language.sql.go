@@ -7,6 +7,8 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createLanguage = `-- name: CreateLanguage :one
@@ -43,12 +45,12 @@ RETURNING id
 `
 
 type CreateLanguageVersionParams struct {
-	LanguageID     int64  `db:"language_id" json:"language_id"`
-	Version        string `db:"version" json:"version"`
-	NixPackageName string `db:"nix_package_name" json:"nix_package_name"`
-	Template       string `db:"template" json:"template"`
-	SearchQuery    string `db:"search_query" json:"search_query"`
-	DefaultVersion bool   `db:"default_version" json:"default_version"`
+	LanguageID     int64       `db:"language_id" json:"language_id"`
+	Version        string      `db:"version" json:"version"`
+	NixPackageName string      `db:"nix_package_name" json:"nix_package_name"`
+	Template       pgtype.Text `db:"template" json:"template"`
+	SearchQuery    string      `db:"search_query" json:"search_query"`
+	DefaultVersion bool        `db:"default_version" json:"default_version"`
 }
 
 func (q *Queries) CreateLanguageVersion(ctx context.Context, arg CreateLanguageVersionParams) (int64, error) {
@@ -137,7 +139,7 @@ func (q *Queries) GetAllLanguageVersions(ctx context.Context) ([]LanguageVersion
 }
 
 const getAllLanguages = `-- name: GetAllLanguages :many
-SELECT id, name, extension, monaco_language, default_code 
+SELECT id, name, extension, monaco_language, template, default_code
 FROM languages
 `
 
@@ -155,6 +157,7 @@ func (q *Queries) GetAllLanguages(ctx context.Context) ([]Language, error) {
 			&i.Name,
 			&i.Extension,
 			&i.MonacoLanguage,
+			&i.Template,
 			&i.DefaultCode,
 		); err != nil {
 			return nil, err
@@ -187,7 +190,7 @@ func (q *Queries) GetDefaultVersion(ctx context.Context, languageID int64) (Lang
 }
 
 const getLanguageByID = `-- name: GetLanguageByID :one
-SELECT id, name, extension, monaco_language, default_code 
+SELECT id, name, extension, monaco_language, template, default_code
 FROM languages 
 WHERE id = $1
 `
@@ -200,13 +203,14 @@ func (q *Queries) GetLanguageByID(ctx context.Context, id int64) (Language, erro
 		&i.Name,
 		&i.Extension,
 		&i.MonacoLanguage,
+		&i.Template,
 		&i.DefaultCode,
 	)
 	return i, err
 }
 
 const getLanguageByName = `-- name: GetLanguageByName :one
-SELECT id, name, extension, monaco_language, default_code from languages WHERE name = $1
+SELECT id, name, extension, monaco_language, template, default_code from languages WHERE name = $1
 `
 
 func (q *Queries) GetLanguageByName(ctx context.Context, name string) (Language, error) {
@@ -217,6 +221,7 @@ func (q *Queries) GetLanguageByName(ctx context.Context, name string) (Language,
 		&i.Name,
 		&i.Extension,
 		&i.MonacoLanguage,
+		&i.Template,
 		&i.DefaultCode,
 	)
 	return i, err
@@ -304,12 +309,12 @@ func (q *Queries) GetVersionsByLanguageID(ctx context.Context, languageID int64)
 }
 
 type InsertLanguageVersionsParams struct {
-	LanguageID     int64  `db:"language_id" json:"language_id"`
-	Version        string `db:"version" json:"version"`
-	NixPackageName string `db:"nix_package_name" json:"nix_package_name"`
-	Template       string `db:"template" json:"template"`
-	SearchQuery    string `db:"search_query" json:"search_query"`
-	DefaultVersion bool   `db:"default_version" json:"default_version"`
+	LanguageID     int64       `db:"language_id" json:"language_id"`
+	Version        string      `db:"version" json:"version"`
+	NixPackageName string      `db:"nix_package_name" json:"nix_package_name"`
+	Template       pgtype.Text `db:"template" json:"template"`
+	SearchQuery    string      `db:"search_query" json:"search_query"`
+	DefaultVersion bool        `db:"default_version" json:"default_version"`
 }
 
 type InsertLanguagesParams struct {
@@ -317,6 +322,7 @@ type InsertLanguagesParams struct {
 	Extension      string `db:"extension" json:"extension"`
 	MonacoLanguage string `db:"monaco_language" json:"monaco_language"`
 	DefaultCode    string `db:"default_code" json:"default_code"`
+	Template       string `db:"template" json:"template"`
 }
 
 const truncateLanguageVersions = `-- name: TruncateLanguageVersions :exec
@@ -373,13 +379,13 @@ returning id
 `
 
 type UpdateLanguageVersionParams struct {
-	ID             int64  `db:"id" json:"id"`
-	LanguageID     int64  `db:"language_id" json:"language_id"`
-	NixPackageName string `db:"nix_package_name" json:"nix_package_name"`
-	Template       string `db:"template" json:"template"`
-	SearchQuery    string `db:"search_query" json:"search_query"`
-	Version        string `db:"version" json:"version"`
-	DefaultVersion bool   `db:"default_version" json:"default_version"`
+	ID             int64       `db:"id" json:"id"`
+	LanguageID     int64       `db:"language_id" json:"language_id"`
+	NixPackageName string      `db:"nix_package_name" json:"nix_package_name"`
+	Template       pgtype.Text `db:"template" json:"template"`
+	SearchQuery    string      `db:"search_query" json:"search_query"`
+	Version        string      `db:"version" json:"version"`
+	DefaultVersion bool        `db:"default_version" json:"default_version"`
 }
 
 func (q *Queries) UpdateLanguageVersion(ctx context.Context, arg UpdateLanguageVersionParams) (int64, error) {

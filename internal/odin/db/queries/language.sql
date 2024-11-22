@@ -5,6 +5,7 @@ CREATE TABLE languages (
     name TEXT NOT NULL UNIQUE,                  
     extension TEXT NOT NULL,                    
     monaco_language TEXT NOT NULL,
+    template TEXT NOT NULL,
     default_code TEXT NOT NULL                    
 );
 
@@ -14,8 +15,8 @@ CREATE TABLE language_versions (
     id bigint PRIMARY KEY DEFAULT nextval('language_versions_id_seq'),
     language_id BIGINT NOT NULL REFERENCES languages (id) ON DELETE CASCADE,
     version TEXT NOT NULL,
-    nix_package_name TEXT NOT NULL,             
-    template TEXT NOT NULL,                                                 
+    nix_package_name TEXT NOT NULL,
+    template TEXT,
     search_query TEXT NOT NULL, 
     default_version BOOLEAN NOT NULL DEFAULT false,                          
     UNIQUE (language_id, version)               
@@ -37,12 +38,12 @@ VALUES ($1, $2, $3, $4)
 RETURNING id;
 
 -- name: GetLanguageByID :one
-SELECT id, name, extension, monaco_language, default_code 
+SELECT *
 FROM languages 
 WHERE id = $1;
 
 -- name: GetAllLanguages :many
-SELECT id, name, extension, monaco_language, default_code 
+SELECT *
 FROM languages;
 
 -- name: UpdateLanguage :one
@@ -105,7 +106,7 @@ SELECT * from languages WHERE name = $1;
 SELECT * FROM language_versions WHERE default_version = true AND language_id = $1;
 
 -- name: InsertLanguages :copyfrom
-INSERT INTO languages (name, extension, monaco_language, default_code) VALUES ($1, $2, $3, $4);
+INSERT INTO languages (name, extension, monaco_language, default_code, template) VALUES ($1, $2, $3, $4, $5);
 
 -- name: InsertLanguageVersions :copyfrom
 INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) VALUES ($1, $2, $3, $4, $5, $6);
