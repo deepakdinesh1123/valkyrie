@@ -64,8 +64,13 @@ func (s *ExecutionService) prepareExecutionRequest(ctx context.Context, req *api
 	execReq.LanguageDependencies = req.Environment.Value.LanguageDependencies
 	execReq.Setup = req.Environment.Value.Setup.Value
 	execReq.ScriptName = fmt.Sprintf("main.%s", lang.Extension)
-	execReq.Template = langVersion.Template
 	execReq.LangVersion = langVersion.ID
+
+	if langVersion.Template.String != "" {
+		execReq.Template = langVersion.Template.String
+	} else {
+		execReq.Template = lang.Template
+	}
 
 	flake, err := s.convertExecSpecToFlake(execReq)
 	if err != nil {

@@ -103,7 +103,7 @@ func GetEnvConfig() (*EnvConfig, error) {
 		viper.SetDefault("ODIN_WORKER_CONCURRENCY", 10)
 		viper.SetDefault("ODIN_HOT_CONTAINER", 5)
 		viper.SetDefault("ODIN_WORKER_TASK_TIMEOUT", 120)
-		viper.SetDefault("ODIN_WORKER_POLL_FREQ", 1)
+		viper.SetDefault("ODIN_WORKER_POLL_FREQ", 30)
 		viper.SetDefault("ODIN_WORKER_RUNTIME", "runc")
 		viper.SetDefault("ODIN_MAX_RETRIES", 5)
 

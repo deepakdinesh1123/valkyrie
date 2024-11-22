@@ -42,6 +42,7 @@ type LanguageVersion struct {
 	NixPackage string `yaml:"nixPackage"`
 	Version    string `yaml:"version"`
 	Default    bool   `yaml:"default,omitempty"`
+	Template   string `yaml:"template,omitempty"`
 }
 
 type NixPackageInfo struct {
@@ -177,6 +178,7 @@ func addLanguages(ctx context.Context, queries db.Store, config *StoreConfig) er
 			Extension:      language.Extension,
 			MonacoLanguage: language.MonacoLanguage,
 			DefaultCode:    language.DefaultCode,
+			Template:       language.Template,
 		})
 	}
 
@@ -202,7 +204,7 @@ func addLanguageVersions(ctx context.Context, queries db.Store, config *StoreCon
 				LanguageID:     lang.ID,
 				Version:        version.Version,
 				NixPackageName: version.NixPackage,
-				Template:       language.Template,
+				Template:       pgtype.Text{String: version.Template, Valid: true},
 				SearchQuery:    fmt.Sprintf("%sPackages", version.NixPackage),
 			}
 			if version.Default {

@@ -17,6 +17,7 @@ CREATE TABLE languages (
     name TEXT NOT NULL UNIQUE,                  
     extension TEXT NOT NULL,                    
     monaco_language TEXT NOT NULL,
+    template TEXT NOT NULL,
     default_code TEXT NOT NULL                    
 );
 
@@ -27,7 +28,7 @@ CREATE TABLE language_versions (
     language_id BIGINT NOT NULL REFERENCES languages (id) ON DELETE CASCADE,
     version TEXT NOT NULL,
     nix_package_name TEXT NOT NULL,             
-    template TEXT NOT NULL,                                                 
+    template TEXT,                                                 
     search_query TEXT NOT NULL, 
     default_version BOOLEAN NOT NULL DEFAULT false,                          
     UNIQUE (language_id, version)               
@@ -107,182 +108,6 @@ create table executions (
     nix_logs text,
     success boolean
 );
-
-
-INSERT INTO languages (name, extension, monaco_language, default_code) 
-VALUES 
-    ('python', 'py', 'python', 'print("Hello, World!")'),
-    ('go', 'go', 'go', 'package main
-
-import "fmt"
-
-func main() {
-    // Type your Go code here
-}'),
-    ('ada', 'adb', 'ada', 'with Ada.Text_IO; use Ada.Text_IO;
-
-procedure Hello is
-begin
-    Put_Line("Hello, World!");
-end Hello;'),
-    ('assembly', 'asm', 'assembly', 'section .data
-    msg db "Hello, World!",0
-
-section .text
-    global _start
-
-_start:
-    mov rax, 1
-    mov rdi, 1
-    mov rsi, msg
-    mov rdx, 13
-    syscall
-    mov rax, 60
-    xor rdi, rdi
-    syscall'),
-    ('bash', 'bash', 'shell', 'echo hello'), 
-    ('bun',  'js', 'javascript', 'empty'),
-    ('crystal', 'cr', 'crystal', 'puts "Hello World"'),
-    ('dart', 'dart', 'dart', 'hello'),
-    ('deno', 'ts', 'typescript', 'console.log("Hello World");'),
-    ('fortran', 'f90', 'fortran', 'program hello
-    print *, "Hello, World!"
-end program hello'),
-    ('groovy', 'groovy', 'groovy', 'println'),
-    ('julia', 'jl', 'julia', 'println("Hello, World!")'),
-    ('lua', 'lua', 'lua', 'print("Hello, World!")'),
-    ('nim', 'nim', 'nim', 'echo "Hello, World!"'),
-    ('node', 'js', 'javascript', '// Type your JavaScript code here
-
-function main() {
-    // Your code here
-}
-
-main();'),
-    ('perl', 'pl', 'perl', '#!/usr/bin/perl
-use strict;
-use warnings;
-
-print "Hello, World!\\n";'),
-    ('php', 'php', 'php', '<?php
-echo "Hello, World!";
-?>'),
-    ('rust', 'rs', 'rust', 'fn main() {
-    println!("Hello, world!");
-}'),
-    ('ruby', 'rb', 'ruby', 'puts "Hello, World!"'),
-    ('sql', 'sql', 'sql', 'CREATE TABLE employees (id INT PRIMARY KEY, name VARCHAR(100), salary DECIMAL(10, 2));'),
-    -- ('swift', 'swift', 'swift', 'print("Hello, World!")'),
-    ('zig', 'zig', 'zig', 'const std = @import("std");
-
-pub fn main() !void {
-    const stdout = std.io.getStdOut().writer();
-    try stdout.print("Hello, World!\\n", .{});
-}');
-
-
-
-
-INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) 
-VALUES 
-    (1, '3.11', 'python3', 'python.tmpl', 'python311Packages', TRUE),
-    (1, '3.12', 'python312', 'python.tmpl', 'python312Packages', FALSE),
-
-    (2, '1.21.13', 'go_1_21', 'go.tmpl', 'goPackages', FALSE),
-    (2, '1.23.1', 'go_1_23', 'go.tmpl', 'goPackages', TRUE),
-    (2, '1.22.8', 'go', 'go.tmpl', 'goPackages', FALSE),
-
-    (3, '13.2.0', 'gnat13', 'ada.tmpl', 'adaPackages', FALSE),
-    (3, '12.3.0', 'gnat', 'ada.tmpl', 'adaPackages', FALSE),
-    (3, '14.1.0', 'gnat14', 'ada.tmpl', 'adaPackages', TRUE),
-
-    (4, '2.16.03', 'nasm', 'assembly.tmpl', 'assemblyPackages', TRUE),
-
-    (5, '5.2p32', 'bash', 'bash.tmpl', 'bashPackages', TRUE),
-
-    (6, '1.18', 'bun', 'bun.tmpl', 'bunPackages', TRUE),
-
-    (7, '1.11.2', 'crystal', 'crystal.tmpl', 'crystalPackages', TRUE),
-    (7, '1.9.2', 'crystal_1_9', 'crystal.tmpl', 'crystalPackages', FALSE),
-
-    (8, '3.3.4', 'dart', 'dart.tmpl', 'dartPackages', TRUE);
-
--- Deno versions
-INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) 
-VALUES
-    (9, '1.44.3', 'deno', 'deno.tmpl', 'deno', TRUE);
-
--- Fortran versions
-INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) 
-VALUES
-    (10, '13.2.0', 'gfortran', 'fortran.tmpl', 'fortran', TRUE),
-    (10, '12.3.0', 'gfortran12', 'fortran.tmpl', 'fortran', FALSE);
-
--- Groovy version
-INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) 
-VALUES
-    (11, '3.0.11', 'groovy', 'groovy.tmpl', 'groovy', TRUE);
-
--- Julia versions
-INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) 
-VALUES
-    (12, '1.10.3', 'julia', 'julia.tmpl', 'julia', TRUE),
-    (12, '1.9.4', 'julia_19', 'julia.tmpl', 'julia', FALSE);
-
--- Lua versions
-INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) 
-VALUES
-    (13, '5.2.4', 'lua', 'lua.tmpl', 'lua52Packages', TRUE),
-    (13, '5.4.6', 'lua5_4_compat', 'lua.tmpl', 'lua54Packages', FALSE),
-    (13, '5.3.6', 'lua5_3_compat', 'lua.tmpl', 'lua53Packages', FALSE);
-
--- Nim versions
-INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) 
-VALUES
-    (14, '2.0.4', 'nim', 'nim.tmpl', 'nim', TRUE),
-    (14, '1.6.20', 'nim1', 'nim.tmpl', 'nim', FALSE);
-
--- Node.js versions
-INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) 
-VALUES
-    (15, '22.4.1', 'nodejs_22', 'node.tmpl', 'nodePackages', TRUE),
-    (15, '20.15.1', 'nodejs_20', 'node.tmpl', 'nodePackages', FALSE),
-    (15, '18.20.4', 'nodejs_18', 'node.tmpl', 'nodePackages', FALSE);
-
--- Perl versions
-INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) 
-VALUES
-    (16, '5.38.2', 'perl', 'perl.tmpl', 'perl538Packages', TRUE),
-    (16, '5.36.3', 'perl536', 'perl.tmpl', 'perl536Packages', FALSE);
-
--- PHP versions
-INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) 
-VALUES
-    (17, '8.2.24', 'php', 'php.tmpl', 'php82Packages', TRUE),
-    (17, '8.3.12', 'php83', 'php.tmpl', 'php83Packages', FALSE),
-    (17, '8.1.30', 'php81', 'php.tmpl', 'php81Packages', FALSE);
-
--- Rust version
-INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) 
-VALUES
-    (18, '1.77.1', 'rustc', 'rust.tmpl', 'rust', TRUE);
-
--- Ruby versions
-INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) 
-VALUES
-    (19, '3.1.6', 'ruby', 'ruby.tmpl', 'rubyPackages', TRUE),
-    (19, '3.2.4', 'ruby_3_2', 'ruby.tmpl', 'rubyPackages_3_2', FALSE),
-    (19, '3.3.5', 'ruby_3_3', 'ruby.tmpl', 'rubyPackages_3_3', FALSE);
-
--- SQL version
-INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) 
-VALUES
-    (20, '3.45.3', 'sqlite', 'sql.tmpl', 'sql', TRUE);
-
--- Zig version
-INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) 
-VALUES
-    (21, '3.45.3', 'zig', 'zig.tmpl', 'zig', TRUE);
 
 
 

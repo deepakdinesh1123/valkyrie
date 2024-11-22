@@ -30,4 +30,6 @@ WORKDIR /home/valnix/
 
 RUN sh store_packages.sh
 
+RUN nix-env -if https://github.com/valkyrie-sh/cached-nix-shell/tarball/master
+
 CMD [ "/bin/sh", "-c", "sleep infinity" ]

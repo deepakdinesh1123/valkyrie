@@ -91,12 +91,18 @@ func (ns *NSJailExecutor) GetExecCmd(ctx context.Context, outFile *os.File, errF
 	language, err := ns.queries.GetLanguageByID(ctx, langVersion.LanguageID)
 
 	var jailExec bytes.Buffer
-	tmplName := filepath.Join("templates", language.Name, langVersion.Template)
+	var langTemplate string
+
+	if langVersion.Template.String != "" {
+		langTemplate = langVersion.Template.String
+	} else {
+		langTemplate = language.Template
+	}
 
 	execTmpl, err := template.New(string("base.nsexec.tmpl")).ParseFS(
 		execution.ExecTemplates,
 		"templates/base.nsexec.tmpl",
-		tmplName,
+		langTemplate,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse template: %s", err)
