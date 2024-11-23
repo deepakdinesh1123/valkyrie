@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/puddle/v2"
 )
 
-func NewContainerPool(ctx context.Context, initPoolSize int32, maxPoolSize int32, engine string) (*puddle.Pool[Container], error) {
+func NewContainerExecutionPool(ctx context.Context, initPoolSize int32, maxPoolSize int32, engine string) (*puddle.Pool[Container], error) {
 	var constructor puddle.Constructor[Container]
 	var destructor puddle.Destructor[Container]
 

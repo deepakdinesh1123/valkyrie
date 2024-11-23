@@ -91,6 +91,17 @@ type Package struct {
 	TsvSearch interface{} `db:"tsv_search" json:"tsv_search"`
 }
 
+type Sandbox struct {
+	SandboxID    int64              `db:"sandbox_id" json:"sandbox_id"`
+	WorkerID     pgtype.Int4        `db:"worker_id" json:"worker_id"`
+	StartedAt    pgtype.Timestamptz `db:"started_at" json:"started_at"`
+	CreatedAt    pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+	GitUrl       pgtype.Text        `db:"git_url" json:"git_url"`
+	SandboxUrl   pgtype.Text        `db:"sandbox_url" json:"sandbox_url"`
+	CurrentState string             `db:"current_state" json:"current_state"`
+}
+
 type Worker struct {
 	ID            int32              `db:"id" json:"id"`
 	Name          string             `db:"name" json:"name"`

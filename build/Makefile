@@ -24,3 +24,8 @@ build-podman-image:
 	podman build \
 		-t odin:alpine \
 		-f build/platforms/alpine/Containerfile .
+
+build-sandbox-image:
+	docker build \
+	-t odin:sandbox \
+	-f build/platforms/sandbox/base.dockerfile

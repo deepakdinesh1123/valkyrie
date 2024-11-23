@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/puddle/v2"
 )
 
-func NewContainerPool(ctx context.Context, initPoolSize int32, maxPoolSize int32, engine string) (*puddle.Pool[Container], error) {
+func NewContainerExecutionPool(ctx context.Context, initPoolSize int32, maxPoolSize int32, engine string) (*puddle.Pool[Container], error) {
 
 	pool, err := puddle.NewPool(&puddle.Config[Container]{Constructor: PodConstructor, Destructor: Poddestructor, MaxSize: maxPoolSize})
 	if err != nil {
