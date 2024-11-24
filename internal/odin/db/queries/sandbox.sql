@@ -10,8 +10,8 @@ create table sandboxes (
 );
 
 -- name: InsertSandbox :one
-insert into sandboxes (worker_id, git_url, sandbox_url)
-values ($1, $2, $3)
+insert into sandboxes (git_url)
+values ($1)
 returning *;
 
 -- name: GetSandbox :one
@@ -27,6 +27,12 @@ where sandbox_id =  $1;
 -- name: UpdateSandboxStartTime :exec
 update sandboxes set
 started_at = $2
+where sandbox_id = $1;
+
+-- name: UpdateSandbox :exec
+update sandboxes set
+started_at = $2,
+sandbox_url = $3
 where sandbox_id = $1;
 
 -- name: FetchSandboxJob :one

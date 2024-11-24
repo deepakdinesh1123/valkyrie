@@ -10,5 +10,5 @@
     "editor.detectIndentation": false,
     "editor.tabSize": 2
   },
-  "go.buildFlags": ["-tags=all"],
+  "go.buildFlags": ["-tags=docker"],
 }

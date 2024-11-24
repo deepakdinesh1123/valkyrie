@@ -10,7 +10,7 @@ import (
 
 func NewContainerExecutionPool(ctx context.Context, initPoolSize int32, maxPoolSize int32, engine string) (*puddle.Pool[Container], error) {
 
-	pool, err := puddle.NewPool(&puddle.Config[Container]{Constructor: DockerConstructor, Destructor: DockerDestructor, MaxSize: maxPoolSize})
+	pool, err := puddle.NewPool(&puddle.Config[Container]{Constructor: DockerExecConstructor, Destructor: DockerExecDestructor, MaxSize: maxPoolSize})
 	if err != nil {
 		return nil, err
 	}

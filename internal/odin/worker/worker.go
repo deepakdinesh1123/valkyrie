@@ -12,6 +12,7 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/executor"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/sandbox"
 	"github.com/deepakdinesh1123/valkyrie/internal/telemetry"
 	"github.com/deepakdinesh1123/valkyrie/pkg/namesgenerator"
 	"github.com/gofrs/flock"
@@ -23,15 +24,16 @@ import (
 )
 
 type Worker struct {
-	ID           int
-	Name         string
-	queries      db.Store
-	envConfig    *config.EnvConfig
-	exectr       executor.Executor
-	logger       *zerolog.Logger
-	tp           trace.TracerProvider
-	mp           metric.MeterProvider
-	otelShutdown func(context.Context) error
+	ID             int
+	Name           string
+	queries        db.Store
+	envConfig      *config.EnvConfig
+	exectr         executor.Executor
+	sandboxHandler sandbox.SandboxHandler
+	logger         *zerolog.Logger
+	tp             trace.TracerProvider
+	mp             metric.MeterProvider
+	otelShutdown   func(context.Context) error
 
 	WorkerStats struct {
 		CPUUsage  float64
@@ -103,11 +105,22 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 			logger.Err(err).Msg("Failed to get worker")
 		}
 	}
-	exectr, err := executor.GetExecutor(ctx, queries, int32(wrkr.ID), tp, mp, envConfig, logger)
-	if err != nil {
-		return nil, err
+
+	if envConfig.ODIN_ENABLE_EXECUTION {
+		exectr, err := executor.GetExecutor(ctx, queries, int32(wrkr.ID), tp, mp, envConfig, logger)
+		if err != nil {
+			return nil, err
+		}
+		wrkr.exectr = exectr
 	}
-	wrkr.exectr = exectr
+
+	if envConfig.ODIN_ENABLE_SANDBOX {
+		sandboxHandler, err := sandbox.GetSandboxHandler(ctx, queries, int32(wrkr.ID), tp, mp, envConfig, logger)
+		if err != nil {
+			return nil, err
+		}
+		wrkr.sandboxHandler = sandboxHandler
+	}
 	logger.Info().Msgf("Starting worker %d with name %s", wrkr.ID, wrkr.Name)
 
 	err = writeWorkerInfo(envConfig.ODIN_WORKER_INFO_FILE, wrkr)
@@ -148,7 +161,9 @@ func (w *Worker) upsertWorker(ctx context.Context, name string, id int) (int, er
 func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 	w.queries.UpdateHeartbeat(ctx, int32(w.ID))
 	defer wg.Done()
-	defer w.exectr.Cleanup()
+	if w.exectr != nil {
+		defer w.exectr.Cleanup()
+	}
 
 	defer func() {
 		var err error
@@ -201,28 +216,49 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 			// 	w.logger.Info().Float64("CPU Usage", w.WorkerStats.CPUUsage).Msg("Worker: high usage")
 			// 	continue
 			// }
-			if swg.Count() >= w.envConfig.ODIN_WORKER_CONCURRENCY {
-				w.logger.Info().Int("Tasks in progress", int(swg.Count())).Int32("Concurrency limit", w.envConfig.ODIN_WORKER_CONCURRENCY).Msg("Worker: concurrency limit reached")
-				continue
-			}
-			res, err := w.queries.FetchJobTx(ctx, db.FetchJobTxParams{WorkerID: int32(w.ID)})
-			if err != nil {
-				switch err {
-				case pgx.ErrNoRows:
+			if w.envConfig.ODIN_ENABLE_EXECUTION {
+				if swg.Count() >= w.envConfig.ODIN_WORKER_CONCURRENCY {
+					w.logger.Info().Int("Tasks in progress", int(swg.Count())).Int32("Concurrency limit", w.envConfig.ODIN_WORKER_CONCURRENCY).Msg("Worker: concurrency limit reached")
 					continue
-				case context.Canceled:
-					w.logger.Info().Msg("Worker: context canceled")
-					swg.Wait()
-					return nil
-				default:
-					w.logger.Err(err).Msgf("Worker: failed to fetch job")
-					return &WorkerError{Type: "FetchJob", Message: err.Error()}
 				}
+				res, err := w.queries.FetchJobTx(ctx, db.FetchJobTxParams{WorkerID: int32(w.ID)})
+				if err != nil {
+					switch err {
+					case pgx.ErrNoRows:
+						continue
+					case context.Canceled:
+						w.logger.Info().Msg("Worker: context canceled")
+						swg.Wait()
+						return nil
+					default:
+						w.logger.Err(err).Msgf("Worker: failed to fetch job")
+						return &WorkerError{Type: "FetchJob", Message: err.Error()}
+					}
+				}
+				w.logger.Info().Msgf("Worker: fetched job %d", res.Job.JobID)
+				swg.Add(1)
+				// span.AddEvent("Executing job")
+				go w.exectr.Execute(ctx, &swg, &res.Job, w.logger.With().Int64("JOB_ID", res.Job.JobID).Logger())
 			}
-			w.logger.Info().Msgf("Worker: fetched job %d", res.Job.JobID)
-			swg.Add(1)
-			// span.AddEvent("Executing job")
-			go w.exectr.Execute(ctx, &swg, &res.Job, w.logger.With().Int64("JOB_ID", res.Job.JobID).Logger())
+
+			if w.envConfig.ODIN_ENABLE_SANDBOX {
+				res, err := w.queries.FetchSandboxJobTx(ctx, db.FetchSandboxJobTxParams{WorkerID: int32(w.ID)})
+				if err != nil {
+					switch err {
+					case pgx.ErrNoRows:
+						continue
+					case context.Canceled:
+						w.logger.Info().Msg("Worker: context canceled")
+						swg.Wait()
+						return nil
+					default:
+						w.logger.Err(err).Msgf("Worker: failed to fetch sandbox job")
+						return &WorkerError{Type: "FetchSandboxJob", Message: err.Error()}
+					}
+				}
+				w.logger.Info().Msgf("Worker: fetched sandbox job %d", res.Sandbox.SandboxID)
+				w.sandboxHandler.Create(ctx, &swg, res.Sandbox)
+			}
 		case <-heartBeatTicker.C:
 			w.queries.UpdateHeartbeat(ctx, int32(w.ID))
 		}

@@ -13,6 +13,9 @@ import (
 
 // Environment struct represents the configuration settings for the application.
 type EnvConfig struct {
+	ODIN_ENABLE_EXECUTION bool `mapstructure:"ODIN_ENABLE_EXECUTION"`
+	ODIN_ENABLE_SANDBOX   bool `mapstructure:"ODIN_ENABLE_SANDBOX"`
+
 	POSTGRES_HOST     string `mapstructure:"POSTGRES_HOST"`     // represents the PostgreSQL server host.
 	POSTGRES_PORT     uint32 `mapstructure:"POSTGRES_PORT"`     // represents the PostgreSQL server port.
 	POSTGRES_USER     string `mapstructure:"POSTGRES_USER"`     // represents the username for connecting to PostgreSQL.
@@ -62,17 +65,8 @@ type EnvConfig struct {
 
 	USER_HOME_DIR string
 
-	// Packages generation database
-	NIXOS_VERSION      string `mapstructure:"NIXOS_VERSION"`      // represents the NixOS version to use.
-	DATABASE_HOST      string `mapstructure:"DATABASE_HOST"`      // represents the database host.
-	DATABASE_PORT      string `mapstructure:"DATABASE_PORT"`      // represents the database port.
-	DATABASE_PASSWORD  string `mapstructure:"DATABASE_PASSWORD"`  // represents the database password.
-	DATABASE_SSL_MODE  string `mapstructure:"DATABASE_SSL_MODE"`  // represents the SSL mode for connecting to PostgreSQL.
-	DATABASE_CONTAINER string `mapstructure:"DATABASE_CONTAINER"` // represents the database container name.
-	DATABASE_USER      string `mapstructure:"DATABASE_USER"`      // represents the database user.
-	DATABASE_NAME      string `mapstructure:"DATABASE_NAME"`      // represents the database name.
-	DUMP_PATH          string `mapstructure:"DUMP_PATH"`          // represents the path for dumps inside the container.
-	LOCAL_DUMP_PATH    string `mapstructure:"LOCAL_DUMP_PATH"`    // represents the local path for dumps.
+	ODIN_WORKER_SANDBOX_HANDLER string `mapstructure:"ODIN_WORKER_SANDBOX_HANDLER"`
+	ODIN_SANDBOX_DOCKER_IMAGE   string `mapstructure:"ODIN_SANDBOX_DOCKER_IMAGE"`
 }
 
 // EnvConfig holds the configuration settings for the application.
@@ -127,15 +121,8 @@ func GetEnvConfig() (*EnvConfig, error) {
 		viper.SetDefault("ODIN_WORKER_DOCKER_IMAGE", "odin:alpine")
 		viper.SetDefault("ODIN_WORKER_PODMAN_IMAGE", "odin:alpine")
 
-		viper.SetDefault("NIXOS_VERSION", "24.05")
-		viper.SetDefault("DATABASE_HOST", "localhost")
-		viper.SetDefault("DATABASE_PORT", "5433")
-		viper.SetDefault("DATABASE_SSL_MODE", "disable")
-		viper.SetDefault("DATABASE_CONTAINER", "nixos-packages-db")
-		viper.SetDefault("DATABASE_USER", "thors")
-		viper.SetDefault("DATABASE_NAME", "nixos_packages")
-		viper.SetDefault("DUMP_PATH", "/dumps")
-		viper.SetDefault("LOCAL_DUMP_PATH", "./dumps")
+		viper.SetDefault("ODIN_WORKER_SANDBOX_HANDLER", "docker")
+		viper.SetDefault("ODIN_SANDBOX_DOCKER_IMAGE", "odin:sandbox")
 
 		// Read configuration from file
 		_ = viper.ReadInConfig()
