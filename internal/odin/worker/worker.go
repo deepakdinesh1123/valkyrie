@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"sync"
 	"time"
@@ -117,7 +118,7 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 	if envConfig.ODIN_ENABLE_SANDBOX {
 		sandboxHandler, err := sandbox.GetSandboxHandler(ctx, queries, int32(wrkr.ID), tp, mp, envConfig, logger)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("could not get sandbox handler: %s", err)
 		}
 		wrkr.sandboxHandler = sandboxHandler
 	}
@@ -201,6 +202,7 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 			swg.Wait()
 			err := ctx.Err()
 			fetchJobTicker.Stop()
+			w.sandboxHandler.Cleanup(context.TODO())
 			w.queries.RequeueWorkerJobs(context.TODO(), pgtype.Int4{Valid: true, Int32: int32(w.ID)})
 			switch err {
 			case context.Canceled:
@@ -249,14 +251,17 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 						continue
 					case context.Canceled:
 						w.logger.Info().Msg("Worker: context canceled")
-						swg.Wait()
+						// swg.Wait()
+						w.sandboxHandler.Cleanup(context.TODO())
 						return nil
 					default:
+						w.sandboxHandler.Cleanup(context.TODO())
 						w.logger.Err(err).Msgf("Worker: failed to fetch sandbox job")
 						return &WorkerError{Type: "FetchSandboxJob", Message: err.Error()}
 					}
 				}
 				w.logger.Info().Msgf("Worker: fetched sandbox job %d", res.Sandbox.SandboxID)
+				swg.Add(1)
 				w.sandboxHandler.Create(ctx, &swg, res.Sandbox)
 			}
 		case <-heartBeatTicker.C:

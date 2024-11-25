@@ -26,6 +26,12 @@ type Handler interface {
 	//
 	// POST /language-versions/create
 	CreateLanguageVersion(ctx context.Context, req *LanguageVersion, params CreateLanguageVersionParams) (CreateLanguageVersionRes, error)
+	// CreateSandbox implements createSandbox operation.
+	//
+	// Create a sandbox.
+	//
+	// POST /sandbox
+	CreateSandbox(ctx context.Context, params CreateSandboxParams) (CreateSandboxRes, error)
 	// DeleteExecutionJob implements deleteExecutionJob operation.
 	//
 	// Delete execution job.
@@ -128,6 +134,12 @@ type Handler interface {
 	//
 	// GET /language-versions/{id}
 	GetLanguageVersionById(ctx context.Context, params GetLanguageVersionByIdParams) (GetLanguageVersionByIdRes, error)
+	// GetSandbox implements getSandbox operation.
+	//
+	// Retrieve Sandbox details.
+	//
+	// GET /sandbox/{sandboxId}
+	GetSandbox(ctx context.Context, params GetSandboxParams) (GetSandboxRes, error)
 	// GetVersion implements getVersion operation.
 	//
 	// Get version.

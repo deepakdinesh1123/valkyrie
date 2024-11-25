@@ -8,7 +8,11 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/pool"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/services/sandbox"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
+	"github.com/goccy/go-yaml"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/puddle/v2"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/metric"
@@ -44,5 +48,80 @@ func NewDockerSandboxHandler(ctx context.Context, queries db.Store, workerId int
 }
 
 func (d *DockerSH) Create(ctx context.Context, wg *concurrency.SafeWaitGroup, sandBox db.Sandbox) {
-	cont := d.containerPool.Acquire(ctx)
+	defer wg.Done()
+
+	cont, err := d.containerPool.Acquire(ctx)
+	if err != nil {
+		d.logger.Err(err).Msg("could not acquire container")
+		return
+	}
+	go d.containerPool.CreateResource(ctx)
+	sandboxConfig, err := sandbox.GetSandboxConfig()
+	if err != nil {
+		d.logger.Err(err).Msg("could not get sandbox config")
+		return
+	}
+	configYaml, err := yaml.Marshal(sandboxConfig)
+	if err != nil {
+		d.logger.Err(err).Msg("could not convert sandbox config to yaml")
+	}
+
+	d.logger.Debug().Str("Command", fmt.Sprintf("echo \"%s\" >> /home/valnix/.config/code-server/config.yaml", string(configYaml))).Msg("Adding config")
+	configExec, err := d.client.ContainerExecCreate(
+		ctx,
+		cont.Value().ID,
+		container.ExecOptions{
+			AttachStderr: true,
+			AttachStdout: true,
+			Cmd: []string{
+				"/bin/sh",
+				"-c",
+				fmt.Sprintf("echo \"%s\" >> /home/valnix/.config/code-server/config.yaml", string(configYaml)),
+			},
+		},
+	)
+	_, err = d.client.ContainerExecAttach(ctx, configExec.ID, container.ExecAttachOptions{})
+	if err != nil {
+		d.logger.Err(err).Msg("error adding code server config")
+		return
+	}
+
+	codeServerExec, err := d.client.ContainerExecCreate(
+		ctx,
+		cont.Value().ID,
+		container.ExecOptions{
+			AttachStderr: true,
+			AttachStdout: true,
+			Cmd: []string{
+				"/home/valnix/start.sh",
+			},
+		},
+	)
+	err = d.client.ContainerExecStart(ctx, codeServerExec.ID, container.ExecStartOptions{
+		Detach: true,
+	})
+	if err != nil {
+		d.logger.Err(err).Msg("error adding code server config")
+		return
+	}
+
+	contInfo, err := d.client.ContainerInspect(ctx, cont.Value().ID)
+	if err != nil {
+		d.logger.Err(err).Msg("error getting container config")
+	}
+
+	containerURL := fmt.Sprintf("http://%s:9090", contInfo.NetworkSettings.IPAddress)
+
+	err = d.queries.MarkSandboxRunning(ctx, db.MarkSandboxRunningParams{
+		SandboxID:  sandBox.SandboxID,
+		SandboxUrl: pgtype.Text{String: containerURL, Valid: true},
+	})
+	if err != nil {
+		d.logger.Err(err).Msg("error marking the container as running")
+	}
+}
+
+func (d *DockerSH) Cleanup(ctx context.Context) error {
+	d.containerPool.Close()
+	return nil
 }

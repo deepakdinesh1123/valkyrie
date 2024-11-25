@@ -1,31 +1,31 @@
 services:
-  odin:
-    build:
-      context: .
-      dockerfile: build/package/dockerfiles/odin.server.dockerfile
-    env_file:
-      - .env
-    depends_on:
-      postgres:
-        condition: service_healthy
-    command: ["server", "start"]
-    ports:
-      - "8080:8080"
+  # odin:
+  #   build:
+  #     context: .
+  #     dockerfile: build/package/dockerfiles/odin.server.dockerfile
+  #   env_file:
+  #     - .env
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   command: ["server", "start"]
+  #   ports:
+  #     - "8080:8080"
 
-  odin-worker:
-    build:
-      context: .
-      dockerfile: build/package/dockerfiles/odin.worker.dockerfile
-    env_file:
-      - .env
-    depends_on:
-      postgres:
-        condition: service_healthy
-      odin:
-        condition: service_started
-    deploy:
-      replicas: 3
-    command: ["worker", "start"]
+  # odin-worker:
+  #   build:
+  #     context: .
+  #     dockerfile: build/package/dockerfiles/odin.worker.dockerfile
+  #   env_file:
+  #     - .env
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     odin:
+  #       condition: service_started
+  #   deploy:
+  #     replicas: 3
+  #   command: ["worker", "start"]
 
   postgres:
     image: postgres
@@ -42,23 +42,44 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+  
+  # caddy:
+  #   image: lucaslorentz/caddy-docker-proxy:ci-alpine
+  #   ports:
+  #     - 80:80
+  #     - 443:443
+  #   environment:
+  #     - CADDY_INGRESS_NETWORKS=caddy
+  #   networks:
+  #     - caddy
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #     - caddy_data:/data
+  #   restart: unless-stopped
 
-  valkyrie-otel-collector:
-    image: otel/opentelemetry-collector-contrib
-    command: ["--config=/etc/otel-collector-config.yaml"]
-    volumes:
-      - ./configs/telemetry/collector.yml:/etc/otel-collector-config.yaml
-    ports:
-      - 4317:4317 # OTLP grpc receiver
-  jaeger:
-    image: jaegertracing/all-in-one:latest
-    ports:
-      - "6831:6831/udp" # UDP port for Jaeger agent
-      - "16686:16686" # Web UI
-      - "14268:14268" # HTTP port for spans
-  prometheus:
-    image: prom/prometheus:latest
-    volumes:
-      - ./configs/telemetry/prometheus.yml:/etc/prometheus/prometheus.yml
-    ports:
-      - "9090:9090"
+  # valkyrie-otel-collector:
+  #   image: otel/opentelemetry-collector-contrib
+  #   command: ["--config=/etc/otel-collector-config.yaml"]
+  #   volumes:
+  #     - ./configs/telemetry/collector.yml:/etc/otel-collector-config.yaml
+  #   ports:
+  #     - 4317:4317 # OTLP grpc receiver
+  # jaeger:
+  #   image: jaegertracing/all-in-one:latest
+  #   ports:
+  #     - "6831:6831/udp" # UDP port for Jaeger agent
+  #     - "16686:16686" # Web UI
+  #     - "14268:14268" # HTTP port for spans
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   volumes:
+  #     - ./configs/telemetry/prometheus.yml:/etc/prometheus/prometheus.yml
+  #   ports:
+  #     - "9090:9090"
+
+networks:
+  caddy:
+    external: true
+
+volumes:
+  caddy_data: {}

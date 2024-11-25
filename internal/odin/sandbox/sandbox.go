@@ -9,4 +9,5 @@ import (
 
 type SandboxHandler interface {
 	Create(ctx context.Context, wg *concurrency.SafeWaitGroup, sandBox db.Sandbox)
+	Cleanup(ctx context.Context) error
 }

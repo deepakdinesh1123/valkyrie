@@ -48,3 +48,7 @@ paths:
     $ref: paths/language-versions_create.yml
   /language-versions/{id}:
     $ref: paths/language-versions_{id}.yml
+  /sandbox:
+    $ref: paths/sandbox.yml
+  /sandbox/{sandboxId}:
+    $ref: paths/sandbox_{sandboxId}.yml

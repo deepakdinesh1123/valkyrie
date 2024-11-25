@@ -16,12 +16,12 @@ import (
 func GetSandboxHandler(ctx context.Context, queries db.Store, workerId int32, tp trace.TracerProvider, mp metric.MeterProvider, envConfig *config.EnvConfig, logger *zerolog.Logger) (SandboxHandler, error) {
 	containerPool, err := pool.NewSandboxPool(ctx, int32(envConfig.ODIN_HOT_CONTAINER), int32(envConfig.ODIN_WORKER_CONCURRENCY), envConfig.ODIN_CONTAINER_ENGINE)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error creating sandbox pool: %s", err)
 	}
 	switch envConfig.ODIN_WORKER_SANDBOX_HANDLER {
 	case "docker":
 		return container.NewDockerSandboxHandler(ctx, queries, workerId, tp, mp, envConfig, containerPool, logger)
 	default:
-		return nil, fmt.Errorf("invalid sandbox handler")
+		return nil, fmt.Errorf("invalid sandbox handler: %s", err)
 	}
 }

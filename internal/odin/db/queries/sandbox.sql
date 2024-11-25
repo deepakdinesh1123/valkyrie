@@ -6,6 +6,7 @@ create table sandboxes (
     created_at timestamptz not null default now(),
     git_url text,
     sandbox_url text,
+    password bytea,
     current_state TEXT NOT NULL CHECK (current_state IN ('pending', 'running', 'failed', 'stopped', 'creating'))
 );
 
@@ -15,7 +16,7 @@ values ($1)
 returning *;
 
 -- name: GetSandbox :one
-select worker_id, started_at, created_at, git_url, sandbox_url
+select *
 from sandboxes
 where  sandbox_id = $1;
 
@@ -29,10 +30,18 @@ update sandboxes set
 started_at = $2
 where sandbox_id = $1;
 
--- name: UpdateSandbox :exec
+-- name: MarkSandboxRunning :exec
 update sandboxes set
-started_at = $2,
-sandbox_url = $3
+started_at = now(),
+sandbox_url = $2,
+password = $3,
+current_state = 'running',
+updated_at = now()
+where sandbox_id = $1;
+
+-- name: UpdateSandboxPassword :exec
+update sandboxes set
+password = $2
 where sandbox_id = $1;
 
 -- name: FetchSandboxJob :one

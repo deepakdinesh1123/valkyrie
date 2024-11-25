@@ -40,6 +40,15 @@ func (UnimplementedHandler) CreateLanguageVersion(ctx context.Context, req *Lang
 	return r, ht.ErrNotImplemented
 }
 
+// CreateSandbox implements createSandbox operation.
+//
+// Create a sandbox.
+//
+// POST /sandbox
+func (UnimplementedHandler) CreateSandbox(ctx context.Context, params CreateSandboxParams) (r CreateSandboxRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // DeleteExecutionJob implements deleteExecutionJob operation.
 //
 // Delete execution job.
@@ -190,6 +199,15 @@ func (UnimplementedHandler) GetLanguageById(ctx context.Context, params GetLangu
 //
 // GET /language-versions/{id}
 func (UnimplementedHandler) GetLanguageVersionById(ctx context.Context, params GetLanguageVersionByIdParams) (r GetLanguageVersionByIdRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetSandbox implements getSandbox operation.
+//
+// Retrieve Sandbox details.
+//
+// GET /sandbox/{sandboxId}
+func (UnimplementedHandler) GetSandbox(ctx context.Context, params GetSandboxParams) (r GetSandboxRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

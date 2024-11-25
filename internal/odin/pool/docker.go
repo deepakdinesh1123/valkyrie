@@ -75,6 +75,10 @@ func DockerSandboxConstructor(ctx context.Context) (Container, error) {
 	createResp, err := dClient.ContainerCreate(ctx, &container.Config{
 		Image:      envConfig.ODIN_SANDBOX_DOCKER_IMAGE,
 		StopSignal: "SIGKILL",
+		// Labels: map[string]string{
+		// 	"caddy":               "https://code1.com",
+		// 	"caddy.reverse_proxy": "{{upstreams 8080}}",
+		// },
 	},
 		nil,
 		nil,

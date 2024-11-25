@@ -3,6 +3,7 @@
 package api
 
 import (
+	"net/url"
 	"time"
 )
 
@@ -90,6 +91,33 @@ func (s *CreateLanguageVersionOK) SetLanguage(val LanguageVersionResponse) {
 }
 
 func (*CreateLanguageVersionOK) createLanguageVersionRes() {}
+
+type CreateSandboxOK struct {
+	Result    string `json:"result"`
+	SandboxId int64  `json:"sandboxId"`
+}
+
+// GetResult returns the value of Result.
+func (s *CreateSandboxOK) GetResult() string {
+	return s.Result
+}
+
+// GetSandboxId returns the value of SandboxId.
+func (s *CreateSandboxOK) GetSandboxId() int64 {
+	return s.SandboxId
+}
+
+// SetResult sets the value of Result.
+func (s *CreateSandboxOK) SetResult(val string) {
+	s.Result = val
+}
+
+// SetSandboxId sets the value of SandboxId.
+func (s *CreateSandboxOK) SetSandboxId(val int64) {
+	s.SandboxId = val
+}
+
+func (*CreateSandboxOK) createSandboxRes() {}
 
 type DeleteExecutionJobBadRequest Error
 
@@ -219,7 +247,9 @@ func (s *Error) SetMessage(val string) {
 	s.Message = val
 }
 
+func (*Error) createSandboxRes()      {}
 func (*Error) getExecutionConfigRes() {}
+func (*Error) getSandboxRes()         {}
 func (*Error) getVersionRes()         {}
 
 type ExecuteBadRequest Error
@@ -1096,6 +1126,8 @@ type Language struct {
 	MonacoLanguage string `json:"monaco_language"`
 	// Default code for the language.
 	DefaultCode string `json:"default_code"`
+	// The default template for the language.
+	Template string `json:"template"`
 }
 
 // GetName returns the value of Name.
@@ -1118,6 +1150,11 @@ func (s *Language) GetDefaultCode() string {
 	return s.DefaultCode
 }
 
+// GetTemplate returns the value of Template.
+func (s *Language) GetTemplate() string {
+	return s.Template
+}
+
 // SetName sets the value of Name.
 func (s *Language) SetName(val string) {
 	s.Name = val
@@ -1138,6 +1175,11 @@ func (s *Language) SetDefaultCode(val string) {
 	s.DefaultCode = val
 }
 
+// SetTemplate sets the value of Template.
+func (s *Language) SetTemplate(val string) {
+	s.Template = val
+}
+
 // Merged schema.
 // Ref: #/components/schemas/LanguageResponse
 type LanguageResponse struct {
@@ -1149,6 +1191,8 @@ type LanguageResponse struct {
 	MonacoLanguage string `json:"monaco_language"`
 	// Merged property.
 	DefaultCode string `json:"default_code"`
+	// The default template for the language.
+	Template string `json:"template"`
 	// Unique identifier for the language version.
 	ID int64 `json:"id"`
 }
@@ -1171,6 +1215,11 @@ func (s *LanguageResponse) GetMonacoLanguage() string {
 // GetDefaultCode returns the value of DefaultCode.
 func (s *LanguageResponse) GetDefaultCode() string {
 	return s.DefaultCode
+}
+
+// GetTemplate returns the value of Template.
+func (s *LanguageResponse) GetTemplate() string {
+	return s.Template
 }
 
 // GetID returns the value of ID.
@@ -1196,6 +1245,11 @@ func (s *LanguageResponse) SetMonacoLanguage(val string) {
 // SetDefaultCode sets the value of DefaultCode.
 func (s *LanguageResponse) SetDefaultCode(val string) {
 	s.DefaultCode = val
+}
+
+// SetTemplate sets the value of Template.
+func (s *LanguageResponse) SetTemplate(val string) {
+	s.Template = val
 }
 
 // SetID sets the value of ID.
@@ -1642,6 +1696,52 @@ func (o OptString) Or(d string) string {
 	return d
 }
 
+// NewOptURI returns new OptURI with value set to v.
+func NewOptURI(v url.URL) OptURI {
+	return OptURI{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptURI is optional url.URL.
+type OptURI struct {
+	Value url.URL
+	Set   bool
+}
+
+// IsSet returns true if OptURI was set.
+func (o OptURI) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptURI) Reset() {
+	var v url.URL
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptURI) SetTo(v url.URL) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptURI) Get() (v url.URL, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptURI) Or(d url.URL) url.URL {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // Ref: #/components/schemas/Package
 type Package struct {
 	// Name of the package.
@@ -1801,6 +1901,67 @@ func (s *PaginationResponse) SetLimit(val int32) {
 func (s *PaginationResponse) SetNext(val OptString) {
 	s.Next = val
 }
+
+// Ref: #/components/schemas/Sandbox
+type Sandbox struct {
+	SandboxId int64       `json:"sandboxId"`
+	State     string      `json:"state"`
+	URL       OptURI      `json:"URL"`
+	GitURL    OptURI      `json:"gitURL"`
+	CreatedAt OptDateTime `json:"created_at"`
+}
+
+// GetSandboxId returns the value of SandboxId.
+func (s *Sandbox) GetSandboxId() int64 {
+	return s.SandboxId
+}
+
+// GetState returns the value of State.
+func (s *Sandbox) GetState() string {
+	return s.State
+}
+
+// GetURL returns the value of URL.
+func (s *Sandbox) GetURL() OptURI {
+	return s.URL
+}
+
+// GetGitURL returns the value of GitURL.
+func (s *Sandbox) GetGitURL() OptURI {
+	return s.GitURL
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *Sandbox) GetCreatedAt() OptDateTime {
+	return s.CreatedAt
+}
+
+// SetSandboxId sets the value of SandboxId.
+func (s *Sandbox) SetSandboxId(val int64) {
+	s.SandboxId = val
+}
+
+// SetState sets the value of State.
+func (s *Sandbox) SetState(val string) {
+	s.State = val
+}
+
+// SetURL sets the value of URL.
+func (s *Sandbox) SetURL(val OptURI) {
+	s.URL = val
+}
+
+// SetGitURL sets the value of GitURL.
+func (s *Sandbox) SetGitURL(val OptURI) {
+	s.GitURL = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *Sandbox) SetCreatedAt(val OptDateTime) {
+	s.CreatedAt = val
+}
+
+func (*Sandbox) getSandboxRes() {}
 
 type SearchLanguagePackagesBadRequest Error
 

@@ -1,0 +1,28 @@
+post:
+  summary: Create a sandbox
+  description: Create a sandbox
+  operationId: createSandbox
+  parameters:
+    - $ref: ../components/parameters/AuthHeader.yml
+  responses:
+    '200':
+      description: ok
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - result
+              - sandboxId
+            properties:
+              result:
+                type: string
+              sandboxId:
+                type: integer
+                format:  int64
+    '500':
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml

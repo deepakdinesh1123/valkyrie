@@ -15,8 +15,8 @@ func NewContainerExecutionPool(ctx context.Context, initPoolSize int32, maxPoolS
 
 	switch engine {
 	case "docker":
-		constructor = DockerConstructor
-		destructor = DockerDestructor
+		constructor = DockerExecConstructor
+		destructor = DockerExecDestructor
 	case "podman":
 		constructor = PodConstructor
 		destructor = Poddestructor

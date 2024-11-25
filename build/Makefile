@@ -28,4 +28,4 @@ build-podman-image:
 build-sandbox-image:
 	docker build \
 	-t odin:sandbox \
-	-f build/platforms/sandbox/base.dockerfile
+	-f build/platforms/sandbox/base.dockerfile .

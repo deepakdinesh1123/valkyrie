@@ -13,6 +13,10 @@ type CreateLanguageVersionRes interface {
 	createLanguageVersionRes()
 }
 
+type CreateSandboxRes interface {
+	createSandboxRes()
+}
+
 type DeleteExecutionJobRes interface {
 	deleteExecutionJobRes()
 }
@@ -79,6 +83,10 @@ type GetLanguageByIdRes interface {
 
 type GetLanguageVersionByIdRes interface {
 	getLanguageVersionByIdRes()
+}
+
+type GetSandboxRes interface {
+	getSandboxRes()
 }
 
 type GetVersionRes interface {

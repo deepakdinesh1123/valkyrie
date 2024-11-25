@@ -1,0 +1,20 @@
+type: object
+required:
+  - sandboxId
+  - state
+properties:
+  sandboxId:
+    type: integer
+    format: int64
+  state:
+    type: string
+  URL:
+    type: string
+    format: uri
+  gitURL:
+    type: string
+    format: uri
+  created_at:
+    type: string
+    format: date-time
+  

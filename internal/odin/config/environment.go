@@ -81,6 +81,9 @@ func GetEnvConfig() (*EnvConfig, error) {
 		viper.SetConfigName(".env")
 		viper.AutomaticEnv()
 
+		viper.SetDefault("ODIN_ENABLE_SANDBOX", true)
+		viper.SetDefault("ODIN_ENABLE_EXECUTION", false)
+
 		viper.SetDefault("POSTGRES_HOST", "localhost")
 		viper.SetDefault("POSTGRES_PORT", 5432)
 		viper.SetDefault("POSTGRES_USER", "thors")

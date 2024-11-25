@@ -114,11 +114,12 @@ create sequence sandboxes_id_seq as bigint;
 create table sandboxes (
     sandbox_id bigint primary key default nextval('sandboxes_id_seq'),
     worker_id int references workers on delete set null,
-    started_at timestamptz not null,
+    started_at timestamptz,
     created_at timestamptz not null default now(),
     updated_at timestamptz,
     git_url text,
     sandbox_url text,
+    password bytea,
     current_state TEXT NOT NULL CHECK (current_state IN ('pending', 'running', 'failed', 'stopped', 'creating')) default 'pending'
 );
 
