@@ -7,6 +7,8 @@ import (
 	"text/template"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
+	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
+	"github.com/jackc/pgx/v5"
 )
 
 func ConvertExecSpecToNixScript(ctx context.Context, execReq *db.ExecRequest, queries db.Store) (string, *ExecutionRequest, error) {
@@ -80,19 +82,51 @@ func (s *ExecutionService) convertExecSpecToFlake(execSpec ExecutionRequest) (st
 	tmpl, err := langTmpl.New("base.flake.tmpl").ParseFS(ExecTemplates, "templates/base.flake.tmpl")
 	if err != nil {
 		s.logger.Err(err).Msg("failed to parse template")
-		return "", &ExecutionServiceError{
-			Type:    "template",
-			Message: "failed to parse template",
-		}
+		return "", fmt.Errorf("error parsing template: %s", err)
 	}
 
 	err = tmpl.Execute(&res, execSpec)
 	if err != nil {
 		s.logger.Err(err).Msg("failed to execute template")
-		return "", &ExecutionServiceError{
-			Type:    "template",
-			Message: "failed to execute template",
-		}
+		return "", fmt.Errorf("failed to execute template: %s", err)
 	}
 	return res.String(), nil
+}
+
+func (s *ExecutionService) CheckExecRequest(ctx context.Context, req *api.ExecutionRequest) error {
+	language, err := s.queries.GetLanguageByName(ctx, req.Language.Value)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return fmt.Errorf("specified language is not supported")
+		}
+	}
+
+	if req.Version.Set {
+		_, err = s.queries.GetLanguageVersion(ctx, db.GetLanguageVersionParams{
+			LanguageID: language.ID,
+			Version:    req.Version.Value,
+		})
+		if err != nil {
+			return fmt.Errorf("specified version is not supported")
+		}
+	}
+
+	if req.Environment.Set {
+		var packages []string
+		if len(req.Environment.Value.LanguageDependencies) != 0 {
+			packages = append(packages, req.Environment.Value.LanguageDependencies...)
+		}
+		if len(req.Environment.Value.SystemDependencies) != 0 {
+			packages = append(packages, req.Environment.Value.SystemDependencies...)
+		}
+
+		res, err := s.queries.PackagesExist(ctx, packages)
+		if err != nil {
+			return fmt.Errorf("error checking if packages exist: %s", err)
+		}
+		if !res.Exists {
+			return fmt.Errorf("following packages does not exist: %s", res.NonexistingPackages)
+		}
+	}
+	return nil
 }

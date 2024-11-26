@@ -62,8 +62,7 @@ LIMIT 50;
 WITH existing_packages AS (
     SELECT name
     FROM packages
-    WHERE language = @language::text
-      AND name = ANY(@packages::text[])
+    WHERE name = ANY(@packages::text[])
 )
 SELECT 
     COUNT(*) = array_length(@packages::text[], 1) AS exists,
