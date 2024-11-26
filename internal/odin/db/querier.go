@@ -57,7 +57,7 @@ type Querier interface {
 	InsertPackages(ctx context.Context, arg []InsertPackagesParams) (int64, error)
 	InsertWorker(ctx context.Context, arg InsertWorkerParams) (Worker, error)
 	ListExecRequests(ctx context.Context, arg ListExecRequestsParams) ([]ExecRequest, error)
-	PackagesExist(ctx context.Context, arg PackagesExistParams) (PackagesExistRow, error)
+	PackagesExist(ctx context.Context, packages []string) (PackagesExistRow, error)
 	PruneCompletedJobs(ctx context.Context) error
 	RequeueLTJobs(ctx context.Context) error
 	RequeueWorkerJobs(ctx context.Context, workerID pgtype.Int4) error

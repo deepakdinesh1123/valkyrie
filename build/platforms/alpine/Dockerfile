@@ -28,8 +28,7 @@ COPY hack/execution/nix_stop.sh /home/valnix/nix_stop.sh
 COPY hack/packages/store_packages_docker.sh /home/valnix/store_packages.sh
 WORKDIR /home/valnix/
 
-RUN sh store_packages.sh
-
 RUN nix-env -if https://github.com/valkyrie-sh/cached-nix-shell/tarball/master
+RUN sh store_packages.sh
 
 CMD [ "/bin/sh", "-c", "sleep infinity" ]

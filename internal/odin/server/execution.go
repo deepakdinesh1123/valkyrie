@@ -12,7 +12,6 @@ import (
 	"github.com/coder/websocket/wsjson"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
-	"github.com/deepakdinesh1123/valkyrie/internal/odin/services/execution"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -26,23 +25,16 @@ type SSEMessage struct {
 }
 
 func (s *OdinServer) Execute(ctx context.Context, req *api.ExecutionRequest, params api.ExecuteParams) (api.ExecuteRes, error) {
+	if err := s.executionService.CheckExecRequest(ctx, req); err != nil {
+		return &api.ExecuteBadRequest{
+			Message: fmt.Sprintf("error in exec request: %s", err),
+		}, nil
+	}
 	jobId, err := s.executionService.AddJob(ctx, req)
 	if err != nil {
-		switch err.(type) {
-		case *execution.ExecutionServiceError:
-			return &api.ExecuteInternalServerError{
-				Message: fmt.Sprintf("Execution Service: %v", err),
-			}, nil
-		case *execution.TemplateError:
-			return &api.ExecuteBadRequest{
-				Message: fmt.Sprintf("Failed to execute: %v", err),
-			}, nil
-		default:
-			s.logger.Error().Stack().Err(err).Msg("Failed to execute")
-			return &api.ExecuteInternalServerError{
-				Message: fmt.Sprintf("Failed to execute: %v", err),
-			}, nil
-		}
+		return &api.ExecuteInternalServerError{
+			Message: fmt.Sprintf("Error adding execution job: %s", err),
+		}, nil
 	}
 	return &api.ExecuteOK{JobId: jobId, Events: fmt.Sprintf("/executions/%d/events", jobId)}, nil
 }
@@ -72,7 +64,6 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 	for {
 		select {
 		case <-ctx.Done():
-			s.logger.Info().Int64("executionId", execId).Msg("Client disconnected")
 			job, err := s.queries.GetJob(context.TODO(), execId)
 			if err != nil {
 				s.logger.Error().Stack().Err(err).Msg("Failed to get job status")
@@ -87,46 +78,37 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 			}
 			return
 		default:
-			s.logger.Debug().Msg("getting job")
 			job, err := s.queries.GetJob(ctx, execId)
-			s.logger.Debug().Msg("got job")
 			if err != nil {
 				s.logger.Error().Stack().Err(err).Msg("Failed to get job")
 				sendSSEMessage(w, flusher, SSEMessage{
 					Status:   "error",
 					ExecID:   execId,
-					ErrorMsg: "Failed to get job",
+					ErrorMsg: fmt.Sprintf("Failed to get job: %s", err),
 				})
 				return
 			}
-
-			s.logger.Debug().Str("status", job.CurrentState).Msg("CurrentState fetched")
-
 			switch job.CurrentState {
 			case "completed":
-				s.logger.Debug().Msg("Getting executions")
 				res, err := s.queries.GetExecutionsForJob(ctx, db.GetExecutionsForJobParams{
 					JobID:  pgtype.Int8{Int64: execId, Valid: true},
 					Limit:  1,
 					Offset: 0,
 				})
-				s.logger.Debug().Msg("got executions")
 				if err != nil {
 					s.logger.Error().Stack().Err(err).Msg("Failed to get execution logs")
 					sendSSEMessage(w, flusher, SSEMessage{
 						Status:   "error",
 						ExecID:   execId,
-						ErrorMsg: err.Error(),
+						ErrorMsg: fmt.Sprintf("failed to get execution logs: %s", err),
 					})
 					return
 				}
-				s.logger.Debug().Msg("sending completed")
 				sendSSEMessage(w, flusher, SSEMessage{
 					Status: "completed",
 					ExecID: execId,
 					Logs:   res[0].ExecLogs,
 				})
-				s.logger.Debug().Msg("completed sent")
 				return
 
 			case "failed":
@@ -137,19 +119,15 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 				return
 
 			case "pending":
-				s.logger.Debug().Msg("sending pending")
 				sendSSEMessage(w, flusher, SSEMessage{
 					Status: "pending",
 					ExecID: execId,
 				})
-				s.logger.Debug().Msg("pending sent")
 			case "scheduled":
-				s.logger.Debug().Msg("sending scheduled")
 				sendSSEMessage(w, flusher, SSEMessage{
 					Status: "scheduled",
 					ExecID: execId,
 				})
-				s.logger.Debug().Msg("scheduled sent")
 			case "cancelled":
 				sendSSEMessage(w, flusher, SSEMessage{
 					Status: "canceled",

@@ -55,12 +55,8 @@ func (s *OdinServer) SearchSystemPackages(ctx context.Context, params api.Search
 
 // PackagesExist implements api.Handler.
 func (s *OdinServer) PackagesExist(ctx context.Context, req *api.PackageExistRequest, params api.PackagesExistParams) (api.PackagesExistRes, error) {
-	dbParams := db.PackagesExistParams{
-		Language: req.Language,
-		Packages: req.Packages,
-	}
 
-	existsResponse, err := s.queries.PackagesExist(ctx, dbParams)
+	existsResponse, err := s.queries.PackagesExist(ctx, req.Packages)
 	if err != nil {
 		return &api.PackagesExistBadRequest{}, err
 	}

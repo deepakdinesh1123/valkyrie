@@ -74,10 +74,7 @@ func (s *ExecutionService) prepareExecutionRequest(ctx context.Context, req *api
 
 	flake, err := s.convertExecSpecToFlake(execReq)
 	if err != nil {
-		return nil, &ExecutionServiceError{
-			Type:    "flake",
-			Message: err.Error(),
-		}
+		return nil, fmt.Errorf("error converting exec spec to flake: %s", err)
 	}
 	execReq.Flake = flake
 	return &execReq, nil
