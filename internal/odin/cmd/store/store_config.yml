@@ -16,7 +16,19 @@ languages:
         version: "3.10"
         searchQuery: "python310Packages"
     template: |
-      {{ define "execute" }} python main.py {{ end }}
+      {{ define "LangSetup" }}
+      {{- if .IsFlake -}}
+                ({{.LangNixPkg}}.withPackages (python-pkgs: [
+                  {{ range .LanguageDependencies -}}
+                    python-pkgs.{{.}}
+                  {{ end -}}
+                ]))
+      {{- else -}}
+      '{{.LangNixPkg}}.withPackages( p: [ {{ range .LanguageDependencies }} p.{{.}} {{ end }} ] )'
+      {{- end -}}
+      {{ end }}
+
+      {{  define "execute" }} python main.py {{ end }}
     deps:
       - requests
       - numpy
@@ -118,7 +130,8 @@ languages:
         searchQuery: "goPackages"
         default: true
     template: |
-      {{ define "execute" }} go run main.go {{ end }}
+      {{ define "compile" }} go build main.go {{ .CompileArgs }}{{ end }}
+      {{ define "execute" }} ./main {{ end }}
     defaultCode: |
       package main
       import "fmt"
@@ -453,6 +466,18 @@ languages:
       {{  define "execute" }} ruby main.rb {{ end }}
     defaultCode: |
       puts "Hello, World!"
+    deps:
+      - sqlite3
+      - os
+      - uri
+      - nap
+      - re2
+      - git
+      - ffi
+      - json
+      - redis
+      - uuid4r
+
 
   - name: sql
     extension: sql
@@ -495,7 +520,6 @@ packages:
   - python3
   - python311
   - python312
-  - go_1_23
   - go_1_21
   - go
   - gnat14

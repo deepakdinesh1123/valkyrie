@@ -4,7 +4,7 @@ import { LanguageResponse } from '@/api-client';
 
 const initlanguage: LanguageResponse = 
   {
-    id: 1,
+    id: 148,
     name: "python",
     extension: "py",
     monaco_language: "python",

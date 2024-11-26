@@ -6,6 +6,7 @@ import (
 	_ "embed"
 	"encoding/csv"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -39,10 +40,11 @@ type Language struct {
 }
 
 type LanguageVersion struct {
-	NixPackage string `yaml:"nixPackage"`
-	Version    string `yaml:"version"`
-	Default    bool   `yaml:"default,omitempty"`
-	Template   string `yaml:"template,omitempty"`
+	NixPackage  string `yaml:"nixPackage"`
+	Version     string `yaml:"version"`
+	Default     bool   `yaml:"default,omitempty"`
+	Template    string `yaml:"template,omitempty"`
+	SearchQuery string `yaml:"searchQuery"`
 }
 
 type NixPackageInfo struct {
@@ -205,7 +207,7 @@ func addLanguageVersions(ctx context.Context, queries db.Store, config *StoreCon
 				Version:        version.Version,
 				NixPackageName: version.NixPackage,
 				Template:       pgtype.Text{String: version.Template, Valid: true},
-				SearchQuery:    fmt.Sprintf("%sPackages", version.NixPackage),
+				SearchQuery:    version.SearchQuery,
 			}
 			if version.Default {
 				langVersion.DefaultVersion = true
@@ -275,7 +277,8 @@ func addPackages(ctx context.Context, queries db.Store, config *StoreConfig, sql
 		}
 		sysPkgInfo, err := getPackageData(pkg, sqliteClient)
 		if err != nil {
-			return fmt.Errorf("could not get system deps package data: %s", err)
+			// return fmt.Errorf("could not get system deps package data: %s", err)
+			log.Println(pkg)
 		}
 		if sysPkgInfo.StorePath == "<broken>" {
 			fmt.Printf("The system dependency %s is broken\n", sysPkgInfo.Attribute)
