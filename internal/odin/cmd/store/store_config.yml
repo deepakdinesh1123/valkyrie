@@ -7,20 +7,102 @@ languages:
     versions:
       - nixPackage: "python312"
         version: "3.12"
+        searchQuery: "python312Packages"
         default: true
       - nixPackage: "python311"
         version: "3.11"
+        searchQuery: "python311Packages"
       - nixPackage: "python310"
         version: "3.10"
+        searchQuery: "python310Packages"
     template: |
       {{ define "execute" }} python main.py {{ end }}
     deps:
-      - numpy
-      - tensorflow
-      - torch
-      - pandas
       - requests
+      - numpy
       - openai
+      - opencv4
+      - openllm
+      - openapi3
+      - openaiauth
+      - openapi-core
+      - openllm-client
+      - sshtunnel
+      - sslib
+      - mathlibtools
+      - random2
+      - stringly
+      - stringcase
+      - stringparser
+      - stringbrewer
+      - datauri
+      - datatable
+      - dataproperty
+      - html5lib
+      - html5tagger
+      - html-tag-names
+      - html-text
+      - beautifulsoup4
+      - selenium
+      - selenium-wire
+      - pandas
+      - scipy
+      - scikit-learn
+      - matplotlib
+      - tensorflow
+      - pytorch-lightning
+      - statsmodels
+      - nltk
+      - gensim
+      - openpyxl
+      - lxml
+      - sqlalchemy
+      - pyyAML
+      - pytest
+      - pydantic
+      - asyncio
+      - regex
+      - tqdm
+      - jinja2
+      - attrs
+      - jsonschema
+      - cryptography
+      - cx_Oracle
+      - pymongo
+      - h5py
+      - pytest-bdd
+      - fastparquet
+      - nltk
+      - langsmith
+      - anthropic
+      - huggingface-hub
+      - litellm
+      - llama-index-embeddings-huggingface
+      - fastai
+      - jax
+      - spacy
+      - lightgbm
+      - mxnet
+      - minichain
+      - langchain-core
+      - zulip
+      - prophet
+      - google-cloud-automl
+      - torchio
+      - orange3
+      - optuna
+      - onnx
+      - onnxruntime
+      - botorch
+      - accupy
+      - kornia
+      - ignite
+      - gym
+      - tensorly
+      - tensordict
+      - gitpython
+      - gitdb
+
     defaultCode: |
       print("Hello World")
 
@@ -30,8 +112,10 @@ languages:
     versions:
       - nixPackage: "go_1_22"
         version: "1.22"
+        searchQuery: "goPackages"
       - nixPackage: "go_1_21"
         version: "1.21"
+        searchQuery: "goPackages"
         default: true
     template: |
       {{ define "execute" }} go run main.go {{ end }}
@@ -43,7 +127,439 @@ languages:
           fmt.Println("Hello, World!")
       }
 
+  - name: ada
+    extension: adb
+    monacoLanguage: ada
+    versions:
+      - nixPackage: "gnat"
+        version: "12.3.0"
+        searchQuery: "gnatPackages"
+      - nixPackage: "gnat13"
+        version: "13.2.0"
+        searchQuery: "gnatPackages"
+      - nixPackage: "gnat14"
+        version: "14.1.0"
+        searchQuery: "gnatPackages"
+        default: true
+    template: |
+      {{ define "compile" }} gnatmake main.adb {{ .CompileArgs }}{{ end }}
+
+      {{ define "execute" }} ./main {{ end }}
+    defaultCode: |
+      with Ada.Text_IO; use Ada.Text_IO;
+      procedure Hello is
+
+      begin
+        Put_Line("Hello, World!");
+      end Hello;
+
+  - name: assembly
+    extension: asm
+    monacoLanguage: assembly
+    versions:
+      - nixPackage: "nasm"
+        version: "2.16.03"
+        default: true
+        searchQuery: "assemblyPackages"
+    template: |
+      {{ define "compile" }} nasm -f elf64 main.asm -o main.o {{ .CompileArgs }} ld -o main main.o {{ end }}
+
+      {{ define "execute" }} ./main {{ end }}
+    defaultCode: |
+      section .data
+          msg db "Hello, World!",0
+
+      section .text
+          global _start
+
+      _start:
+          mov rax, 1
+          mov rdi, 1
+          mov rsi, msg
+          mov rdx, 13
+          syscall
+          mov rax, 60
+          xor rdi, rdi
+          syscall
+
+  - name: bash
+    extension: bash
+    monacoLanguage: shell
+    versions:
+      - nixPackage: "bash"
+        version: "5.2p32"
+        default: true
+        searchQuery: "bashPackages"
+    template: |
+      {{ define "execute" }} bash main.bash {{ end }}
+    defaultCode: |
+      echo hello
+
+  - name: bun
+    extension: js
+    monacoLanguage: javascript
+    versions:
+      - nixPackage: "bun"
+        version: "1.18"
+        default: true
+        searchQuery: "bunPackages"
+    template: |
+      {{ define "execute" }} bun run main.js {{ end }}
+    defaultCode: |
+      console.log("Hello World!")
+
+  - name: crystal
+    extension: cr
+    monacoLanguage: crystal
+    versions:
+      - nixPackage: "crystal"
+        version: "1.11.2"
+        default: true
+        searchQuery: "crystalPackages"
+      - nixPackage: "crystal_1_9"
+        version: "1.9.2"
+        searchQuery: "crystalPackages"
+    template: |
+      {{ define "execute" }} crystal run main.cr {{ end }}
+    defaultCode: |
+      puts "Hello World"
+
+  - name: dart
+    extension: dart
+    monacoLanguage: dart
+    versions:
+      - nixPackage: "dart"
+        version: "3.3.4"
+        default: true
+        searchQuery: "dartPackages"
+    template: |
+      {{ define "execute" }} dart run main.dart {{ end }}
+    defaultCode: |
+      void main() {
+        print("Hello, World!");
+      }
+
+  - name: deno
+    extension: ts
+    monacoLanguage: typescript
+    versions:
+      - nixPackage: "deno"
+        version: "1.44.3"
+        default: true
+        searchQuery: "deno"
+    template: |
+      {{ define "execute" }} deno run main.ts {{ end }}
+    defaultCode: |
+      console.log("Hello World");
+
+  - name: fortran
+    extension: f90
+    monacoLanguage: fortran
+    versions:
+      - nixPackage: "gfortran"
+        version: "13.2.0"
+        default: true
+        searchQuery: "fortran"
+      - nixPackage: "gfortran12"
+        version: "12.3.0"
+        searchQuery: "fortran"
+    template: |
+     {{ define "compile" }} gfortran main.f90 {{ .CompileArgs }} {{ end }}
+
+     {{ define "execute" }} ./a.out {{ end }}
+    defaultCode: |
+      program hello
+        print *, "Hello, World!"
+      end program hello
+
+  - name: groovy
+    extension: groovy
+    monacoLanguage: groovy
+    versions:
+      - nixPackage: "groovy"
+        version: "3.0.11"
+        default: true
+        searchQuery: "groovy"
+    template: |
+      {{ define "execute" }} groovy main.groovy {{ end }}
+    defaultCode: |
+      println "Hello World!"
+    
+  - name: julia
+    extension: jl
+    monacoLanguage: julia
+    versions:
+      - nixPackage: "julia"
+        version: "1.10.3"
+        default: true
+        searchQuery: "julia"
+      - nixPackage: "julia_19"
+        version: "1.9.4"
+        searchQuery: "julia"
+    template: |
+     {{  define "execute" }} julia main.jl {{ end }}
+    defaultCode: |
+      println("Hello, World!")
+
+  - name: lua
+    extension: lua
+    monacoLanguage: lua
+    versions:
+      - nixPackage: "lua"
+        version: "5.2.4"
+        default: true
+        searchQuery: "lua52Packages"
+      - nixPackage: "lua5_4_compat"
+        version: "5.4.6"
+        searchQuery: "lua54Packages"
+      - nixPackage: "lua5_3_compat"
+        version: "5.3.6"
+        searchQuery: "lua53Packages"
+    template: |
+      {{ define "LangSetup" }}
+      {{- if .IsFlake -}}
+                ({{.LangNixPkg}}.withPackages (lua-pkgs: [
+                  {{ range .LanguageDependencies -}}
+                    lua-pkgs.{{.}}
+                  {{ end -}}
+                ]))
+      {{- else -}}
+      '{{.LangNixPkg}}.withPackages( p: [ {{ range .LanguageDependencies }} p.{{.}} {{ end }} ] )'
+      {{- end -}}
+      {{ end }}
+      
+      {{  define "execute" }} lua main.lua {{ end }}
+    defaultCode: |
+      print("Hello, World!")
+
+  - name: nim
+    extension: nim
+    monacoLanguage: nim
+    versions:
+      - nixPackage: "nim"
+        version: "2.0.4"
+        default: true
+        searchQuery: "nim"
+      - nixPackage: "nim1"
+        version: "1.6.20"
+        searchQuery: "nim"
+    template: |
+     {{ define "compile" }} nim c -d:nodebug main.nim {{ .CompileArgs }} {{ end }}
+
+     {{ define "execute" }} ./main {{ end }}
+    defaultCode: |
+      echo "Hello, World!"
+
+  - name: node
+    extension: js
+    monacoLanguage: javascript
+    versions:
+      - nixPackage: "nodejs_22"
+        version: "22.4.1"
+        default: true
+        searchQuery: "nodePackages"
+      - nixPackage: "nodejs_20"
+        version: "20.15.1"
+        searchQuery: "nodePackages"
+      - nixPackage: "nodejs_18"
+        version: "18.20.4"
+        searchQuery: "nodePackages"
+    template: |
+      {{ define "execute" }} node main.js {{ end }}
+    defaultCode: |
+      console.log("Hello World!");
+
+  - name: perl
+    extension: pl
+    monacoLanguage: perl
+    versions:
+      - nixPackage: "perl"
+        version: "5.38.2"
+        default: true
+        searchQuery: "perl538Packages"
+      - nixPackage: "perl536"
+        version: "5.36.3"
+        searchQuery: "perl536Packages"
+    template: |
+      {{ define "execute" }} perl main.pl {{ end }}
+    defaultCode: |
+      #!/usr/bin/perl
+      use strict;
+      use warnings;
+      print "Hello, World!\n";
+
+  - name: php
+    extension: php
+    monacoLanguage: php
+    versions:
+      - nixPackage: "php"
+        version: "8.2.24"
+        default: true
+        searchQuery: "php82Packages"
+      - nixPackage: "php83"
+        version: "8.3.12"
+        searchQuery: "php83Packages"
+      - nixPackage: "php81"
+        version: "8.1.30"
+        searchQuery: "php81Packages"
+    template: |
+      {{ define "execute" }} php main.php {{ end }}
+    defaultCode: |
+      <?php echo "Hello, World!"; ?>
+    
+  - name: rust
+    extension: rs
+    monacoLanguage: rust
+    versions:
+      - nixPackage: "rustc"
+        version: "1.77.1"
+        default: true
+        searchQuery: "rust"
+    template: |
+      {{ define "compile" }} rustc main.rs {{ .CompileArgs }} {{ end }} 
+      {{ define "execute" }} ./main {{ end }}
+    defaultCode: |
+      fn main() {
+          println!("Hello, world!");
+      }
+
+  - name: ruby
+    extension: rb
+    monacoLanguage: ruby
+    versions:
+      - nixPackage: "ruby"
+        version: "3.1.6"
+        default: true
+        searchQuery: "rubyPackages"
+      - nixPackage: "ruby_3_2"
+        version: "3.2.4"
+        searchQuery: "rubyPackages_3_2"
+      - nixPackage: "ruby_3_3"
+        version: "3.3.5"
+        searchQuery: "rubyPackages_3_3"
+    template: |
+      {{ define "LangSetup" }}
+      {{- if .IsFlake -}}
+                ({{.LangNixPkg}}.withPackages (ruby-pkgs: [
+                  {{ range .LanguageDependencies -}}
+                    ruby-pkgs.{{.}}
+                  {{ end -}}
+                ]))
+      {{- else -}}
+      '{{.LangNixPkg}}.withPackages( p: [ {{ range .LanguageDependencies }} p.{{.}} {{ end }} ] )'
+      {{- end -}}
+      {{ end }}
+
+      {{  define "execute" }} ruby main.rb {{ end }}
+    defaultCode: |
+      puts "Hello, World!"
+
+  - name: sql
+    extension: sql
+    monacoLanguage: sql
+    versions:
+      - nixPackage: "sqlite"
+        version: "3.45.3"
+        default: true
+        searchQuery: "sql"
+    template: |
+      {{ define "execute" }} sqlite3 sample.db < main.sql {{ end }}
+    defaultCode: |
+      CREATE TABLE employees (
+          id INT PRIMARY KEY,
+          name VARCHAR(100),
+          salary DECIMAL(10, 2)
+      );
+
+  - name: zig
+    extension: zig
+    monacoLanguage: zig
+    versions:
+      - nixPackage: "zig"
+        version: "3.45.3"
+        default: true
+        searchQuery: "zig"
+    template: |
+      {{ define "compile" }} zig build-exe main.zig {{- .CompileArgs -}} {{ end }} 
+      {{ define "execute" }} ./main {{ end }}
+    defaultCode: |
+      const std = @import("std");
+
+      pub fn main() !void {
+          const stdout = std.io.getStdOut().writer();
+          try stdout.print("Hello, World!\n", .{});
+      }
+
+
 packages:
+  - python3
+  - python311
+  - python312
+  - go_1_23
+  - go_1_21
+  - go
+  - gnat14
+  - gnat13
+  - nasm
+  - bash
+  - bun
+  - crystal
+  - crystal_1_9
+  - dart
+  - deno
+  - gfortran
+  - gfortran12
+  - groovy
+  - julia
+  - julia_1_9
+  - lua
+  - lua5_4_compat
+  - lua4_3_compat
+  - nim
+  - nim1
+  - nodejs_22
+  - nodejs_20
+  - nodejs_18
+  - perl
+  - perl536
+  - php
+  - php83
+  - php81
+  - rustc
+  - ruby
+  - ruby_3_2
+  - ruby_3_3
   - sqlite
+  - swift
+  - zig
+  - jq
+  - ffmpeg
+  - git
+  - gnumake
+  - gnused
+  - gnutar
+  - gzip
+  - curl
+  - wget
+  - xz
+  - bzip2
+  - sqlite
+  - sqlite3
   - rocksdb
+  - h2
+  - h2o
+  - hsqldb
+  - db62
+  - duckdb
+  - httpie
+  - newman
+  - hurl
+  - curlie
+  - grpcurl
+  - protobuf_26
+  - valgrind
+  - valgrind-light
+  - jmespath
+  - fx
+  - yq
   - pkg-config
