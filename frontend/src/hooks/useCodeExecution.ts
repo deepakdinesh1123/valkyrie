@@ -16,12 +16,17 @@ export const useCodeExecution = () => {
       languageDependencies: string[];
     },
     cmdLineArgs: string;
+    input : string;
+    compilerArgs: string;
+    setup: string;
+    command: string;
     
   }) => {
     try {
       setIsLoading(true); 
       const response = await api.execute(runData);
-
+      console.log(runData);
+      
       const source = new EventSource(`${eventPath}${response.data.events}`);
       
       setEventSource(source);
