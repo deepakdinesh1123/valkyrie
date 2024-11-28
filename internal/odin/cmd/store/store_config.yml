@@ -69,17 +69,17 @@ languages:
       - openpyxl
       - lxml
       - sqlalchemy
-      - pyyAML
+      - pyyaml
       - pytest
       - pydantic
-      - asyncio
+      # - asyncio
       - regex
       - tqdm
       - jinja2
       - attrs
       - jsonschema
       - cryptography
-      - cx_Oracle
+      - cx-oracle
       - pymongo
       - h5py
       - pytest-bdd

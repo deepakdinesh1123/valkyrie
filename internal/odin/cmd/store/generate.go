@@ -247,13 +247,13 @@ func addPackages(ctx context.Context, queries db.Store, config *StoreConfig, sql
 			packages = append(packages, pkg)
 			for _, dep := range language.Deps {
 				langPkg := db.InsertPackagesParams{
-					Name:     fmt.Sprintf("%sPackages.%s", version.NixPackage, dep),
+					Name:     dep,
 					Pkgtype:  "language",
-					Language: pgtype.Text{String: fmt.Sprintf("%sPackages", version.NixPackage), Valid: true},
+					Language: pgtype.Text{String: version.SearchQuery, Valid: true},
 				}
-				langPkgInfo, err := getPackageData(langPkg.Name, sqliteClient)
+				langPkgInfo, err := getPackageData(fmt.Sprintf("%s.%s", version.SearchQuery, dep), sqliteClient)
 				if err != nil {
-					fmt.Printf("Language dependency %s does not exist\n", langPkg.Name)
+					fmt.Printf("%s dependency does not exist\n", fmt.Sprintf("%s.%s", version.SearchQuery, dep))
 					continue
 				}
 				if langPkgInfo.StorePath == "<broken>" {
