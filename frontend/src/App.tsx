@@ -130,11 +130,11 @@ const App: React.FC = () => {
         environment: {
           systemDependencies: selectedSystemDependencies,
           languageDependencies: selectedLanguageDependencies,
+          setup: setup,
         },
         cmdLineArgs: args,
         input: currentInput,
         compilerArgs: compilerArgs,
-        setup: setup,
         command: command
       });
     } else {

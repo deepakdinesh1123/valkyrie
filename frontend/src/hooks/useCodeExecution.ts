@@ -14,11 +14,11 @@ export const useCodeExecution = () => {
     environment: {
       systemDependencies: string[];
       languageDependencies: string[];
+      setup: string;
     },
     cmdLineArgs: string;
     input : string;
     compilerArgs: string;
-    setup: string;
     command: string;
     
   }) => {
