@@ -1,0 +1,16 @@
+type: object
+properties:
+  environment_variables:
+    type: array
+    items:
+      $ref: ./EnvironmentVariable.yml
+  languageDependencies:
+    type: array
+    items:
+      type: string
+  systemDependencies:
+    type: array
+    items:
+      type: string
+  args:
+    type: string

@@ -1,5 +1,0 @@
-apiVersion: k3d.io/v1alpha4
-kind: Simple
-image: rancher/k3s:v1.20.4-k3s1
-metadata:
-  name: Valkyrie
