@@ -25,11 +25,11 @@ type SSEMessage struct {
 }
 
 func (s *OdinServer) Execute(ctx context.Context, req *api.ExecutionRequest, params api.ExecuteParams) (api.ExecuteRes, error) {
-	// if err := s.executionService.CheckExecRequest(ctx, req); err != nil {
-	// 	return &api.ExecuteBadRequest{
-	// 		Message: fmt.Sprintf("error in exec request: %s", err),
-	// 	}, nil
-	// }
+	if err := s.executionService.CheckExecRequest(ctx, req); err != nil {
+		return &api.ExecuteBadRequest{
+			Message: fmt.Sprintf("error in exec request: %s", err),
+		}, nil
+	}
 	jobId, err := s.executionService.AddJob(ctx, req)
 	if err != nil {
 		return &api.ExecuteInternalServerError{

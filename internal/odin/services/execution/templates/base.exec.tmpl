@@ -13,9 +13,9 @@
 {{- if .Command }}
 {{ .Command }}  >>  output.txt 2>&1
 {{- else }}
-{{- block "compile" . }}{{ end }}
+{{ block "compile" . }}{{ end }}
 {{- end }}
 
-{{ if .Input }}cat input.txt | {{ end -}}
-{{- block "execute" . }}{{ end -}}
-{{- if .CmdLineArgs }} {{ .CmdLineArgs }}{{ end }} >> output.txt 2>&1
+{{ block "execute" . }}{{ end -}}
+{{- if .CmdLineArgs }} {{ .CmdLineArgs }}{{ end }}
+{{- if .Input }} < input.txt {{ end -}} >> output.txt 2>&1

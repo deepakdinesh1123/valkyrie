@@ -120,22 +120,27 @@ func (s *ExecutionService) CheckExecRequest(ctx context.Context, req *api.Execut
 		}
 	}
 
-	if req.Environment.Set {
-		var packages []string
-		if len(req.Environment.Value.LanguageDependencies) != 0 {
-			packages = append(packages, req.Environment.Value.LanguageDependencies...)
-		}
-		if len(req.Environment.Value.SystemDependencies) != 0 {
-			packages = append(packages, req.Environment.Value.SystemDependencies...)
-		}
+	// if req.Environment.Set {
+	// 	var packages []string
+	// 	if len(req.Environment.Value.LanguageDependencies) != 0 {
+	// 		packages = append(packages, req.Environment.Value.LanguageDependencies...)
+	// 	}
+	// 	if len(req.Environment.Value.SystemDependencies) != 0 {
+	// 		packages = append(packages, req.Environment.Value.SystemDependencies...)
+	// 	}
 
-		res, err := s.queries.PackagesExist(ctx, packages)
-		if err != nil {
-			return fmt.Errorf("error checking if packages exist: %s", err)
-		}
-		if !res.Exists {
-			return fmt.Errorf("following packages does not exist: %s", res.NonexistingPackages)
-		}
-	}
+	// 	if len(packages) > 0 {
+	// 		res, err := s.queries.PackagesExist(ctx, db.PackagesExistParams{
+	// 			Packages: packages,
+	// 			Language: req.Language.Value,
+	// 		})
+	// 		if err != nil {
+	// 			return fmt.Errorf("error checking if packages exist: %s", err)
+	// 		}
+	// 		if !res.Exists {
+	// 			return fmt.Errorf("following packages does not exist: %s", res.NonexistingPackages)
+	// 		}
+	// 	}
+	// }
 	return nil
 }

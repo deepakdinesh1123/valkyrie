@@ -120,7 +120,7 @@ func (s *ExecutionService) AddJob(ctx context.Context, req *api.ExecutionRequest
 		jobParams.Timeout = req.Timeout.Value
 	}
 
-	hash := calculateHash(jobParams.Code, jobParams.Flake, jobParams.Files)
+	hash := calculateHash(jobParams.Code, jobParams.Flake, jobParams.Files, jobParams.Input)
 	jobParams.Hash = hash
 
 	job, err := s.queries.AddJobTx(ctx, jobParams)
@@ -131,10 +131,11 @@ func (s *ExecutionService) AddJob(ctx context.Context, req *api.ExecutionRequest
 	return int64(job.JobID), nil
 }
 
-func calculateHash(code string, flake string, files []byte) string {
+func calculateHash(code string, flake string, files []byte, input string) string {
 	hashInstance := sha256.New()
 	hashInstance.Write([]byte(code))
 	hashInstance.Write([]byte(flake))
 	hashInstance.Write(files)
+	hashInstance.Write([]byte(input))
 	return hex.EncodeToString(hashInstance.Sum(nil))
 }

@@ -132,7 +132,8 @@ func (s *SystemExecutor) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 					return
 				}
 			}
-			s.checkFailed(s.queries.UpdateJobResultTx(ctx, jobRes))
+			s.logger.Err(err).Msg("execution error")
+			// s.checkFailed(s.queries.UpdateJobResultTx(ctx, jobRes))
 			done <- true
 			return
 		}
@@ -199,6 +200,7 @@ func (s *SystemExecutor) writeFiles(ctx context.Context, dir string, execReq *db
 	files := map[string]string{
 		"exec.sh":       script,
 		spec.ScriptName: execReq.Code.String,
+		"input.txt":     execReq.Input.String,
 	}
 
 	for name, content := range files {

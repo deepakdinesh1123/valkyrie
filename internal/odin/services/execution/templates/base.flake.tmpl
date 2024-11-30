@@ -27,12 +27,12 @@
               {{- if .Command }}
               {{ .Command }}
               {{- else }}
-              {{- block "compile" . }}{{ end }}
+              {{ block "compile" . }}{{ end }}
               {{- end }}
 
-              {{ if .Input }}cat input.txt | {{ end -}}
-              {{- block "execute" . }}{{ end -}}
+              {{ block "execute" . }}{{ end -}}
               {{- if .CmdLineArgs }} {{ .CmdLineArgs }}{{ end }}
+              {{- if .Input }} < input.txt {{ end -}}
             '';
           };
       });

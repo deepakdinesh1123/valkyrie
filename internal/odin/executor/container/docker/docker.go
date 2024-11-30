@@ -66,6 +66,7 @@ func (d *DockerProvider) WriteFiles(ctx context.Context, containerID string, pre
 	files := map[string]string{
 		"exec.sh":       script,
 		spec.ScriptName: execReq.Code.String,
+		"input.txt":     execReq.Input.String,
 	}
 
 	tarFilePath, err := common.CreateTarArchive(files, execReq.Files, prepDir)
