@@ -130,7 +130,7 @@ languages:
         searchQuery: "goPackages"
         default: true
     template: |
-      {{ define "compile" }} go build main.go {{ .CompileArgs }}{{ end }}
+      {{ define "compile" }} go build main.go {{ .CompilerArgs }}{{ end }}
       {{ define "execute" }} ./main {{ end }}
     defaultCode: |
       package main
@@ -155,7 +155,7 @@ languages:
         searchQuery: "gnatPackages"
         default: true
     template: |
-      {{ define "compile" }} gnatmake main.adb {{ .CompileArgs }}{{ end }}
+      {{ define "compile" }} gnatmake main.adb {{ .CompilerArgs }}{{ end }}
 
       {{ define "execute" }} ./main {{ end }}
     defaultCode: |
@@ -175,7 +175,7 @@ languages:
         default: true
         searchQuery: "assemblyPackages"
     template: |
-      {{ define "compile" }} nasm -f elf64 main.asm -o main.o {{ .CompileArgs }} ld -o main main.o {{ end }}
+      {{ define "compile" }} nasm -f elf64 main.asm -o main.o {{ .CompilerArgs }} ld -o main main.o {{ end }}
 
       {{ define "execute" }} ./main {{ end }}
     defaultCode: |
@@ -277,7 +277,7 @@ languages:
         version: "12.3.0"
         searchQuery: "fortran"
     template: |
-     {{ define "compile" }} gfortran main.f90 {{ .CompileArgs }} {{ end }}
+     {{ define "compile" }} gfortran main.f90 {{ .CompilerArgs }} {{ end }}
 
      {{ define "execute" }} ./a.out {{ end }}
     defaultCode: |
@@ -357,7 +357,7 @@ languages:
         version: "1.6.20"
         searchQuery: "nim"
     template: |
-     {{ define "compile" }} nim c -d:nodebug main.nim {{ .CompileArgs }} {{ end }}
+     {{ define "compile" }} nim c -d:nodebug main.nim {{ .CompilerArgs }} {{ end }}
 
      {{ define "execute" }} ./main {{ end }}
     defaultCode: |
@@ -429,7 +429,7 @@ languages:
         default: true
         searchQuery: "rust"
     template: |
-      {{ define "compile" }} rustc main.rs {{ .CompileArgs }} {{ end }} 
+      {{ define "compile" }} rustc main.rs {{ .CompilerArgs }} {{ end }} 
       {{ define "execute" }} ./main {{ end }}
     defaultCode: |
       fn main() {
@@ -505,7 +505,7 @@ languages:
         default: true
         searchQuery: "zig"
     template: |
-      {{ define "compile" }} zig build-exe main.zig {{- .CompileArgs -}} {{ end }} 
+      {{ define "compile" }} zig build-exe main.zig {{- .CompilerArgs -}} {{ end }} 
       {{ define "execute" }} ./main {{ end }}
     defaultCode: |
       const std = @import("std");

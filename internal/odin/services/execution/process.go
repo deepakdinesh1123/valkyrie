@@ -53,11 +53,13 @@ func (s *ExecutionService) prepareExecutionRequest(ctx context.Context, req *api
 		return nil, err
 	}
 
+	s.logger.Debug().Str("Script", req.Environment.Value.Setup.Value).Msg("Setup")
+
 	execReq.LangNixPkg = langVersion.NixPackageName
 	execReq.Language = req.Language.Value
 	execReq.Code = req.Code.Value
 	execReq.CmdLineArgs = req.CmdLineArgs.Value
-	execReq.CompileArgs = req.CompileArgs.Value
+	execReq.CompilerArgs = req.CompilerArgs.Value
 	execReq.Input = req.Input.Value
 	execReq.Command = req.Command.Value
 	execReq.SystemDependencies = req.Environment.Value.SystemDependencies
@@ -91,11 +93,12 @@ func (s *ExecutionService) AddJob(ctx context.Context, req *api.ExecutionRequest
 	jobParams.LanguageDependencies = execReq.LanguageDependencies
 	jobParams.SystemDependencies = execReq.SystemDependencies
 	jobParams.CmdLineArgs = execReq.CmdLineArgs
-	jobParams.CompileArgs = execReq.CompileArgs
+	jobParams.CompilerArgs = execReq.CompilerArgs
 	jobParams.Files = req.Files
 	jobParams.Input = execReq.Input
 	jobParams.Command = execReq.Command
 	jobParams.LangVersion = execReq.LangVersion
+	jobParams.Setup = execReq.Setup
 
 	s.logger.Debug().Int64("Version", jobParams.LangVersion).Msg("Language")
 

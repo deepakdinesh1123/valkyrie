@@ -421,17 +421,17 @@ func (s *ExecutionEnvironmentSpec) SetSetup(val OptString) {
 
 // Ref: #/components/schemas/ExecutionRequest
 type ExecutionRequest struct {
-	Environment OptExecutionEnvironmentSpec `json:"environment"`
-	Code        OptString                   `json:"code"`
-	Language    OptString                   `json:"language"`
-	Version     OptString                   `json:"version"`
-	MaxRetries  OptInt                      `json:"max_retries"`
-	Timeout     OptInt32                    `json:"timeout"`
-	CmdLineArgs OptString                   `json:"cmdLineArgs"`
-	CompileArgs OptString                   `json:"compileArgs"`
-	Command     OptString                   `json:"command"`
-	Files       []byte                      `json:"files"`
-	Input       OptString                   `json:"input"`
+	Environment  OptExecutionEnvironmentSpec `json:"environment"`
+	Code         OptString                   `json:"code"`
+	Language     OptString                   `json:"language"`
+	Version      OptString                   `json:"version"`
+	MaxRetries   OptInt                      `json:"max_retries"`
+	Timeout      OptInt32                    `json:"timeout"`
+	CmdLineArgs  OptString                   `json:"cmdLineArgs"`
+	CompilerArgs OptString                   `json:"compilerArgs"`
+	Command      OptString                   `json:"command"`
+	Files        []byte                      `json:"files"`
+	Input        OptString                   `json:"input"`
 }
 
 // GetEnvironment returns the value of Environment.
@@ -469,9 +469,9 @@ func (s *ExecutionRequest) GetCmdLineArgs() OptString {
 	return s.CmdLineArgs
 }
 
-// GetCompileArgs returns the value of CompileArgs.
-func (s *ExecutionRequest) GetCompileArgs() OptString {
-	return s.CompileArgs
+// GetCompilerArgs returns the value of CompilerArgs.
+func (s *ExecutionRequest) GetCompilerArgs() OptString {
+	return s.CompilerArgs
 }
 
 // GetCommand returns the value of Command.
@@ -524,9 +524,9 @@ func (s *ExecutionRequest) SetCmdLineArgs(val OptString) {
 	s.CmdLineArgs = val
 }
 
-// SetCompileArgs sets the value of CompileArgs.
-func (s *ExecutionRequest) SetCompileArgs(val OptString) {
-	s.CompileArgs = val
+// SetCompilerArgs sets the value of CompilerArgs.
+func (s *ExecutionRequest) SetCompilerArgs(val OptString) {
+	s.CompilerArgs = val
 }
 
 // SetCommand sets the value of Command.
@@ -1120,6 +1120,8 @@ type Language struct {
 	MonacoLanguage string `json:"monaco_language"`
 	// Default code for the language.
 	DefaultCode string `json:"default_code"`
+	// The default template for the language.
+	Template string `json:"template"`
 }
 
 // GetName returns the value of Name.
@@ -1142,6 +1144,11 @@ func (s *Language) GetDefaultCode() string {
 	return s.DefaultCode
 }
 
+// GetTemplate returns the value of Template.
+func (s *Language) GetTemplate() string {
+	return s.Template
+}
+
 // SetName sets the value of Name.
 func (s *Language) SetName(val string) {
 	s.Name = val
@@ -1162,6 +1169,11 @@ func (s *Language) SetDefaultCode(val string) {
 	s.DefaultCode = val
 }
 
+// SetTemplate sets the value of Template.
+func (s *Language) SetTemplate(val string) {
+	s.Template = val
+}
+
 // Merged schema.
 // Ref: #/components/schemas/LanguageResponse
 type LanguageResponse struct {
@@ -1173,6 +1185,8 @@ type LanguageResponse struct {
 	MonacoLanguage string `json:"monaco_language"`
 	// Merged property.
 	DefaultCode string `json:"default_code"`
+	// The default template for the language.
+	Template string `json:"template"`
 	// Unique identifier for the language version.
 	ID int64 `json:"id"`
 }
@@ -1195,6 +1209,11 @@ func (s *LanguageResponse) GetMonacoLanguage() string {
 // GetDefaultCode returns the value of DefaultCode.
 func (s *LanguageResponse) GetDefaultCode() string {
 	return s.DefaultCode
+}
+
+// GetTemplate returns the value of Template.
+func (s *LanguageResponse) GetTemplate() string {
+	return s.Template
 }
 
 // GetID returns the value of ID.
@@ -1220,6 +1239,11 @@ func (s *LanguageResponse) SetMonacoLanguage(val string) {
 // SetDefaultCode sets the value of DefaultCode.
 func (s *LanguageResponse) SetDefaultCode(val string) {
 	s.DefaultCode = val
+}
+
+// SetTemplate sets the value of Template.
+func (s *LanguageResponse) SetTemplate(val string) {
+	s.Template = val
 }
 
 // SetID sets the value of ID.

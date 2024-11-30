@@ -16,10 +16,12 @@ func ConvertExecSpecToNixScript(ctx context.Context, execReq *db.ExecRequest, qu
 	execSpec.LanguageDependencies = execReq.LanguageDependencies
 	execSpec.SystemDependencies = execReq.SystemDependencies
 	execSpec.CmdLineArgs = execReq.CmdLineArgs.String
-	execSpec.CompileArgs = execReq.CompileArgs.String
+	execSpec.CompilerArgs = execReq.CompileArgs.String
 	execSpec.Input = execReq.Input.String
 	execSpec.Command = execReq.Command.String
 	execSpec.Setup = execReq.Setup.String
+
+	fmt.Println(execReq.LanguageDependencies, execReq.SystemDependencies, execReq.Setup.String, execReq.Command.String)
 
 	langVersion, err := queries.GetLanguageVersionByID(ctx, execReq.LanguageVersion)
 	if err != nil {
@@ -46,20 +48,22 @@ func ConvertExecSpecToNixScript(ctx context.Context, execReq *db.ExecRequest, qu
 		langTemplate = language.Template
 	}
 
-	langTmpl, err := template.New(string("langTmpl")).Parse(langTemplate)
+	baseTemplate, err := ExecTemplates.ReadFile("templates/base.exec.tmpl")
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to parse language template")
+		return "", nil, fmt.Errorf("failed to read base template")
 	}
 
-	tmpl, err := langTmpl.New(string("base.exec.tmpl")).ParseFS(
-		ExecTemplates,
-		"templates/base.exec.tmpl",
-	)
+	baseTmpl, err := template.New("base").Parse(string(baseTemplate))
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to parse template")
 	}
 
-	err = tmpl.Execute(&res, execSpec)
+	langTmpl, err := template.Must(baseTmpl.Clone()).Parse(langTemplate)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to parse language template")
+	}
+
+	err = langTmpl.Execute(&res, execSpec)
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to execute template")
 	}
@@ -72,23 +76,28 @@ func ConvertExecSpecToNixScript(ctx context.Context, execReq *db.ExecRequest, qu
 func (s *ExecutionService) convertExecSpecToFlake(execSpec ExecutionRequest) (string, error) {
 	execSpec.IsFlake = true
 
+	s.logger.Debug().Str("cmdLineArgs", execSpec.CmdLineArgs).Str("compileArgs", execSpec.CompilerArgs).Msg("Args are")
+
 	var res bytes.Buffer
 
-	langTmpl, err := template.New(string("langTmpl")).Parse(execSpec.Template)
+	baseTemplate, err := ExecTemplates.ReadFile("templates/base.flake.tmpl")
+	if err != nil {
+		return "", fmt.Errorf("failed to read base template")
+	}
+
+	baseTmpl, err := template.New("base").Parse(string(baseTemplate))
+	if err != nil {
+		return "", fmt.Errorf("failed to parse template")
+	}
+
+	langTmpl, err := template.Must(baseTmpl.Clone()).Parse(execSpec.Template)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse language template")
 	}
 
-	tmpl, err := langTmpl.New("base.flake.tmpl").ParseFS(ExecTemplates, "templates/base.flake.tmpl")
+	err = langTmpl.Execute(&res, execSpec)
 	if err != nil {
-		s.logger.Err(err).Msg("failed to parse template")
-		return "", fmt.Errorf("error parsing template: %s", err)
-	}
-
-	err = tmpl.Execute(&res, execSpec)
-	if err != nil {
-		s.logger.Err(err).Msg("failed to execute template")
-		return "", fmt.Errorf("failed to execute template: %s", err)
+		return "", fmt.Errorf("failed to execute template")
 	}
 	return res.String(), nil
 }

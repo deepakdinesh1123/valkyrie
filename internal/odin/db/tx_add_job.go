@@ -15,7 +15,7 @@ type AddJobTxParams struct {
 	LanguageDependencies []string
 	SystemDependencies   []string
 	CmdLineArgs          string
-	CompileArgs          string
+	CompilerArgs         string
 	Files                []byte
 	Input                string
 	Command              string
@@ -45,7 +45,7 @@ func (s *SQLStore) AddJobTx(ctx context.Context, arg AddJobTxParams) (AddJobTxRe
 					SystemDependencies:   arg.SystemDependencies,
 					Flake:                arg.Flake,
 					CmdLineArgs:          pgtype.Text{String: arg.CmdLineArgs, Valid: true},
-					CompileArgs:          pgtype.Text{String: arg.CompileArgs, Valid: true},
+					CompileArgs:          pgtype.Text{String: arg.CompilerArgs, Valid: true},
 					Command:              pgtype.Text{String: arg.Command, Valid: true},
 					LanguageVersion:      arg.LangVersion,
 					Setup:                pgtype.Text{String: arg.Setup, Valid: true},
