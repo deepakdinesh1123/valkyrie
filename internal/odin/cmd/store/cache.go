@@ -56,7 +56,7 @@ func cacheStore(cmd *cobra.Command, args []string) error {
 		if pkg.Pkgtype == "system" {
 			pkgName = pkg.Name
 		} else {
-			pkgName = fmt.Sprintf("%s.%s", pkg.Name, pkg.Language.String)
+			pkgName = fmt.Sprintf("%s.%s", pkg.Language.String, pkg.Name)
 		}
 		_, err := exec.Command("cached-nix-shell", "-p", pkgName, "--run", "exit").Output()
 

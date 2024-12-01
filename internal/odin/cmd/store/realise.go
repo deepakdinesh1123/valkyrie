@@ -54,13 +54,14 @@ func realisePackages(cmd *cobra.Command, args []string) error {
 }
 
 func realise(pkg db.GetAllPackagesRow) error {
+	var pkgName string
 	if pkg.Pkgtype == "system" {
-		cmd := exec.Command("nix-shell", "-p", pkg.Name, "--run", "exit")
-		err := cmd.Run()
-		return err
+		pkgName = pkg.Name
 	} else {
-		cmd := exec.Command("nix-shell", "-p", fmt.Sprintf("%s.%s", pkg.Name, pkg.Language.String), "--run", "exit")
-		err := cmd.Run()
-		return err
+		pkgName = fmt.Sprintf("%s.%s", pkg.Language.String, pkg.Name)
 	}
+	fmt.Println("Realising package %s", pkgName)
+	cmd := exec.Command("nix-shell", "-p", pkgName, "--run", "exit")
+	err := cmd.Run()
+	return err
 }
