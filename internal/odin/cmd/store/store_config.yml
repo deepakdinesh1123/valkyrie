@@ -231,9 +231,6 @@ languages:
         version: "1.11.2"
         default: true
         searchQuery: "crystalPackages"
-      - nixPackage: "crystal_1_9"
-        version: "1.9.2"
-        searchQuery: "crystalPackages"
     template: |
       {{ define "execute" }} crystal run main.cr {{ end }}
     defaultCode: |
@@ -355,9 +352,6 @@ languages:
         version: "2.0.4"
         default: true
         searchQuery: "nim"
-      - nixPackage: "nim1"
-        version: "1.6.20"
-        searchQuery: "nim"
     template: |
      {{ define "compile" }} nim c -d:nodebug main.nim {{ .CompilerArgs }} {{ end }}
 
@@ -371,13 +365,16 @@ languages:
     versions:
       - nixPackage: "nodejs_22"
         version: "22.4.1"
-        default: true
         searchQuery: "nodePackages"
       - nixPackage: "nodejs_20"
         version: "20.15.1"
         searchQuery: "nodePackages"
       - nixPackage: "nodejs_18"
         version: "18.20.4"
+        searchQuery: "nodePackages"
+      - nixPackage: "nodejs_23"
+        version: "23.2.0"
+        default: true
         searchQuery: "nodePackages"
     template: |
       {{ define "execute" }} node main.js {{ end }}
@@ -388,13 +385,13 @@ languages:
     extension: pl
     monacoLanguage: perl
     versions:
-      - nixPackage: "perl"
-        version: "5.38.2"
+      - nixPackage: "perl5"
+        version: "5.40.0"
         default: true
+        searchQuery: "perl540Packages"
+      - nixPackage: "perl538"
+        version: "5.38.2"
         searchQuery: "perl538Packages"
-      - nixPackage: "perl536"
-        version: "5.36.3"
-        searchQuery: "perl536Packages"
     template: |
       {{ define "execute" }} perl main.pl {{ end }}
     defaultCode: |
@@ -408,7 +405,7 @@ languages:
     monacoLanguage: php
     versions:
       - nixPackage: "php"
-        version: "8.2.24"
+        version: "8.2.26"
         default: true
         searchQuery: "php82Packages"
       - nixPackage: "php83"
@@ -443,12 +440,12 @@ languages:
     monacoLanguage: ruby
     versions:
       - nixPackage: "ruby"
-        version: "3.1.6"
-        default: true
+        version: "3.3.5"
         searchQuery: "rubyPackages"
-      - nixPackage: "ruby_3_2"
-        version: "3.2.4"
-        searchQuery: "rubyPackages_3_2"
+      - nixPackage: "ruby_3_4"
+        version: "3.4.0"
+        default: true
+        searchQuery: "rubyPackages_3_4"
       - nixPackage: "ruby_3_3"
         version: "3.3.5"
         searchQuery: "rubyPackages_3_3"
