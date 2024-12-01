@@ -1,6 +1,7 @@
 package store
 
 import (
+	"fmt"
 	"os/exec"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/logs"
@@ -53,7 +54,13 @@ func realisePackages(cmd *cobra.Command, args []string) error {
 }
 
 func realise(pkg db.GetAllPackagesRow) error {
-	cmd := exec.Command("nix-shell", "-p", pkg.Name, "--run", "exit")
-	err := cmd.Run()
-	return err
+	if pkg.Pkgtype == "system" {
+		cmd := exec.Command("nix-shell", "-p", pkg.Name, "--run", "exit")
+		err := cmd.Run()
+		return err
+	} else {
+		cmd := exec.Command("nix-shell", "-p", fmt.Sprintf("%s.%s", pkg.Name, pkg.Language.String), "--run", "exit")
+		err := cmd.Run()
+		return err
+	}
 }

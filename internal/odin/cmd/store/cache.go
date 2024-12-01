@@ -52,12 +52,19 @@ func cacheStore(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, pkg := range pkgs {
-		_, err := exec.Command("cached-nix-shell", "-p", pkg.Name, "--run", "exit").Output()
+		var pkgName string
+		if pkg.Pkgtype == "system" {
+			pkgName = pkg.Name
+		} else {
+			pkgName = fmt.Sprintf("%s.%s", pkg.Name, pkg.Language.String)
+		}
+		_, err := exec.Command("cached-nix-shell", "-p", pkgName, "--run", "exit").Output()
 
 		if err != nil {
 			// If there's an error (e.g., Vim is not installed), print the error
 			return fmt.Errorf("error caching package %s: %s", pkg.Name, err)
 		}
+
 	}
 	return nil
 }
