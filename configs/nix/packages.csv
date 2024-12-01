@@ -158,6 +158,7 @@ gitdb,language,python311Packages
 python310,system,
 go_1_22,system,
 go_1_21,system,
+go,system,
 gnat,system,
 gnat13,system,
 gnat14,system,

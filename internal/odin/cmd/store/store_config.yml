@@ -1,4 +1,4 @@
-nix_channel: https://nixos.org/channels/nixos-24.05
+nix_channel: https://nixos.org/channels/nixos-24.11
 
 languages:
   - name: python
@@ -128,7 +128,9 @@ languages:
       - nixPackage: "go_1_21"
         version: "1.21"
         searchQuery: "goPackages"
-        default: true
+      - nixPackage: "go"
+        version: "1.23"
+        searchQuery: "goPackages"
     template: |
       {{ define "compile" }} go build main.go {{ .CompilerArgs }}{{ end }}
       {{ define "execute" }} ./main {{ end }}
