@@ -382,7 +382,7 @@ languages:
     extension: pl
     monacoLanguage: perl
     versions:
-      - nixPackage: "perl5"
+      - nixPackage: "perl540"
         version: "5.40.0"
         default: true
         searchQuery: "perl540Packages"
