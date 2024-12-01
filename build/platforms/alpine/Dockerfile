@@ -1,23 +1,33 @@
 FROM alpine:3.20
 
-ARG HOST_UID
-ARG HOST_GID
-ARG HOST_USER
-ARG HOST_GROUP
-
 RUN apk update && \
     apk add --no-cache shadow xz curl git vim && \
-    addgroup -g ${HOST_GID} -S ${HOST_GROUP} && \
-    adduser -u ${HOST_UID} -G ${HOST_GROUP} -s /bin/sh -D ${HOST_USER}
+    addgroup -g 1024 -S valnix && \
+    adduser -u 1024 -G valnix -S -D valnix
 
-RUN mkdir /etc/nix && echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
-USER $HOST_USER
-RUN mkdir ~/odin && chown $HOST_USER:$HOST_USER ~/odin
-RUN cd /tmp && git clone --depth 1 --branch 24.05 --single-branch https://github.com/NixOS/nixpkgs.git 
+RUN curl -L https://nixos.org/nix/install -o install_nix.sh
+RUN chmod +x install_nix.sh
+RUN mkdir /nix
+RUN chown -R valnix /nix
+COPY configs/nix/nix.conf /etc/nix/nix.conf
 
-COPY hack/execution/* /home/$HOST_USER/
+USER valnix
+RUN sh install_nix.sh --no-daemon
+ENV PATH="$PATH:/home/valnix/.nix-profile/bin"
 
-VOLUME [ "/home/$HOST_USER" ]
-WORKDIR /home/$HOST_USER/
+RUN nix-channel --remove nixpkgs
+RUN nix-channel --add https://nixos.org/channels/nixos-24.05 nixpkgs
+RUN nix-channel --update
 
-CMD [ "/bin/sh", "nix_setup.sh" ]
+RUN mkdir ~/odin
+
+COPY configs/nix/packages.csv /tmp/packages.csv
+
+COPY hack/execution/nix_run_docker.sh /home/valnix/nix_run.sh
+COPY hack/execution/nix_stop.sh /home/valnix/nix_stop.sh
+COPY hack/packages/store_packages_docker.sh /home/valnix/store_packages.sh
+WORKDIR /home/valnix/
+
+RUN sh store_packages.sh
+
+CMD [ "/bin/sh", "-c", "sleep infinity" ]

@@ -9,5 +9,9 @@
   "[gotmpl]": {
     "editor.detectIndentation": false,
     "editor.tabSize": 2
-  }
+  },
+  "go.buildFlags": [
+    "-tags=all"
+  ],
+  "svg.preview.background": "editor",
 }

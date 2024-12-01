@@ -9,20 +9,21 @@ export const useCodeExecution = () => {
 
   const executeCode = async (runData: {
     language: string;
+    version: string;
     code: string;
     environment: {
       systemDependencies: string[];
       languageDependencies: string[];
-      args: string;
-    }
+    },
+    cmdLineArgs: string;
     
   }) => {
     try {
-      console.log(runData);
       setIsLoading(true); 
       const response = await api.execute(runData);
 
       const source = new EventSource(`${eventPath}${response.data.events}`);
+      
       setEventSource(source);
 
       source.onmessage = (event) => {

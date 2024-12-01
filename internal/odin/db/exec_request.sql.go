@@ -21,7 +21,7 @@ func (q *Queries) DeleteExecRequest(ctx context.Context, id int32) error {
 }
 
 const getExecRequest = `-- name: GetExecRequest :one
-select id, hash, code, path, flake, nix_script, args, programming_language from exec_request where id = $1
+select id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, language_version from exec_request where id = $1
 `
 
 func (q *Queries) GetExecRequest(ctx context.Context, id int32) (ExecRequest, error) {
@@ -31,17 +31,22 @@ func (q *Queries) GetExecRequest(ctx context.Context, id int32) (ExecRequest, er
 		&i.ID,
 		&i.Hash,
 		&i.Code,
-		&i.Path,
 		&i.Flake,
-		&i.NixScript,
-		&i.Args,
-		&i.ProgrammingLanguage,
+		&i.LanguageDependencies,
+		&i.SystemDependencies,
+		&i.CmdLineArgs,
+		&i.CompileArgs,
+		&i.Files,
+		&i.Input,
+		&i.Command,
+		&i.Setup,
+		&i.LanguageVersion,
 	)
 	return i, err
 }
 
 const getExecRequestByHash = `-- name: GetExecRequestByHash :one
-select id, hash, code, path, flake, nix_script, args, programming_language from exec_request where hash = $1
+select id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, language_version from exec_request where hash = $1
 `
 
 func (q *Queries) GetExecRequestByHash(ctx context.Context, hash string) (ExecRequest, error) {
@@ -51,42 +56,70 @@ func (q *Queries) GetExecRequestByHash(ctx context.Context, hash string) (ExecRe
 		&i.ID,
 		&i.Hash,
 		&i.Code,
-		&i.Path,
 		&i.Flake,
-		&i.NixScript,
-		&i.Args,
-		&i.ProgrammingLanguage,
+		&i.LanguageDependencies,
+		&i.SystemDependencies,
+		&i.CmdLineArgs,
+		&i.CompileArgs,
+		&i.Files,
+		&i.Input,
+		&i.Command,
+		&i.Setup,
+		&i.LanguageVersion,
 	)
 	return i, err
 }
 
 const insertExecRequest = `-- name: InsertExecRequest :one
 insert into exec_request
-    (hash, code, path, flake, args, programming_language, nix_script)
+    (
+        hash, 
+        code, 
+        flake, 
+        language_dependencies, 
+        system_dependencies, 
+        cmd_line_args, 
+        compile_args,
+        files,
+        input,
+        command,
+        setup,
+        language_version
+    )
 values
-    ($1, $2, $3, $4, $5, $6, $7)
+    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 returning id
 `
 
 type InsertExecRequestParams struct {
-	Hash                string      `db:"hash" json:"hash"`
-	Code                string      `db:"code" json:"code"`
-	Path                string      `db:"path" json:"path"`
-	Flake               string      `db:"flake" json:"flake"`
-	Args                pgtype.Text `db:"args" json:"args"`
-	ProgrammingLanguage pgtype.Text `db:"programming_language" json:"programming_language"`
-	NixScript           string      `db:"nix_script" json:"nix_script"`
+	Hash                 string      `db:"hash" json:"hash"`
+	Code                 pgtype.Text `db:"code" json:"code"`
+	Flake                string      `db:"flake" json:"flake"`
+	LanguageDependencies []string    `db:"language_dependencies" json:"language_dependencies"`
+	SystemDependencies   []string    `db:"system_dependencies" json:"system_dependencies"`
+	CmdLineArgs          pgtype.Text `db:"cmd_line_args" json:"cmd_line_args"`
+	CompileArgs          pgtype.Text `db:"compile_args" json:"compile_args"`
+	Files                []byte      `db:"files" json:"files"`
+	Input                pgtype.Text `db:"input" json:"input"`
+	Command              pgtype.Text `db:"command" json:"command"`
+	Setup                pgtype.Text `db:"setup" json:"setup"`
+	LanguageVersion      int64       `db:"language_version" json:"language_version"`
 }
 
 func (q *Queries) InsertExecRequest(ctx context.Context, arg InsertExecRequestParams) (int32, error) {
 	row := q.db.QueryRow(ctx, insertExecRequest,
 		arg.Hash,
 		arg.Code,
-		arg.Path,
 		arg.Flake,
-		arg.Args,
-		arg.ProgrammingLanguage,
-		arg.NixScript,
+		arg.LanguageDependencies,
+		arg.SystemDependencies,
+		arg.CmdLineArgs,
+		arg.CompileArgs,
+		arg.Files,
+		arg.Input,
+		arg.Command,
+		arg.Setup,
+		arg.LanguageVersion,
 	)
 	var id int32
 	err := row.Scan(&id)
@@ -94,7 +127,7 @@ func (q *Queries) InsertExecRequest(ctx context.Context, arg InsertExecRequestPa
 }
 
 const listExecRequests = `-- name: ListExecRequests :many
-select id, hash, code, path, flake, nix_script, args, programming_language from exec_request
+select id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, language_version from exec_request
 limit $1 offset $2
 `
 
@@ -116,11 +149,16 @@ func (q *Queries) ListExecRequests(ctx context.Context, arg ListExecRequestsPara
 			&i.ID,
 			&i.Hash,
 			&i.Code,
-			&i.Path,
 			&i.Flake,
-			&i.NixScript,
-			&i.Args,
-			&i.ProgrammingLanguage,
+			&i.LanguageDependencies,
+			&i.SystemDependencies,
+			&i.CmdLineArgs,
+			&i.CompileArgs,
+			&i.Files,
+			&i.Input,
+			&i.Command,
+			&i.Setup,
+			&i.LanguageVersion,
 		); err != nil {
 			return nil, err
 		}

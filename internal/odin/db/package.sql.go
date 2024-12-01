@@ -7,7 +7,110 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
+
+const fetchLanguagePackages = `-- name: FetchLanguagePackages :many
+SELECT
+    name,
+    version
+FROM packages
+WHERE
+    language = $1::text
+LIMIT 10
+`
+
+type FetchLanguagePackagesRow struct {
+	Name    string `db:"name" json:"name"`
+	Version string `db:"version" json:"version"`
+}
+
+func (q *Queries) FetchLanguagePackages(ctx context.Context, language string) ([]FetchLanguagePackagesRow, error) {
+	rows, err := q.db.Query(ctx, fetchLanguagePackages, language)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FetchLanguagePackagesRow
+	for rows.Next() {
+		var i FetchLanguagePackagesRow
+		if err := rows.Scan(&i.Name, &i.Version); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const fetchSystemPackages = `-- name: FetchSystemPackages :many
+SELECT
+    name,
+    version
+FROM packages
+WHERE
+    pkgType = 'system'
+LIMIT 10
+`
+
+type FetchSystemPackagesRow struct {
+	Name    string `db:"name" json:"name"`
+	Version string `db:"version" json:"version"`
+}
+
+func (q *Queries) FetchSystemPackages(ctx context.Context) ([]FetchSystemPackagesRow, error) {
+	rows, err := q.db.Query(ctx, fetchSystemPackages)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FetchSystemPackagesRow
+	for rows.Next() {
+		var i FetchSystemPackagesRow
+		if err := rows.Scan(&i.Name, &i.Version); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getPackageStorePaths = `-- name: GetPackageStorePaths :many
+SELECT name, store_path
+FROM packages
+WHERE name = ANY($1::text[])
+`
+
+type GetPackageStorePathsRow struct {
+	Name      string      `db:"name" json:"name"`
+	StorePath pgtype.Text `db:"store_path" json:"store_path"`
+}
+
+func (q *Queries) GetPackageStorePaths(ctx context.Context, packages []string) ([]GetPackageStorePathsRow, error) {
+	rows, err := q.db.Query(ctx, getPackageStorePaths, packages)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetPackageStorePathsRow
+	for rows.Next() {
+		var i GetPackageStorePathsRow
+		if err := rows.Scan(&i.Name, &i.StorePath); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
 
 const packagesExist = `-- name: PackagesExist :one
 WITH existing_packages AS (
@@ -51,8 +154,8 @@ FROM packages
 WHERE
     language = $1::text  
     AND (
-        tsv_search @@ plainto_tsquery('english', $2::text) OR  -- Full-text search
-        name ILIKE '%' || $2::text || '%'                       -- Contains search
+        tsv_search @@ plainto_tsquery('english', $2::text) OR  
+        name ILIKE '%' || $2::text || '%'                     
     )
 ORDER BY name ASC
 LIMIT 50
@@ -96,8 +199,8 @@ FROM packages
 WHERE
     pkgType = 'system'
     AND (
-        tsv_search @@ plainto_tsquery('english', $1) OR  -- Full-text search
-        name ILIKE '%' || $1 || '%'                       -- Contains search
+        tsv_search @@ plainto_tsquery('english', $1) OR  
+        name ILIKE '%' || $1 || '%'                       
     )
 ORDER BY name ASC
 LIMIT 50

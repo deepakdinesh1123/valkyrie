@@ -30,7 +30,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                 </ul>
                 <span className='text-white'>Community links:</span>
                 <a
-                    href="https://discord.gg/3cJpQNgT"
+                    href="https://discord.gg/9VMKq3rt5C"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:opacity-80 transition-opacity"

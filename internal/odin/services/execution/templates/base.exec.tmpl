@@ -1,10 +1,18 @@
-#!/usr/bin/env cached-nix-shell
+#!/usr/bin/env nix-shell
 #! nix-shell -i bash --pure
 #! nix-shell -p {{ block "LangSetup" . }}{{.LangNixPkg}}{{ end }}
 {{ if eq (len .SystemDependencies) 0 -}}
-{{else -}}
+{{ else -}}
 #! nix-shell -p {{ range .SystemDependencies }}{{.}} {{ end }}
 {{end -}}
 
-{{- block "compile" . -}}{{ end }}
-{{ block "execute" . }}{{ end }}{{ if ne .Args "" }}{{ .Args -}}{{ end }} >> output.txt 2>&1
+{{ if .Setup -}}
+{{ .Setup }}
+{{ end }}
+
+{{ if .Command -}}
+{{ .Command }}  >>  output.txt 2>&1
+{{ else -}}
+{{ block "compile" . }}{{ end }}
+{{ if .Input -}}cat input.txt | {{- end -}}{{ block "execute" . }}{{ end }}{{ if ne .CmdLineArgs "" }}{{ .CmdLineArgs -}}{{ end }} >> output.txt 2>&1
+{{ end }}

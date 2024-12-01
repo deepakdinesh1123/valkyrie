@@ -12,5 +12,5 @@ properties:
     type: array
     items:
       type: string
-  args:
+  setup:
     type: string

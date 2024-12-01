@@ -1,0 +1,23 @@
+type: object
+required:
+  - name
+  - extension
+  - monaco_language
+  - default_code
+properties:
+  name:
+    type: string
+    description: Name of the language.
+    example: python-3.10
+  extension:
+    type: string
+    description: File extension for the language.
+    example: py
+  monaco_language:
+    type: string
+    description: Monaco editor language identifier.
+    example: python
+  default_code:
+    type: string
+    description: Default code for the language.
+    example: print('Hello, World!')

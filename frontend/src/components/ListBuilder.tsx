@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
-import { Search, X } from "lucide-react";
+import { Search, X, Package } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ interface SearchableListBuilderProps {
   onSearchChange: (searchTerm: string) => void;
   resetTrigger?: any;
   nonExistingPackages?: string[];
+  totalPackagesCount?: number;
 }
 
 const ListBuilder: React.FC<SearchableListBuilderProps> = ({
@@ -19,11 +20,13 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
   onSearchChange,
   resetTrigger,
   nonExistingPackages = [],
+  totalPackagesCount,
 }) => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [showNoResults, setShowNoResults] = useState<boolean>(false);
+  const [hasInteracted, setHasInteracted] = useState<boolean>(false);
 
   const debouncedSearchChange = useCallback(
     debounce((value: string) => {
@@ -45,7 +48,7 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
       debouncedSearchChange(searchTerm);
       noResultsTimer = setTimeout(() => {
         setShowNoResults(true);
-      }, 1000); // Delay of 1 second before showing "No results"
+      }, 500);
     }
     return () => {
       debouncedSearchChange.cancel();
@@ -57,7 +60,9 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
     if (resetTrigger !== undefined) {
       setSelectedItems([]);
       setSearchTerm("");
+      setIsSearching(false);
       setShowNoResults(false);
+      setHasInteracted(false);
       onSelectionChange([]);
       onSearchChange("");
     }
@@ -73,24 +78,28 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
         onSelectionChange(updatedSelectedItems);
         setSearchTerm("");
       }
+      nonExistingPackages = [];
     }
   }, [nonExistingPackages, selectedItems, onSelectionChange]);
 
   const filteredItems = useMemo(() => {
-    if (searchTerm === "") {
-      return items.filter(item => !selectedItems.includes(item.name));
+    let baseItems = items;
+
+    if (searchTerm) {
+      baseItems = items.filter(item =>
+        item.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
-    return items.filter(
-      (item) =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !selectedItems.includes(item.name)
-    );
-  }, [items, searchTerm, selectedItems]);
+
+    return baseItems;
+  }, [items, searchTerm]);
 
   const handleSelect = (item: { name: string; version: string }) => {
-    const newSelectedItems = [...selectedItems, item.name];
-    setSelectedItems(newSelectedItems);
-    onSelectionChange(newSelectedItems);
+    if (!selectedItems.includes(item.name)) {
+      const newSelectedItems = [...selectedItems, item.name];
+      setSelectedItems(newSelectedItems);
+      onSelectionChange(newSelectedItems);
+    }
   };
 
   const handleRemove = (itemName: string) => {
@@ -101,6 +110,11 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
 
   const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
+    setHasInteracted(true);
+  };
+
+  const handleSearchFocus = () => {
+    setHasInteracted(true);
   };
 
   return (
@@ -108,9 +122,10 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
       <div className="relative mb-2">
         <Input
           type="text"
-          placeholder="Search items..."
+          placeholder="Search from hundreds of packages..."
           value={searchTerm}
           onChange={handleSearchInput}
+          onFocus={handleSearchFocus}
           className="border-transparent focus:border-transparent focus:ring-0 pl-10 pr-4 py-2 w-full outline-1 bg-neutral-900 text-white border-none"
         />
         <Search
@@ -118,6 +133,7 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
           size={20}
         />
       </div>
+      
       <div className="mb-4 flex flex-wrap gap-2">
         {selectedItems.map((itemName) => (
           <Badge
@@ -132,31 +148,52 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
               onClick={() => handleRemove(itemName)}
               className="h-5 w-5 p-0 hover:bg-red-100 hover:text-black rounded-full bg-neutral-800"
             >
-              <X size={14} className="text-gray-500 hover:text-black-500" />
+              <X size={14} className="text-gray-500 hover:text-black" />
             </Button>
           </Badge>
         ))}
       </div>
-      {searchTerm !== "" && (
+
+      
+
+      {items.length === 0 ? (
+        <div className="pl-2">No Packages Available..</div>
+      ) : searchTerm !== "" || filteredItems.length > 0 ? (
         isSearching ? (
           <div className="pl-2">Searching...</div>
         ) : filteredItems.length === 0 && showNoResults ? (
-          <div className="pl-2">No results...</div>
-        ) : filteredItems.length > 0 && (
+          <div className="pl-2">No results found</div>
+        ) : (
           <div className="bg-neutral-900 text-white shadow-md rounded-md overflow-hidden">
             <ul className="max-h-40 overflow-y-auto">
               {filteredItems.map((item) => (
                 <li
                   key={item.name}
-                  className="px-4 py-2 hover:bg-gray-200 hover:text-black cursor-pointer"
-                  onClick={() => handleSelect(item)}
+                  className={`px-4 py-2 ${
+                    selectedItems.includes(item.name)
+                      ? "text-gray-400 cursor-not-allowed bg-stone-700"
+                      : "hover:bg-gray-200 hover:text-black cursor-pointer"
+                  }`}
+                  onClick={() =>
+                    !selectedItems.includes(item.name) && handleSelect(item)
+                  }
                 >
-                  {`${item.name}`}
+                  <div className="flex items-center gap-2 justify-between">
+                    {item.name} <span style={{ fontSize: '0.9em' }}>{item.version}</span>
+                  </div>
                 </li>
               ))}
             </ul>
           </div>
         )
+      ) : null}
+      {!hasInteracted && items.length > 0 && (
+        <div className="flex items-center gap-2 text-gray-400 mt-3 pl-2">
+          <Package size={16} />
+          <span className="text-sm">
+            Showing popular packages. Search to explore {totalPackagesCount ? `${totalPackagesCount.toLocaleString()}+` : 'hundreds of'} more...
+          </span>
+        </div>
       )}
     </div>
   );

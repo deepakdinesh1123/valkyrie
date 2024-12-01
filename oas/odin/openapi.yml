@@ -6,7 +6,7 @@ info:
     name: MIT
     url: https://github.com/deepakdinesh1123/valkyrie/blob/main/LICENSE
 servers:
-  - url: http://usevalkyrie.odin.org/api/
+  - url: https://backend.evnix.cloud/api
 paths:
   /executions/execute:
     $ref: paths/executions_execute.yml
@@ -20,13 +20,33 @@ paths:
     $ref: paths/executions_{execId}.yml
   /executions/jobs/{JobId}:
     $ref: paths/executions_jobs_{JobId}.yml
-  /executions/workers:
-    $ref: paths/executions_workers.yml
-  /executions/workers/{workerId}:
-    $ref: paths/executions_workers_{workerId}.yml
   /version:
     $ref: paths/version.yml
   /execution/config:
     $ref: paths/execution_config.yml
+  /fetch/system:
+    $ref: paths/fetch_system.yml
+  /search/system:
+    $ref: paths/search_system.yml
+  /fetch/language:
+    $ref: paths/fetch_language.yml
+  /search/language:
+    $ref: paths/search_language.yml
+  /packages/exist:
+    $ref: paths/packages_exist.yml
+  /languages/{id}/versions:
+    $ref: paths/languages_{id}_versions.yml
   /languages:
     $ref: paths/languages.yml
+  /languages/create:
+    $ref: paths/languages_create.yml
+  /languages/{id}:
+    $ref: paths/languages_{id}.yml
+  /language-versions:
+    $ref: paths/language-versions.yml
+  /language-versions/create:
+    $ref: paths/language-versions_create.yml
+  /language-versions/{id}:
+    $ref: paths/language-versions_{id}.yml
+  /flake/{jobId}:
+    $ref: paths/flake_{jobId}.yml

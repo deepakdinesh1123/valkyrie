@@ -1,10 +1,8 @@
 get:
-  summary: Get all execution workers
-  description: Get all execution workers
-  operationId: getExecutionWorkers
+  summary: Fetch inital list of available system packages
+  description: Initialize the search results content with a default set of system packages
+  operationId: FetchSystemPackages
   parameters:
-    - $ref: ../components/parameters/PageNumber.yml
-    - $ref: ../components/parameters/PageSize.yml
     - $ref: ../components/parameters/AuthHeader.yml
   responses:
     '200':
@@ -14,15 +12,12 @@ get:
           schema:
             type: object
             required:
-              - workers
-              - pagination
+              - packages
             properties:
-              workers:
+              packages:
                 type: array
                 items:
-                  $ref: ../components/schemas/ExecutionWorker.yml
-              pagination:
-                $ref: ../components/schemas/PaginationResponse.yml
+                  $ref: ../components/schemas/Package.yml
     '400':
       description: Bad Request
       content:
@@ -31,6 +26,10 @@ get:
             $ref: ../components/schemas/Error.yml
     '403':
       description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml
     '500':
       description: Internal Server Error
       content:
