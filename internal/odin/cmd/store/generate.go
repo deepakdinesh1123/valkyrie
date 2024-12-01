@@ -215,7 +215,6 @@ func addLanguageVersions(ctx context.Context, queries db.Store, config *StoreCon
 			languageVersions = append(languageVersions, langVersion)
 		}
 	}
-
 	_, err := queries.InsertLanguageVersions(ctx, languageVersions)
 	if err != nil {
 		return logError("Error inserting language versions into the database", err)
@@ -235,7 +234,7 @@ func addPackages(ctx context.Context, queries db.Store, config *StoreConfig, sql
 			}
 			pkgInfo, err := getPackageData(pkg.Name, sqliteClient)
 			if err != nil {
-				return fmt.Errorf("could not get system package data: %s", err)
+				return fmt.Errorf("could not get system package %s data: %s", version.NixPackage, err)
 			}
 			if pkgInfo.StorePath == "<broken>" {
 				fmt.Printf("The language %s is broken\n", pkgInfo.Attribute)

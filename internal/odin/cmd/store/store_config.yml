@@ -302,7 +302,7 @@ languages:
     monacoLanguage: julia
     versions:
       - nixPackage: "julia"
-        version: "1.10.3"
+        version: "1.11.1"
         default: true
         searchQuery: "julia"
       - nixPackage: "julia_19"
@@ -446,9 +446,9 @@ languages:
         version: "3.4.0"
         default: true
         searchQuery: "rubyPackages_3_4"
-      - nixPackage: "ruby_3_3"
-        version: "3.3.5"
-        searchQuery: "rubyPackages_3_3"
+      - nixPackage: "ruby_3_2"
+        version: "3.2.5"
+        searchQuery: "rubyPackages_3_2"
     template: |
       {{ define "LangSetup" }}
       {{- if .IsFlake -}}
@@ -500,7 +500,7 @@ languages:
     monacoLanguage: zig
     versions:
       - nixPackage: "zig"
-        version: "3.45.3"
+        version: "0.13.0"
         default: true
         searchQuery: "zig"
     template: |
