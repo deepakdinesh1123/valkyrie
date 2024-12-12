@@ -59,4 +59,4 @@ odinb
 *.tfstate.backup
 *.terraform.lock*
 .terraform/
-rippkgs-index.sqlite
+rippkgs*
