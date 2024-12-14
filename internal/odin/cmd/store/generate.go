@@ -41,7 +41,7 @@ type Language struct {
 
 type LanguageVersion struct {
 	NixPackage  string `yaml:"nixPackage"`
-	Version     string `yaml:"version"`
+	Version     string `yaml:"version,omitempty"`
 	Default     bool   `yaml:"default,omitempty"`
 	Template    string `yaml:"template,omitempty"`
 	SearchQuery string `yaml:"searchQuery"`
@@ -133,7 +133,7 @@ func generatePackages(cmd *cobra.Command, args []string) error {
 		return logError("Error adding languages to store", err)
 	}
 
-	err = addLanguageVersions(ctx, queries, &storeConfig)
+	err = addLanguageVersions(ctx, queries, &storeConfig, sqliteClient)
 	if err != nil {
 		return logError("Error adding language versions to store", err)
 	}
@@ -191,7 +191,7 @@ func addLanguages(ctx context.Context, queries db.Store, config *StoreConfig) er
 	return nil
 }
 
-func addLanguageVersions(ctx context.Context, queries db.Store, config *StoreConfig) error {
+func addLanguageVersions(ctx context.Context, queries db.Store, config *StoreConfig, sqliteClient *sql.DB) error {
 	var languageVersions []db.InsertLanguageVersionsParams
 
 	for _, language := range config.Languages {
@@ -202,9 +202,14 @@ func addLanguageVersions(ctx context.Context, queries db.Store, config *StoreCon
 			continue
 		}
 		for _, version := range language.Versions {
+			pkgData, err := getPackageData(version.NixPackage, sqliteClient)
+			log.Println(pkgData.Version, pkgData.Name)
+			if err != nil {
+				return fmt.Errorf("could not get system package %s data: %s", version.NixPackage, err)
+			}
 			langVersion := db.InsertLanguageVersionsParams{
 				LanguageID:     lang.ID,
-				Version:        version.Version,
+				Version:        pkgData.Version,
 				NixPackageName: version.NixPackage,
 				Template:       pgtype.Text{String: version.Template, Valid: true},
 				SearchQuery:    version.SearchQuery,
@@ -227,9 +232,13 @@ func addPackages(ctx context.Context, queries db.Store, config *StoreConfig, sql
 
 	for _, language := range config.Languages {
 		for _, version := range language.Versions {
+			pkgData, err := getPackageData(version.NixPackage, sqliteClient)
+			if err != nil {
+				return fmt.Errorf("could not get system package %s data: %s", version.NixPackage, err)
+			}
 			pkg := db.InsertPackagesParams{
 				Name:    version.NixPackage,
-				Version: version.Version,
+				Version: pkgData.Version,
 				Pkgtype: "system",
 			}
 			pkgInfo, err := getPackageData(pkg.Name, sqliteClient)

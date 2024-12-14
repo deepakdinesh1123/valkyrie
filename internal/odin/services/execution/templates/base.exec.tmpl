@@ -1,4 +1,4 @@
-#!/usr/bin/env cached-nix-shell
+#!/usr/bin/env nix-shell
 #! nix-shell -i bash --pure
 #! nix-shell -p {{ block "LangSetup" . }}{{.LangNixPkg}}{{ end }}
 {{ if eq (len .SystemDependencies) 0 -}}

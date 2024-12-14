@@ -3,6 +3,8 @@ import LanguageSelector from "@/components/LanguageSelector";
 import '@/App.css';
 import { Input } from "@/components/ui/input";
 import CodeEditor from "@/components/CodeEditor";
+import { ServerStatusProvider } from "@/components/ServerStatusProvider";
+import AppContainer from "@/components/AppContainer";
 import { useLanguages } from "@/hooks/useLanguages";
 import { useLanguageVersions } from "@/hooks/useLanguageVersions";
 import { LanguageResponse, LanguageVersion } from "@/api-client";
@@ -26,7 +28,7 @@ const App: React.FC = () => {
   const [args, setArgs] = useState<string>("");
   const [compilerArgs, setCompilerArgs] = useState<string>("");
   const { selectedLanguage, setSelectedLanguage } = useLanguages();
-  const { selectedLanguageVersion, setSelectedLanguageVersion } = useLanguageVersions(selectedLanguage?.id);
+  const { selectedLanguageVersion, setSelectedLanguageVersion } = useLanguageVersions(selectedLanguage?.id || 0);
   const [codeContent, setCodeContent] = useState<string>("");
   const { terminalOutput, executeCode, isLoading } = useCodeExecution();
   const [selectedLanguageDependencies, setSelectedLanguageDependencies] = useState<string[]>([]);
@@ -40,8 +42,8 @@ const App: React.FC = () => {
   const calculatedHeight = `calc(100% - ${terminalHeight}px)`;
   const [isAnnouncmentModalOpen, setIsAnnouncementModalOpen] = useState<boolean>(true);
   const { systemPackages } = useSystemPackages(systemSearchString);
-  const { languagePackages, resetLanguagePackages } = useLanguagePackages(languageSearchString, selectedLanguageVersion?.search_query);
-  const { defaultSystemPackages, defaultLanguagePackages } = useDefaultPackages(selectedLanguageVersion?.search_query);
+  const { languagePackages, resetLanguagePackages } = useLanguagePackages(languageSearchString, selectedLanguageVersion?.search_query || "");
+  const { defaultSystemPackages, defaultLanguagePackages } = useDefaultPackages(selectedLanguageVersion?.search_query || "");
   const [pendingVersionChange, setPendingVersionChange] = useState<any>(null);
   const [resetLanguageDependencies, setResetLanguageDependencies] = useState({});
   const { existsResponse } = usePackagesExist(
@@ -125,7 +127,7 @@ const App: React.FC = () => {
     if (selectedLanguage && codeContent) {
       executeCode({
         language: selectedLanguage.name,
-        version: selectedLanguageVersion.version,
+        version: selectedLanguageVersion?.version || "",
         code: codeContent,
         environment: {
           systemDependencies: selectedSystemDependencies,
@@ -151,6 +153,8 @@ const App: React.FC = () => {
 
 
   return (
+    <ServerStatusProvider>
+      <AppContainer>
     <div className="flex h-screen relative">
       <div className="absolute top-0 right-0 z-10 ">
         <img
@@ -419,6 +423,8 @@ const App: React.FC = () => {
         onClose={() => setIsAnnouncementModalOpen(false)}
       />
     </div>
+    </AppContainer>
+    </ServerStatusProvider>
   );
 };
 

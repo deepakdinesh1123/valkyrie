@@ -6,14 +6,11 @@ languages:
     monacoLanguage: python
     versions:
       - nixPackage: "python312"
-        version: "3.12"
         searchQuery: "python312Packages"
         default: true
       - nixPackage: "python311"
-        version: "3.11"
         searchQuery: "python311Packages"
       - nixPackage: "python310"
-        version: "3.10"
         searchQuery: "python310Packages"
     template: |
       {{ define "LangSetup" }}
@@ -112,6 +109,8 @@ languages:
       - gym
       - tensorly
       - tensordict
+      - keras
+      - tensorflow
       - gitpython
       - gitdb
 
@@ -123,10 +122,8 @@ languages:
     monacoLanguage: go
     versions:
       - nixPackage: "go_1_22"
-        version: "1.22"
         searchQuery: "goPackages"
       - nixPackage: "go"
-        version: "1.23"
         searchQuery: "goPackages"
     template: |
       {{ define "compile" }} go build main.go {{ .CompilerArgs }}{{ end }}
@@ -144,13 +141,10 @@ languages:
     monacoLanguage: ada
     versions:
       - nixPackage: "gnat"
-        version: "12.3.0"
         searchQuery: "gnatPackages"
       - nixPackage: "gnat13"
-        version: "13.2.0"
         searchQuery: "gnatPackages"
       - nixPackage: "gnat14"
-        version: "14.1.0"
         searchQuery: "gnatPackages"
         default: true
     template: |
@@ -170,7 +164,6 @@ languages:
     monacoLanguage: assembly
     versions:
       - nixPackage: "nasm"
-        version: "2.16.03"
         default: true
         searchQuery: "assemblyPackages"
     template: |
@@ -199,7 +192,6 @@ languages:
     monacoLanguage: shell
     versions:
       - nixPackage: "bash"
-        version: "5.2p32"
         default: true
         searchQuery: "bashPackages"
     template: |
@@ -212,7 +204,6 @@ languages:
     monacoLanguage: javascript
     versions:
       - nixPackage: "bun"
-        version: "1.18"
         default: true
         searchQuery: "bunPackages"
     template: |
@@ -225,7 +216,6 @@ languages:
     monacoLanguage: crystal
     versions:
       - nixPackage: "crystal"
-        version: "1.11.2"
         default: true
         searchQuery: "crystalPackages"
     template: |
@@ -238,7 +228,6 @@ languages:
     monacoLanguage: dart
     versions:
       - nixPackage: "dart"
-        version: "3.3.4"
         default: true
         searchQuery: "dartPackages"
     template: |
@@ -253,7 +242,6 @@ languages:
     monacoLanguage: typescript
     versions:
       - nixPackage: "deno"
-        version: "1.44.3"
         default: true
         searchQuery: "deno"
     template: |
@@ -266,11 +254,9 @@ languages:
     monacoLanguage: fortran
     versions:
       - nixPackage: "gfortran"
-        version: "13.2.0"
         default: true
         searchQuery: "fortran"
       - nixPackage: "gfortran12"
-        version: "12.3.0"
         searchQuery: "fortran"
     template: |
      {{ define "compile" }} gfortran main.f90 {{ .CompilerArgs }} {{ end }}
@@ -286,7 +272,6 @@ languages:
     monacoLanguage: groovy
     versions:
       - nixPackage: "groovy"
-        version: "3.0.11"
         default: true
         searchQuery: "groovy"
     template: |
@@ -299,11 +284,9 @@ languages:
     monacoLanguage: julia
     versions:
       - nixPackage: "julia"
-        version: "1.11.1"
         default: true
         searchQuery: "julia"
       - nixPackage: "julia_19"
-        version: "1.9.4"
         searchQuery: "julia"
     template: |
      {{  define "execute" }} julia main.jl {{ end }}
@@ -315,14 +298,11 @@ languages:
     monacoLanguage: lua
     versions:
       - nixPackage: "lua"
-        version: "5.2.4"
         default: true
         searchQuery: "lua52Packages"
       - nixPackage: "lua5_4_compat"
-        version: "5.4.6"
         searchQuery: "lua54Packages"
       - nixPackage: "lua5_3_compat"
-        version: "5.3.6"
         searchQuery: "lua53Packages"
     template: |
       {{ define "LangSetup" }}
@@ -346,7 +326,6 @@ languages:
     monacoLanguage: nim
     versions:
       - nixPackage: "nim"
-        version: "2.0.4"
         default: true
         searchQuery: "nim"
     template: |
@@ -361,33 +340,29 @@ languages:
     monacoLanguage: javascript
     versions:
       - nixPackage: "nodejs_22"
-        version: "22.4.1"
         searchQuery: "nodePackages"
       - nixPackage: "nodejs_20"
-        version: "20.15.1"
         searchQuery: "nodePackages"
       - nixPackage: "nodejs_18"
-        version: "18.20.4"
         searchQuery: "nodePackages"
       - nixPackage: "nodejs_23"
-        version: "23.2.0"
         default: true
         searchQuery: "nodePackages"
     template: |
       {{ define "execute" }} node main.js {{ end }}
     defaultCode: |
       console.log("Hello World!");
+    deps:
+      - lodash
 
   - name: perl
     extension: pl
     monacoLanguage: perl
     versions:
       - nixPackage: "perl540"
-        version: "5.40.0"
         default: true
         searchQuery: "perl540Packages"
       - nixPackage: "perl538"
-        version: "5.38.2"
         searchQuery: "perl538Packages"
     template: |
       {{ define "execute" }} perl main.pl {{ end }}
@@ -402,14 +377,11 @@ languages:
     monacoLanguage: php
     versions:
       - nixPackage: "php"
-        version: "8.2.26"
         default: true
         searchQuery: "php82Packages"
       - nixPackage: "php83"
-        version: "8.3.12"
         searchQuery: "php83Packages"
       - nixPackage: "php81"
-        version: "8.1.30"
         searchQuery: "php81Packages"
     template: |
       {{ define "execute" }} php main.php {{ end }}
@@ -421,7 +393,6 @@ languages:
     monacoLanguage: rust
     versions:
       - nixPackage: "rustc"
-        version: "1.77.1"
         default: true
         searchQuery: "rust"
     template: |
@@ -437,14 +408,11 @@ languages:
     monacoLanguage: ruby
     versions:
       - nixPackage: "ruby"
-        version: "3.3.5"
         searchQuery: "rubyPackages"
       - nixPackage: "ruby_3_4"
-        version: "3.4.0"
         default: true
         searchQuery: "rubyPackages_3_4"
       - nixPackage: "ruby_3_2"
-        version: "3.2.5"
         searchQuery: "rubyPackages_3_2"
     template: |
       {{ define "LangSetup" }}
@@ -480,7 +448,6 @@ languages:
     monacoLanguage: sql
     versions:
       - nixPackage: "sqlite"
-        version: "3.45.3"
         default: true
         searchQuery: "sql"
     template: |
@@ -497,7 +464,6 @@ languages:
     monacoLanguage: zig
     versions:
       - nixPackage: "zig"
-        version: "0.13.0"
         default: true
         searchQuery: "zig"
     template: |

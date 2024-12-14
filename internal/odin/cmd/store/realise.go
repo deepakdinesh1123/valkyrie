@@ -60,7 +60,7 @@ func realise(pkg db.GetAllPackagesRow) error {
 	} else {
 		pkgName = fmt.Sprintf("%s.%s", pkg.Language.String, pkg.Name)
 	}
-	fmt.Println("Realising package %s", pkgName)
+	fmt.Printf("Realising package %s", pkgName)
 	cmd := exec.Command("nix-shell", "-p", pkgName, "--run", "exit")
 	err := cmd.Run()
 	return err
