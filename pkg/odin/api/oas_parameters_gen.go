@@ -905,6 +905,72 @@ func decodeFetchSystemPackagesParams(args [0]string, argsEscaped bool, r *http.R
 	return params, nil
 }
 
+// FlakeJobIdGetParams is parameters of GET /flake/{jobId} operation.
+type FlakeJobIdGetParams struct {
+	// Job ID.
+	JobId int64
+}
+
+func unpackFlakeJobIdGetParams(packed middleware.Parameters) (params FlakeJobIdGetParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "jobId",
+			In:   "path",
+		}
+		params.JobId = packed[key].(int64)
+	}
+	return params
+}
+
+func decodeFlakeJobIdGetParams(args [1]string, argsEscaped bool, r *http.Request) (params FlakeJobIdGetParams, _ error) {
+	// Decode path: jobId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "jobId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToInt64(val)
+				if err != nil {
+					return err
+				}
+
+				params.JobId = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "jobId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // GetAllExecutionJobsParams is parameters of getAllExecutionJobs operation.
 type GetAllExecutionJobsParams struct {
 	// The page number to retrieve.

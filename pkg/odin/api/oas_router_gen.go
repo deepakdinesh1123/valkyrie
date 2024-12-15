@@ -209,9 +209,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				}
 
 				elem = origElem
-			case 'f': // Prefix: "fetch/"
+			case 'f': // Prefix: "f"
 				origElem := elem
-				if l := len("fetch/"); len(elem) >= l && elem[0:l] == "fetch/" {
+				if l := len("f"); len(elem) >= l && elem[0:l] == "f" {
 					elem = elem[l:]
 				} else {
 					break
@@ -221,40 +221,83 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					break
 				}
 				switch elem[0] {
-				case 'l': // Prefix: "language"
+				case 'e': // Prefix: "etch/"
 					origElem := elem
-					if l := len("language"); len(elem) >= l && elem[0:l] == "language" {
+					if l := len("etch/"); len(elem) >= l && elem[0:l] == "etch/" {
 						elem = elem[l:]
 					} else {
 						break
 					}
 
 					if len(elem) == 0 {
-						// Leaf node.
-						switch r.Method {
-						case "GET":
-							s.handleFetchLanguagePackagesRequest([0]string{}, elemIsEscaped, w, r)
-						default:
-							s.notAllowed(w, r, "GET")
+						break
+					}
+					switch elem[0] {
+					case 'l': // Prefix: "language"
+						origElem := elem
+						if l := len("language"); len(elem) >= l && elem[0:l] == "language" {
+							elem = elem[l:]
+						} else {
+							break
 						}
 
-						return
+						if len(elem) == 0 {
+							// Leaf node.
+							switch r.Method {
+							case "GET":
+								s.handleFetchLanguagePackagesRequest([0]string{}, elemIsEscaped, w, r)
+							default:
+								s.notAllowed(w, r, "GET")
+							}
+
+							return
+						}
+
+						elem = origElem
+					case 's': // Prefix: "system"
+						origElem := elem
+						if l := len("system"); len(elem) >= l && elem[0:l] == "system" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch r.Method {
+							case "GET":
+								s.handleFetchSystemPackagesRequest([0]string{}, elemIsEscaped, w, r)
+							default:
+								s.notAllowed(w, r, "GET")
+							}
+
+							return
+						}
+
+						elem = origElem
 					}
 
 					elem = origElem
-				case 's': // Prefix: "system"
+				case 'l': // Prefix: "lake/"
 					origElem := elem
-					if l := len("system"); len(elem) >= l && elem[0:l] == "system" {
+					if l := len("lake/"); len(elem) >= l && elem[0:l] == "lake/" {
 						elem = elem[l:]
 					} else {
 						break
 					}
 
+					// Param: "jobId"
+					// Leaf parameter
+					args[0] = elem
+					elem = ""
+
 					if len(elem) == 0 {
 						// Leaf node.
 						switch r.Method {
 						case "GET":
-							s.handleFetchSystemPackagesRequest([0]string{}, elemIsEscaped, w, r)
+							s.handleFlakeJobIdGetRequest([1]string{
+								args[0],
+							}, elemIsEscaped, w, r)
 						default:
 							s.notAllowed(w, r, "GET")
 						}
@@ -833,7 +876,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						// Leaf node.
 						switch method {
 						case "GET":
-							r.name = "GetExecutionConfig"
+							r.name = GetExecutionConfigOperation
 							r.summary = "Get execution config"
 							r.operationID = "getExecutionConfig"
 							r.pathPattern = "/execution/config"
@@ -857,7 +900,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					if len(elem) == 0 {
 						switch method {
 						case "GET":
-							r.name = "GetAllExecutions"
+							r.name = GetAllExecutionsOperation
 							r.summary = "Get all executions"
 							r.operationID = "getAllExecutions"
 							r.pathPattern = "/executions"
@@ -893,7 +936,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								// Leaf node.
 								switch method {
 								case "POST":
-									r.name = "Execute"
+									r.name = ExecuteOperation
 									r.summary = "Execute a script"
 									r.operationID = "execute"
 									r.pathPattern = "/executions/execute"
@@ -923,7 +966,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								// Leaf node.
 								switch method {
 								case "DELETE":
-									r.name = "DeleteExecutionJob"
+									r.name = DeleteExecutionJobOperation
 									r.summary = "Delete execution job"
 									r.operationID = "deleteExecutionJob"
 									r.pathPattern = "/executions/jobs/{JobId}"
@@ -931,7 +974,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									r.count = 1
 									return r, true
 								case "GET":
-									r.name = "GetExecutionJobById"
+									r.name = GetExecutionJobByIdOperation
 									r.summary = "Get execution job"
 									r.operationID = "getExecutionJobById"
 									r.pathPattern = "/executions/jobs/{JobId}"
@@ -939,7 +982,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									r.count = 1
 									return r, true
 								case "PUT":
-									r.name = "CancelExecutionJob"
+									r.name = CancelExecutionJobOperation
 									r.summary = "Cancel Execution Job"
 									r.operationID = "cancelExecutionJob"
 									r.pathPattern = "/executions/jobs/{JobId}"
@@ -962,7 +1005,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							// Leaf node.
 							switch method {
 							case "GET":
-								r.name = "GetExecutionResultById"
+								r.name = GetExecutionResultByIdOperation
 								r.summary = "Get execution result by id"
 								r.operationID = "getExecutionResultById"
 								r.pathPattern = "/executions/{execId}"
@@ -981,9 +1024,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 				}
 
 				elem = origElem
-			case 'f': // Prefix: "fetch/"
+			case 'f': // Prefix: "f"
 				origElem := elem
-				if l := len("fetch/"); len(elem) >= l && elem[0:l] == "fetch/" {
+				if l := len("f"); len(elem) >= l && elem[0:l] == "f" {
 					elem = elem[l:]
 				} else {
 					break
@@ -993,49 +1036,94 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					break
 				}
 				switch elem[0] {
-				case 'l': // Prefix: "language"
+				case 'e': // Prefix: "etch/"
 					origElem := elem
-					if l := len("language"); len(elem) >= l && elem[0:l] == "language" {
+					if l := len("etch/"); len(elem) >= l && elem[0:l] == "etch/" {
 						elem = elem[l:]
 					} else {
 						break
 					}
 
 					if len(elem) == 0 {
-						// Leaf node.
-						switch method {
-						case "GET":
-							r.name = "FetchLanguagePackages"
-							r.summary = "Fetch inital list of available language packages"
-							r.operationID = "FetchLanguagePackages"
-							r.pathPattern = "/fetch/language"
-							r.args = args
-							r.count = 0
-							return r, true
-						default:
-							return
+						break
+					}
+					switch elem[0] {
+					case 'l': // Prefix: "language"
+						origElem := elem
+						if l := len("language"); len(elem) >= l && elem[0:l] == "language" {
+							elem = elem[l:]
+						} else {
+							break
 						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch method {
+							case "GET":
+								r.name = FetchLanguagePackagesOperation
+								r.summary = "Fetch inital list of available language packages"
+								r.operationID = "FetchLanguagePackages"
+								r.pathPattern = "/fetch/language"
+								r.args = args
+								r.count = 0
+								return r, true
+							default:
+								return
+							}
+						}
+
+						elem = origElem
+					case 's': // Prefix: "system"
+						origElem := elem
+						if l := len("system"); len(elem) >= l && elem[0:l] == "system" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch method {
+							case "GET":
+								r.name = FetchSystemPackagesOperation
+								r.summary = "Fetch inital list of available system packages"
+								r.operationID = "FetchSystemPackages"
+								r.pathPattern = "/fetch/system"
+								r.args = args
+								r.count = 0
+								return r, true
+							default:
+								return
+							}
+						}
+
+						elem = origElem
 					}
 
 					elem = origElem
-				case 's': // Prefix: "system"
+				case 'l': // Prefix: "lake/"
 					origElem := elem
-					if l := len("system"); len(elem) >= l && elem[0:l] == "system" {
+					if l := len("lake/"); len(elem) >= l && elem[0:l] == "lake/" {
 						elem = elem[l:]
 					} else {
 						break
 					}
 
+					// Param: "jobId"
+					// Leaf parameter
+					args[0] = elem
+					elem = ""
+
 					if len(elem) == 0 {
 						// Leaf node.
 						switch method {
 						case "GET":
-							r.name = "FetchSystemPackages"
-							r.summary = "Fetch inital list of available system packages"
-							r.operationID = "FetchSystemPackages"
-							r.pathPattern = "/fetch/system"
+							r.name = FlakeJobIdGetOperation
+							r.summary = "Fetch Flake"
+							r.operationID = ""
+							r.pathPattern = "/flake/{jobId}"
 							r.args = args
-							r.count = 0
+							r.count = 1
 							return r, true
 						default:
 							return
@@ -1070,7 +1158,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						// Leaf node.
 						switch method {
 						case "GET":
-							r.name = "GetAllExecutionJobs"
+							r.name = GetAllExecutionJobsOperation
 							r.summary = "Get all execution jobs"
 							r.operationID = "getAllExecutionJobs"
 							r.pathPattern = "/jobs/execution"
@@ -1109,7 +1197,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						// Leaf node.
 						switch method {
 						case "GET":
-							r.name = "GetExecutionsForJob"
+							r.name = GetExecutionsForJobOperation
 							r.summary = "Get executions of given job"
 							r.operationID = "getExecutionsForJob"
 							r.pathPattern = "/jobs/{JobId}/executions"
@@ -1148,7 +1236,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					if len(elem) == 0 {
 						switch method {
 						case "GET":
-							r.name = "GetAllLanguageVersions"
+							r.name = GetAllLanguageVersionsOperation
 							r.summary = "Get all language versions"
 							r.operationID = "getAllLanguageVersions"
 							r.pathPattern = "/language-versions"
@@ -1184,7 +1272,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								// Leaf node.
 								switch method {
 								case "POST":
-									r.name = "CreateLanguageVersion"
+									r.name = CreateLanguageVersionOperation
 									r.summary = "Create a language version"
 									r.operationID = "createLanguageVersion"
 									r.pathPattern = "/language-versions/create"
@@ -1207,7 +1295,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							// Leaf node.
 							switch method {
 							case "DELETE":
-								r.name = "DeleteLanguageVersion"
+								r.name = DeleteLanguageVersionOperation
 								r.summary = "Delete a language version"
 								r.operationID = "deleteLanguageVersion"
 								r.pathPattern = "/language-versions/{id}"
@@ -1215,7 +1303,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.count = 1
 								return r, true
 							case "GET":
-								r.name = "GetLanguageVersionById"
+								r.name = GetLanguageVersionByIdOperation
 								r.summary = "Get language version by ID"
 								r.operationID = "getLanguageVersionById"
 								r.pathPattern = "/language-versions/{id}"
@@ -1223,7 +1311,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.count = 1
 								return r, true
 							case "PUT":
-								r.name = "UpdateLanguageVersion"
+								r.name = UpdateLanguageVersionOperation
 								r.summary = "Update a language version"
 								r.operationID = "updateLanguageVersion"
 								r.pathPattern = "/language-versions/{id}"
@@ -1250,7 +1338,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					if len(elem) == 0 {
 						switch method {
 						case "GET":
-							r.name = "GetAllLanguages"
+							r.name = GetAllLanguagesOperation
 							r.summary = "Get all languages"
 							r.operationID = "getAllLanguages"
 							r.pathPattern = "/languages"
@@ -1286,7 +1374,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								// Leaf node.
 								switch method {
 								case "POST":
-									r.name = "CreateLanguage"
+									r.name = CreateLanguageOperation
 									r.summary = "Create a language"
 									r.operationID = "createLanguage"
 									r.pathPattern = "/languages/create"
@@ -1312,7 +1400,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						if len(elem) == 0 {
 							switch method {
 							case "DELETE":
-								r.name = "DeleteLanguage"
+								r.name = DeleteLanguageOperation
 								r.summary = "Delete a language"
 								r.operationID = "deleteLanguage"
 								r.pathPattern = "/languages/{id}"
@@ -1320,7 +1408,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.count = 1
 								return r, true
 							case "GET":
-								r.name = "GetLanguageById"
+								r.name = GetLanguageByIdOperation
 								r.summary = "Get language by ID"
 								r.operationID = "getLanguageById"
 								r.pathPattern = "/languages/{id}"
@@ -1328,7 +1416,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.count = 1
 								return r, true
 							case "PUT":
-								r.name = "UpdateLanguage"
+								r.name = UpdateLanguageOperation
 								r.summary = "Update a language"
 								r.operationID = "updateLanguage"
 								r.pathPattern = "/languages/{id}"
@@ -1352,7 +1440,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								// Leaf node.
 								switch method {
 								case "GET":
-									r.name = "GetAllVersions"
+									r.name = GetAllVersionsOperation
 									r.summary = "Get all language versions"
 									r.operationID = "getAllVersions"
 									r.pathPattern = "/languages/{id}/versions"
@@ -1386,7 +1474,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					// Leaf node.
 					switch method {
 					case "POST":
-						r.name = "PackagesExist"
+						r.name = PackagesExistOperation
 						r.summary = "Verify package list is available."
 						r.operationID = "PackagesExist"
 						r.pathPattern = "/packages/exist"
@@ -1547,7 +1635,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					// Leaf node.
 					switch method {
 					case "GET":
-						r.name = "GetVersion"
+						r.name = GetVersionOperation
 						r.summary = "Get version"
 						r.operationID = "getVersion"
 						r.pathPattern = "/version"

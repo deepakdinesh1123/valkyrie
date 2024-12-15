@@ -451,17 +451,17 @@ func (s *ExecutionEnvironmentSpec) SetSetup(val OptString) {
 
 // Ref: #/components/schemas/ExecutionRequest
 type ExecutionRequest struct {
-	Environment OptExecutionEnvironmentSpec `json:"environment"`
-	Code        OptString                   `json:"code"`
-	Language    OptString                   `json:"language"`
-	Version     OptString                   `json:"version"`
-	MaxRetries  OptInt                      `json:"max_retries"`
-	Timeout     OptInt32                    `json:"timeout"`
-	CmdLineArgs OptString                   `json:"cmdLineArgs"`
-	CompileArgs OptString                   `json:"compileArgs"`
-	Command     OptString                   `json:"command"`
-	Files       []byte                      `json:"files"`
-	Input       OptString                   `json:"input"`
+	Environment  OptExecutionEnvironmentSpec `json:"environment"`
+	Code         OptString                   `json:"code"`
+	Language     OptString                   `json:"language"`
+	Version      OptString                   `json:"version"`
+	MaxRetries   OptInt                      `json:"max_retries"`
+	Timeout      OptInt32                    `json:"timeout"`
+	CmdLineArgs  OptString                   `json:"cmdLineArgs"`
+	CompilerArgs OptString                   `json:"compilerArgs"`
+	Command      OptString                   `json:"command"`
+	Files        []byte                      `json:"files"`
+	Input        OptString                   `json:"input"`
 }
 
 // GetEnvironment returns the value of Environment.
@@ -499,9 +499,9 @@ func (s *ExecutionRequest) GetCmdLineArgs() OptString {
 	return s.CmdLineArgs
 }
 
-// GetCompileArgs returns the value of CompileArgs.
-func (s *ExecutionRequest) GetCompileArgs() OptString {
-	return s.CompileArgs
+// GetCompilerArgs returns the value of CompilerArgs.
+func (s *ExecutionRequest) GetCompilerArgs() OptString {
+	return s.CompilerArgs
 }
 
 // GetCommand returns the value of Command.
@@ -554,9 +554,9 @@ func (s *ExecutionRequest) SetCmdLineArgs(val OptString) {
 	s.CmdLineArgs = val
 }
 
-// SetCompileArgs sets the value of CompileArgs.
-func (s *ExecutionRequest) SetCompileArgs(val OptString) {
-	s.CompileArgs = val
+// SetCompilerArgs sets the value of CompilerArgs.
+func (s *ExecutionRequest) SetCompilerArgs(val OptString) {
+	s.CompilerArgs = val
 }
 
 // SetCommand sets the value of Command.
@@ -748,6 +748,30 @@ func (s *FetchSystemPackagesOK) SetPackages(val []Package) {
 }
 
 func (*FetchSystemPackagesOK) fetchSystemPackagesRes() {}
+
+type FlakeJobIdGetForbidden Error
+
+func (*FlakeJobIdGetForbidden) flakeJobIdGetRes() {}
+
+type FlakeJobIdGetInternalServerError Error
+
+func (*FlakeJobIdGetInternalServerError) flakeJobIdGetRes() {}
+
+type FlakeJobIdGetOK struct {
+	Flake string `json:"flake"`
+}
+
+// GetFlake returns the value of Flake.
+func (s *FlakeJobIdGetOK) GetFlake() string {
+	return s.Flake
+}
+
+// SetFlake sets the value of Flake.
+func (s *FlakeJobIdGetOK) SetFlake(val string) {
+	s.Flake = val
+}
+
+func (*FlakeJobIdGetOK) flakeJobIdGetRes() {}
 
 type GetAllExecutionJobsBadRequest Error
 

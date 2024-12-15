@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
-import { Search, X } from "lucide-react";
+import { Search, X, Package } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ interface SearchableListBuilderProps {
   onSearchChange: (searchTerm: string) => void;
   resetTrigger?: any;
   nonExistingPackages?: string[];
+  totalPackagesCount?: number;
 }
 
 const ListBuilder: React.FC<SearchableListBuilderProps> = ({
@@ -19,11 +20,13 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
   onSearchChange,
   resetTrigger,
   nonExistingPackages = [],
+  totalPackagesCount,
 }) => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [showNoResults, setShowNoResults] = useState<boolean>(false);
+  const [hasInteracted, setHasInteracted] = useState<boolean>(false);
 
   const debouncedSearchChange = useCallback(
     debounce((value: string) => {
@@ -59,6 +62,7 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
       setSearchTerm("");
       setIsSearching(false);
       setShowNoResults(false);
+      setHasInteracted(false);
       onSelectionChange([]);
       onSearchChange("");
     }
@@ -106,6 +110,11 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
 
   const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
+    setHasInteracted(true);
+  };
+
+  const handleSearchFocus = () => {
+    setHasInteracted(true);
   };
 
   return (
@@ -113,9 +122,10 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
       <div className="relative mb-2">
         <Input
           type="text"
-          placeholder="Search items..."
+          placeholder="Search from hundreds of packages..."
           value={searchTerm}
           onChange={handleSearchInput}
+          onFocus={handleSearchFocus}
           className="border-transparent focus:border-transparent focus:ring-0 pl-10 pr-4 py-2 w-full outline-1 bg-neutral-900 text-white border-none"
         />
         <Search
@@ -144,6 +154,8 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
         ))}
       </div>
 
+      
+
       {items.length === 0 ? (
         <div className="pl-2">No Packages Available..</div>
       ) : searchTerm !== "" || filteredItems.length > 0 ? (
@@ -157,10 +169,11 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
               {filteredItems.map((item) => (
                 <li
                   key={item.name}
-                  className={`px-4 py-2 ${selectedItems.includes(item.name)
+                  className={`px-4 py-2 ${
+                    selectedItems.includes(item.name)
                       ? "text-gray-400 cursor-not-allowed bg-stone-700"
                       : "hover:bg-gray-200 hover:text-black cursor-pointer"
-                    }`}
+                  }`}
                   onClick={() =>
                     !selectedItems.includes(item.name) && handleSelect(item)
                   }
@@ -174,6 +187,14 @@ const ListBuilder: React.FC<SearchableListBuilderProps> = ({
           </div>
         )
       ) : null}
+      {!hasInteracted && items.length > 0 && (
+        <div className="flex items-center gap-2 text-gray-400 mt-3 pl-2">
+          <Package size={16} />
+          <span className="text-sm">
+            Showing popular packages. Search to explore {totalPackagesCount ? `${totalPackagesCount.toLocaleString()}+` : 'hundreds of'} more...
+          </span>
+        </div>
+      )}
     </div>
   );
 };

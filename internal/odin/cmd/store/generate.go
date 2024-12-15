@@ -6,6 +6,7 @@ import (
 	_ "embed"
 	"encoding/csv"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -39,10 +40,11 @@ type Language struct {
 }
 
 type LanguageVersion struct {
-	NixPackage string `yaml:"nixPackage"`
-	Version    string `yaml:"version"`
-	Default    bool   `yaml:"default,omitempty"`
-	Template   string `yaml:"template,omitempty"`
+	NixPackage  string `yaml:"nixPackage"`
+	Version     string `yaml:"version,omitempty"`
+	Default     bool   `yaml:"default,omitempty"`
+	Template    string `yaml:"template,omitempty"`
+	SearchQuery string `yaml:"searchQuery"`
 }
 
 type NixPackageInfo struct {
@@ -131,7 +133,7 @@ func generatePackages(cmd *cobra.Command, args []string) error {
 		return logError("Error adding languages to store", err)
 	}
 
-	err = addLanguageVersions(ctx, queries, &storeConfig)
+	err = addLanguageVersions(ctx, queries, &storeConfig, sqliteClient)
 	if err != nil {
 		return logError("Error adding language versions to store", err)
 	}
@@ -189,7 +191,7 @@ func addLanguages(ctx context.Context, queries db.Store, config *StoreConfig) er
 	return nil
 }
 
-func addLanguageVersions(ctx context.Context, queries db.Store, config *StoreConfig) error {
+func addLanguageVersions(ctx context.Context, queries db.Store, config *StoreConfig, sqliteClient *sql.DB) error {
 	var languageVersions []db.InsertLanguageVersionsParams
 
 	for _, language := range config.Languages {
@@ -200,12 +202,17 @@ func addLanguageVersions(ctx context.Context, queries db.Store, config *StoreCon
 			continue
 		}
 		for _, version := range language.Versions {
+			pkgData, err := getPackageData(version.NixPackage, sqliteClient)
+			log.Println(pkgData.Version, pkgData.Name)
+			if err != nil {
+				return fmt.Errorf("could not get system package %s data: %s", version.NixPackage, err)
+			}
 			langVersion := db.InsertLanguageVersionsParams{
 				LanguageID:     lang.ID,
-				Version:        version.Version,
+				Version:        pkgData.Version,
 				NixPackageName: version.NixPackage,
 				Template:       pgtype.Text{String: version.Template, Valid: true},
-				SearchQuery:    fmt.Sprintf("%sPackages", version.NixPackage),
+				SearchQuery:    version.SearchQuery,
 			}
 			if version.Default {
 				langVersion.DefaultVersion = true
@@ -213,7 +220,6 @@ func addLanguageVersions(ctx context.Context, queries db.Store, config *StoreCon
 			languageVersions = append(languageVersions, langVersion)
 		}
 	}
-
 	_, err := queries.InsertLanguageVersions(ctx, languageVersions)
 	if err != nil {
 		return logError("Error inserting language versions into the database", err)
@@ -226,14 +232,18 @@ func addPackages(ctx context.Context, queries db.Store, config *StoreConfig, sql
 
 	for _, language := range config.Languages {
 		for _, version := range language.Versions {
+			pkgData, err := getPackageData(version.NixPackage, sqliteClient)
+			if err != nil {
+				return fmt.Errorf("could not get system package %s data: %s", version.NixPackage, err)
+			}
 			pkg := db.InsertPackagesParams{
 				Name:    version.NixPackage,
-				Version: version.Version,
+				Version: pkgData.Version,
 				Pkgtype: "system",
 			}
 			pkgInfo, err := getPackageData(pkg.Name, sqliteClient)
 			if err != nil {
-				return fmt.Errorf("could not get system package data: %s", err)
+				return fmt.Errorf("could not get system package %s data: %s", version.NixPackage, err)
 			}
 			if pkgInfo.StorePath == "<broken>" {
 				fmt.Printf("The language %s is broken\n", pkgInfo.Attribute)
@@ -245,13 +255,13 @@ func addPackages(ctx context.Context, queries db.Store, config *StoreConfig, sql
 			packages = append(packages, pkg)
 			for _, dep := range language.Deps {
 				langPkg := db.InsertPackagesParams{
-					Name:     fmt.Sprintf("%sPackages.%s", version.NixPackage, dep),
+					Name:     dep,
 					Pkgtype:  "language",
-					Language: pgtype.Text{String: fmt.Sprintf("%sPackages", version.NixPackage), Valid: true},
+					Language: pgtype.Text{String: version.SearchQuery, Valid: true},
 				}
-				langPkgInfo, err := getPackageData(langPkg.Name, sqliteClient)
+				langPkgInfo, err := getPackageData(fmt.Sprintf("%s.%s", version.SearchQuery, dep), sqliteClient)
 				if err != nil {
-					fmt.Printf("Language dependency %s does not exist\n", langPkg.Name)
+					fmt.Printf("%s dependency does not exist\n", fmt.Sprintf("%s.%s", version.SearchQuery, dep))
 					continue
 				}
 				if langPkgInfo.StorePath == "<broken>" {
@@ -275,7 +285,8 @@ func addPackages(ctx context.Context, queries db.Store, config *StoreConfig, sql
 		}
 		sysPkgInfo, err := getPackageData(pkg, sqliteClient)
 		if err != nil {
-			return fmt.Errorf("could not get system deps package data: %s", err)
+			// return fmt.Errorf("could not get system deps package data: %s", err)
+			log.Println(pkg)
 		}
 		if sysPkgInfo.StorePath == "<broken>" {
 			fmt.Printf("The system dependency %s is broken\n", sysPkgInfo.Attribute)

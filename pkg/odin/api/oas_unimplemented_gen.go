@@ -103,6 +103,15 @@ func (UnimplementedHandler) FetchSystemPackages(ctx context.Context, params Fetc
 	return r, ht.ErrNotImplemented
 }
 
+// FlakeJobIdGet implements GET /flake/{jobId} operation.
+//
+// Fetches flake of a given job.
+//
+// GET /flake/{jobId}
+func (UnimplementedHandler) FlakeJobIdGet(ctx context.Context, params FlakeJobIdGetParams) (r FlakeJobIdGetRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetAllExecutionJobs implements getAllExecutionJobs operation.
 //
 // Get all execution jobs.

@@ -19,7 +19,7 @@ CREATE TABLE language_versions (
     template TEXT,
     search_query TEXT NOT NULL, 
     default_version BOOLEAN NOT NULL DEFAULT false,                          
-    UNIQUE (language_id, version)               
+    UNIQUE (language_id, nix_package_name)               
 );
 
 CREATE UNIQUE INDEX unique_default_version_per_language 

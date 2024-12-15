@@ -1207,7 +1207,7 @@ components:
           default: -1
         cmdLineArgs:
           type: string
-        compileArgs:
+        compilerArgs:
           type: string
         command:
           type: string
