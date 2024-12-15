@@ -3,6 +3,8 @@ import LanguageSelector from "@/components/LanguageSelector";
 import '@/App.css';
 import { Input } from "@/components/ui/input";
 import CodeEditor from "@/components/CodeEditor";
+import { ServerStatusProvider } from "@/components/ServerStatusProvider";
+import AppContainer from "@/components/AppContainer";
 import { useLanguages } from "@/hooks/useLanguages";
 import { useLanguageVersions } from "@/hooks/useLanguageVersions";
 import { LanguageResponse, LanguageVersion } from "@/api-client";
@@ -20,11 +22,13 @@ import { useSystemPackages } from "@/hooks/useSystemPackages";
 import { useLanguagePackages } from "@/hooks/useLanguagePackages";
 import { usePackagesExist } from "@/hooks/usePackageExists";
 import { useDefaultPackages } from "@/hooks/useDefaultPackages";
+import Editor from '@monaco-editor/react';
 
 const App: React.FC = () => {
   const [args, setArgs] = useState<string>("");
+  const [compilerArgs, setCompilerArgs] = useState<string>("");
   const { selectedLanguage, setSelectedLanguage } = useLanguages();
-  const { selectedLanguageVersion, setSelectedLanguageVersion } = useLanguageVersions(selectedLanguage?.id);
+  const { selectedLanguageVersion, setSelectedLanguageVersion } = useLanguageVersions(selectedLanguage?.id || 0);
   const [codeContent, setCodeContent] = useState<string>("");
   const { terminalOutput, executeCode, isLoading } = useCodeExecution();
   const [selectedLanguageDependencies, setSelectedLanguageDependencies] = useState<string[]>([]);
@@ -38,25 +42,28 @@ const App: React.FC = () => {
   const calculatedHeight = `calc(100% - ${terminalHeight}px)`;
   const [isAnnouncmentModalOpen, setIsAnnouncementModalOpen] = useState<boolean>(true);
   const { systemPackages } = useSystemPackages(systemSearchString);
-  const { languagePackages, resetLanguagePackages } = useLanguagePackages(languageSearchString, selectedLanguageVersion?.search_query);
-  const { defaultSystemPackages, defaultLanguagePackages } = useDefaultPackages(selectedLanguageVersion?.search_query);
+  const { languagePackages, resetLanguagePackages } = useLanguagePackages(languageSearchString, selectedLanguageVersion?.search_query || "");
+  const { defaultSystemPackages, defaultLanguagePackages } = useDefaultPackages(selectedLanguageVersion?.search_query || "");
   const [pendingVersionChange, setPendingVersionChange] = useState<any>(null);
   const [resetLanguageDependencies, setResetLanguageDependencies] = useState({});
   const { existsResponse } = usePackagesExist(
     pendingVersionChange?.search_query || "",
     selectedLanguageDependencies
-  );  
+  );
   const finalSystemPackages = systemPackages.length > 0 ? systemPackages : defaultSystemPackages;
   const finalLanguagePackages = languagePackages.length > 0 ? languagePackages : defaultLanguagePackages;
-
+  const [currentInput, setCurrentInput] = useState('');
+  const [setup, setSetup] = useState('');
+  const [command, setCommand] = useState('');
+  const [activeTab, setActiveTab] = useState('dependencies');
 
   useEffect(() => {
     if (pendingVersionChange && existsResponse) {
       handleLanguageChangeEffect(pendingVersionChange, existsResponse);
-      setPendingVersionChange(null); 
+      setPendingVersionChange(null);
     }
-  }, [pendingVersionChange, existsResponse]); 
-  
+  }, [pendingVersionChange, existsResponse]);
+
 
   const resetOnNewLanguage = useCallback((language: LanguageResponse) => {
     setSelectedLanguage(language);
@@ -106,45 +113,57 @@ const App: React.FC = () => {
 
   const handleVersionChange = useCallback((version: LanguageVersion) => {
     if (version !== selectedLanguageVersion) {
-      setPendingVersionChange(version); 
+      setPendingVersionChange(version);
       const nonExistingPackages = existsResponse?.nonExistingPackages || [];
       setSelectedLanguageVersion(version);
       setSelectedLanguageDependencies((prev) => prev.filter(dep => !nonExistingPackages.includes(dep)));
     }
-  }, [selectedLanguageVersion, existsResponse]); 
-  
+  }, [selectedLanguageVersion, existsResponse]);
+
 
   const handleRunCode = useCallback(() => {
+    console.log(currentInput);
+
     if (selectedLanguage && codeContent) {
       executeCode({
         language: selectedLanguage.name,
-        version: selectedLanguageVersion.version,
+        version: selectedLanguageVersion?.version || "",
         code: codeContent,
         environment: {
           systemDependencies: selectedSystemDependencies,
           languageDependencies: selectedLanguageDependencies,
+          setup: setup,
         },
-        cmdLineArgs:args
+        cmdLineArgs: args,
+        input: currentInput,
+        compilerArgs: compilerArgs,
+        command: command
       });
     } else {
     }
-  }, [selectedLanguage, codeContent, args, executeCode, selectedLanguageDependencies, selectedSystemDependencies]);
+  }, [selectedLanguage, codeContent, args, compilerArgs, setup, command, executeCode, selectedLanguageDependencies, selectedSystemDependencies]);
 
   const handleTerminalResize = useCallback((height: number) => {
     setTerminalHeight(height);
   }, []);
 
+  const handleInputChange = (input: string) => {
+    setCurrentInput(input);
+  };
+
 
   return (
+    <ServerStatusProvider>
+      <AppContainer>
     <div className="flex h-screen relative">
       <div className="absolute top-0 right-0 z-10 ">
-    <img
-      src={ValkyrieIcon}
-      className="h-12 object-cove mr-2 pt-3 pr-20"
-      alt="Valkyrie"
-      style={{ objectPosition: 'top' }} 
-    />
-  </div>
+        <img
+          src={ValkyrieIcon}
+          className="h-12 object-cove mr-2 pt-3 pr-20"
+          alt="Valkyrie"
+          style={{ objectPosition: 'top' }}
+        />
+      </div>
       <div className="editor-container flex-1 w-full">
         <div className="top-bar flex flex-wrap justify-between items-center p-2 bg-transparent mr-44">
           <div className="flex flex-wrap items-center w-full sm:w-auto mb-2 sm:mb-0">
@@ -161,6 +180,13 @@ const App: React.FC = () => {
               placeholder="Args"
               value={args}
               onChange={(e) => setArgs(e.target.value)}
+              className="args-input w-full sm:w-36 mr-1 bg-neutral-900 text-white border-opacity-100 focus:ring-0"
+            />
+            <Input
+              type="text"
+              placeholder="Compiler Args"
+              value={compilerArgs}
+              onChange={(e) => setCompilerArgs(e.target.value)}
               className="args-input w-full sm:w-36 mr-1 bg-neutral-900 text-white border-opacity-100 focus:ring-0"
             />
           </div>
@@ -216,45 +242,133 @@ const App: React.FC = () => {
             }}
           />
           <div className="terminal-container transition-all duration-300 ease-in-out mr-0" style={{ height: 'calc(100%)', width: isSidebarOpen ? '75%' : '100%' }}>
-            <Terminal output={terminalOutput} tabName="Output" />
+            <Terminal output={terminalOutput} tabName="Output" onInputChange={handleInputChange} />
           </div>
         </div>
       </div>
 
-      {/* Overlay Sidebar */}
       <div
         className={`fixed top-0 right-0 h-full w-full md:w-1/3 lg:w-1/4 bg-neutral-800 text-white p-2 
-          flex flex-col justify-between transition-transform duration-300 ease-in-out z-50
-          ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}
-          shadow-2xl`}
+        flex flex-col justify-between transition-transform duration-300 ease-in-out z-50
+        ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}
+        shadow-2xl`}
       >
-        <div className="flex-1">
-          <div className="flex flex-col gap-2 h-full">
-            <div className="flex-1 flex flex-col rounded-md shadow-md p-2">
-              <span className="">System Dependencies</span>
-              <div className="flex-1 mt-2 rounded-md min-h-[14rem]">
-                <ListBuilder
-                  items={finalSystemPackages}
-                  onSelectionChange={setSelectedSystemDependencies}
-                  onSearchChange={setSystemSearchString}
-                />
+        {/* Tab Navigation */}
+        <div className="flex border-b  border-zinc-700 mb-2 ">
+          <button
+            className={`flex-1 py-2 bg-neutral-900 ${activeTab === 'dependencies' ? 'border-b-2 border-blue-500' : ''}`}
+            onClick={() => setActiveTab('dependencies')}
+          >
+            Dependencies
+          </button>
+          <button
+            className={`flex-1 py-2 bg-neutral-900 ${activeTab === 'setup' ? 'border-b-2 border-blue-500' : ''}`}
+            onClick={() => setActiveTab('setup')}
+          >
+            Setup
+          </button>
+        </div>
+
+        {/* Dependencies Tab Content */}
+        {activeTab === 'dependencies' && (
+          <div className="flex-1">
+            <div className="flex flex-col gap-2 h-full">
+              <div className="flex-1 flex flex-col rounded-md shadow-md p-2">
+                <span className="">System Dependencies</span>
+                <div className="flex-1 mt-2 rounded-md min-h-[14rem]">
+                  <ListBuilder
+                    items={finalSystemPackages}
+                    onSelectionChange={setSelectedSystemDependencies}
+                    onSearchChange={setSystemSearchString}
+                  />
+                </div>
               </div>
-            </div>
-            <div className="border border-t border-zinc-700"></div>
-            <div className="flex-1 flex flex-col bg-transparent rounded-md shadow-md p-2">
-              <span className="">Language Dependencies</span>
-              <div className="flex-1 mt-2 rounded-md min-h-[14rem]">
-                <ListBuilder
-                  items={finalLanguagePackages}
-                  onSelectionChange={setSelectedLanguageDependencies}
-                  onSearchChange={setLanguageSearchString}
-                  resetTrigger={resetLanguageDependencies}
-                  nonExistingPackages={existsResponse?.nonExistingPackages || []}
-                />
+              <div className="border border-t border-zinc-700"></div>
+              <div className="flex-1 flex flex-col bg-transparent rounded-md shadow-md p-2">
+                <span className="">Language Dependencies</span>
+                <div className="flex-1 mt-2 rounded-md min-h-[14rem]">
+                  <ListBuilder
+                    items={finalLanguagePackages}
+                    onSelectionChange={setSelectedLanguageDependencies}
+                    onSearchChange={setLanguageSearchString}
+                    resetTrigger={resetLanguageDependencies}
+                    nonExistingPackages={existsResponse?.nonExistingPackages || []}
+                  />
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Setup Tab Content */}
+        {activeTab === 'setup' && (
+          <div className="flex-1 flex flex-col gap-4 p-2">
+            <div className="flex flex-col flex-1">
+              <label className="mb-2 text-sm">Setup</label>
+              <Editor
+                className="flex-1 w-full bg-[#1E1E1E] text-white p-2 rounded-md resize-none"
+                width="100%"
+                language="shell" 
+                theme="vs-dark"  
+                value={setup}
+                onChange={(value) => setSetup(value || '')}
+                options={{
+                  readOnly: false,                 
+                  lineNumbers: 'off',              
+                  minimap: { enabled: false },    
+                  scrollBeyondLastLine: false,     
+                  wordWrap: 'off',                 
+                  folding: false,                  
+                  lineDecorationsWidth: 0,         
+                  lineNumbersMinChars: 0,          
+                  guides: {
+                    indentation: false             
+                  },
+                  renderLineHighlight: 'none',     
+                  overviewRulerLanes: 0,           
+                  contextmenu: false,              
+                  suggestOnTriggerCharacters: false, 
+                  quickSuggestions: false,         
+                  automaticLayout: true,         
+                  cursorBlinking: 'solid',         
+                  cursorStyle: 'line',             
+                }}
+              />
+            </div>
+            <div className="flex flex-col flex-1">
+              <label className="mb-2 text-sm">Commands</label>
+              <Editor
+                className="flex-1 w-full bg-[#1E1E1E] text-white p-2 rounded-md resize-none"
+                width="100%"
+                language="shell" 
+                theme="vs-dark"  
+                value={command}
+                onChange={(value) => setCommand(value || '')}
+                options={{
+                  readOnly: false,                 
+                  lineNumbers: 'off',              
+                  minimap: { enabled: false },    
+                  scrollBeyondLastLine: false,     
+                  wordWrap: 'off',                 
+                  folding: false,                  
+                  lineDecorationsWidth: 0,         
+                  lineNumbersMinChars: 0,          
+                  guides: {
+                    indentation: false             
+                  },
+                  renderLineHighlight: 'none',     
+                  overviewRulerLanes: 0,           
+                  contextmenu: false,              
+                  suggestOnTriggerCharacters: false, 
+                  quickSuggestions: false,         
+                  automaticLayout: true,         
+                  cursorBlinking: 'solid',         
+                  cursorStyle: 'line',             
+                }}
+              />
+            </div>
+          </div>
+        )}
 
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 mt-4 pb-2">
           <button
@@ -276,7 +390,7 @@ const App: React.FC = () => {
         <div className="text-sm text-white pt-1 flex items-center space-x-2 justify-between">
           <span>Valkyrie</span>
           <a
-            href="https://discord.gg/3cJpQNgT"
+            href="https://discord.gg/9VMKq3rt5C"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:opacity-80 transition-opacity"
@@ -294,7 +408,6 @@ const App: React.FC = () => {
           </a>
         </div>
       </div>
-
       <HelpModal
         isOpen={isHelpModalOpen}
         onClose={() => setIsHelpModalOpen(false)}
@@ -310,6 +423,8 @@ const App: React.FC = () => {
         onClose={() => setIsAnnouncementModalOpen(false)}
       />
     </div>
+    </AppContainer>
+    </ServerStatusProvider>
   );
 };
 

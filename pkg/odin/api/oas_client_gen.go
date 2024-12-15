@@ -265,7 +265,7 @@ func (c *Client) sendCancelExecutionJob(ctx context.Context, params CancelExecut
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "CancelExecutionJob",
+	ctx, span := c.cfg.Tracer.Start(ctx, CancelExecutionJobOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -372,7 +372,7 @@ func (c *Client) sendCreateLanguage(ctx context.Context, request *Language, para
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "CreateLanguage",
+	ctx, span := c.cfg.Tracer.Start(ctx, CreateLanguageOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -464,7 +464,7 @@ func (c *Client) sendCreateLanguageVersion(ctx context.Context, request *Languag
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "CreateLanguageVersion",
+	ctx, span := c.cfg.Tracer.Start(ctx, CreateLanguageVersionOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -556,7 +556,7 @@ func (c *Client) sendDeleteExecutionJob(ctx context.Context, params DeleteExecut
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "DeleteExecutionJob",
+	ctx, span := c.cfg.Tracer.Start(ctx, DeleteExecutionJobOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -663,7 +663,7 @@ func (c *Client) sendDeleteLanguage(ctx context.Context, params DeleteLanguagePa
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "DeleteLanguage",
+	ctx, span := c.cfg.Tracer.Start(ctx, DeleteLanguageOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -770,7 +770,7 @@ func (c *Client) sendDeleteLanguageVersion(ctx context.Context, params DeleteLan
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "DeleteLanguageVersion",
+	ctx, span := c.cfg.Tracer.Start(ctx, DeleteLanguageVersionOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -877,7 +877,7 @@ func (c *Client) sendExecute(ctx context.Context, request *ExecutionRequest, par
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "Execute",
+	ctx, span := c.cfg.Tracer.Start(ctx, ExecuteOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -969,7 +969,7 @@ func (c *Client) sendFetchLanguagePackages(ctx context.Context, params FetchLang
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "FetchLanguagePackages",
+	ctx, span := c.cfg.Tracer.Start(ctx, FetchLanguagePackagesOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -1076,7 +1076,7 @@ func (c *Client) sendFetchSystemPackages(ctx context.Context, params FetchSystem
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "FetchSystemPackages",
+	ctx, span := c.cfg.Tracer.Start(ctx, FetchSystemPackagesOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -1164,7 +1164,7 @@ func (c *Client) sendFlakeJobIdGet(ctx context.Context, params FlakeJobIdGetPara
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "FlakeJobIdGet",
+	ctx, span := c.cfg.Tracer.Start(ctx, FlakeJobIdGetOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -1254,7 +1254,7 @@ func (c *Client) sendGetAllExecutionJobs(ctx context.Context, params GetAllExecu
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "GetAllExecutionJobs",
+	ctx, span := c.cfg.Tracer.Start(ctx, GetAllExecutionJobsOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -1381,7 +1381,7 @@ func (c *Client) sendGetAllExecutions(ctx context.Context, params GetAllExecutio
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "GetAllExecutions",
+	ctx, span := c.cfg.Tracer.Start(ctx, GetAllExecutionsOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -1508,7 +1508,7 @@ func (c *Client) sendGetAllLanguageVersions(ctx context.Context, params GetAllLa
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "GetAllLanguageVersions",
+	ctx, span := c.cfg.Tracer.Start(ctx, GetAllLanguageVersionsOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -1597,7 +1597,7 @@ func (c *Client) sendGetAllLanguages(ctx context.Context, params GetAllLanguages
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "GetAllLanguages",
+	ctx, span := c.cfg.Tracer.Start(ctx, GetAllLanguagesOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -1686,7 +1686,7 @@ func (c *Client) sendGetAllVersions(ctx context.Context, params GetAllVersionsPa
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "GetAllVersions",
+	ctx, span := c.cfg.Tracer.Start(ctx, GetAllVersionsOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -1794,7 +1794,7 @@ func (c *Client) sendGetExecutionConfig(ctx context.Context, params GetExecution
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "GetExecutionConfig",
+	ctx, span := c.cfg.Tracer.Start(ctx, GetExecutionConfigOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -1883,7 +1883,7 @@ func (c *Client) sendGetExecutionJobById(ctx context.Context, params GetExecutio
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "GetExecutionJobById",
+	ctx, span := c.cfg.Tracer.Start(ctx, GetExecutionJobByIdOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -1990,7 +1990,7 @@ func (c *Client) sendGetExecutionResultById(ctx context.Context, params GetExecu
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "GetExecutionResultById",
+	ctx, span := c.cfg.Tracer.Start(ctx, GetExecutionResultByIdOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -2097,7 +2097,7 @@ func (c *Client) sendGetExecutionsForJob(ctx context.Context, params GetExecutio
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "GetExecutionsForJob",
+	ctx, span := c.cfg.Tracer.Start(ctx, GetExecutionsForJobOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -2243,7 +2243,7 @@ func (c *Client) sendGetLanguageById(ctx context.Context, params GetLanguageById
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "GetLanguageById",
+	ctx, span := c.cfg.Tracer.Start(ctx, GetLanguageByIdOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -2350,7 +2350,7 @@ func (c *Client) sendGetLanguageVersionById(ctx context.Context, params GetLangu
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "GetLanguageVersionById",
+	ctx, span := c.cfg.Tracer.Start(ctx, GetLanguageVersionByIdOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -2457,7 +2457,7 @@ func (c *Client) sendGetVersion(ctx context.Context, params GetVersionParams) (r
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "GetVersion",
+	ctx, span := c.cfg.Tracer.Start(ctx, GetVersionOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -2547,7 +2547,7 @@ func (c *Client) sendPackagesExist(ctx context.Context, request *PackageExistReq
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "PackagesExist",
+	ctx, span := c.cfg.Tracer.Start(ctx, PackagesExistOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -2639,7 +2639,7 @@ func (c *Client) sendSearchLanguagePackages(ctx context.Context, params SearchLa
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "SearchLanguagePackages",
+	ctx, span := c.cfg.Tracer.Start(ctx, SearchLanguagePackagesOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -2760,7 +2760,7 @@ func (c *Client) sendSearchSystemPackages(ctx context.Context, params SearchSyst
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "SearchSystemPackages",
+	ctx, span := c.cfg.Tracer.Start(ctx, SearchSystemPackagesOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -2867,7 +2867,7 @@ func (c *Client) sendUpdateLanguage(ctx context.Context, request *Language, para
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "UpdateLanguage",
+	ctx, span := c.cfg.Tracer.Start(ctx, UpdateLanguageOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -2977,7 +2977,7 @@ func (c *Client) sendUpdateLanguageVersion(ctx context.Context, request *Languag
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "UpdateLanguageVersion",
+	ctx, span := c.cfg.Tracer.Start(ctx, UpdateLanguageVersionOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)

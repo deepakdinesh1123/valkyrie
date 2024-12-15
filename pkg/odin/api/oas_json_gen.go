@@ -1975,9 +1975,9 @@ func (s *ExecutionRequest) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
-		if s.CompileArgs.Set {
-			e.FieldStart("compileArgs")
-			s.CompileArgs.Encode(e)
+		if s.CompilerArgs.Set {
+			e.FieldStart("compilerArgs")
+			s.CompilerArgs.Encode(e)
 		}
 	}
 	{
@@ -2006,7 +2006,7 @@ var jsonFieldsNameOfExecutionRequest = [11]string{
 	4:  "max_retries",
 	5:  "timeout",
 	6:  "cmdLineArgs",
-	7:  "compileArgs",
+	7:  "compilerArgs",
 	8:  "command",
 	9:  "files",
 	10: "input",
@@ -2091,15 +2091,15 @@ func (s *ExecutionRequest) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"cmdLineArgs\"")
 			}
-		case "compileArgs":
+		case "compilerArgs":
 			if err := func() error {
-				s.CompileArgs.Reset()
-				if err := s.CompileArgs.Decode(d); err != nil {
+				s.CompilerArgs.Reset()
+				if err := s.CompilerArgs.Decode(d); err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"compileArgs\"")
+				return errors.Wrap(err, "decode field \"compilerArgs\"")
 			}
 		case "command":
 			if err := func() error {
@@ -5025,13 +5025,18 @@ func (s *Language) encodeFields(e *jx.Encoder) {
 		e.FieldStart("default_code")
 		e.Str(s.DefaultCode)
 	}
+	{
+		e.FieldStart("template")
+		e.Str(s.Template)
+	}
 }
 
-var jsonFieldsNameOfLanguage = [4]string{
+var jsonFieldsNameOfLanguage = [5]string{
 	0: "name",
 	1: "extension",
 	2: "monaco_language",
 	3: "default_code",
+	4: "template",
 }
 
 // Decode decodes Language from json.
@@ -5091,6 +5096,18 @@ func (s *Language) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"default_code\"")
 			}
+		case "template":
+			requiredBitSet[0] |= 1 << 4
+			if err := func() error {
+				v, err := d.Str()
+				s.Template = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"template\"")
+			}
 		default:
 			return d.Skip()
 		}
@@ -5101,7 +5118,7 @@ func (s *Language) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00001111,
+		0b00011111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -5173,17 +5190,22 @@ func (s *LanguageResponse) encodeFields(e *jx.Encoder) {
 		e.Str(s.DefaultCode)
 	}
 	{
+		e.FieldStart("template")
+		e.Str(s.Template)
+	}
+	{
 		e.FieldStart("id")
 		e.Int64(s.ID)
 	}
 }
 
-var jsonFieldsNameOfLanguageResponse = [5]string{
+var jsonFieldsNameOfLanguageResponse = [6]string{
 	0: "name",
 	1: "extension",
 	2: "monaco_language",
 	3: "default_code",
-	4: "id",
+	4: "template",
+	5: "id",
 }
 
 // Decode decodes LanguageResponse from json.
@@ -5243,8 +5265,20 @@ func (s *LanguageResponse) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"default_code\"")
 			}
-		case "id":
+		case "template":
 			requiredBitSet[0] |= 1 << 4
+			if err := func() error {
+				v, err := d.Str()
+				s.Template = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"template\"")
+			}
+		case "id":
+			requiredBitSet[0] |= 1 << 5
 			if err := func() error {
 				v, err := d.Int64()
 				s.ID = int64(v)
@@ -5265,7 +5299,7 @@ func (s *LanguageResponse) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00011111,
+		0b00111111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.

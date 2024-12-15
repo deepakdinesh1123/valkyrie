@@ -14,14 +14,19 @@ export const useCodeExecution = () => {
     environment: {
       systemDependencies: string[];
       languageDependencies: string[];
+      setup: string;
     },
     cmdLineArgs: string;
+    input : string;
+    compilerArgs: string;
+    command: string;
     
   }) => {
     try {
       setIsLoading(true); 
       const response = await api.execute(runData);
-
+      console.log(runData);
+      
       const source = new EventSource(`${eventPath}${response.data.events}`);
       
       setEventSource(source);

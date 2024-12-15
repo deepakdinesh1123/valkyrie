@@ -67,17 +67,18 @@ type Language struct {
 	Name           string `db:"name" json:"name"`
 	Extension      string `db:"extension" json:"extension"`
 	MonacoLanguage string `db:"monaco_language" json:"monaco_language"`
+	Template       string `db:"template" json:"template"`
 	DefaultCode    string `db:"default_code" json:"default_code"`
 }
 
 type LanguageVersion struct {
-	ID             int64  `db:"id" json:"id"`
-	LanguageID     int64  `db:"language_id" json:"language_id"`
-	Version        string `db:"version" json:"version"`
-	NixPackageName string `db:"nix_package_name" json:"nix_package_name"`
-	Template       string `db:"template" json:"template"`
-	SearchQuery    string `db:"search_query" json:"search_query"`
-	DefaultVersion bool   `db:"default_version" json:"default_version"`
+	ID             int64       `db:"id" json:"id"`
+	LanguageID     int64       `db:"language_id" json:"language_id"`
+	Version        string      `db:"version" json:"version"`
+	NixPackageName string      `db:"nix_package_name" json:"nix_package_name"`
+	Template       pgtype.Text `db:"template" json:"template"`
+	SearchQuery    string      `db:"search_query" json:"search_query"`
+	DefaultVersion bool        `db:"default_version" json:"default_version"`
 }
 
 type Package struct {

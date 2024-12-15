@@ -10,7 +10,7 @@ type ExecutionRequest struct {
 	LanguageDependencies []string
 	SystemDependencies   []string
 	CmdLineArgs          string
-	CompileArgs          string
+	CompilerArgs         string
 	Input                string
 	Command              string
 	Setup                string

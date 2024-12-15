@@ -1189,7 +1189,7 @@ components:
           default: -1
         cmdLineArgs:
           type: string
-        compileArgs:
+        compilerArgs:
           type: string
         command:
           type: string
@@ -1402,6 +1402,7 @@ components:
         - extension
         - monaco_language
         - default_code
+        - template
       properties:
         name:
           type: string
@@ -1419,6 +1420,11 @@ components:
           type: string
           description: Default code for the language.
           example: print('Hello, World!')
+        template:
+          type: string
+          description: The default template for the language
+          example: |
+            {{ define "execute" }} go run main.go {{ if .Args }}{{ .Args }}{{ end }} {{ end }}
     LanguageResponse:
       allOf:
         - $ref: '#/components/schemas/Language'

@@ -53,26 +53,30 @@ func (s *ExecutionService) prepareExecutionRequest(ctx context.Context, req *api
 		return nil, err
 	}
 
+	s.logger.Debug().Str("Script", req.Environment.Value.Setup.Value).Msg("Setup")
+
 	execReq.LangNixPkg = langVersion.NixPackageName
 	execReq.Language = req.Language.Value
 	execReq.Code = req.Code.Value
 	execReq.CmdLineArgs = req.CmdLineArgs.Value
-	execReq.CompileArgs = req.CompileArgs.Value
+	execReq.CompilerArgs = req.CompilerArgs.Value
 	execReq.Input = req.Input.Value
 	execReq.Command = req.Command.Value
 	execReq.SystemDependencies = req.Environment.Value.SystemDependencies
 	execReq.LanguageDependencies = req.Environment.Value.LanguageDependencies
 	execReq.Setup = req.Environment.Value.Setup.Value
 	execReq.ScriptName = fmt.Sprintf("main.%s", lang.Extension)
-	execReq.Template = langVersion.Template
 	execReq.LangVersion = langVersion.ID
+
+	if langVersion.Template.String != "" {
+		execReq.Template = langVersion.Template.String
+	} else {
+		execReq.Template = lang.Template
+	}
 
 	flake, err := s.convertExecSpecToFlake(execReq)
 	if err != nil {
-		return nil, &ExecutionServiceError{
-			Type:    "flake",
-			Message: err.Error(),
-		}
+		return nil, fmt.Errorf("error converting exec spec to flake: %s", err)
 	}
 	execReq.Flake = flake
 	return &execReq, nil
@@ -89,11 +93,12 @@ func (s *ExecutionService) AddJob(ctx context.Context, req *api.ExecutionRequest
 	jobParams.LanguageDependencies = execReq.LanguageDependencies
 	jobParams.SystemDependencies = execReq.SystemDependencies
 	jobParams.CmdLineArgs = execReq.CmdLineArgs
-	jobParams.CompileArgs = execReq.CompileArgs
+	jobParams.CompilerArgs = execReq.CompilerArgs
 	jobParams.Files = req.Files
 	jobParams.Input = execReq.Input
 	jobParams.Command = execReq.Command
 	jobParams.LangVersion = execReq.LangVersion
+	jobParams.Setup = execReq.Setup
 
 	s.logger.Debug().Int64("Version", jobParams.LangVersion).Msg("Language")
 
@@ -115,7 +120,7 @@ func (s *ExecutionService) AddJob(ctx context.Context, req *api.ExecutionRequest
 		jobParams.Timeout = req.Timeout.Value
 	}
 
-	hash := calculateHash(jobParams.Code, jobParams.Flake, jobParams.Files)
+	hash := calculateHash(jobParams.Code, jobParams.Flake, jobParams.Files, jobParams.Input)
 	jobParams.Hash = hash
 
 	job, err := s.queries.AddJobTx(ctx, jobParams)
@@ -126,10 +131,11 @@ func (s *ExecutionService) AddJob(ctx context.Context, req *api.ExecutionRequest
 	return int64(job.JobID), nil
 }
 
-func calculateHash(code string, flake string, files []byte) string {
+func calculateHash(code string, flake string, files []byte, input string) string {
 	hashInstance := sha256.New()
 	hashInstance.Write([]byte(code))
 	hashInstance.Write([]byte(flake))
 	hashInstance.Write(files)
+	hashInstance.Write([]byte(input))
 	return hex.EncodeToString(hashInstance.Sum(nil))
 }

@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -102,7 +103,7 @@ func GetEnvConfig() (*EnvConfig, error) {
 		viper.SetDefault("ODIN_WORKER_CONCURRENCY", 10)
 		viper.SetDefault("ODIN_HOT_CONTAINER", 5)
 		viper.SetDefault("ODIN_WORKER_TASK_TIMEOUT", 120)
-		viper.SetDefault("ODIN_WORKER_POLL_FREQ", 1)
+		viper.SetDefault("ODIN_WORKER_POLL_FREQ", 30)
 		viper.SetDefault("ODIN_WORKER_RUNTIME", "runc")
 		viper.SetDefault("ODIN_MAX_RETRIES", 5)
 
@@ -142,7 +143,7 @@ func GetEnvConfig() (*EnvConfig, error) {
 		// Unmarshal configuration into EnvConfig struct
 		err := viper.Unmarshal(&envConfig)
 		if err != nil {
-			return
+			log.Default().Print(".env not found using defaults")
 		}
 
 		usr, err := user.Current()

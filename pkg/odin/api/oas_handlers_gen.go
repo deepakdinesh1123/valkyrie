@@ -33,7 +33,7 @@ func (s *Server) handleCancelExecutionJobRequest(args [1]string, argsEscaped boo
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "CancelExecutionJob",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), CancelExecutionJobOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -64,7 +64,7 @@ func (s *Server) handleCancelExecutionJobRequest(args [1]string, argsEscaped boo
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "CancelExecutionJob",
+			Name: CancelExecutionJobOperation,
 			ID:   "cancelExecutionJob",
 		}
 	)
@@ -83,7 +83,7 @@ func (s *Server) handleCancelExecutionJobRequest(args [1]string, argsEscaped boo
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "CancelExecutionJob",
+			OperationName:    CancelExecutionJobOperation,
 			OperationSummary: "Cancel Execution Job",
 			OperationID:      "cancelExecutionJob",
 			Body:             nil,
@@ -149,7 +149,7 @@ func (s *Server) handleCreateLanguageRequest(args [0]string, argsEscaped bool, w
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "CreateLanguage",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), CreateLanguageOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -180,7 +180,7 @@ func (s *Server) handleCreateLanguageRequest(args [0]string, argsEscaped bool, w
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "CreateLanguage",
+			Name: CreateLanguageOperation,
 			ID:   "createLanguage",
 		}
 	)
@@ -214,7 +214,7 @@ func (s *Server) handleCreateLanguageRequest(args [0]string, argsEscaped bool, w
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "CreateLanguage",
+			OperationName:    CreateLanguageOperation,
 			OperationSummary: "Create a language",
 			OperationID:      "createLanguage",
 			Body:             request,
@@ -276,7 +276,7 @@ func (s *Server) handleCreateLanguageVersionRequest(args [0]string, argsEscaped 
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "CreateLanguageVersion",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), CreateLanguageVersionOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -307,7 +307,7 @@ func (s *Server) handleCreateLanguageVersionRequest(args [0]string, argsEscaped 
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "CreateLanguageVersion",
+			Name: CreateLanguageVersionOperation,
 			ID:   "createLanguageVersion",
 		}
 	)
@@ -341,7 +341,7 @@ func (s *Server) handleCreateLanguageVersionRequest(args [0]string, argsEscaped 
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "CreateLanguageVersion",
+			OperationName:    CreateLanguageVersionOperation,
 			OperationSummary: "Create a language version",
 			OperationID:      "createLanguageVersion",
 			Body:             request,
@@ -403,7 +403,7 @@ func (s *Server) handleDeleteExecutionJobRequest(args [1]string, argsEscaped boo
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "DeleteExecutionJob",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), DeleteExecutionJobOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -434,7 +434,7 @@ func (s *Server) handleDeleteExecutionJobRequest(args [1]string, argsEscaped boo
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "DeleteExecutionJob",
+			Name: DeleteExecutionJobOperation,
 			ID:   "deleteExecutionJob",
 		}
 	)
@@ -453,7 +453,7 @@ func (s *Server) handleDeleteExecutionJobRequest(args [1]string, argsEscaped boo
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "DeleteExecutionJob",
+			OperationName:    DeleteExecutionJobOperation,
 			OperationSummary: "Delete execution job",
 			OperationID:      "deleteExecutionJob",
 			Body:             nil,
@@ -519,7 +519,7 @@ func (s *Server) handleDeleteLanguageRequest(args [1]string, argsEscaped bool, w
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "DeleteLanguage",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), DeleteLanguageOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -550,7 +550,7 @@ func (s *Server) handleDeleteLanguageRequest(args [1]string, argsEscaped bool, w
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "DeleteLanguage",
+			Name: DeleteLanguageOperation,
 			ID:   "deleteLanguage",
 		}
 	)
@@ -569,7 +569,7 @@ func (s *Server) handleDeleteLanguageRequest(args [1]string, argsEscaped bool, w
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "DeleteLanguage",
+			OperationName:    DeleteLanguageOperation,
 			OperationSummary: "Delete a language",
 			OperationID:      "deleteLanguage",
 			Body:             nil,
@@ -635,7 +635,7 @@ func (s *Server) handleDeleteLanguageVersionRequest(args [1]string, argsEscaped 
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "DeleteLanguageVersion",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), DeleteLanguageVersionOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -666,7 +666,7 @@ func (s *Server) handleDeleteLanguageVersionRequest(args [1]string, argsEscaped 
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "DeleteLanguageVersion",
+			Name: DeleteLanguageVersionOperation,
 			ID:   "deleteLanguageVersion",
 		}
 	)
@@ -685,7 +685,7 @@ func (s *Server) handleDeleteLanguageVersionRequest(args [1]string, argsEscaped 
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "DeleteLanguageVersion",
+			OperationName:    DeleteLanguageVersionOperation,
 			OperationSummary: "Delete a language version",
 			OperationID:      "deleteLanguageVersion",
 			Body:             nil,
@@ -751,7 +751,7 @@ func (s *Server) handleExecuteRequest(args [0]string, argsEscaped bool, w http.R
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "Execute",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), ExecuteOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -782,7 +782,7 @@ func (s *Server) handleExecuteRequest(args [0]string, argsEscaped bool, w http.R
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "Execute",
+			Name: ExecuteOperation,
 			ID:   "execute",
 		}
 	)
@@ -816,7 +816,7 @@ func (s *Server) handleExecuteRequest(args [0]string, argsEscaped bool, w http.R
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "Execute",
+			OperationName:    ExecuteOperation,
 			OperationSummary: "Execute a script",
 			OperationID:      "execute",
 			Body:             request,
@@ -878,7 +878,7 @@ func (s *Server) handleFetchLanguagePackagesRequest(args [0]string, argsEscaped 
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "FetchLanguagePackages",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), FetchLanguagePackagesOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -909,7 +909,7 @@ func (s *Server) handleFetchLanguagePackagesRequest(args [0]string, argsEscaped 
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "FetchLanguagePackages",
+			Name: FetchLanguagePackagesOperation,
 			ID:   "FetchLanguagePackages",
 		}
 	)
@@ -928,7 +928,7 @@ func (s *Server) handleFetchLanguagePackagesRequest(args [0]string, argsEscaped 
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "FetchLanguagePackages",
+			OperationName:    FetchLanguagePackagesOperation,
 			OperationSummary: "Fetch inital list of available language packages",
 			OperationID:      "FetchLanguagePackages",
 			Body:             nil,
@@ -994,7 +994,7 @@ func (s *Server) handleFetchSystemPackagesRequest(args [0]string, argsEscaped bo
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "FetchSystemPackages",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), FetchSystemPackagesOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -1025,7 +1025,7 @@ func (s *Server) handleFetchSystemPackagesRequest(args [0]string, argsEscaped bo
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "FetchSystemPackages",
+			Name: FetchSystemPackagesOperation,
 			ID:   "FetchSystemPackages",
 		}
 	)
@@ -1044,7 +1044,7 @@ func (s *Server) handleFetchSystemPackagesRequest(args [0]string, argsEscaped bo
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "FetchSystemPackages",
+			OperationName:    FetchSystemPackagesOperation,
 			OperationSummary: "Fetch inital list of available system packages",
 			OperationID:      "FetchSystemPackages",
 			Body:             nil,
@@ -1105,7 +1105,7 @@ func (s *Server) handleFlakeJobIdGetRequest(args [1]string, argsEscaped bool, w 
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "FlakeJobIdGet",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), FlakeJobIdGetOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -1136,7 +1136,7 @@ func (s *Server) handleFlakeJobIdGetRequest(args [1]string, argsEscaped bool, w 
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "FlakeJobIdGet",
+			Name: FlakeJobIdGetOperation,
 			ID:   "",
 		}
 	)
@@ -1155,7 +1155,7 @@ func (s *Server) handleFlakeJobIdGetRequest(args [1]string, argsEscaped bool, w 
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "FlakeJobIdGet",
+			OperationName:    FlakeJobIdGetOperation,
 			OperationSummary: "Fetch Flake",
 			OperationID:      "",
 			Body:             nil,
@@ -1217,7 +1217,7 @@ func (s *Server) handleGetAllExecutionJobsRequest(args [0]string, argsEscaped bo
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetAllExecutionJobs",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), GetAllExecutionJobsOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -1248,7 +1248,7 @@ func (s *Server) handleGetAllExecutionJobsRequest(args [0]string, argsEscaped bo
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "GetAllExecutionJobs",
+			Name: GetAllExecutionJobsOperation,
 			ID:   "getAllExecutionJobs",
 		}
 	)
@@ -1267,7 +1267,7 @@ func (s *Server) handleGetAllExecutionJobsRequest(args [0]string, argsEscaped bo
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "GetAllExecutionJobs",
+			OperationName:    GetAllExecutionJobsOperation,
 			OperationSummary: "Get all execution jobs",
 			OperationID:      "getAllExecutionJobs",
 			Body:             nil,
@@ -1337,7 +1337,7 @@ func (s *Server) handleGetAllExecutionsRequest(args [0]string, argsEscaped bool,
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetAllExecutions",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), GetAllExecutionsOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -1368,7 +1368,7 @@ func (s *Server) handleGetAllExecutionsRequest(args [0]string, argsEscaped bool,
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "GetAllExecutions",
+			Name: GetAllExecutionsOperation,
 			ID:   "getAllExecutions",
 		}
 	)
@@ -1387,7 +1387,7 @@ func (s *Server) handleGetAllExecutionsRequest(args [0]string, argsEscaped bool,
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "GetAllExecutions",
+			OperationName:    GetAllExecutionsOperation,
 			OperationSummary: "Get all executions",
 			OperationID:      "getAllExecutions",
 			Body:             nil,
@@ -1457,7 +1457,7 @@ func (s *Server) handleGetAllLanguageVersionsRequest(args [0]string, argsEscaped
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetAllLanguageVersions",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), GetAllLanguageVersionsOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -1488,7 +1488,7 @@ func (s *Server) handleGetAllLanguageVersionsRequest(args [0]string, argsEscaped
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "GetAllLanguageVersions",
+			Name: GetAllLanguageVersionsOperation,
 			ID:   "getAllLanguageVersions",
 		}
 	)
@@ -1507,7 +1507,7 @@ func (s *Server) handleGetAllLanguageVersionsRequest(args [0]string, argsEscaped
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "GetAllLanguageVersions",
+			OperationName:    GetAllLanguageVersionsOperation,
 			OperationSummary: "Get all language versions",
 			OperationID:      "getAllLanguageVersions",
 			Body:             nil,
@@ -1569,7 +1569,7 @@ func (s *Server) handleGetAllLanguagesRequest(args [0]string, argsEscaped bool, 
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetAllLanguages",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), GetAllLanguagesOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -1600,7 +1600,7 @@ func (s *Server) handleGetAllLanguagesRequest(args [0]string, argsEscaped bool, 
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "GetAllLanguages",
+			Name: GetAllLanguagesOperation,
 			ID:   "getAllLanguages",
 		}
 	)
@@ -1619,7 +1619,7 @@ func (s *Server) handleGetAllLanguagesRequest(args [0]string, argsEscaped bool, 
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "GetAllLanguages",
+			OperationName:    GetAllLanguagesOperation,
 			OperationSummary: "Get all languages",
 			OperationID:      "getAllLanguages",
 			Body:             nil,
@@ -1681,7 +1681,7 @@ func (s *Server) handleGetAllVersionsRequest(args [1]string, argsEscaped bool, w
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetAllVersions",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), GetAllVersionsOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -1712,7 +1712,7 @@ func (s *Server) handleGetAllVersionsRequest(args [1]string, argsEscaped bool, w
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "GetAllVersions",
+			Name: GetAllVersionsOperation,
 			ID:   "getAllVersions",
 		}
 	)
@@ -1731,7 +1731,7 @@ func (s *Server) handleGetAllVersionsRequest(args [1]string, argsEscaped bool, w
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "GetAllVersions",
+			OperationName:    GetAllVersionsOperation,
 			OperationSummary: "Get all language versions",
 			OperationID:      "getAllVersions",
 			Body:             nil,
@@ -1797,7 +1797,7 @@ func (s *Server) handleGetExecutionConfigRequest(args [0]string, argsEscaped boo
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetExecutionConfig",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), GetExecutionConfigOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -1828,7 +1828,7 @@ func (s *Server) handleGetExecutionConfigRequest(args [0]string, argsEscaped boo
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "GetExecutionConfig",
+			Name: GetExecutionConfigOperation,
 			ID:   "getExecutionConfig",
 		}
 	)
@@ -1847,7 +1847,7 @@ func (s *Server) handleGetExecutionConfigRequest(args [0]string, argsEscaped boo
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "GetExecutionConfig",
+			OperationName:    GetExecutionConfigOperation,
 			OperationSummary: "Get execution config",
 			OperationID:      "getExecutionConfig",
 			Body:             nil,
@@ -1909,7 +1909,7 @@ func (s *Server) handleGetExecutionJobByIdRequest(args [1]string, argsEscaped bo
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetExecutionJobById",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), GetExecutionJobByIdOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -1940,7 +1940,7 @@ func (s *Server) handleGetExecutionJobByIdRequest(args [1]string, argsEscaped bo
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "GetExecutionJobById",
+			Name: GetExecutionJobByIdOperation,
 			ID:   "getExecutionJobById",
 		}
 	)
@@ -1959,7 +1959,7 @@ func (s *Server) handleGetExecutionJobByIdRequest(args [1]string, argsEscaped bo
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "GetExecutionJobById",
+			OperationName:    GetExecutionJobByIdOperation,
 			OperationSummary: "Get execution job",
 			OperationID:      "getExecutionJobById",
 			Body:             nil,
@@ -2025,7 +2025,7 @@ func (s *Server) handleGetExecutionResultByIdRequest(args [1]string, argsEscaped
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetExecutionResultById",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), GetExecutionResultByIdOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -2056,7 +2056,7 @@ func (s *Server) handleGetExecutionResultByIdRequest(args [1]string, argsEscaped
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "GetExecutionResultById",
+			Name: GetExecutionResultByIdOperation,
 			ID:   "getExecutionResultById",
 		}
 	)
@@ -2075,7 +2075,7 @@ func (s *Server) handleGetExecutionResultByIdRequest(args [1]string, argsEscaped
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "GetExecutionResultById",
+			OperationName:    GetExecutionResultByIdOperation,
 			OperationSummary: "Get execution result by id",
 			OperationID:      "getExecutionResultById",
 			Body:             nil,
@@ -2141,7 +2141,7 @@ func (s *Server) handleGetExecutionsForJobRequest(args [1]string, argsEscaped bo
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetExecutionsForJob",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), GetExecutionsForJobOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -2172,7 +2172,7 @@ func (s *Server) handleGetExecutionsForJobRequest(args [1]string, argsEscaped bo
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "GetExecutionsForJob",
+			Name: GetExecutionsForJobOperation,
 			ID:   "getExecutionsForJob",
 		}
 	)
@@ -2191,7 +2191,7 @@ func (s *Server) handleGetExecutionsForJobRequest(args [1]string, argsEscaped bo
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "GetExecutionsForJob",
+			OperationName:    GetExecutionsForJobOperation,
 			OperationSummary: "Get executions of given job",
 			OperationID:      "getExecutionsForJob",
 			Body:             nil,
@@ -2265,7 +2265,7 @@ func (s *Server) handleGetLanguageByIdRequest(args [1]string, argsEscaped bool, 
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetLanguageById",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), GetLanguageByIdOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -2296,7 +2296,7 @@ func (s *Server) handleGetLanguageByIdRequest(args [1]string, argsEscaped bool, 
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "GetLanguageById",
+			Name: GetLanguageByIdOperation,
 			ID:   "getLanguageById",
 		}
 	)
@@ -2315,7 +2315,7 @@ func (s *Server) handleGetLanguageByIdRequest(args [1]string, argsEscaped bool, 
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "GetLanguageById",
+			OperationName:    GetLanguageByIdOperation,
 			OperationSummary: "Get language by ID",
 			OperationID:      "getLanguageById",
 			Body:             nil,
@@ -2381,7 +2381,7 @@ func (s *Server) handleGetLanguageVersionByIdRequest(args [1]string, argsEscaped
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetLanguageVersionById",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), GetLanguageVersionByIdOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -2412,7 +2412,7 @@ func (s *Server) handleGetLanguageVersionByIdRequest(args [1]string, argsEscaped
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "GetLanguageVersionById",
+			Name: GetLanguageVersionByIdOperation,
 			ID:   "getLanguageVersionById",
 		}
 	)
@@ -2431,7 +2431,7 @@ func (s *Server) handleGetLanguageVersionByIdRequest(args [1]string, argsEscaped
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "GetLanguageVersionById",
+			OperationName:    GetLanguageVersionByIdOperation,
 			OperationSummary: "Get language version by ID",
 			OperationID:      "getLanguageVersionById",
 			Body:             nil,
@@ -2497,7 +2497,7 @@ func (s *Server) handleGetVersionRequest(args [0]string, argsEscaped bool, w htt
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetVersion",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), GetVersionOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -2528,7 +2528,7 @@ func (s *Server) handleGetVersionRequest(args [0]string, argsEscaped bool, w htt
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "GetVersion",
+			Name: GetVersionOperation,
 			ID:   "getVersion",
 		}
 	)
@@ -2547,7 +2547,7 @@ func (s *Server) handleGetVersionRequest(args [0]string, argsEscaped bool, w htt
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "GetVersion",
+			OperationName:    GetVersionOperation,
 			OperationSummary: "Get version",
 			OperationID:      "getVersion",
 			Body:             nil,
@@ -2610,7 +2610,7 @@ func (s *Server) handlePackagesExistRequest(args [0]string, argsEscaped bool, w 
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "PackagesExist",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), PackagesExistOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -2641,7 +2641,7 @@ func (s *Server) handlePackagesExistRequest(args [0]string, argsEscaped bool, w 
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "PackagesExist",
+			Name: PackagesExistOperation,
 			ID:   "PackagesExist",
 		}
 	)
@@ -2675,7 +2675,7 @@ func (s *Server) handlePackagesExistRequest(args [0]string, argsEscaped bool, w 
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "PackagesExist",
+			OperationName:    PackagesExistOperation,
 			OperationSummary: "Verify package list is available.",
 			OperationID:      "PackagesExist",
 			Body:             request,
@@ -2737,7 +2737,7 @@ func (s *Server) handleSearchLanguagePackagesRequest(args [0]string, argsEscaped
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "SearchLanguagePackages",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), SearchLanguagePackagesOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -2768,7 +2768,7 @@ func (s *Server) handleSearchLanguagePackagesRequest(args [0]string, argsEscaped
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "SearchLanguagePackages",
+			Name: SearchLanguagePackagesOperation,
 			ID:   "SearchLanguagePackages",
 		}
 	)
@@ -2787,7 +2787,7 @@ func (s *Server) handleSearchLanguagePackagesRequest(args [0]string, argsEscaped
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "SearchLanguagePackages",
+			OperationName:    SearchLanguagePackagesOperation,
 			OperationSummary: "Search for language specific packages",
 			OperationID:      "SearchLanguagePackages",
 			Body:             nil,
@@ -2857,7 +2857,7 @@ func (s *Server) handleSearchSystemPackagesRequest(args [0]string, argsEscaped b
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "SearchSystemPackages",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), SearchSystemPackagesOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -2888,7 +2888,7 @@ func (s *Server) handleSearchSystemPackagesRequest(args [0]string, argsEscaped b
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "SearchSystemPackages",
+			Name: SearchSystemPackagesOperation,
 			ID:   "SearchSystemPackages",
 		}
 	)
@@ -2907,7 +2907,7 @@ func (s *Server) handleSearchSystemPackagesRequest(args [0]string, argsEscaped b
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "SearchSystemPackages",
+			OperationName:    SearchSystemPackagesOperation,
 			OperationSummary: "Search for system packages",
 			OperationID:      "SearchSystemPackages",
 			Body:             nil,
@@ -2973,7 +2973,7 @@ func (s *Server) handleUpdateLanguageRequest(args [1]string, argsEscaped bool, w
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "UpdateLanguage",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), UpdateLanguageOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -3004,7 +3004,7 @@ func (s *Server) handleUpdateLanguageRequest(args [1]string, argsEscaped bool, w
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "UpdateLanguage",
+			Name: UpdateLanguageOperation,
 			ID:   "updateLanguage",
 		}
 	)
@@ -3038,7 +3038,7 @@ func (s *Server) handleUpdateLanguageRequest(args [1]string, argsEscaped bool, w
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "UpdateLanguage",
+			OperationName:    UpdateLanguageOperation,
 			OperationSummary: "Update a language",
 			OperationID:      "updateLanguage",
 			Body:             request,
@@ -3104,7 +3104,7 @@ func (s *Server) handleUpdateLanguageVersionRequest(args [1]string, argsEscaped 
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "UpdateLanguageVersion",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), UpdateLanguageVersionOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -3135,7 +3135,7 @@ func (s *Server) handleUpdateLanguageVersionRequest(args [1]string, argsEscaped 
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "UpdateLanguageVersion",
+			Name: UpdateLanguageVersionOperation,
 			ID:   "updateLanguageVersion",
 		}
 	)
@@ -3169,7 +3169,7 @@ func (s *Server) handleUpdateLanguageVersionRequest(args [1]string, argsEscaped 
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "UpdateLanguageVersion",
+			OperationName:    UpdateLanguageVersionOperation,
 			OperationSummary: "Update a language version",
 			OperationID:      "updateLanguageVersion",
 			Body:             request,

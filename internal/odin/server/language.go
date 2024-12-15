@@ -8,6 +8,7 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 // CreateLanguage implements api.Handler.
@@ -61,7 +62,7 @@ func (s *OdinServer) CreateLanguageVersion(ctx context.Context, req *api.Languag
 		LanguageID:     req.LanguageID,
 		Version:        req.Version,
 		NixPackageName: req.NixPackageName,
-		Template:       req.Template,
+		Template:       pgtype.Text{String: req.Template, Valid: true},
 		SearchQuery:    req.SearchQuery,
 		DefaultVersion: req.DefaultVersion,
 	}
@@ -188,7 +189,7 @@ func (s *OdinServer) GetAllLanguageVersions(ctx context.Context, params api.GetA
 			LanguageID:     version.LanguageID,
 			Version:        version.Version,
 			NixPackageName: version.NixPackageName,
-			Template:       version.Template,
+			Template:       version.Template.String,
 			SearchQuery:    version.SearchQuery,
 			DefaultVersion: version.DefaultVersion,
 		})
@@ -251,7 +252,7 @@ func (s *OdinServer) GetLanguageVersionById(ctx context.Context, params api.GetL
 		LanguageID:     version.LanguageID,
 		Version:        version.Version,
 		NixPackageName: version.NixPackageName,
-		Template:       version.Template,
+		Template:       version.Template.String,
 		SearchQuery:    version.SearchQuery,
 		DefaultVersion: version.DefaultVersion,
 	}
@@ -304,7 +305,7 @@ func (s *OdinServer) UpdateLanguageVersion(ctx context.Context, req *api.Languag
 		LanguageID:     req.LanguageID,
 		Version:        req.Version,
 		NixPackageName: req.NixPackageName,
-		Template:       req.Template,
+		Template:       pgtype.Text{String: req.Template, Valid: true},
 		SearchQuery:    req.SearchQuery,
 		DefaultVersion: req.DefaultVersion,
 	}
@@ -361,7 +362,7 @@ func (s *OdinServer) GetAllVersions(ctx context.Context, params api.GetAllVersio
 			LanguageID:     version.LanguageID,
 			Version:        version.Version,
 			NixPackageName: version.NixPackageName,
-			Template:       version.Template,
+			Template:       version.Template.String,
 			SearchQuery:    version.SearchQuery,
 			DefaultVersion: version.DefaultVersion,
 		})
