@@ -1,13 +1,3 @@
-create table if not exists packages (
-    package_id bigint primary key default nextval('packages_id_seq'),
-    name text not null,
-    version text not null,
-    pkgType text not null,
-    language text,
-    store_path text,
-    tsv_search TSVECTOR
-);
-
 -- name: TruncatePackages :exec
 TRUNCATE TABLE packages  CASCADE;
 

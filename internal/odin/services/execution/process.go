@@ -123,7 +123,7 @@ func (s *ExecutionService) AddJob(ctx context.Context, req *api.ExecutionRequest
 	hash := calculateHash(jobParams.Code, jobParams.Flake, jobParams.Files, jobParams.Input)
 	jobParams.Hash = hash
 
-	job, err := s.queries.AddJobTx(ctx, jobParams)
+	job, err := s.queries.AddExecJobTx(ctx, jobParams)
 	if err != nil {
 		s.logger.Err(err).Msg("failed to add job")
 		return 0, err

@@ -3,8 +3,8 @@ get:
   description: Get all executions
   operationId: getAllExecutions
   parameters:
-    - $ref: ../components/parameters/PageNumber.yml
-    - $ref: ../components/parameters/PageSize.yml
+    - $ref: ../components/parameters/Cursor.yml
+    - $ref: ../components/parameters/Limit.yml
     - $ref: ../components/parameters/AuthHeader.yml
   responses:
     '200':

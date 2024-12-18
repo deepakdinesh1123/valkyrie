@@ -733,6 +733,72 @@ func decodeExecuteParams(args [0]string, argsEscaped bool, r *http.Request) (par
 	return params, nil
 }
 
+// FetchFlakeParams is parameters of fetchFlake operation.
+type FetchFlakeParams struct {
+	// Job ID.
+	JobId int64
+}
+
+func unpackFetchFlakeParams(packed middleware.Parameters) (params FetchFlakeParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "jobId",
+			In:   "path",
+		}
+		params.JobId = packed[key].(int64)
+	}
+	return params
+}
+
+func decodeFetchFlakeParams(args [1]string, argsEscaped bool, r *http.Request) (params FetchFlakeParams, _ error) {
+	// Decode path: jobId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "jobId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToInt64(val)
+				if err != nil {
+					return err
+				}
+
+				params.JobId = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "jobId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // FetchLanguagePackagesParams is parameters of FetchLanguagePackages operation.
 type FetchLanguagePackagesParams struct {
 	// Authentication token.
@@ -905,78 +971,12 @@ func decodeFetchSystemPackagesParams(args [0]string, argsEscaped bool, r *http.R
 	return params, nil
 }
 
-// FlakeJobIdGetParams is parameters of GET /flake/{jobId} operation.
-type FlakeJobIdGetParams struct {
-	// Job ID.
-	JobId int64
-}
-
-func unpackFlakeJobIdGetParams(packed middleware.Parameters) (params FlakeJobIdGetParams) {
-	{
-		key := middleware.ParameterKey{
-			Name: "jobId",
-			In:   "path",
-		}
-		params.JobId = packed[key].(int64)
-	}
-	return params
-}
-
-func decodeFlakeJobIdGetParams(args [1]string, argsEscaped bool, r *http.Request) (params FlakeJobIdGetParams, _ error) {
-	// Decode path: jobId.
-	if err := func() error {
-		param := args[0]
-		if argsEscaped {
-			unescaped, err := url.PathUnescape(args[0])
-			if err != nil {
-				return errors.Wrap(err, "unescape path")
-			}
-			param = unescaped
-		}
-		if len(param) > 0 {
-			d := uri.NewPathDecoder(uri.PathDecoderConfig{
-				Param:   "jobId",
-				Value:   param,
-				Style:   uri.PathStyleSimple,
-				Explode: false,
-			})
-
-			if err := func() error {
-				val, err := d.DecodeValue()
-				if err != nil {
-					return err
-				}
-
-				c, err := conv.ToInt64(val)
-				if err != nil {
-					return err
-				}
-
-				params.JobId = c
-				return nil
-			}(); err != nil {
-				return err
-			}
-		} else {
-			return validate.ErrFieldRequired
-		}
-		return nil
-	}(); err != nil {
-		return params, &ogenerrors.DecodeParamError{
-			Name: "jobId",
-			In:   "path",
-			Err:  err,
-		}
-	}
-	return params, nil
-}
-
 // GetAllExecutionJobsParams is parameters of getAllExecutionJobs operation.
 type GetAllExecutionJobsParams struct {
-	// The page number to retrieve.
-	Page OptInt32
-	// The number of items per page.
-	PageSize OptInt32
+	// The current position of the cursor.
+	Cursor OptInt64
+	// The current position of the cursor.
+	Limit OptInt64
 	// Authentication token.
 	XAuthToken OptString
 }
@@ -984,20 +984,20 @@ type GetAllExecutionJobsParams struct {
 func unpackGetAllExecutionJobsParams(packed middleware.Parameters) (params GetAllExecutionJobsParams) {
 	{
 		key := middleware.ParameterKey{
-			Name: "page",
+			Name: "cursor",
 			In:   "query",
 		}
 		if v, ok := packed[key]; ok {
-			params.Page = v.(OptInt32)
+			params.Cursor = v.(OptInt64)
 		}
 	}
 	{
 		key := middleware.ParameterKey{
-			Name: "pageSize",
+			Name: "limit",
 			In:   "query",
 		}
 		if v, ok := packed[key]; ok {
-			params.PageSize = v.(OptInt32)
+			params.Limit = v.(OptInt64)
 		}
 	}
 	{
@@ -1015,39 +1015,39 @@ func unpackGetAllExecutionJobsParams(packed middleware.Parameters) (params GetAl
 func decodeGetAllExecutionJobsParams(args [0]string, argsEscaped bool, r *http.Request) (params GetAllExecutionJobsParams, _ error) {
 	q := uri.NewQueryDecoder(r.URL.Query())
 	h := uri.NewHeaderDecoder(r.Header)
-	// Set default value for query: page.
+	// Set default value for query: cursor.
 	{
-		val := int32(0)
-		params.Page.SetTo(val)
+		val := int64(0)
+		params.Cursor.SetTo(val)
 	}
-	// Decode query: page.
+	// Decode query: cursor.
 	if err := func() error {
 		cfg := uri.QueryParameterDecodingConfig{
-			Name:    "page",
+			Name:    "cursor",
 			Style:   uri.QueryStyleForm,
 			Explode: true,
 		}
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotPageVal int32
+				var paramsDotCursorVal int64
 				if err := func() error {
 					val, err := d.DecodeValue()
 					if err != nil {
 						return err
 					}
 
-					c, err := conv.ToInt32(val)
+					c, err := conv.ToInt64(val)
 					if err != nil {
 						return err
 					}
 
-					paramsDotPageVal = c
+					paramsDotCursorVal = c
 					return nil
 				}(); err != nil {
 					return err
 				}
-				params.Page.SetTo(paramsDotPageVal)
+				params.Cursor.SetTo(paramsDotCursorVal)
 				return nil
 			}); err != nil {
 				return err
@@ -1056,44 +1056,44 @@ func decodeGetAllExecutionJobsParams(args [0]string, argsEscaped bool, r *http.R
 		return nil
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
-			Name: "page",
+			Name: "cursor",
 			In:   "query",
 			Err:  err,
 		}
 	}
-	// Set default value for query: pageSize.
+	// Set default value for query: limit.
 	{
-		val := int32(20)
-		params.PageSize.SetTo(val)
+		val := int64(10)
+		params.Limit.SetTo(val)
 	}
-	// Decode query: pageSize.
+	// Decode query: limit.
 	if err := func() error {
 		cfg := uri.QueryParameterDecodingConfig{
-			Name:    "pageSize",
+			Name:    "limit",
 			Style:   uri.QueryStyleForm,
 			Explode: true,
 		}
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotPageSizeVal int32
+				var paramsDotLimitVal int64
 				if err := func() error {
 					val, err := d.DecodeValue()
 					if err != nil {
 						return err
 					}
 
-					c, err := conv.ToInt32(val)
+					c, err := conv.ToInt64(val)
 					if err != nil {
 						return err
 					}
 
-					paramsDotPageSizeVal = c
+					paramsDotLimitVal = c
 					return nil
 				}(); err != nil {
 					return err
 				}
-				params.PageSize.SetTo(paramsDotPageSizeVal)
+				params.Limit.SetTo(paramsDotLimitVal)
 				return nil
 			}); err != nil {
 				return err
@@ -1102,7 +1102,7 @@ func decodeGetAllExecutionJobsParams(args [0]string, argsEscaped bool, r *http.R
 		return nil
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
-			Name: "pageSize",
+			Name: "limit",
 			In:   "query",
 			Err:  err,
 		}
@@ -1151,10 +1151,10 @@ func decodeGetAllExecutionJobsParams(args [0]string, argsEscaped bool, r *http.R
 
 // GetAllExecutionsParams is parameters of getAllExecutions operation.
 type GetAllExecutionsParams struct {
-	// The page number to retrieve.
-	Page OptInt32
-	// The number of items per page.
-	PageSize OptInt32
+	// The current position of the cursor.
+	Cursor OptInt64
+	// The current position of the cursor.
+	Limit OptInt64
 	// Authentication token.
 	XAuthToken OptString
 }
@@ -1162,20 +1162,20 @@ type GetAllExecutionsParams struct {
 func unpackGetAllExecutionsParams(packed middleware.Parameters) (params GetAllExecutionsParams) {
 	{
 		key := middleware.ParameterKey{
-			Name: "page",
+			Name: "cursor",
 			In:   "query",
 		}
 		if v, ok := packed[key]; ok {
-			params.Page = v.(OptInt32)
+			params.Cursor = v.(OptInt64)
 		}
 	}
 	{
 		key := middleware.ParameterKey{
-			Name: "pageSize",
+			Name: "limit",
 			In:   "query",
 		}
 		if v, ok := packed[key]; ok {
-			params.PageSize = v.(OptInt32)
+			params.Limit = v.(OptInt64)
 		}
 	}
 	{
@@ -1193,39 +1193,39 @@ func unpackGetAllExecutionsParams(packed middleware.Parameters) (params GetAllEx
 func decodeGetAllExecutionsParams(args [0]string, argsEscaped bool, r *http.Request) (params GetAllExecutionsParams, _ error) {
 	q := uri.NewQueryDecoder(r.URL.Query())
 	h := uri.NewHeaderDecoder(r.Header)
-	// Set default value for query: page.
+	// Set default value for query: cursor.
 	{
-		val := int32(0)
-		params.Page.SetTo(val)
+		val := int64(0)
+		params.Cursor.SetTo(val)
 	}
-	// Decode query: page.
+	// Decode query: cursor.
 	if err := func() error {
 		cfg := uri.QueryParameterDecodingConfig{
-			Name:    "page",
+			Name:    "cursor",
 			Style:   uri.QueryStyleForm,
 			Explode: true,
 		}
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotPageVal int32
+				var paramsDotCursorVal int64
 				if err := func() error {
 					val, err := d.DecodeValue()
 					if err != nil {
 						return err
 					}
 
-					c, err := conv.ToInt32(val)
+					c, err := conv.ToInt64(val)
 					if err != nil {
 						return err
 					}
 
-					paramsDotPageVal = c
+					paramsDotCursorVal = c
 					return nil
 				}(); err != nil {
 					return err
 				}
-				params.Page.SetTo(paramsDotPageVal)
+				params.Cursor.SetTo(paramsDotCursorVal)
 				return nil
 			}); err != nil {
 				return err
@@ -1234,44 +1234,44 @@ func decodeGetAllExecutionsParams(args [0]string, argsEscaped bool, r *http.Requ
 		return nil
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
-			Name: "page",
+			Name: "cursor",
 			In:   "query",
 			Err:  err,
 		}
 	}
-	// Set default value for query: pageSize.
+	// Set default value for query: limit.
 	{
-		val := int32(20)
-		params.PageSize.SetTo(val)
+		val := int64(10)
+		params.Limit.SetTo(val)
 	}
-	// Decode query: pageSize.
+	// Decode query: limit.
 	if err := func() error {
 		cfg := uri.QueryParameterDecodingConfig{
-			Name:    "pageSize",
+			Name:    "limit",
 			Style:   uri.QueryStyleForm,
 			Explode: true,
 		}
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotPageSizeVal int32
+				var paramsDotLimitVal int64
 				if err := func() error {
 					val, err := d.DecodeValue()
 					if err != nil {
 						return err
 					}
 
-					c, err := conv.ToInt32(val)
+					c, err := conv.ToInt64(val)
 					if err != nil {
 						return err
 					}
 
-					paramsDotPageSizeVal = c
+					paramsDotLimitVal = c
 					return nil
 				}(); err != nil {
 					return err
 				}
-				params.PageSize.SetTo(paramsDotPageSizeVal)
+				params.Limit.SetTo(paramsDotLimitVal)
 				return nil
 			}); err != nil {
 				return err
@@ -1280,7 +1280,7 @@ func decodeGetAllExecutionsParams(args [0]string, argsEscaped bool, r *http.Requ
 		return nil
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
-			Name: "pageSize",
+			Name: "limit",
 			In:   "query",
 			Err:  err,
 		}
@@ -1868,10 +1868,10 @@ func decodeGetExecutionResultByIdParams(args [1]string, argsEscaped bool, r *htt
 // GetExecutionsForJobParams is parameters of getExecutionsForJob operation.
 type GetExecutionsForJobParams struct {
 	JobId int64
-	// The page number to retrieve.
-	Page OptInt32
-	// The number of items per page.
-	PageSize OptInt32
+	// The current position of the cursor.
+	Cursor OptInt64
+	// The current position of the cursor.
+	Limit OptInt64
 	// Authentication token.
 	XAuthToken OptString
 }
@@ -1886,20 +1886,20 @@ func unpackGetExecutionsForJobParams(packed middleware.Parameters) (params GetEx
 	}
 	{
 		key := middleware.ParameterKey{
-			Name: "page",
+			Name: "cursor",
 			In:   "query",
 		}
 		if v, ok := packed[key]; ok {
-			params.Page = v.(OptInt32)
+			params.Cursor = v.(OptInt64)
 		}
 	}
 	{
 		key := middleware.ParameterKey{
-			Name: "pageSize",
+			Name: "limit",
 			In:   "query",
 		}
 		if v, ok := packed[key]; ok {
-			params.PageSize = v.(OptInt32)
+			params.Limit = v.(OptInt64)
 		}
 	}
 	{
@@ -1962,39 +1962,39 @@ func decodeGetExecutionsForJobParams(args [1]string, argsEscaped bool, r *http.R
 			Err:  err,
 		}
 	}
-	// Set default value for query: page.
+	// Set default value for query: cursor.
 	{
-		val := int32(0)
-		params.Page.SetTo(val)
+		val := int64(0)
+		params.Cursor.SetTo(val)
 	}
-	// Decode query: page.
+	// Decode query: cursor.
 	if err := func() error {
 		cfg := uri.QueryParameterDecodingConfig{
-			Name:    "page",
+			Name:    "cursor",
 			Style:   uri.QueryStyleForm,
 			Explode: true,
 		}
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotPageVal int32
+				var paramsDotCursorVal int64
 				if err := func() error {
 					val, err := d.DecodeValue()
 					if err != nil {
 						return err
 					}
 
-					c, err := conv.ToInt32(val)
+					c, err := conv.ToInt64(val)
 					if err != nil {
 						return err
 					}
 
-					paramsDotPageVal = c
+					paramsDotCursorVal = c
 					return nil
 				}(); err != nil {
 					return err
 				}
-				params.Page.SetTo(paramsDotPageVal)
+				params.Cursor.SetTo(paramsDotCursorVal)
 				return nil
 			}); err != nil {
 				return err
@@ -2003,44 +2003,44 @@ func decodeGetExecutionsForJobParams(args [1]string, argsEscaped bool, r *http.R
 		return nil
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
-			Name: "page",
+			Name: "cursor",
 			In:   "query",
 			Err:  err,
 		}
 	}
-	// Set default value for query: pageSize.
+	// Set default value for query: limit.
 	{
-		val := int32(20)
-		params.PageSize.SetTo(val)
+		val := int64(10)
+		params.Limit.SetTo(val)
 	}
-	// Decode query: pageSize.
+	// Decode query: limit.
 	if err := func() error {
 		cfg := uri.QueryParameterDecodingConfig{
-			Name:    "pageSize",
+			Name:    "limit",
 			Style:   uri.QueryStyleForm,
 			Explode: true,
 		}
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotPageSizeVal int32
+				var paramsDotLimitVal int64
 				if err := func() error {
 					val, err := d.DecodeValue()
 					if err != nil {
 						return err
 					}
 
-					c, err := conv.ToInt32(val)
+					c, err := conv.ToInt64(val)
 					if err != nil {
 						return err
 					}
 
-					paramsDotPageSizeVal = c
+					paramsDotLimitVal = c
 					return nil
 				}(); err != nil {
 					return err
 				}
-				params.PageSize.SetTo(paramsDotPageSizeVal)
+				params.Limit.SetTo(paramsDotLimitVal)
 				return nil
 			}); err != nil {
 				return err
@@ -2049,7 +2049,7 @@ func decodeGetExecutionsForJobParams(args [1]string, argsEscaped bool, r *http.R
 		return nil
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
-			Name: "pageSize",
+			Name: "limit",
 			In:   "query",
 			Err:  err,
 		}

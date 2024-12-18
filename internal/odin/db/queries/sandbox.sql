@@ -1,15 +1,3 @@
-create table sandboxes (
-    sandbox_id bigint primary key default nextval('sandboxes_id_seq'),
-    worker_id int references workers on delete set null,
-    started_at timestamptz,
-    updated_at timestamptz,
-    created_at timestamptz not null default now(),
-    git_url text,
-    sandbox_url text,
-    password bytea,
-    current_state TEXT NOT NULL CHECK (current_state IN ('pending', 'running', 'failed', 'stopped', 'creating'))
-);
-
 -- name: InsertSandbox :one
 insert into sandboxes (git_url)
 values ($1)

@@ -33,16 +33,16 @@ type ExecuteRes interface {
 	executeRes()
 }
 
+type FetchFlakeRes interface {
+	fetchFlakeRes()
+}
+
 type FetchLanguagePackagesRes interface {
 	fetchLanguagePackagesRes()
 }
 
 type FetchSystemPackagesRes interface {
 	fetchSystemPackagesRes()
-}
-
-type FlakeJobIdGetRes interface {
-	flakeJobIdGetRes()
 }
 
 type GetAllExecutionJobsRes interface {

@@ -56,6 +56,12 @@ type Handler interface {
 	//
 	// POST /executions/execute
 	Execute(ctx context.Context, req *ExecutionRequest, params ExecuteParams) (ExecuteRes, error)
+	// FetchFlake implements fetchFlake operation.
+	//
+	// Fetches flake of a given job.
+	//
+	// GET /flake/{jobId}
+	FetchFlake(ctx context.Context, params FetchFlakeParams) (FetchFlakeRes, error)
 	// FetchLanguagePackages implements FetchLanguagePackages operation.
 	//
 	// Initialize the search results content with a default set of language specific packages.
@@ -68,12 +74,6 @@ type Handler interface {
 	//
 	// GET /fetch/system
 	FetchSystemPackages(ctx context.Context, params FetchSystemPackagesParams) (FetchSystemPackagesRes, error)
-	// FlakeJobIdGet implements GET /flake/{jobId} operation.
-	//
-	// Fetches flake of a given job.
-	//
-	// GET /flake/{jobId}
-	FlakeJobIdGet(ctx context.Context, params FlakeJobIdGetParams) (FlakeJobIdGetRes, error)
 	// GetAllExecutionJobs implements getAllExecutionJobs operation.
 	//
 	// Get all execution jobs.

@@ -19,9 +19,13 @@ migrate-down:
 	@migrate -path internal/odin/db/migrations -database ${POSTGRES_URL} down
 
 # Generate SQL code
-gq:
+generate-query:
 	@echo "Generating SQL code..."
 	@cd internal/odin/db && sqlc generate
+
+validate-query:
+	@echo "Validating SQLC queries..."
+	@cd internal/odin/db && sqlc vet
 
 # Start the PostgreSQL database
 start-db:

@@ -71,6 +71,12 @@ type Invoker interface {
 	//
 	// POST /executions/execute
 	Execute(ctx context.Context, request *ExecutionRequest, params ExecuteParams) (ExecuteRes, error)
+	// FetchFlake invokes fetchFlake operation.
+	//
+	// Fetches flake of a given job.
+	//
+	// GET /flake/{jobId}
+	FetchFlake(ctx context.Context, params FetchFlakeParams) (FetchFlakeRes, error)
 	// FetchLanguagePackages invokes FetchLanguagePackages operation.
 	//
 	// Initialize the search results content with a default set of language specific packages.
@@ -83,12 +89,6 @@ type Invoker interface {
 	//
 	// GET /fetch/system
 	FetchSystemPackages(ctx context.Context, params FetchSystemPackagesParams) (FetchSystemPackagesRes, error)
-	// FlakeJobIdGet invokes GET /flake/{jobId} operation.
-	//
-	// Fetches flake of a given job.
-	//
-	// GET /flake/{jobId}
-	FlakeJobIdGet(ctx context.Context, params FlakeJobIdGetParams) (FlakeJobIdGetRes, error)
 	// GetAllExecutionJobs invokes getAllExecutionJobs operation.
 	//
 	// Get all execution jobs.
@@ -270,7 +270,7 @@ func (c *Client) sendCancelExecutionJob(ctx context.Context, params CancelExecut
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
@@ -377,7 +377,7 @@ func (c *Client) sendCreateLanguage(ctx context.Context, request *Language, para
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
@@ -469,7 +469,7 @@ func (c *Client) sendCreateLanguageVersion(ctx context.Context, request *Languag
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
@@ -561,14 +561,14 @@ func (c *Client) sendCreateSandbox(ctx context.Context, params CreateSandboxPara
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "CreateSandbox",
+	ctx, span := c.cfg.Tracer.Start(ctx, CreateSandboxOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -650,7 +650,7 @@ func (c *Client) sendDeleteExecutionJob(ctx context.Context, params DeleteExecut
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
@@ -757,7 +757,7 @@ func (c *Client) sendDeleteLanguage(ctx context.Context, params DeleteLanguagePa
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
@@ -864,7 +864,7 @@ func (c *Client) sendDeleteLanguageVersion(ctx context.Context, params DeleteLan
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
@@ -971,7 +971,7 @@ func (c *Client) sendExecute(ctx context.Context, request *ExecutionRequest, par
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
@@ -1041,6 +1041,96 @@ func (c *Client) sendExecute(ctx context.Context, request *ExecutionRequest, par
 	return result, nil
 }
 
+// FetchFlake invokes fetchFlake operation.
+//
+// Fetches flake of a given job.
+//
+// GET /flake/{jobId}
+func (c *Client) FetchFlake(ctx context.Context, params FetchFlakeParams) (FetchFlakeRes, error) {
+	res, err := c.sendFetchFlake(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendFetchFlake(ctx context.Context, params FetchFlakeParams) (res FetchFlakeRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("fetchFlake"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/flake/{jobId}"),
+	}
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, FetchFlakeOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [2]string
+	pathParts[0] = "/flake/"
+	{
+		// Encode "jobId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "jobId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			return e.EncodeValue(conv.Int64ToString(params.JobId))
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodeFetchFlakeResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // FetchLanguagePackages invokes FetchLanguagePackages operation.
 //
 // Initialize the search results content with a default set of language specific packages.
@@ -1063,7 +1153,7 @@ func (c *Client) sendFetchLanguagePackages(ctx context.Context, params FetchLang
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
@@ -1170,7 +1260,7 @@ func (c *Client) sendFetchSystemPackages(ctx context.Context, params FetchSystem
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
@@ -1237,95 +1327,6 @@ func (c *Client) sendFetchSystemPackages(ctx context.Context, params FetchSystem
 	return result, nil
 }
 
-// FlakeJobIdGet invokes GET /flake/{jobId} operation.
-//
-// Fetches flake of a given job.
-//
-// GET /flake/{jobId}
-func (c *Client) FlakeJobIdGet(ctx context.Context, params FlakeJobIdGetParams) (FlakeJobIdGetRes, error) {
-	res, err := c.sendFlakeJobIdGet(ctx, params)
-	return res, err
-}
-
-func (c *Client) sendFlakeJobIdGet(ctx context.Context, params FlakeJobIdGetParams) (res FlakeJobIdGetRes, err error) {
-	otelAttrs := []attribute.KeyValue{
-		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/flake/{jobId}"),
-	}
-
-	// Run stopwatch.
-	startTime := time.Now()
-	defer func() {
-		// Use floating point division here for higher precision (instead of Millisecond method).
-		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
-	}()
-
-	// Increment request counter.
-	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-
-	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, FlakeJobIdGetOperation,
-		trace.WithAttributes(otelAttrs...),
-		clientSpanKind,
-	)
-	// Track stage for error reporting.
-	var stage string
-	defer func() {
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, stage)
-			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-		}
-		span.End()
-	}()
-
-	stage = "BuildURL"
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [2]string
-	pathParts[0] = "/flake/"
-	{
-		// Encode "jobId" parameter.
-		e := uri.NewPathEncoder(uri.PathEncoderConfig{
-			Param:   "jobId",
-			Style:   uri.PathStyleSimple,
-			Explode: false,
-		})
-		if err := func() error {
-			return e.EncodeValue(conv.Int64ToString(params.JobId))
-		}(); err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		encoded, err := e.Result()
-		if err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		pathParts[1] = encoded
-	}
-	uri.AddPathParts(u, pathParts[:]...)
-
-	stage = "EncodeRequest"
-	r, err := ht.NewRequest(ctx, "GET", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-
-	stage = "SendRequest"
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	defer resp.Body.Close()
-
-	stage = "DecodeResponse"
-	result, err := decodeFlakeJobIdGetResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
 // GetAllExecutionJobs invokes getAllExecutionJobs operation.
 //
 // Get all execution jobs.
@@ -1348,7 +1349,7 @@ func (c *Client) sendGetAllExecutionJobs(ctx context.Context, params GetAllExecu
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
@@ -1379,16 +1380,16 @@ func (c *Client) sendGetAllExecutionJobs(ctx context.Context, params GetAllExecu
 	stage = "EncodeQueryParams"
 	q := uri.NewQueryEncoder()
 	{
-		// Encode "page" parameter.
+		// Encode "cursor" parameter.
 		cfg := uri.QueryParameterEncodingConfig{
-			Name:    "page",
+			Name:    "cursor",
 			Style:   uri.QueryStyleForm,
 			Explode: true,
 		}
 
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.Page.Get(); ok {
-				return e.EncodeValue(conv.Int32ToString(val))
+			if val, ok := params.Cursor.Get(); ok {
+				return e.EncodeValue(conv.Int64ToString(val))
 			}
 			return nil
 		}); err != nil {
@@ -1396,16 +1397,16 @@ func (c *Client) sendGetAllExecutionJobs(ctx context.Context, params GetAllExecu
 		}
 	}
 	{
-		// Encode "pageSize" parameter.
+		// Encode "limit" parameter.
 		cfg := uri.QueryParameterEncodingConfig{
-			Name:    "pageSize",
+			Name:    "limit",
 			Style:   uri.QueryStyleForm,
 			Explode: true,
 		}
 
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.PageSize.Get(); ok {
-				return e.EncodeValue(conv.Int32ToString(val))
+			if val, ok := params.Limit.Get(); ok {
+				return e.EncodeValue(conv.Int64ToString(val))
 			}
 			return nil
 		}); err != nil {
@@ -1475,7 +1476,7 @@ func (c *Client) sendGetAllExecutions(ctx context.Context, params GetAllExecutio
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
@@ -1506,16 +1507,16 @@ func (c *Client) sendGetAllExecutions(ctx context.Context, params GetAllExecutio
 	stage = "EncodeQueryParams"
 	q := uri.NewQueryEncoder()
 	{
-		// Encode "page" parameter.
+		// Encode "cursor" parameter.
 		cfg := uri.QueryParameterEncodingConfig{
-			Name:    "page",
+			Name:    "cursor",
 			Style:   uri.QueryStyleForm,
 			Explode: true,
 		}
 
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.Page.Get(); ok {
-				return e.EncodeValue(conv.Int32ToString(val))
+			if val, ok := params.Cursor.Get(); ok {
+				return e.EncodeValue(conv.Int64ToString(val))
 			}
 			return nil
 		}); err != nil {
@@ -1523,16 +1524,16 @@ func (c *Client) sendGetAllExecutions(ctx context.Context, params GetAllExecutio
 		}
 	}
 	{
-		// Encode "pageSize" parameter.
+		// Encode "limit" parameter.
 		cfg := uri.QueryParameterEncodingConfig{
-			Name:    "pageSize",
+			Name:    "limit",
 			Style:   uri.QueryStyleForm,
 			Explode: true,
 		}
 
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.PageSize.Get(); ok {
-				return e.EncodeValue(conv.Int32ToString(val))
+			if val, ok := params.Limit.Get(); ok {
+				return e.EncodeValue(conv.Int64ToString(val))
 			}
 			return nil
 		}); err != nil {
@@ -1602,7 +1603,7 @@ func (c *Client) sendGetAllLanguageVersions(ctx context.Context, params GetAllLa
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
@@ -1691,7 +1692,7 @@ func (c *Client) sendGetAllLanguages(ctx context.Context, params GetAllLanguages
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
@@ -1780,7 +1781,7 @@ func (c *Client) sendGetAllVersions(ctx context.Context, params GetAllVersionsPa
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
@@ -1888,7 +1889,7 @@ func (c *Client) sendGetExecutionConfig(ctx context.Context, params GetExecution
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
@@ -1977,7 +1978,7 @@ func (c *Client) sendGetExecutionJobById(ctx context.Context, params GetExecutio
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
@@ -2084,7 +2085,7 @@ func (c *Client) sendGetExecutionResultById(ctx context.Context, params GetExecu
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
@@ -2191,7 +2192,7 @@ func (c *Client) sendGetExecutionsForJob(ctx context.Context, params GetExecutio
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
@@ -2241,16 +2242,16 @@ func (c *Client) sendGetExecutionsForJob(ctx context.Context, params GetExecutio
 	stage = "EncodeQueryParams"
 	q := uri.NewQueryEncoder()
 	{
-		// Encode "page" parameter.
+		// Encode "cursor" parameter.
 		cfg := uri.QueryParameterEncodingConfig{
-			Name:    "page",
+			Name:    "cursor",
 			Style:   uri.QueryStyleForm,
 			Explode: true,
 		}
 
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.Page.Get(); ok {
-				return e.EncodeValue(conv.Int32ToString(val))
+			if val, ok := params.Cursor.Get(); ok {
+				return e.EncodeValue(conv.Int64ToString(val))
 			}
 			return nil
 		}); err != nil {
@@ -2258,16 +2259,16 @@ func (c *Client) sendGetExecutionsForJob(ctx context.Context, params GetExecutio
 		}
 	}
 	{
-		// Encode "pageSize" parameter.
+		// Encode "limit" parameter.
 		cfg := uri.QueryParameterEncodingConfig{
-			Name:    "pageSize",
+			Name:    "limit",
 			Style:   uri.QueryStyleForm,
 			Explode: true,
 		}
 
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.PageSize.Get(); ok {
-				return e.EncodeValue(conv.Int32ToString(val))
+			if val, ok := params.Limit.Get(); ok {
+				return e.EncodeValue(conv.Int64ToString(val))
 			}
 			return nil
 		}); err != nil {
@@ -2337,7 +2338,7 @@ func (c *Client) sendGetLanguageById(ctx context.Context, params GetLanguageById
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
@@ -2444,7 +2445,7 @@ func (c *Client) sendGetLanguageVersionById(ctx context.Context, params GetLangu
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
@@ -2551,14 +2552,14 @@ func (c *Client) sendGetSandbox(ctx context.Context, params GetSandboxParams) (r
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "GetSandbox",
+	ctx, span := c.cfg.Tracer.Start(ctx, GetSandboxOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -2658,7 +2659,7 @@ func (c *Client) sendGetVersion(ctx context.Context, params GetVersionParams) (r
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
@@ -2748,7 +2749,7 @@ func (c *Client) sendPackagesExist(ctx context.Context, request *PackageExistReq
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
@@ -2840,7 +2841,7 @@ func (c *Client) sendSearchLanguagePackages(ctx context.Context, params SearchLa
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
@@ -2961,7 +2962,7 @@ func (c *Client) sendSearchSystemPackages(ctx context.Context, params SearchSyst
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
@@ -3068,7 +3069,7 @@ func (c *Client) sendUpdateLanguage(ctx context.Context, request *Language, para
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
@@ -3178,7 +3179,7 @@ func (c *Client) sendUpdateLanguageVersion(ctx context.Context, request *Languag
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.

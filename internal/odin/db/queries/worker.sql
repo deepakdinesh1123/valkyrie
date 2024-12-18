@@ -1,11 +1,3 @@
-create table workers (
-    id int primary key,
-    name text not null unique,
-    created_at timestamptz not null default now(),
-    last_heartbeat timestamptz,
-    current_state TEXT NOT NULL CHECK (current_state IN ('active', 'stale')) DEFAULT 'active'
-);
-
 -- name: CreateWorker :one
 insert into workers
     (name)
@@ -27,8 +19,7 @@ where name = $1
 returning *;
 
 -- name: GetAllWorkers :many
-select * from workers
-limit $1 offset $2;
+select * from workers;
 
 -- name: GetTotalWorkers :one
 select count(*) from workers;

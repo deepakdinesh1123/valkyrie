@@ -2,6 +2,8 @@ package db
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/jackc/pgx/v5"
@@ -29,7 +31,7 @@ type AddJobTxResult struct {
 	JobID int64
 }
 
-func (s *SQLStore) AddJobTx(ctx context.Context, arg AddJobTxParams) (AddJobTxResult, error) {
+func (s *SQLStore) AddExecJobTx(ctx context.Context, arg AddJobTxParams) (AddJobTxResult, error) {
 	var addJobTxResult AddJobTxResult
 
 	err := s.execTx(ctx, func(q *Queries) error {
@@ -63,8 +65,15 @@ func (s *SQLStore) AddJobTx(ctx context.Context, arg AddJobTxParams) (AddJobTxRe
 			execId = execReq.ID
 		}
 
+		jobArgs, err := json.Marshal(JobArguments{
+			ExecReqId: execId,
+		})
+		if err != nil {
+			return fmt.Errorf("error creating exec job args: %s", err)
+		}
+
 		var jobParams InsertJobParams
-		jobParams.ExecRequestID = pgtype.Int4{Int32: execId, Valid: true}
+		jobParams.Arguments = jobArgs
 		jobParams.MaxRetries = pgtype.Int4{Int32: int32(arg.MaxRetries), Valid: true}
 		jobParams.TimeOut = pgtype.Int4{Int32: arg.Timeout, Valid: true}
 		job, err := s.InsertJob(ctx, jobParams)

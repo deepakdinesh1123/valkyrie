@@ -2,23 +2,16 @@ type: object
 required:
   - total
   - limit
-  - offset
+  - cursor
 properties:
   total:
     type: integer
     format: int64
     description: Represents the total number of items.
-  pages:
-    type: integer
-    format: int32
-    description: Represents the total number of pages.
-  page:
-    type: integer
-    format: int32
-    description: Represents the current page.
   limit:
     type: integer
-    format: int32
+    format: int64
     description: Represents the number of items per page.
-  next:
-    type: string
+  cursor:
+    type: integer
+    format: int64

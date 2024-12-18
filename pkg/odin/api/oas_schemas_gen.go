@@ -693,6 +693,30 @@ func (s *ExecutionResult) SetNixLogs(val OptString) {
 
 func (*ExecutionResult) getExecutionResultByIdRes() {}
 
+type FetchFlakeForbidden Error
+
+func (*FetchFlakeForbidden) fetchFlakeRes() {}
+
+type FetchFlakeInternalServerError Error
+
+func (*FetchFlakeInternalServerError) fetchFlakeRes() {}
+
+type FetchFlakeOK struct {
+	Flake string `json:"flake"`
+}
+
+// GetFlake returns the value of Flake.
+func (s *FetchFlakeOK) GetFlake() string {
+	return s.Flake
+}
+
+// SetFlake sets the value of Flake.
+func (s *FetchFlakeOK) SetFlake(val string) {
+	s.Flake = val
+}
+
+func (*FetchFlakeOK) fetchFlakeRes() {}
+
 type FetchLanguagePackagesBadRequest Error
 
 func (*FetchLanguagePackagesBadRequest) fetchLanguagePackagesRes() {}
@@ -748,30 +772,6 @@ func (s *FetchSystemPackagesOK) SetPackages(val []Package) {
 }
 
 func (*FetchSystemPackagesOK) fetchSystemPackagesRes() {}
-
-type FlakeJobIdGetForbidden Error
-
-func (*FlakeJobIdGetForbidden) flakeJobIdGetRes() {}
-
-type FlakeJobIdGetInternalServerError Error
-
-func (*FlakeJobIdGetInternalServerError) flakeJobIdGetRes() {}
-
-type FlakeJobIdGetOK struct {
-	Flake string `json:"flake"`
-}
-
-// GetFlake returns the value of Flake.
-func (s *FlakeJobIdGetOK) GetFlake() string {
-	return s.Flake
-}
-
-// SetFlake sets the value of Flake.
-func (s *FlakeJobIdGetOK) SetFlake(val string) {
-	s.Flake = val
-}
-
-func (*FlakeJobIdGetOK) flakeJobIdGetRes() {}
 
 type GetAllExecutionJobsBadRequest Error
 
@@ -1674,6 +1674,52 @@ func (o OptInt32) Or(d int32) int32 {
 	return d
 }
 
+// NewOptInt64 returns new OptInt64 with value set to v.
+func NewOptInt64(v int64) OptInt64 {
+	return OptInt64{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptInt64 is optional int64.
+type OptInt64 struct {
+	Value int64
+	Set   bool
+}
+
+// IsSet returns true if OptInt64 was set.
+func (o OptInt64) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptInt64) Reset() {
+	var v int64
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptInt64) SetTo(v int64) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptInt64) Get() (v int64, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptInt64) Or(d int64) int64 {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptString returns new OptString with value set to v.
 func NewOptString(v string) OptString {
 	return OptString{
@@ -1867,13 +1913,9 @@ func (*PackagesExistOK) packagesExistRes() {}
 type PaginationResponse struct {
 	// Represents the total number of items.
 	Total int64 `json:"total"`
-	// Represents the total number of pages.
-	Pages OptInt32 `json:"pages"`
-	// Represents the current page.
-	Page OptInt32 `json:"page"`
 	// Represents the number of items per page.
-	Limit int32     `json:"limit"`
-	Next  OptString `json:"next"`
+	Limit  int64 `json:"limit"`
+	Cursor int64 `json:"cursor"`
 }
 
 // GetTotal returns the value of Total.
@@ -1881,24 +1923,14 @@ func (s *PaginationResponse) GetTotal() int64 {
 	return s.Total
 }
 
-// GetPages returns the value of Pages.
-func (s *PaginationResponse) GetPages() OptInt32 {
-	return s.Pages
-}
-
-// GetPage returns the value of Page.
-func (s *PaginationResponse) GetPage() OptInt32 {
-	return s.Page
-}
-
 // GetLimit returns the value of Limit.
-func (s *PaginationResponse) GetLimit() int32 {
+func (s *PaginationResponse) GetLimit() int64 {
 	return s.Limit
 }
 
-// GetNext returns the value of Next.
-func (s *PaginationResponse) GetNext() OptString {
-	return s.Next
+// GetCursor returns the value of Cursor.
+func (s *PaginationResponse) GetCursor() int64 {
+	return s.Cursor
 }
 
 // SetTotal sets the value of Total.
@@ -1906,24 +1938,14 @@ func (s *PaginationResponse) SetTotal(val int64) {
 	s.Total = val
 }
 
-// SetPages sets the value of Pages.
-func (s *PaginationResponse) SetPages(val OptInt32) {
-	s.Pages = val
-}
-
-// SetPage sets the value of Page.
-func (s *PaginationResponse) SetPage(val OptInt32) {
-	s.Page = val
-}
-
 // SetLimit sets the value of Limit.
-func (s *PaginationResponse) SetLimit(val int32) {
+func (s *PaginationResponse) SetLimit(val int64) {
 	s.Limit = val
 }
 
-// SetNext sets the value of Next.
-func (s *PaginationResponse) SetNext(val OptString) {
-	s.Next = val
+// SetCursor sets the value of Cursor.
+func (s *PaginationResponse) SetCursor(val int64) {
+	s.Cursor = val
 }
 
 // Ref: #/components/schemas/Sandbox

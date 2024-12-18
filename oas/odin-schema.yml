@@ -6,7 +6,7 @@ info:
     name: MIT
     url: https://github.com/deepakdinesh1123/valkyrie/blob/main/LICENSE
 servers:
-  - url: http://usevalkyrie.odin.org/api/v1
+  - url: https://backend.evnix.cloud/api
 paths:
   /executions/execute:
     post:
@@ -56,8 +56,8 @@ paths:
       description: Get all execution jobs
       operationId: getAllExecutionJobs
       parameters:
-        - $ref: '#/components/parameters/PageNumber'
-        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
@@ -96,8 +96,8 @@ paths:
       description: Get all executions
       operationId: getAllExecutions
       parameters:
-        - $ref: '#/components/parameters/PageNumber'
-        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
@@ -142,8 +142,8 @@ paths:
           schema:
             type: integer
             format: int64
-        - $ref: '#/components/parameters/PageNumber'
-        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
@@ -1119,6 +1119,45 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /flake/{jobId}:
+    get:
+      summary: Fetch Flake
+      description: Fetches flake of a given job
+      operationId: fetchFlake
+      parameters:
+        - in: path
+          name: jobId
+          schema:
+            type: integer
+            format: int64
+          required: true
+          description: Job ID
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - flake
+                properties:
+                  flake:
+                    type: string
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/Error'
 components:
   parameters:
     AuthHeader:
@@ -1128,24 +1167,24 @@ components:
       required: false
       schema:
         type: string
-    PageNumber:
-      name: page
+    Cursor:
+      name: cursor
       in: query
-      description: The page number to retrieve.
+      description: The current position of the cursor
       required: false
       schema:
         type: integer
-        format: int32
+        format: int64
         default: 0
-    PageSize:
-      name: pageSize
+    Limit:
+      name: limit
       in: query
-      description: The number of items per page.
+      description: The current position of the cursor
       required: false
       schema:
         type: integer
-        format: int32
-        default: 20
+        format: int64
+        default: 10
     SearchString:
       name: searchString
       in: query
@@ -1252,26 +1291,19 @@ components:
       required:
         - total
         - limit
-        - offset
+        - cursor
       properties:
         total:
           type: integer
           format: int64
           description: Represents the total number of items.
-        pages:
-          type: integer
-          format: int32
-          description: Represents the total number of pages.
-        page:
-          type: integer
-          format: int32
-          description: Represents the current page.
         limit:
           type: integer
-          format: int32
+          format: int64
           description: Represents the number of items per page.
-        next:
-          type: string
+        cursor:
+          type: integer
+          format: int64
     ExecutionResult:
       allOf:
         - $ref: '#/components/schemas/Job'

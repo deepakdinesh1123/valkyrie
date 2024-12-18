@@ -85,6 +85,15 @@ func (UnimplementedHandler) Execute(ctx context.Context, req *ExecutionRequest, 
 	return r, ht.ErrNotImplemented
 }
 
+// FetchFlake implements fetchFlake operation.
+//
+// Fetches flake of a given job.
+//
+// GET /flake/{jobId}
+func (UnimplementedHandler) FetchFlake(ctx context.Context, params FetchFlakeParams) (r FetchFlakeRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // FetchLanguagePackages implements FetchLanguagePackages operation.
 //
 // Initialize the search results content with a default set of language specific packages.
@@ -100,15 +109,6 @@ func (UnimplementedHandler) FetchLanguagePackages(ctx context.Context, params Fe
 //
 // GET /fetch/system
 func (UnimplementedHandler) FetchSystemPackages(ctx context.Context, params FetchSystemPackagesParams) (r FetchSystemPackagesRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
-// FlakeJobIdGet implements GET /flake/{jobId} operation.
-//
-// Fetches flake of a given job.
-//
-// GET /flake/{jobId}
-func (UnimplementedHandler) FlakeJobIdGet(ctx context.Context, params FlakeJobIdGetParams) (r FlakeJobIdGetRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

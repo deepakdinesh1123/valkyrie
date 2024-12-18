@@ -64,7 +64,7 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 	for {
 		select {
 		case <-ctx.Done():
-			job, err := s.queries.GetJob(context.TODO(), execId)
+			job, err := s.queries.GetExecutionJob(context.TODO(), execId)
 			if err != nil {
 				s.logger.Error().Stack().Err(err).Msg("Failed to get job status")
 				return
@@ -79,7 +79,7 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 			return
 		default:
 			s.logger.Debug().Msg("getting job")
-			job, err := s.queries.GetJob(ctx, execId)
+			job, err := s.queries.GetExecutionJob(ctx, execId)
 			s.logger.Debug().Msg("got job")
 			if err != nil {
 				s.logger.Error().Stack().Err(err).Msg("Failed to get job")
@@ -93,10 +93,9 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 			switch job.CurrentState {
 			case "completed":
 				s.logger.Debug().Msg("Getting executions")
-				res, err := s.queries.GetExecutionsForJob(ctx, db.GetExecutionsForJobParams{
-					JobID:  pgtype.Int8{Int64: execId, Valid: true},
-					Limit:  1,
-					Offset: 0,
+				res, err := s.queries.GetLatestExecution(ctx, pgtype.Int8{
+					Int64: job.JobID,
+					Valid: true,
 				})
 				s.logger.Debug().Msg("got executions")
 				if err != nil {
@@ -111,7 +110,7 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 				sendSSEMessage(w, flusher, SSEMessage{
 					Status: "completed",
 					ExecID: execId,
-					Logs:   res[0].ExecLogs,
+					Logs:   res.ExecLogs,
 				})
 				s.logger.Debug().Msg("completed sent")
 				return
@@ -179,7 +178,7 @@ func (s *OdinServer) ExecuteWS(w http.ResponseWriter, r *http.Request) {
 			s.logger.Info().Int64("executionId", execId).Msg("Client disconnected")
 			return
 		default:
-			job, err := s.queries.GetJob(ctx, execId)
+			job, err := s.queries.GetExecutionJob(ctx, execId)
 			if err != nil {
 				s.logger.Error().Stack().Err(err).Msg("Failed to get job")
 				return
@@ -190,17 +189,16 @@ func (s *OdinServer) ExecuteWS(w http.ResponseWriter, r *http.Request) {
 			switch job.CurrentState {
 			case "completed":
 				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("completed: %d\n\n", execId)))
-				res, err := s.queries.GetExecutionsForJob(ctx, db.GetExecutionsForJobParams{
-					JobID:  pgtype.Int8{Int64: execId, Valid: true},
-					Limit:  1,
-					Offset: 0,
+				res, err := s.queries.GetLatestExecution(ctx, pgtype.Int8{
+					Int64: job.JobID,
+					Valid: true,
 				})
 				if err != nil {
 					s.logger.Error().Stack().Err(err).Msg("Failed to get execution executions")
 					c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("failed: %s\n\n", err)))
 					return
 				}
-				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("data: %s\n\n", res[0].ExecLogs)))
+				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("data: %s\n\n", res.ExecLogs)))
 				return
 			case "failed":
 				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("failed: %d\n\n", execId)))
@@ -219,8 +217,8 @@ func (s *OdinServer) ExecuteWS(w http.ResponseWriter, r *http.Request) {
 
 func (s *OdinServer) GetAllExecutions(ctx context.Context, params api.GetAllExecutionsParams) (api.GetAllExecutionsRes, error) {
 	execResDB, err := s.queries.GetAllExecutions(ctx, db.GetAllExecutionsParams{
-		Limit:  params.PageSize.Value,
-		Offset: params.Page.Value * params.PageSize.Value,
+		Limit:  params.Limit.Value,
+		ExecID: params.Cursor.Value,
 	})
 	if err != nil {
 		return &api.GetAllExecutionsInternalServerError{
@@ -243,10 +241,18 @@ func (s *OdinServer) GetAllExecutions(ctx context.Context, params api.GetAllExec
 			FinishedAt: execution.FinishedAt.Time,
 		})
 	}
+	var cursor int64
+	if len(executions) > 0 {
+		cursor = executions[len(executions)-1].JobId
+	} else {
+		cursor = 0
+	}
 	resp := api.GetAllExecutionsOK{
 		Executions: executions,
 		Pagination: api.PaginationResponse{
-			Total: total,
+			Total:  total,
+			Limit:  params.Limit.Value,
+			Cursor: cursor,
 		},
 	}
 	return &resp, nil
@@ -255,8 +261,8 @@ func (s *OdinServer) GetAllExecutions(ctx context.Context, params api.GetAllExec
 func (s *OdinServer) GetExecutionsForJob(ctx context.Context, params api.GetExecutionsForJobParams) (api.GetExecutionsForJobRes, error) {
 	execRes, err := s.queries.GetExecutionsForJob(ctx, db.GetExecutionsForJobParams{
 		JobID:  pgtype.Int8{Int64: params.JobId, Valid: true},
-		Limit:  params.PageSize.Value,
-		Offset: params.Page.Value * params.PageSize.Value,
+		Limit:  params.Limit.Value,
+		ExecID: params.Cursor.Value,
 	})
 	if err != nil {
 		return &api.GetExecutionsForJobInternalServerError{
@@ -295,9 +301,9 @@ func (s *OdinServer) GetAllExecutionJobs(ctx context.Context, params api.GetAllE
 	if user != "admin" {
 		return &api.GetAllExecutionJobsForbidden{}, nil
 	}
-	executionsDB, err := s.queries.GetAllJobs(ctx, db.GetAllJobsParams{
-		Limit:  params.PageSize.Value,
-		Offset: params.Page.Value * params.PageSize.Value,
+	executionsDB, err := s.queries.GetAllExecutionJobs(ctx, db.GetAllExecutionJobsParams{
+		Limit: params.Limit.Value,
+		JobID: params.Cursor.Value,
 	})
 	if err != nil {
 		return &api.GetAllExecutionJobsInternalServerError{
@@ -320,10 +326,18 @@ func (s *OdinServer) GetAllExecutionJobs(ctx context.Context, params api.GetAllE
 			UpdatedAt: api.OptDateTime{Value: job.UpdatedAt.Time, Set: true},
 		})
 	}
+	var cursor int64
+	if len(jobs) > 0 {
+		cursor = jobs[len(jobs)-1].JobId
+	} else {
+		cursor = 0
+	}
 	resp := api.GetAllExecutionJobsOK{
 		Jobs: jobs,
 		Pagination: api.PaginationResponse{
-			Total: total,
+			Total:  total,
+			Limit:  params.Limit.Value,
+			Cursor: cursor,
 		},
 	}
 	return &resp, nil
@@ -402,7 +416,7 @@ func (s *OdinServer) GetExecutionResultById(ctx context.Context, params api.GetE
 }
 
 func (s *OdinServer) GetExecutionJobById(ctx context.Context, params api.GetExecutionJobByIdParams) (api.GetExecutionJobByIdRes, error) {
-	job, err := s.queries.GetJob(ctx, params.JobId)
+	job, err := s.queries.GetExecutionJob(ctx, params.JobId)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return &api.GetExecutionJobByIdBadRequest{
@@ -451,12 +465,12 @@ func sendSSEMessage(w http.ResponseWriter, flusher http.Flusher, message SSEMess
 }
 
 // FlakeJobIdGet implements api.Handler.
-func (s *OdinServer) FlakeJobIdGet(ctx context.Context, params api.FlakeJobIdGetParams) (api.FlakeJobIdGetRes, error) {
+func (s *OdinServer) FetchFlake(ctx context.Context, params api.FetchFlakeParams) (api.FetchFlakeRes, error) {
 	flake, err := s.queries.GetFlake(ctx, params.JobId)
 	if err != nil {
-		return &api.FlakeJobIdGetInternalServerError{}, err
+		return &api.FetchFlakeInternalServerError{}, err
 	}
-	return &api.FlakeJobIdGetOK{
+	return &api.FetchFlakeOK{
 		Flake: flake,
 	}, nil
 }

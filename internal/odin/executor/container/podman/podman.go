@@ -5,6 +5,7 @@ package podman
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -54,7 +55,13 @@ func GetPodmanClient(envConfig *config.EnvConfig, queries db.Store, workerId int
 }
 
 func (p *PodmanClient) WriteFiles(ctx context.Context, containerID string, prepDir string, job *db.Job) error {
-	execReq, err := p.queries.GetExecRequest(ctx, job.ExecRequestID.Int32)
+	var jobArgs db.JobArguments
+	err := json.Unmarshal(job.Arguments, &jobArgs)
+	if err != nil {
+		return fmt.Errorf("error parsing job arguments")
+	}
+
+	execReq, err := p.queries.GetExecRequest(ctx, jobArgs.ExecReqId)
 	if err != nil {
 		return err
 	}

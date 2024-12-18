@@ -87,12 +87,15 @@ create table jobs (
     updated_at timestamptz,
     time_out int,
     started_at timestamptz,
-    exec_request_id int references exec_request on delete set null,
+    type varchar(20),
+    arguments jsonb,
     current_state TEXT NOT NULL CHECK (current_state IN ('pending', 'scheduled', 'completed', 'failed', 'cancelled')) DEFAULT 'pending',
     retries int default 0,
     max_retries int default 5,
     worker_id int references workers on delete set null
 );
+
+CREATE INDEX arguments_idx ON jobs USING gin (arguments);
 
 create sequence executions_id_seq as bigint;
 

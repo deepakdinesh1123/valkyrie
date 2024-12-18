@@ -295,7 +295,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 						// Leaf node.
 						switch r.Method {
 						case "GET":
-							s.handleFlakeJobIdGetRequest([1]string{
+							s.handleFetchFlakeRequest([1]string{
 								args[0],
 							}, elemIsEscaped, w, r)
 						default:
@@ -1118,9 +1118,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						// Leaf node.
 						switch method {
 						case "GET":
-							r.name = FlakeJobIdGetOperation
+							r.name = FetchFlakeOperation
 							r.summary = "Fetch Flake"
-							r.operationID = ""
+							r.operationID = "fetchFlake"
 							r.pathPattern = "/flake/{jobId}"
 							r.args = args
 							r.count = 1
@@ -1510,7 +1510,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					if len(elem) == 0 {
 						switch method {
 						case "POST":
-							r.name = "CreateSandbox"
+							r.name = CreateSandboxOperation
 							r.summary = "Create a sandbox"
 							r.operationID = "createSandbox"
 							r.pathPattern = "/sandbox"
@@ -1539,7 +1539,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							// Leaf node.
 							switch method {
 							case "GET":
-								r.name = "GetSandbox"
+								r.name = GetSandboxOperation
 								r.summary = "Get Sandbox"
 								r.operationID = "getSandbox"
 								r.pathPattern = "/sandbox/{sandboxId}"
@@ -1579,7 +1579,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							// Leaf node.
 							switch method {
 							case "GET":
-								r.name = "SearchLanguagePackages"
+								r.name = SearchLanguagePackagesOperation
 								r.summary = "Search for language specific packages"
 								r.operationID = "SearchLanguagePackages"
 								r.pathPattern = "/search/language"
@@ -1604,7 +1604,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							// Leaf node.
 							switch method {
 							case "GET":
-								r.name = "SearchSystemPackages"
+								r.name = SearchSystemPackagesOperation
 								r.summary = "Search for system packages"
 								r.operationID = "SearchSystemPackages"
 								r.pathPattern = "/search/system"

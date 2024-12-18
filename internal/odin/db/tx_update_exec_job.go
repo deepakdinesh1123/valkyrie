@@ -2,6 +2,8 @@ package db
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -42,12 +44,19 @@ func (s *SQLStore) UpdateJobResultTx(ctx context.Context, arg UpdateJobResultTxP
 				}
 			}
 		}
+
+		var jobArgs JobArguments
+		err := json.Unmarshal(arg.Job.Arguments, &jobArgs)
+		if err != nil {
+			return fmt.Errorf("error marshaling arguments json: %s", err)
+		}
+
 		execution, err := q.InsertExecution(ctx, InsertExecutionParams{
 			JobID:         pgtype.Int8{Int64: int64(arg.Job.JobID), Valid: true},
 			WorkerID:      pgtype.Int4{Int32: arg.WorkerId, Valid: true},
 			StartedAt:     pgtype.Timestamptz{Time: arg.StartTime, Valid: true},
 			FinishedAt:    pgtype.Timestamptz{Time: time.Now(), Valid: true},
-			ExecRequestID: arg.Job.ExecRequestID,
+			ExecRequestID: pgtype.Int4{Int32: jobArgs.ExecReqId, Valid: true},
 			ExecLogs:      arg.ExecLogs,
 			NixLogs:       pgtype.Text{String: arg.NixLogs, Valid: true},
 			Success:       pgtype.Bool{Bool: arg.Success, Valid: true},

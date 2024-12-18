@@ -1,6 +1,7 @@
 get:
   summary: Fetch Flake
   description: Fetches flake of a given job
+  operationId: fetchFlake
   parameters:
     - in: path
       name: jobId
