@@ -22,7 +22,7 @@ const RequestPackageModal: React.FC<RequestPackageModalProps> = ({ isOpen, onClo
                         <a className="underline text-blue-500" href="https://search.nixos.org/packages" target='_blank'>
                             NixOS search
                         </a>{' '}
-                        and search in the 24.05 channel.
+                        and search in the 24.11 channel.
                     </DialogDescription>
                 </DialogHeader>
                 <p className="text-white">

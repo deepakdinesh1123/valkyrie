@@ -40,7 +40,7 @@ const App: React.FC = () => {
   const [isRequestModalOpen, setIsRequestModalOpen] = useState<boolean>(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState<boolean>(false);
   const calculatedHeight = `calc(100% - ${terminalHeight}px)`;
-  const [isAnnouncmentModalOpen, setIsAnnouncementModalOpen] = useState<boolean>(true);
+  const [isAnnouncmentModalOpen, setIsAnnouncementModalOpen] = useState<boolean>(false);
   const { systemPackages } = useSystemPackages(systemSearchString);
   const { languagePackages, resetLanguagePackages } = useLanguagePackages(languageSearchString, selectedLanguageVersion?.search_query || "");
   const { defaultSystemPackages, defaultLanguagePackages } = useDefaultPackages(selectedLanguageVersion?.search_query || "");

@@ -167,7 +167,8 @@ languages:
         default: true
         searchQuery: "assemblyPackages"
     template: |
-      {{ define "compile" }} nasm -f elf64 main.asm -o main.o {{ .CompilerArgs }} ld -o main main.o {{ end }}
+      {{ define "compile" }} nasm -f elf64 main.asm -o main.o {{ .CompilerArgs }} 
+      ld -o main main.o {{ end }}
 
       {{ define "execute" }} ./main {{ end }}
     defaultCode: |
@@ -477,6 +478,24 @@ languages:
           try stdout.print("Hello, World!\n", .{});
       }
 
+  - name: odin
+    extension: odin
+    monacoLanguage: odin
+    versions:
+      - nixPackage: "odin"
+        default: true
+        searchQuery: "odinPackages"
+    template: |
+      {{ define "execute" }} odin run main.odin -file  {{ end }}
+    defaultCode: |
+      package main
+
+      import "core:fmt"
+
+      main :: proc() {
+      	fmt.println("Hellope!")
+      }
+
 
 packages:
   - jq
@@ -510,3 +529,4 @@ packages:
   - fx
   - yq
   - pkg-config
+  - gcc14
