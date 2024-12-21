@@ -333,6 +333,10 @@ func getPackageData(pkg string, sqliteClient *sql.DB) (NixPackageInfo, error) {
 }
 
 func generateDockerStoreConfig(pkgs []db.InsertPackagesParams) error {
+	if _, err := os.Stat("configs/nix"); err != nil {
+		fmt.Println("Not in a nix repo, generation of package config for docker stopped")
+		return nil
+	}
 	file, err := os.Create("configs/nix/packages.csv")
 	if err != nil {
 		return err

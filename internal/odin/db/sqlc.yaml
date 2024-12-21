@@ -3,7 +3,7 @@ cloud:
   project: '01J1BQY2CAXNR8DBY51C3KJG0K'
 servers:
 - engine: postgresql
-  uri: "postgresql://thors:thorkell@localhost:5432/valkyrie?sslmode=disable"
+  uri: ${PG_URL}
 sql:
   - schema:
       - "migrations"

@@ -2,7 +2,7 @@
 include .env oas/Makefile build/Makefile testing/Makefile
 
 # PostgreSQL Connection URL
-POSTGRES_URL = postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=${POSTGRES_SSL_MODE}
+PG_URL = postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=${POSTGRES_SSL_MODE}
 
 # Phony Targets
 .PHONY: all migrate gq start-db clear-stdb start-observability odin docker-db add-pkgs run-pkgs store-pkgs dump
@@ -13,18 +13,21 @@ all: odin migrate start-db start-observability
 # Run database migrations
 migrate:
 	@echo "Running database migrations..."
-	@migrate -path internal/odin/db/migrations -database ${POSTGRES_URL} up
+	@migrate -path internal/odin/db/migrations -database ${PG_URL} up
 
 migrate-down:
-	@migrate -path internal/odin/db/migrations -database ${POSTGRES_URL} down
+	@migrate -path internal/odin/db/migrations -database ${PG_URL} down
 
 # Generate SQL code
 generate-query:
 	@echo "Generating SQL code..."
+	@export POSTGRES_URL=${PG_URL}
 	@cd internal/odin/db && sqlc generate
 
 validate-query:
+	@echo ${PG_URL}
 	@echo "Validating SQLC queries..."
+	@export PG_URL=${PG_URL}
 	@cd internal/odin/db && sqlc vet
 
 # Start the PostgreSQL database
@@ -54,7 +57,7 @@ odin:
 # Start PostgreSQL with Docker and run migrations
 docker-db:
 	@docker-compose up -d postgres 
-	migrate -path internal/odin/db/migrations -database $(POSTGRES_URL) up
+	migrate -path internal/odin/db/migrations -database $(PG_URL) up
 
 # Add packages from a dump file
 add-pkgs:
