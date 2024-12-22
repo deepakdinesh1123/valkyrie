@@ -32,9 +32,14 @@ sql:
               import: "github.com/google/uuid"
               type: "UUID"
             nullable: true
-          # - column: "jobs.arguments"
-          #   go_type: 
-          #     import: "github.com/deepakdinesh1123/valkyrie/internal/odin/"
-          #     package: "db"
-          #     type: "JobArguments"
+          - column: "jobs.arguments"
+            go_type: 
+              import: "github.com/deepakdinesh1123/valkyrie/internal/odin/db/jsonschema"
+              package: "jsonschema"
+              type: "JobArguments"
+          - column: "sandboxes.config"
+            go_type:
+              import: "github.com/deepakdinesh1123/valkyrie/internal/odin/db/jsonschema"
+              package: "jsonschema"
+              type: "SandboxConfig"
           

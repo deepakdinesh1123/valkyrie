@@ -4,7 +4,6 @@ package docker
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -43,26 +42,20 @@ func GetDockerProvider(envConfig *config.EnvConfig, queries db.Store, workerId i
 		return nil, fmt.Errorf("could not get docker client")
 	}
 	return &DockerProvider{
-		client:    client,
-		queries:   queries,
-		envConfig: envConfig,
-		workerId:  workerId,
-		logger:    logger,
-		tp:        tp,
-		mp:        mp,
-		// user:      user,
+		client:        client,
+		queries:       queries,
+		envConfig:     envConfig,
+		workerId:      workerId,
+		logger:        logger,
+		tp:            tp,
+		mp:            mp,
 		containerPool: containerPool,
 	}, nil
 }
 
 func (d *DockerProvider) WriteFiles(ctx context.Context, containerID string, prepDir string, job *db.Job) error {
-	var jobArgs db.JobArguments
-	err := json.Unmarshal(job.Arguments, &jobArgs)
-	if err != nil {
-		return fmt.Errorf("error parsing job arguments")
-	}
 
-	execReq, err := d.queries.GetExecRequest(ctx, jobArgs.ExecReqId)
+	execReq, err := d.queries.GetExecRequest(ctx, job.Arguments.ExecReqId)
 	if err != nil {
 		return err
 	}

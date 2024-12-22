@@ -4,7 +4,6 @@ package system
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -57,14 +56,8 @@ func (s *SystemExecutor) Execute(ctx context.Context, wg *concurrency.SafeWaitGr
 	s.logger.Info().Msg("getting exec request")
 	res, err := s.queries.GetTotalJobs(ctx)
 	s.logger.Info().Int64("id", res).Msg("Log")
-	var jobArgs db.JobArguments
-	err = json.Unmarshal(job.Arguments, &jobArgs)
-	if err != nil {
-		s.logger.Err(err).Msg("error parsing job arguments")
-		return
-	}
 
-	execReq, err := s.queries.GetExecRequest(ctx, jobArgs.ExecReqId)
+	execReq, err := s.queries.GetExecRequest(ctx, job.Arguments.ExecReqId)
 	if err != nil {
 		s.logger.Err(err).Msg("error getting exec request")
 		return

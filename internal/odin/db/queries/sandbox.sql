@@ -1,5 +1,5 @@
 -- name: InsertSandbox :one
-insert into sandboxes (git_url)
+insert into sandboxes (config)
 values ($1)
 returning *;
 
@@ -31,18 +31,3 @@ where sandbox_id = $1;
 update sandboxes set
 password = $2
 where sandbox_id = $1;
-
--- name: FetchSandboxJob :one
-update sandboxes set current_state = 'creating', started_at = now(), worker_id = $1, updated_at = now()
-where sandbox_id = (
-    select sandbox_id from sandboxes
-    where 
-        current_state = 'pending'
-    order by
-        sandbox_id asc
-    for update skip locked
-    limit 1
-    )
-returning *;
-
-

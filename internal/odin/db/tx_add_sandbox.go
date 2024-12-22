@@ -3,27 +3,40 @@ package db
 import (
 	"context"
 
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/db/jsonschema"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type AddSandboxTxParams struct {
-	GitUrl string
+	SandboxConfig jsonschema.SandboxConfig
+	MaxRetries    int
 }
 
 type AddSandboxTxResult struct {
-	SandboxId int
+	SandboxId int64
 }
 
-func (s *SQLStore) AddSandboxTx(ctx context.Context, arg AddSandboxTxParams) (AddSandboxTxResult, error) {
+func (s *SQLStore) AddSandboxJobTx(ctx context.Context, arg AddSandboxTxParams) (AddSandboxTxResult, error) {
 	var addSandboxTxResult AddSandboxTxResult
 	err := s.execTx(ctx, func(q *Queries) error {
-		sandbox, err := q.InsertSandbox(ctx,
-			pgtype.Text{String: arg.GitUrl, Valid: true},
-		)
+
+		sandbox, err := q.InsertSandbox(ctx, arg.SandboxConfig)
 		if err != nil {
 			return err
 		}
-		addSandboxTxResult.SandboxId = int(sandbox.SandboxID)
+		addSandboxTxResult.SandboxId = sandbox.SandboxID
+		arg.SandboxConfig.SandboxId = sandbox.SandboxID
+		_, err = q.InsertJob(ctx, InsertJobParams{
+			JobType: "sandbox",
+			Arguments: jsonschema.JobArguments{
+				SandboxConfig: arg.SandboxConfig,
+			},
+			MaxRetries: pgtype.Int4{Int32: int32(arg.MaxRetries), Valid: true},
+		})
+		if err != nil {
+			return err
+		}
+
 		return nil
 	})
 	if err != nil {

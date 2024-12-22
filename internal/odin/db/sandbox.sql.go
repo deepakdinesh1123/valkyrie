@@ -8,42 +8,12 @@ package db
 import (
 	"context"
 
+	jsonschema "github.com/deepakdinesh1123/valkyrie/internal/odin/db/jsonschema"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const fetchSandboxJob = `-- name: FetchSandboxJob :one
-update sandboxes set current_state = 'creating', started_at = now(), worker_id = $1, updated_at = now()
-where sandbox_id = (
-    select sandbox_id from sandboxes
-    where 
-        current_state = 'pending'
-    order by
-        sandbox_id asc
-    for update skip locked
-    limit 1
-    )
-returning sandbox_id, worker_id, started_at, created_at, updated_at, git_url, sandbox_url, password, current_state
-`
-
-func (q *Queries) FetchSandboxJob(ctx context.Context, workerID pgtype.Int4) (Sandbox, error) {
-	row := q.db.QueryRow(ctx, fetchSandboxJob, workerID)
-	var i Sandbox
-	err := row.Scan(
-		&i.SandboxID,
-		&i.WorkerID,
-		&i.StartedAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.GitUrl,
-		&i.SandboxUrl,
-		&i.Password,
-		&i.CurrentState,
-	)
-	return i, err
-}
-
 const getSandbox = `-- name: GetSandbox :one
-select sandbox_id, worker_id, started_at, created_at, updated_at, git_url, sandbox_url, password, current_state
+select sandbox_id, worker_id, started_at, created_at, updated_at, sandbox_url, password, config, details, current_state
 from sandboxes
 where  sandbox_id = $1
 `
@@ -57,22 +27,23 @@ func (q *Queries) GetSandbox(ctx context.Context, sandboxID int64) (Sandbox, err
 		&i.StartedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.GitUrl,
 		&i.SandboxUrl,
 		&i.Password,
+		&i.Config,
+		&i.Details,
 		&i.CurrentState,
 	)
 	return i, err
 }
 
 const insertSandbox = `-- name: InsertSandbox :one
-insert into sandboxes (git_url)
+insert into sandboxes (config)
 values ($1)
-returning sandbox_id, worker_id, started_at, created_at, updated_at, git_url, sandbox_url, password, current_state
+returning sandbox_id, worker_id, started_at, created_at, updated_at, sandbox_url, password, config, details, current_state
 `
 
-func (q *Queries) InsertSandbox(ctx context.Context, gitUrl pgtype.Text) (Sandbox, error) {
-	row := q.db.QueryRow(ctx, insertSandbox, gitUrl)
+func (q *Queries) InsertSandbox(ctx context.Context, config jsonschema.SandboxConfig) (Sandbox, error) {
+	row := q.db.QueryRow(ctx, insertSandbox, config)
 	var i Sandbox
 	err := row.Scan(
 		&i.SandboxID,
@@ -80,9 +51,10 @@ func (q *Queries) InsertSandbox(ctx context.Context, gitUrl pgtype.Text) (Sandbo
 		&i.StartedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.GitUrl,
 		&i.SandboxUrl,
 		&i.Password,
+		&i.Config,
+		&i.Details,
 		&i.CurrentState,
 	)
 	return i, err

@@ -2,28 +2,34 @@
 SELECT flake 
 FROM exec_request 
 WHERE id = (
-    SELECT CAST(arguments->>'exec_req_id' AS INT) 
+    SELECT CAST(arguments->'ExecConfig'->>'exec_req_id' AS INT) 
     FROM jobs 
     WHERE job_id = $1
 );
 
 -- name: FetchJob :one
-update jobs set current_state = 'scheduled', started_at = now(), worker_id = $1, updated_at = now()
-where job_id = (
-    select job_id from jobs
+with cte as (
+    select job_id
+    from jobs
     where 
         current_state = 'pending'
+        and job_type = @JobType::text
         and retries < max_retries
-    order by
-        job_id asc
+    order by job_id asc
     for update skip locked
     limit 1
-    )
+)
+update jobs
+set current_state = 'scheduled', 
+    started_at = now(), 
+    worker_id = @WorkerId::int, 
+    updated_at = now()
+where job_id = (select job_id from cte)
 returning *;
 
 -- name: InsertJob :one
 insert into jobs
-    (type, arguments, max_retries, time_out)
+    (arguments, max_retries, time_out, job_type)
 values
     ($1, $2, $3, $4)
 returning *;
@@ -46,13 +52,13 @@ returning *;
 SELECT * 
 FROM jobs
 INNER JOIN exec_request 
-ON CAST(arguments->>'exec_req_id' AS INT) = exec_request.id
+ON CAST(arguments->'ExecConfig'->>'exec_req_id' AS INT) = exec_request.id
 WHERE job_id <= $1
 ORDER BY jobs.job_id
 LIMIT $2;
 
 -- name: GetExecutionJob :one
-select * from jobs inner join exec_request on CAST(arguments->>'exec_req_id' AS INT) = exec_request.id where jobs.job_id = $1;
+select * from jobs inner join exec_request on CAST(arguments->'ExecConfig'->>'exec_req_id' AS INT) = exec_request.id where jobs.job_id = $1;
 
 -- name: GetExecution :one
 select * from executions

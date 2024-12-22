@@ -8,6 +8,7 @@ package db
 import (
 	"context"
 
+	jsonschema "github.com/deepakdinesh1123/valkyrie/internal/odin/db/jsonschema"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -32,22 +33,33 @@ func (q *Queries) DeleteJob(ctx context.Context, jobID int64) (int64, error) {
 }
 
 const fetchJob = `-- name: FetchJob :one
-update jobs set current_state = 'scheduled', started_at = now(), worker_id = $1, updated_at = now()
-where job_id = (
-    select job_id from jobs
+with cte as (
+    select job_id
+    from jobs
     where 
         current_state = 'pending'
+        and job_type = $2::text
         and retries < max_retries
-    order by
-        job_id asc
+    order by job_id asc
     for update skip locked
     limit 1
-    )
-returning job_id, created_at, updated_at, time_out, started_at, type, arguments, current_state, retries, max_retries, worker_id
+)
+update jobs
+set current_state = 'scheduled', 
+    started_at = now(), 
+    worker_id = $1::int, 
+    updated_at = now()
+where job_id = (select job_id from cte)
+returning job_id, created_at, updated_at, time_out, started_at, arguments, current_state, retries, max_retries, worker_id, job_type
 `
 
-func (q *Queries) FetchJob(ctx context.Context, workerID pgtype.Int4) (Job, error) {
-	row := q.db.QueryRow(ctx, fetchJob, workerID)
+type FetchJobParams struct {
+	Workerid int32  `db:"workerid" json:"workerid"`
+	Jobtype  string `db:"jobtype" json:"jobtype"`
+}
+
+func (q *Queries) FetchJob(ctx context.Context, arg FetchJobParams) (Job, error) {
+	row := q.db.QueryRow(ctx, fetchJob, arg.Workerid, arg.Jobtype)
 	var i Job
 	err := row.Scan(
 		&i.JobID,
@@ -55,21 +67,21 @@ func (q *Queries) FetchJob(ctx context.Context, workerID pgtype.Int4) (Job, erro
 		&i.UpdatedAt,
 		&i.TimeOut,
 		&i.StartedAt,
-		&i.Type,
 		&i.Arguments,
 		&i.CurrentState,
 		&i.Retries,
 		&i.MaxRetries,
 		&i.WorkerID,
+		&i.JobType,
 	)
 	return i, err
 }
 
 const getAllExecutionJobs = `-- name: GetAllExecutionJobs :many
-SELECT job_id, created_at, updated_at, time_out, started_at, type, arguments, current_state, retries, max_retries, worker_id, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, language_version 
+SELECT job_id, created_at, updated_at, time_out, started_at, arguments, current_state, retries, max_retries, worker_id, job_type, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, language_version 
 FROM jobs
 INNER JOIN exec_request 
-ON CAST(arguments->>'exec_req_id' AS INT) = exec_request.id
+ON CAST(arguments->'ExecConfig'->>'exec_req_id' AS INT) = exec_request.id
 WHERE job_id <= $1
 ORDER BY jobs.job_id
 LIMIT $2
@@ -81,30 +93,30 @@ type GetAllExecutionJobsParams struct {
 }
 
 type GetAllExecutionJobsRow struct {
-	JobID                int64              `db:"job_id" json:"job_id"`
-	CreatedAt            pgtype.Timestamptz `db:"created_at" json:"created_at"`
-	UpdatedAt            pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
-	TimeOut              pgtype.Int4        `db:"time_out" json:"time_out"`
-	StartedAt            pgtype.Timestamptz `db:"started_at" json:"started_at"`
-	Type                 pgtype.Text        `db:"type" json:"type"`
-	Arguments            []byte             `db:"arguments" json:"arguments"`
-	CurrentState         string             `db:"current_state" json:"current_state"`
-	Retries              pgtype.Int4        `db:"retries" json:"retries"`
-	MaxRetries           pgtype.Int4        `db:"max_retries" json:"max_retries"`
-	WorkerID             pgtype.Int4        `db:"worker_id" json:"worker_id"`
-	ID                   int32              `db:"id" json:"id"`
-	Hash                 string             `db:"hash" json:"hash"`
-	Code                 pgtype.Text        `db:"code" json:"code"`
-	Flake                string             `db:"flake" json:"flake"`
-	LanguageDependencies []string           `db:"language_dependencies" json:"language_dependencies"`
-	SystemDependencies   []string           `db:"system_dependencies" json:"system_dependencies"`
-	CmdLineArgs          pgtype.Text        `db:"cmd_line_args" json:"cmd_line_args"`
-	CompileArgs          pgtype.Text        `db:"compile_args" json:"compile_args"`
-	Files                []byte             `db:"files" json:"files"`
-	Input                pgtype.Text        `db:"input" json:"input"`
-	Command              pgtype.Text        `db:"command" json:"command"`
-	Setup                pgtype.Text        `db:"setup" json:"setup"`
-	LanguageVersion      int64              `db:"language_version" json:"language_version"`
+	JobID                int64                   `db:"job_id" json:"job_id"`
+	CreatedAt            pgtype.Timestamptz      `db:"created_at" json:"created_at"`
+	UpdatedAt            pgtype.Timestamptz      `db:"updated_at" json:"updated_at"`
+	TimeOut              pgtype.Int4             `db:"time_out" json:"time_out"`
+	StartedAt            pgtype.Timestamptz      `db:"started_at" json:"started_at"`
+	Arguments            jsonschema.JobArguments `db:"arguments" json:"arguments"`
+	CurrentState         string                  `db:"current_state" json:"current_state"`
+	Retries              pgtype.Int4             `db:"retries" json:"retries"`
+	MaxRetries           pgtype.Int4             `db:"max_retries" json:"max_retries"`
+	WorkerID             pgtype.Int4             `db:"worker_id" json:"worker_id"`
+	JobType              string                  `db:"job_type" json:"job_type"`
+	ID                   int32                   `db:"id" json:"id"`
+	Hash                 string                  `db:"hash" json:"hash"`
+	Code                 pgtype.Text             `db:"code" json:"code"`
+	Flake                string                  `db:"flake" json:"flake"`
+	LanguageDependencies []string                `db:"language_dependencies" json:"language_dependencies"`
+	SystemDependencies   []string                `db:"system_dependencies" json:"system_dependencies"`
+	CmdLineArgs          pgtype.Text             `db:"cmd_line_args" json:"cmd_line_args"`
+	CompileArgs          pgtype.Text             `db:"compile_args" json:"compile_args"`
+	Files                []byte                  `db:"files" json:"files"`
+	Input                pgtype.Text             `db:"input" json:"input"`
+	Command              pgtype.Text             `db:"command" json:"command"`
+	Setup                pgtype.Text             `db:"setup" json:"setup"`
+	LanguageVersion      int64                   `db:"language_version" json:"language_version"`
 }
 
 func (q *Queries) GetAllExecutionJobs(ctx context.Context, arg GetAllExecutionJobsParams) ([]GetAllExecutionJobsRow, error) {
@@ -122,12 +134,12 @@ func (q *Queries) GetAllExecutionJobs(ctx context.Context, arg GetAllExecutionJo
 			&i.UpdatedAt,
 			&i.TimeOut,
 			&i.StartedAt,
-			&i.Type,
 			&i.Arguments,
 			&i.CurrentState,
 			&i.Retries,
 			&i.MaxRetries,
 			&i.WorkerID,
+			&i.JobType,
 			&i.ID,
 			&i.Hash,
 			&i.Code,
@@ -299,34 +311,34 @@ func (q *Queries) GetExecution(ctx context.Context, execID int64) (GetExecutionR
 }
 
 const getExecutionJob = `-- name: GetExecutionJob :one
-select job_id, created_at, updated_at, time_out, started_at, type, arguments, current_state, retries, max_retries, worker_id, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, language_version from jobs inner join exec_request on CAST(arguments->>'exec_req_id' AS INT) = exec_request.id where jobs.job_id = $1
+select job_id, created_at, updated_at, time_out, started_at, arguments, current_state, retries, max_retries, worker_id, job_type, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, language_version from jobs inner join exec_request on CAST(arguments->'ExecConfig'->>'exec_req_id' AS INT) = exec_request.id where jobs.job_id = $1
 `
 
 type GetExecutionJobRow struct {
-	JobID                int64              `db:"job_id" json:"job_id"`
-	CreatedAt            pgtype.Timestamptz `db:"created_at" json:"created_at"`
-	UpdatedAt            pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
-	TimeOut              pgtype.Int4        `db:"time_out" json:"time_out"`
-	StartedAt            pgtype.Timestamptz `db:"started_at" json:"started_at"`
-	Type                 pgtype.Text        `db:"type" json:"type"`
-	Arguments            []byte             `db:"arguments" json:"arguments"`
-	CurrentState         string             `db:"current_state" json:"current_state"`
-	Retries              pgtype.Int4        `db:"retries" json:"retries"`
-	MaxRetries           pgtype.Int4        `db:"max_retries" json:"max_retries"`
-	WorkerID             pgtype.Int4        `db:"worker_id" json:"worker_id"`
-	ID                   int32              `db:"id" json:"id"`
-	Hash                 string             `db:"hash" json:"hash"`
-	Code                 pgtype.Text        `db:"code" json:"code"`
-	Flake                string             `db:"flake" json:"flake"`
-	LanguageDependencies []string           `db:"language_dependencies" json:"language_dependencies"`
-	SystemDependencies   []string           `db:"system_dependencies" json:"system_dependencies"`
-	CmdLineArgs          pgtype.Text        `db:"cmd_line_args" json:"cmd_line_args"`
-	CompileArgs          pgtype.Text        `db:"compile_args" json:"compile_args"`
-	Files                []byte             `db:"files" json:"files"`
-	Input                pgtype.Text        `db:"input" json:"input"`
-	Command              pgtype.Text        `db:"command" json:"command"`
-	Setup                pgtype.Text        `db:"setup" json:"setup"`
-	LanguageVersion      int64              `db:"language_version" json:"language_version"`
+	JobID                int64                   `db:"job_id" json:"job_id"`
+	CreatedAt            pgtype.Timestamptz      `db:"created_at" json:"created_at"`
+	UpdatedAt            pgtype.Timestamptz      `db:"updated_at" json:"updated_at"`
+	TimeOut              pgtype.Int4             `db:"time_out" json:"time_out"`
+	StartedAt            pgtype.Timestamptz      `db:"started_at" json:"started_at"`
+	Arguments            jsonschema.JobArguments `db:"arguments" json:"arguments"`
+	CurrentState         string                  `db:"current_state" json:"current_state"`
+	Retries              pgtype.Int4             `db:"retries" json:"retries"`
+	MaxRetries           pgtype.Int4             `db:"max_retries" json:"max_retries"`
+	WorkerID             pgtype.Int4             `db:"worker_id" json:"worker_id"`
+	JobType              string                  `db:"job_type" json:"job_type"`
+	ID                   int32                   `db:"id" json:"id"`
+	Hash                 string                  `db:"hash" json:"hash"`
+	Code                 pgtype.Text             `db:"code" json:"code"`
+	Flake                string                  `db:"flake" json:"flake"`
+	LanguageDependencies []string                `db:"language_dependencies" json:"language_dependencies"`
+	SystemDependencies   []string                `db:"system_dependencies" json:"system_dependencies"`
+	CmdLineArgs          pgtype.Text             `db:"cmd_line_args" json:"cmd_line_args"`
+	CompileArgs          pgtype.Text             `db:"compile_args" json:"compile_args"`
+	Files                []byte                  `db:"files" json:"files"`
+	Input                pgtype.Text             `db:"input" json:"input"`
+	Command              pgtype.Text             `db:"command" json:"command"`
+	Setup                pgtype.Text             `db:"setup" json:"setup"`
+	LanguageVersion      int64                   `db:"language_version" json:"language_version"`
 }
 
 func (q *Queries) GetExecutionJob(ctx context.Context, jobID int64) (GetExecutionJobRow, error) {
@@ -338,12 +350,12 @@ func (q *Queries) GetExecutionJob(ctx context.Context, jobID int64) (GetExecutio
 		&i.UpdatedAt,
 		&i.TimeOut,
 		&i.StartedAt,
-		&i.Type,
 		&i.Arguments,
 		&i.CurrentState,
 		&i.Retries,
 		&i.MaxRetries,
 		&i.WorkerID,
+		&i.JobType,
 		&i.ID,
 		&i.Hash,
 		&i.Code,
@@ -449,7 +461,7 @@ const getFlake = `-- name: GetFlake :one
 SELECT flake 
 FROM exec_request 
 WHERE id = (
-    SELECT CAST(arguments->>'exec_req_id' AS INT) 
+    SELECT CAST(arguments->'ExecConfig'->>'exec_req_id' AS INT) 
     FROM jobs 
     WHERE job_id = $1
 )
@@ -619,25 +631,25 @@ func (q *Queries) InsertExecution(ctx context.Context, arg InsertExecutionParams
 
 const insertJob = `-- name: InsertJob :one
 insert into jobs
-    (type, arguments, max_retries, time_out)
+    (arguments, max_retries, time_out, job_type)
 values
     ($1, $2, $3, $4)
-returning job_id, created_at, updated_at, time_out, started_at, type, arguments, current_state, retries, max_retries, worker_id
+returning job_id, created_at, updated_at, time_out, started_at, arguments, current_state, retries, max_retries, worker_id, job_type
 `
 
 type InsertJobParams struct {
-	Type       pgtype.Text `db:"type" json:"type"`
-	Arguments  []byte      `db:"arguments" json:"arguments"`
-	MaxRetries pgtype.Int4 `db:"max_retries" json:"max_retries"`
-	TimeOut    pgtype.Int4 `db:"time_out" json:"time_out"`
+	Arguments  jsonschema.JobArguments `db:"arguments" json:"arguments"`
+	MaxRetries pgtype.Int4             `db:"max_retries" json:"max_retries"`
+	TimeOut    pgtype.Int4             `db:"time_out" json:"time_out"`
+	JobType    string                  `db:"job_type" json:"job_type"`
 }
 
 func (q *Queries) InsertJob(ctx context.Context, arg InsertJobParams) (Job, error) {
 	row := q.db.QueryRow(ctx, insertJob,
-		arg.Type,
 		arg.Arguments,
 		arg.MaxRetries,
 		arg.TimeOut,
+		arg.JobType,
 	)
 	var i Job
 	err := row.Scan(
@@ -646,12 +658,12 @@ func (q *Queries) InsertJob(ctx context.Context, arg InsertJobParams) (Job, erro
 		&i.UpdatedAt,
 		&i.TimeOut,
 		&i.StartedAt,
-		&i.Type,
 		&i.Arguments,
 		&i.CurrentState,
 		&i.Retries,
 		&i.MaxRetries,
 		&i.WorkerID,
+		&i.JobType,
 	)
 	return i, err
 }

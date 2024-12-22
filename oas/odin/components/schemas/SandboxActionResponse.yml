@@ -1,0 +1,8 @@
+type: object
+properties:
+  success:
+    type: boolean
+    description: Sucess of the action
+  response:
+    type: string
+    description: Action response

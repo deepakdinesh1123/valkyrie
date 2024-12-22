@@ -5,18 +5,25 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/db/jsonschema"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 func (s *OdinServer) CreateSandbox(ctx context.Context, params api.CreateSandboxParams) (api.CreateSandboxRes, error) {
-	sandbox, err := s.queries.InsertSandbox(ctx, pgtype.Text{String: "", Valid: true})
+	res, err := s.queries.AddSandboxJobTx(ctx, db.AddSandboxTxParams{
+		SandboxConfig: jsonschema.SandboxConfig{},
+		MaxRetries:    s.envConfig.ODIN_MAX_RETRIES,
+	})
 	if err != nil {
-		s.logger.Err(err).Msg("error inserting sandbox")
+		s.logger.Err(err).Msg("could not create sandbox")
+		return &api.CreateSandboxOK{
+			Result: "Failure:",
+		}, nil
 	}
 	return &api.CreateSandboxOK{
 		Result:    "Creating Sandbox",
-		SandboxId: sandbox.SandboxID,
+		SandboxId: res.SandboxId,
 	}, nil
 }
 

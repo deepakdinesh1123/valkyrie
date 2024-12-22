@@ -7,6 +7,7 @@ package db
 import (
 	"context"
 
+	jsonschema "github.com/deepakdinesh1123/valkyrie/internal/odin/db/jsonschema"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -21,9 +22,8 @@ type Querier interface {
 	DeleteLanguage(ctx context.Context, id int64) (int64, error)
 	DeleteLanguageVersion(ctx context.Context, id int64) (int64, error)
 	DeleteWorker(ctx context.Context, id int32) error
-	FetchJob(ctx context.Context, workerID pgtype.Int4) (Job, error)
+	FetchJob(ctx context.Context, arg FetchJobParams) (Job, error)
 	FetchLanguagePackages(ctx context.Context, language string) ([]FetchLanguagePackagesRow, error)
-	FetchSandboxJob(ctx context.Context, workerID pgtype.Int4) (Sandbox, error)
 	FetchSystemPackages(ctx context.Context) ([]FetchSystemPackagesRow, error)
 	GetAllExecutionJobs(ctx context.Context, arg GetAllExecutionJobsParams) ([]GetAllExecutionJobsRow, error)
 	GetAllExecutions(ctx context.Context, arg GetAllExecutionsParams) ([]GetAllExecutionsRow, error)
@@ -59,7 +59,7 @@ type Querier interface {
 	InsertLanguageVersions(ctx context.Context, arg []InsertLanguageVersionsParams) (int64, error)
 	InsertLanguages(ctx context.Context, arg []InsertLanguagesParams) (int64, error)
 	InsertPackages(ctx context.Context, arg []InsertPackagesParams) (int64, error)
-	InsertSandbox(ctx context.Context, gitUrl pgtype.Text) (Sandbox, error)
+	InsertSandbox(ctx context.Context, config jsonschema.SandboxConfig) (Sandbox, error)
 	InsertWorker(ctx context.Context, arg InsertWorkerParams) (Worker, error)
 	ListExecRequests(ctx context.Context, arg ListExecRequestsParams) ([]ExecRequest, error)
 	MarkSandboxRunning(ctx context.Context, arg MarkSandboxRunningParams) error

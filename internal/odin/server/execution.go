@@ -25,6 +25,11 @@ type SSEMessage struct {
 }
 
 func (s *OdinServer) Execute(ctx context.Context, req *api.ExecutionRequest, params api.ExecuteParams) (api.ExecuteRes, error) {
+	if !s.envConfig.ODIN_ENABLE_EXECUTION {
+		return &api.ExecuteBadRequest{
+			Message: "Execution is not enabled, please ask the admin to enable it",
+		}, nil
+	}
 	if err := s.executionService.CheckExecRequest(ctx, req); err != nil {
 		return &api.ExecuteBadRequest{
 			Message: fmt.Sprintf("error in exec request: %s", err),

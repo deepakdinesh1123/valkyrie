@@ -2,8 +2,6 @@ package db
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type FetchSandboxJobTxParams struct {
@@ -17,10 +15,18 @@ type FetchSandboxJobTxResult struct {
 func (s *SQLStore) FetchSandboxJobTx(ctx context.Context, arg FetchSandboxJobTxParams) (FetchSandboxJobTxResult, error) {
 	var fetchSandboxTxResult FetchSandboxJobTxResult
 	err := s.execTx(ctx, func(q *Queries) error {
-		sandbox, err := q.FetchSandboxJob(ctx, pgtype.Int4{Int32: arg.WorkerID, Valid: true})
+		job, err := q.FetchJob(ctx, FetchJobParams{
+			Workerid: arg.WorkerID,
+			Jobtype:  "sandbox",
+		})
 		if err != nil {
 			return err
 		}
+		sandbox, err := q.GetSandbox(ctx, job.Arguments.SandboxId)
+		if err != nil {
+			return err
+		}
+
 		fetchSandboxTxResult.Sandbox = sandbox
 		return nil
 	})

@@ -48,6 +48,7 @@ func NewDockerSandboxHandler(ctx context.Context, queries db.Store, workerId int
 }
 
 func (d *DockerSH) Create(ctx context.Context, wg *concurrency.SafeWaitGroup, sandBox db.Sandbox) {
+	d.logger.Info().Msg("Creating sandbox")
 	defer wg.Done()
 
 	cont, err := d.containerPool.Acquire(ctx)
@@ -56,17 +57,19 @@ func (d *DockerSH) Create(ctx context.Context, wg *concurrency.SafeWaitGroup, sa
 		return
 	}
 	go d.containerPool.CreateResource(ctx)
-	sandboxConfig, err := sandbox.GetSandboxConfig()
+
+	d.logger.Info().Msg("code srvere")
+	CodeServerConfig, err := sandbox.GetCodeServerConfig()
 	if err != nil {
 		d.logger.Err(err).Msg("could not get sandbox config")
 		return
 	}
-	configYaml, err := yaml.Marshal(sandboxConfig)
+	configYaml, err := yaml.Marshal(CodeServerConfig)
 	if err != nil {
 		d.logger.Err(err).Msg("could not convert sandbox config to yaml")
 	}
 
-	d.logger.Debug().Str("Command", fmt.Sprintf("echo \"%s\" >> /home/valnix/.config/code-server/config.yaml", string(configYaml))).Msg("Adding config")
+	d.logger.Info().Str("Command", fmt.Sprintf("echo \"%s\" >> /home/valnix/.config/code-server/config.yaml", string(configYaml))).Msg("Adding config")
 	configExec, err := d.client.ContainerExecCreate(
 		ctx,
 		cont.Value().ID,
@@ -111,7 +114,7 @@ func (d *DockerSH) Create(ctx context.Context, wg *concurrency.SafeWaitGroup, sa
 	}
 
 	containerURL := fmt.Sprintf("http://%s:9090", contInfo.NetworkSettings.IPAddress)
-
+	d.logger.Info().Msg(containerURL)
 	err = d.queries.MarkSandboxRunning(ctx, db.MarkSandboxRunningParams{
 		SandboxID:  sandBox.SandboxID,
 		SandboxUrl: pgtype.Text{String: containerURL, Valid: true},
@@ -119,6 +122,8 @@ func (d *DockerSH) Create(ctx context.Context, wg *concurrency.SafeWaitGroup, sa
 	if err != nil {
 		d.logger.Err(err).Msg("error marking the container as running")
 	}
+
+	d.logger.Info().Msg("Create ended")
 }
 
 func (d *DockerSH) Cleanup(ctx context.Context) error {

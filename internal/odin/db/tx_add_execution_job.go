@@ -2,10 +2,9 @@ package db
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"log"
 
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/db/jsonschema"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -65,17 +64,15 @@ func (s *SQLStore) AddExecJobTx(ctx context.Context, arg AddJobTxParams) (AddJob
 			execId = execReq.ID
 		}
 
-		jobArgs, err := json.Marshal(JobArguments{
-			ExecReqId: execId,
-		})
-		if err != nil {
-			return fmt.Errorf("error creating exec job args: %s", err)
-		}
-
 		var jobParams InsertJobParams
-		jobParams.Arguments = jobArgs
+		jobParams.Arguments = jsonschema.JobArguments{
+			ExecConfig: jsonschema.ExecConfig{
+				ExecReqId: execId,
+			},
+		}
 		jobParams.MaxRetries = pgtype.Int4{Int32: int32(arg.MaxRetries), Valid: true}
 		jobParams.TimeOut = pgtype.Int4{Int32: arg.Timeout, Valid: true}
+		jobParams.JobType = "execution"
 		job, err := s.InsertJob(ctx, jobParams)
 		if err != nil {
 			log.Printf("InsertJob error: %v", err)

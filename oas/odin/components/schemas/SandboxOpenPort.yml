@@ -1,0 +1,7 @@
+type: object
+required:
+  - port
+properties:
+  port:
+    type: integer
+    description: port to open

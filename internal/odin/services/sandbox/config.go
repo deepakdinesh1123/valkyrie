@@ -1,11 +1,6 @@
 package sandbox
 
-import (
-	"math/rand"
-	"strings"
-)
-
-type SandboxConfig struct {
+type CodeServerConfig struct {
 	BindAddr string `yaml:"bind-addr"`
 	Auth     string `yaml:"auth"`
 	Password string `yaml:"password"`
@@ -13,16 +8,16 @@ type SandboxConfig struct {
 	Cert bool `yaml:"cert"`
 }
 
-const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+// const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-// Function to generate a random password
-func generateRandomPassword(length int) string {
-	var sb strings.Builder
-	for i := 0; i < length; i++ {
-		sb.WriteByte(charset[rand.Intn(len(charset))])
-	}
-	return sb.String()
-}
+// // Function to generate a random password
+// func generateRandomPassword(length int) string {
+// 	var sb strings.Builder
+// 	for i := 0; i < length; i++ {
+// 		sb.WriteByte(charset[rand.Intn(len(charset))])
+// 	}
+// 	return sb.String()
+// }
 
 // func getPasswordHash(password string) ([]byte, error) {
 // 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -32,17 +27,17 @@ func generateRandomPassword(length int) string {
 // 	return hash, nil
 // }
 
-func GetSandboxConfig() (*SandboxConfig, error) {
-	password := generateRandomPassword(10)
+func GetCodeServerConfig() (*CodeServerConfig, error) {
+	// password := generateRandomPassword(10)
 	// hashedPassword, err := getPasswordHash(password)
 	// if err != nil {
 	// 	return nil, fmt.Errorf("could not get hashed password")
 	// }
-	return &SandboxConfig{
+	return &CodeServerConfig{
 		BindAddr: "0.0.0.0:9090",
-		Auth:     "password",
+		Auth:     "none",
 		Cert:     false,
-		Password: password,
+		// Password: password,
 		// HashedPassword: hashedPassword,
 	}, nil
 }

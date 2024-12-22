@@ -5,6 +5,7 @@
 package db
 
 import (
+	jsonschema "github.com/deepakdinesh1123/valkyrie/internal/odin/db/jsonschema"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -38,29 +39,17 @@ type Execution struct {
 }
 
 type Job struct {
-	JobID        int64              `db:"job_id" json:"job_id"`
-	CreatedAt    pgtype.Timestamptz `db:"created_at" json:"created_at"`
-	UpdatedAt    pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
-	TimeOut      pgtype.Int4        `db:"time_out" json:"time_out"`
-	StartedAt    pgtype.Timestamptz `db:"started_at" json:"started_at"`
-	Type         pgtype.Text        `db:"type" json:"type"`
-	Arguments    []byte             `db:"arguments" json:"arguments"`
-	CurrentState string             `db:"current_state" json:"current_state"`
-	Retries      pgtype.Int4        `db:"retries" json:"retries"`
-	MaxRetries   pgtype.Int4        `db:"max_retries" json:"max_retries"`
-	WorkerID     pgtype.Int4        `db:"worker_id" json:"worker_id"`
-}
-
-type JobGroup struct {
-	ID        int32              `db:"id" json:"id"`
-	Name      string             `db:"name" json:"name"`
-	CreatedAt pgtype.Timestamptz `db:"created_at" json:"created_at"`
-}
-
-type JobType struct {
-	ID        int32              `db:"id" json:"id"`
-	Name      string             `db:"name" json:"name"`
-	CreatedAt pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	JobID        int64                   `db:"job_id" json:"job_id"`
+	CreatedAt    pgtype.Timestamptz      `db:"created_at" json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz      `db:"updated_at" json:"updated_at"`
+	TimeOut      pgtype.Int4             `db:"time_out" json:"time_out"`
+	StartedAt    pgtype.Timestamptz      `db:"started_at" json:"started_at"`
+	Arguments    jsonschema.JobArguments `db:"arguments" json:"arguments"`
+	CurrentState string                  `db:"current_state" json:"current_state"`
+	Retries      pgtype.Int4             `db:"retries" json:"retries"`
+	MaxRetries   pgtype.Int4             `db:"max_retries" json:"max_retries"`
+	WorkerID     pgtype.Int4             `db:"worker_id" json:"worker_id"`
+	JobType      string                  `db:"job_type" json:"job_type"`
 }
 
 type Language struct {
@@ -93,15 +82,16 @@ type Package struct {
 }
 
 type Sandbox struct {
-	SandboxID    int64              `db:"sandbox_id" json:"sandbox_id"`
-	WorkerID     pgtype.Int4        `db:"worker_id" json:"worker_id"`
-	StartedAt    pgtype.Timestamptz `db:"started_at" json:"started_at"`
-	CreatedAt    pgtype.Timestamptz `db:"created_at" json:"created_at"`
-	UpdatedAt    pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
-	GitUrl       pgtype.Text        `db:"git_url" json:"git_url"`
-	SandboxUrl   pgtype.Text        `db:"sandbox_url" json:"sandbox_url"`
-	Password     []byte             `db:"password" json:"password"`
-	CurrentState string             `db:"current_state" json:"current_state"`
+	SandboxID    int64                    `db:"sandbox_id" json:"sandbox_id"`
+	WorkerID     pgtype.Int4              `db:"worker_id" json:"worker_id"`
+	StartedAt    pgtype.Timestamptz       `db:"started_at" json:"started_at"`
+	CreatedAt    pgtype.Timestamptz       `db:"created_at" json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz       `db:"updated_at" json:"updated_at"`
+	SandboxUrl   pgtype.Text              `db:"sandbox_url" json:"sandbox_url"`
+	Password     []byte                   `db:"password" json:"password"`
+	Config       jsonschema.SandboxConfig `db:"config" json:"config"`
+	Details      []byte                   `db:"details" json:"details"`
+	CurrentState string                   `db:"current_state" json:"current_state"`
 }
 
 type Worker struct {
