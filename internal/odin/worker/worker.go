@@ -202,12 +202,12 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 			swg.Wait()
 			err := ctx.Err()
 			fetchJobTicker.Stop()
-			w.logger.Info().Msg("cleanup container")
-			err = w.sandboxHandler.Cleanup(context.TODO())
-			if err != nil {
-				return fmt.Errorf("error cleaning up containers: %s", err)
+			if w.sandboxHandler != nil {
+				err = w.sandboxHandler.Cleanup(context.TODO())
+				if err != nil {
+					return fmt.Errorf("error cleaning up containers: %s", err)
+				}
 			}
-			w.logger.Info().Msg("container cleaned up")
 			w.queries.RequeueWorkerJobs(context.TODO(), pgtype.Int4{Valid: true, Int32: int32(w.ID)})
 			switch err {
 			case context.Canceled:

@@ -3,6 +3,7 @@ package container
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/concurrency"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
@@ -28,6 +29,9 @@ type DockerSH struct {
 	tp            trace.TracerProvider
 	mp            metric.MeterProvider
 	containerPool *puddle.Pool[pool.Container]
+
+	containers []*puddle.Resource[pool.Container]
+	mu         sync.Mutex
 }
 
 func NewDockerSandboxHandler(ctx context.Context, queries db.Store, workerId int32, tp trace.TracerProvider, mp metric.MeterProvider, envConfig *config.EnvConfig, containerPool *puddle.Pool[pool.Container], logger *zerolog.Logger) (*DockerSH, error) {
@@ -123,10 +127,15 @@ func (d *DockerSH) Create(ctx context.Context, wg *concurrency.SafeWaitGroup, sa
 		d.logger.Err(err).Msg("error marking the container as running")
 	}
 
-	d.logger.Info().Msg("Create ended")
+	d.mu.Lock()
+	d.containers = append(d.containers, cont)
+	d.mu.Unlock()
 }
 
 func (d *DockerSH) Cleanup(ctx context.Context) error {
+	for _, cont := range d.containers {
+		cont.Destroy()
+	}
 	d.containerPool.Close()
 	return nil
 }
