@@ -1,0 +1,50 @@
+asyncapi: '3.0.0'
+info:
+  title: Odin Agent
+  version: '1.0.0'
+  description: |
+    Odin Agent for interacting with sandboxes.
+
+servers:
+  production:
+    host: worker.evnix.cloud
+    pathname: /sandbox
+    protocol: wss
+    description: Agent for interacting with sandbox
+
+channels:
+  /:
+    description: Root channel for sandbox operations.
+    bindings:
+      ws:
+        query:
+          type: object
+          properties:
+            sandboxId:
+              type: string
+              description: Unique identifier for the sandbox.
+
+components:
+  messages:
+    ExecuteCommand:
+      name: ExecuteCommand
+      summary: Execute a command in the sandbox.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/executeCommand'
+
+  schemas:
+    executeCommand:
+      type: object
+      properties:
+        command:
+          type: string
+          description: Command to execute in the sandbox.
+        stdin:
+          type: boolean
+          description: Indicates if stdin is required.
+        shell:
+          type: string
+          description: The shell environment to use.
+      required:
+        - command

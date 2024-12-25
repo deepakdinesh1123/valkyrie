@@ -12,7 +12,7 @@
         pkgs = import nixpkgs { inherit system; };
       in
       rec {
-        docsDependencies = with pkgs; [ python312Packages.mkdocs-material redocly ];
+        
         loadTestDependencies = with pkgs; [ jmeter ];
         devDependencies = with pkgs; [ 
           sqlc 
@@ -33,8 +33,11 @@
 
         packages = {
           odin = pkgs.callPackage ./build/package/nix/odin.nix { inherit pkgs; };
+          asyncapi = pkgs.callPackage ./build/package/nix/asyncapi-cli { inherit pkgs; };
         };
 		    defaultPackage = packages.odin;
+
+        docsDependencies = with pkgs; [ python312Packages.mkdocs-material redocly ] ++ [ packages.asyncapi ];
 
         devShells = {
           default = pkgs.mkShell {

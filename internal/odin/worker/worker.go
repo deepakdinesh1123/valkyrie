@@ -263,7 +263,6 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 						w.logger.Info().Msg("cleanup complete")
 						return nil
 					default:
-						w.sandboxHandler.Cleanup(context.TODO())
 						w.logger.Err(err).Msgf("Worker: failed to fetch sandbox job")
 						return &WorkerError{Type: "FetchSandboxJob", Message: err.Error()}
 					}

@@ -1,5 +1,5 @@
 # Include other Makefiles
-include .env oas/Makefile build/Makefile testing/Makefile
+include .env schemas/Makefile build/Makefile testing/Makefile
 
 # PostgreSQL Connection URL
 PG_URL = postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=${POSTGRES_SSL_MODE}
