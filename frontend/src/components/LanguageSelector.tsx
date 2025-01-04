@@ -96,7 +96,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
                                 <CommandList>
                                     <CommandEmpty>No Language found.</CommandEmpty>
                                     <CommandGroup className="text-white bg-neutral-900">
-                                    {sortedLanguages.map((language) => (
+                                        {sortedLanguages.map((language) => (
                                             <CommandItem
                                                 key={language.id}
                                                 value={language.name}
@@ -122,15 +122,21 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
             {/* Version Selector */}
             <Popover open={versionOpen} onOpenChange={setVersionOpen}>
                 <PopoverTrigger asChild>
-                    <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={versionOpen}
-                        className="w-[150px] justify-between bg-neutral-900 text-white hover:bg-neutral-700 hover:text-white"
-                    >
-                        {selectedLanguageVersion?.version || "Select Version..."}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
+                    <PopoverTrigger asChild>
+                        <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={versionOpen}
+                            className="w-[150px] justify-between bg-neutral-900 text-white hover:bg-neutral-700 hover:text-white"
+                            title={selectedLanguageVersion?.version || "Select Version..."}
+                        >
+                                <span className="truncate">
+                                    {selectedLanguageVersion?.version || "Select Version..."}    
+                                </span>
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                    </PopoverTrigger>
+
                 </PopoverTrigger>
                 <PopoverContent className="w-[150px] p-0 text-white bg-neutral-900">
                     <Command className="text-white bg-neutral-900">

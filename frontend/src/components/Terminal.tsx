@@ -1,4 +1,8 @@
 import React, { useRef, useEffect, useState } from "react";
+import AnsiToHtml from 'ansi-to-html';
+
+const ansiConverter = new AnsiToHtml();
+
 
 interface TerminalProps {
   output: string[];
@@ -57,9 +61,11 @@ const Terminal: React.FC<TerminalProps> = ({ output, onInputChange, tabName }) =
             <div className="text-white">No output yet...</div>
           ) : (
             output.map((line, index) => (
-              <div key={index} className="whitespace-pre-wrap text-white">
-                {line}
-              </div>
+              <div
+                key={index}
+                className="whitespace-pre-wrap text-white"
+                dangerouslySetInnerHTML={{ __html: ansiConverter.toHtml(line) }}
+              />
             ))
           )}
         </div>

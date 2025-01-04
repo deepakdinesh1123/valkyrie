@@ -153,6 +153,8 @@ ignite,language,python311Packages
 gym,language,python311Packages
 tensorly,language,python311Packages
 tensordict,language,python311Packages
+keras,language,python311Packages
+tensorflow,language,python311Packages
 gitpython,language,python311Packages
 gitdb,language,python311Packages
 python310,system,
@@ -191,6 +193,7 @@ ruby_3_4,system,
 ruby_3_2,system,
 sqlite,system,
 zig,system,
+odin,system,
 jq,system,
 ffmpeg,system,
 git,system,
@@ -222,3 +225,4 @@ jmespath,system,
 fx,system,
 yq,system,
 pkg-config,system,
+gcc14,system,
