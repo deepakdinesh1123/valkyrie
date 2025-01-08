@@ -1,21 +1,33 @@
-site_name: Valkyrie
-theme: 
-  name: "material"
+site_name: Odin
+site_description: Odin Documentation
+strict: true
+site_url: https://deepakdinesh1123.github.io/valkyrie/
+
+repo_name: deepakdinesh1123/valkyrie
+repo_url: https://github.com/deepakdinesh1123/valkyrie
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: custom
-      accent: custom
       toggle:
-        icon: material/lightbulb-outline
-        name: "Switch to dark mode"
+        icon: material/brightness-7
+        name: Switch to dark mode
+      primary: black
+      accent: red
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: custom
-      accent: custom
       toggle:
-        icon: material/lightbulb
-        name: "Switch to light mode"
+        icon: material/brightness-4
+        name: Switch to light mode
+      primary: black
+      accent: lime
+  font:
+    text: Roboto
+    code: Roboto Mono
+  language: en
   features:
     - search.suggest
     - search.highlight
@@ -23,12 +35,11 @@ theme:
     - content.code.annotate
     - content.code.copy
     - content.code.select
+    - navigation.expand
     - navigation.indexes
     - navigation.path
     - navigation.tabs
     - navigation.instant
-    - navigation.instant.preview
-    - navigation.instant.prefetch
     - navigation.instant.progress
     - navigation.sections
     - navigation.tracking
@@ -41,5 +52,57 @@ validation:
   unrecognized_links: warn
 
 nav:
-  - Intro:
-      - index.md
+  - Home: index.md
+  - Valkyrie: valkyrie/index.md
+  - Odin:
+      - Home: valkyrie/odin/index.md
+      - Getting Started: valkyrie/odin/getting_started.md
+      - Setup:
+          - Home: valkyrie/odin/setup/index.md
+          - Standalone: valkyrie/odin/setup/standalone.md
+          - Podman: valkyrie/odin/setup/podman.md
+          - Docker: valkyrie/odin/setup/docker.md
+          - NSJail: valkyrie/odin/setup/nsjail.md
+          - Native: valkyrie/odin/setup/native.md
+      - Contributing: valkyrie/odin/contributing.md
+      - Examples: valkyrie/odin/examples.md
+      - Deployment:
+          - Home: valkyrie/odin/deployment/index.md
+          - AWS:
+              - Odin Server: valkyrie/odin/deployment/aws/server.md
+              - Shared Nix Store: valkyrie/odin/deployment/aws/shared_nix_store.md
+              - Odin Worker: valkyrie/odin/deployment/aws/worker.md
+          - GCP:
+              - Odin Server: valkyrie/odin/deployment/gcp/server.md
+              - Shared Nix Store: valkyrie/odin/deployment/gcp/shared_nix_store.md
+              - Odin Worker: valkyrie/odin/deployment/gcp/worker.md
+  - Blog: blog/index.md
+
+markdown_extensions:
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+plugins:
+  - privacy
+  - search
+  - blog
+  - minify:
+      minify_html: true
+
+extra:
+  status:
+    new: Recently added
+    deprecated: Deprecated
+  version:
+    provider: mike
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/deepakdinesh1123/valkyrie
+
+copyright: >
+  Copyright &copy; 2024 Odin

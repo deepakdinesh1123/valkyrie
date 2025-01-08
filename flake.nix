@@ -12,8 +12,6 @@
         pkgs = import nixpkgs { inherit system; };
       in
       rec {
-        docsDependencies = with pkgs; [ python312Packages.mkdocs-material redocly ];
-        loadTestDependencies = with pkgs; [ jmeter ];
         devDependencies = with pkgs; [ 
           sqlc 
           go-migrate 
@@ -43,12 +41,7 @@
           dev = pkgs.mkShell {
             buildInputs = devDependencies;
           };
-          load-test = pkgs.mkShell {
-            buildInputs = loadTestDependencies;
-          };
-          docs = pkgs.mkShell {
-            buildInputs = docsDependencies;
-          };
+          docs = import ./docs/shell.nix { inherit pkgs; };
         };
     }
   );
