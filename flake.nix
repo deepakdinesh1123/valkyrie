@@ -19,25 +19,23 @@
           go-migrate 
           go_1_22
           nodejs_20
-          # podman-compose
-          # caddy
           postgresql_16
           pkg-config ] ++ lib.optionals stdenv.isLinux [ 
             nsjail
-            # gpgme 
-            # libgpg-error 
-            # libassuan
-            # btrfs-progs
-            # fuse-overlayfs
+            gpgme 
+            libgpg-error 
+            libassuan
+            btrfs-progs
+            fuse-overlayfs
           ];
 
         packages = {
           odin = pkgs.callPackage ./build/package/nix/odin.nix { inherit pkgs; };
-          asyncapi = pkgs.callPackage ./build/package/nix/asyncapi-cli { inherit pkgs; };
+          # asyncapi = pkgs.callPackage ./build/package/nix/asyncapi-cli { inherit pkgs; };
         };
 		    defaultPackage = packages.odin;
 
-        docsDependencies = with pkgs; [ python312Packages.mkdocs-material redocly ] ++ [ packages.asyncapi ];
+        docsDependencies = with pkgs; [ python312Packages.mkdocs-material redocly quicktype uv ];
 
         devShells = {
           default = pkgs.mkShell {
@@ -52,6 +50,8 @@
           docs = pkgs.mkShell {
             buildInputs = docsDependencies;
           };
+          python-sdk = import ./sdk/python/shell.nix { inherit pkgs; };
+          js-sdk = import ./sdk/js/shell.nix { inherit pkgs; };
         };
     }
   );

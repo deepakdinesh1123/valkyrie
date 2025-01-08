@@ -1,0 +1,46 @@
+{
+    "properties": {
+        "sandboxId": {
+            "title": "Sandboxid",
+            "type": "integer"
+        },
+        "command": {
+            "title": "Command",
+            "type": "string"
+        },
+        "stdin": {
+            "default": false,
+            "title": "Stdin",
+            "type": "boolean"
+        },
+        "stderr": {
+            "default": true,
+            "title": "Stderr",
+            "type": "boolean"
+        },
+        "stdout": {
+            "default": true,
+            "title": "Stdout",
+            "type": "boolean"
+        },
+        "workDir": {
+            "default": "",
+            "title": "Workdir",
+            "type": "string"
+        },
+        "env": {
+            "default": [],
+            "items": {
+                "type": "string"
+            },
+            "title": "Env",
+            "type": "array"
+        }
+    },
+    "required": [
+        "sandboxId",
+        "command"
+    ],
+    "title": "ExecuteCommand",
+    "type": "object"
+}
