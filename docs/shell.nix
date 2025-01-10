@@ -4,10 +4,9 @@
 }:
 
 let
-  docsDependencies = with pkgs.python312Packages; [
-    mkdocs-material
-    mkdocs-minify-plugin
-    markdown
+  docsDependencies = with pkgs; [
+    python313
+    uv
   ];
 in
 pkgs.mkShell {

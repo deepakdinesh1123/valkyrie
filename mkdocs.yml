@@ -1,5 +1,5 @@
-site_name: Odin
-site_description: Odin Documentation
+site_name: Valkyrie
+site_description: Valkyrie Documentation
 strict: true
 site_url: https://deepakdinesh1123.github.io/valkyrie/
 
@@ -9,6 +9,7 @@ edit_uri: edit/main/docs/
 
 theme:
   name: material
+  custom_dir: docs/overrides
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
@@ -38,6 +39,7 @@ theme:
     - navigation.expand
     - navigation.indexes
     - navigation.path
+    - navigation.prune
     - navigation.tabs
     - navigation.instant
     - navigation.instant.progress
@@ -57,6 +59,7 @@ nav:
   - Odin:
       - Home: valkyrie/odin/index.md
       - Getting Started: valkyrie/odin/getting_started.md
+      - Installation: valkyrie/odin/installation.md
       - Setup:
           - Home: valkyrie/odin/setup/index.md
           - Standalone: valkyrie/odin/setup/standalone.md
@@ -86,6 +89,9 @@ markdown_extensions:
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
 
 plugins:
   - privacy
@@ -103,6 +109,9 @@ extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/deepakdinesh1123/valkyrie
+
+extra_css:
+  - stylesheets/extra.css
 
 copyright: >
   Copyright &copy; 2024 Odin

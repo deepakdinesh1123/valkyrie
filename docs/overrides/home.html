@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="valkyrie-landing">
+  <section class="hero">
+      <h1>Valkyrie</h1>
+      <p>Simplifying Nix adoption for developers. Build, test, and deploy with confidence using a streamlined Nix workflow.</p>
+      <a href="#getting-started" class="cta-button">Get Started</a>
+  </section>
+
+  <div class="features">
+      <div class="feature-card">
+          <h3>Simplified Adoption</h3>
+          <p>Start using Nix without the steep learning curve. Valkyrie provides intuitive tools and workflows that make Nix accessible to everyone.</p>
+      </div>
+      <div class="feature-card">
+          <h3>Reproducible Builds</h3>
+          <p>Ensure consistent development environments across your team. Every build is reproducible and deterministic.</p>
+      </div>
+      <div class="feature-card">
+          <h3>Seamless Integration</h3>
+          <p>Integrate Nix into your existing workflow with minimal configuration. Works with your favorite tools and platforms.</p>
+      </div>
+  </div>
+
+  <section class="odin-section">
+      <h2>Meet Odin</h2>
+      <p>Execute code with precise dependency management. Odin lets you specify dependencies and run code in isolated environments, similar to Judge0 but with more control.</p>
+      <div class="code-example">
+          <pre><code># Example Odin configuration
+dependencies:
+- python3
+- numpy
+- pandas
+
+code:
+import numpy as np
+import pandas as pd
+
+# Your code here</code></pre>
+      </div>
+  </section>
+</div>
+{% endblock %}
