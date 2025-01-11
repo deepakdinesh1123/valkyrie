@@ -10,6 +10,8 @@ edit_uri: edit/main/docs/
 theme:
   name: material
   custom_dir: docs/overrides
+  logo: images/odin.svg
+  favicon: images/odin.svg
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
@@ -58,6 +60,7 @@ nav:
   - Valkyrie: valkyrie/index.md
   - Odin:
       - Home: valkyrie/odin/index.md
+      - Architecture: valkyrie/odin/architecture.md
       - Getting Started: valkyrie/odin/getting_started.md
       - Installation: valkyrie/odin/installation.md
       - Setup:
@@ -91,7 +94,11 @@ markdown_extensions:
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - admonition
   - pymdownx.details
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
 
 plugins:
   - privacy
@@ -109,7 +116,6 @@ extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/deepakdinesh1123/valkyrie
-
 extra_css:
   - stylesheets/extra.css
 

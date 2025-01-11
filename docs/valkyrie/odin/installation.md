@@ -63,13 +63,3 @@ Then run the following command to create a shell with odin installed
 ```shell
 nix develop
 ```
-
-## Next Steps
-After installation, you might want to:
-
-Configure your environment
-Set up your first Odin project
-Explore Odin's features
-
-!!! success "Need Help?"
-    If you encounter any issues during installation, please refer to our troubleshooting guide or reach out to the community for support.
