@@ -49,7 +49,7 @@ odin:
 
 # Start PostgreSQL with Docker and run migrations
 docker-db:
-	@docker-compose up -d postgres 
+	@docker-compose up -d postgres
 	migrate -path internal/odin/db/migrations -database $(POSTGRES_URL) up
 
 # Add packages from a dump file

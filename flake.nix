@@ -12,21 +12,21 @@
         pkgs = import nixpkgs { inherit system; };
       in
       rec {
-        devDependencies = with pkgs; [ 
-          sqlc 
-          go-migrate 
+        devDependencies = with pkgs; [
+          sqlc
+          go-migrate
           go_1_22
           nodejs_20
           # podman-compose
           # caddy
           postgresql_16
-          pkg-config ] ++ lib.optionals stdenv.isLinux [ 
+          pkg-config ] ++ lib.optionals stdenv.isLinux [
             nsjail
-            # gpgme 
-            # libgpg-error 
-            # libassuan
-            # btrfs-progs
-            # fuse-overlayfs
+            gpgme
+            libgpg-error
+            libassuan
+            btrfs-progs
+            fuse-overlayfs
           ];
 
         packages = {
