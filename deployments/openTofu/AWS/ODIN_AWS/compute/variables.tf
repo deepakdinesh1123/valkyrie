@@ -15,6 +15,7 @@ variable "key_pair_name" {
 }
 variable "ebs_size" {
   type = number
+  default = 80
 }
 variable "multi_attach_enabled" {
   type = bool

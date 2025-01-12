@@ -106,7 +106,7 @@ module "ec2" {
 module "ebs" {
   source = "../../modules/ebs"
 
-  ebs_name              = "valnix_ebs"
+  ebs_name              = "shared_nix_store"
   ebs_size              = var.ebs_size
   ec2_availability_zone = module.ec2.ec2_availability_zone
   multi_attach_enabled  = var.multi_attach_enabled
