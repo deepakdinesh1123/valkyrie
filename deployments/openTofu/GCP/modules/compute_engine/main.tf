@@ -1,4 +1,8 @@
 
+resource "google_compute_address" "static-ip" {
+  name = "odin-server-pip"
+}
+
 resource "google_compute_instance" "compute-engine" {
   attached_disk {
     device_name = var.disk_name
@@ -36,7 +40,7 @@ resource "google_compute_instance" "compute-engine" {
 
   network_interface {
     access_config {
-      network_tier = "STANDARD"
+      nat_ip       = google_compute_address.static-ip.address
     }
 
     queue_count = 0
