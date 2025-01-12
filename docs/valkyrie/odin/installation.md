@@ -15,27 +15,51 @@ sh <(curl -L https://nixos.org/nix/install) --no-daemon
 sh <(curl -L https://nixos.org/nix/install) --daemon
 ```
 
+### [Determinate Nix Installer](https://github.com/DeterminateSystems/nix-installer)
+
+You can also use determinate nix installer to install nix easily, it allows you to easily roll back all the changes and uninstall nix if something goes wrong
+
 ## Installing Odin
-Odin can be installed using either of these methods:
-Method 1: Using Nix Flakes
-!!! example "Steps for Nix Flakes Installation"
-    1. Enable flakes in your Nix configuration
-    2. Add Odin flake to your inputs
-    3. Import and use Odin in your configuration
-Method 2: Using Nix Shell
-!!! example "Steps for Nix Shell Installation"
-    1. Create a shell.nix file
-    2. Add Odin dependencies
-    3. Enter the Nix shell environment
-!!! info "Version Information"
-    Check the official documentation for specific version compatibility details.
 
-## Next Steps
-After installation, you might want to:
+### With Flakes
 
-Configure your environment
-Set up your first Odin project
-Explore Odin's features
+!!! note "Note"
+    This is a temporary method until we start releasing versions of the odin package in our own binary cache
 
-!!! success "Need Help?"
-    If you encounter any issues during installation, please refer to our troubleshooting guide or reach out to the community for support.
+create a flake.nix with the following content
+
+```nix
+{
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
+    flake-utils.url = "github:numtide/flake-utils";
+    valkyrie.url = "github:deepakdinesh1123/valkyrie/development";
+  };
+
+  outputs = { self, nixpkgs, flake-utils, valkyrie, ... }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = import nixpkgs { inherit system; };
+        valkyriePkgs = valkyrie.packages.${system}; # Access packages from the Valkyrie flake
+      in {
+        devShells = {
+          default = pkgs.mkShell {
+            buildInputs = with pkgs; [
+              valkyriePkgs.odin # Use the odin package from Valkyrie
+            ];
+          };
+        };
+      }
+    );
+}
+
+```
+
+!!! tip "Tip"
+    You can use the same flake input to add this package to your home-manager or nix-darwin or NixOS config
+
+Then run the following command to create a shell with odin installed
+
+```shell
+nix develop
+```
