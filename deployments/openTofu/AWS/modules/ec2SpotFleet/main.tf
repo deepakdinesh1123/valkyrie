@@ -45,7 +45,7 @@ resource "aws_spot_fleet_request" "example" {
 	}
 
 	tags = {
-			Name = "valnix-spot-fleet"
+			Name = "valnix-worker"
 	}
 }
 
