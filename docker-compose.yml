@@ -2,7 +2,7 @@ services:
   odin:
     build:
       context: .
-      dockerfile: build/package/dockerfiles/odin.server.dockerfile
+      dockerfile: build/package/dockerfiles/odin.dockerfile
     env_file:
       - .env
     depends_on:
@@ -15,7 +15,7 @@ services:
   odin-worker:
     build:
       context: .
-      dockerfile: build/package/dockerfiles/odin.worker.dockerfile
+      dockerfile: build/package/dockerfiles/odin.dockerfile
     env_file:
       - .env
     depends_on:
@@ -24,8 +24,16 @@ services:
       odin:
         condition: service_started
     deploy:
-      replicas: 3
+      replicas: 1
     command: ["worker", "start"]
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - ODIN_WORKER_EXECUTOR=container
+      - ODIN_WORKER_CONTAINER_ENGINE=docker
+      - POSTGRES_HOST=postgres
 
   postgres:
     image: postgres
@@ -43,22 +51,22 @@ services:
       timeout: 5s
       retries: 5
 
-  valkyrie-otel-collector:
-    image: otel/opentelemetry-collector-contrib
-    command: ["--config=/etc/otel-collector-config.yaml"]
-    volumes:
-      - ./configs/telemetry/collector.yml:/etc/otel-collector-config.yaml
-    ports:
-      - 4317:4317 # OTLP grpc receiver
-  jaeger:
-    image: jaegertracing/all-in-one:latest
-    ports:
-      - "6831:6831/udp" # UDP port for Jaeger agent
-      - "16686:16686" # Web UI
-      - "14268:14268" # HTTP port for spans
-  prometheus:
-    image: prom/prometheus:latest
-    volumes:
-      - ./configs/telemetry/prometheus.yml:/etc/prometheus/prometheus.yml
-    ports:
-      - "9090:9090"
+  # valkyrie-otel-collector:
+  #   image: otel/opentelemetry-collector-contrib
+  #   command: ["--config=/etc/otel-collector-config.yaml"]
+  #   volumes:
+  #     - ./configs/telemetry/collector.yml:/etc/otel-collector-config.yaml
+  #   ports:
+  #     - 4317:4317 # OTLP grpc receiver
+  # jaeger:
+  #   image: jaegertracing/all-in-one:latest
+  #   ports:
+  #     - "6831:6831/udp" # UDP port for Jaeger agent
+  #     - "16686:16686" # Web UI
+  #     - "14268:14268" # HTTP port for spans
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   volumes:
+  #     - ./configs/telemetry/prometheus.yml:/etc/prometheus/prometheus.yml
+  #   ports:
+  #     - "9090:9090"

@@ -18,7 +18,7 @@ buildGoModule rec {
 
   doCheck = false;
 
-  buildInputs =  lib.optionals stdenv.isLinux [
+  buildInputs = lib.optionals stdenv.isLinux [
     gpgme
     libgpg-error
     libassuan
@@ -27,18 +27,17 @@ buildGoModule rec {
 
   nativeBuildInputs = [ pkg-config ];
 
-  tags = lib.optionals stdenv.isDarwin [
-      "darwin"
-  ];
+  tags = lib.optionals stdenv.isDarwin [ "darwin" ]
+      ++ lib.optionals stdenv.isLinux [ "all" ];
 
   subPackages = [ "cmd/odin" ];
 
   ldflags = [ "-s" "-w" "-X info.version=${version}" ];
 
   meta = with lib; {
-    description = "Odin Server";
+    description = "Odin";
     license = licenses.asl20;
-    maintainers = with maintainers; [ ];
-    mainProgram = "odin";
+    maintainers = with maintainers; [ deepak sujay manoj ];
+    mainProgram = pname;
   };
 }
