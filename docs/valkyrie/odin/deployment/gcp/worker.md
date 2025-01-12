@@ -5,7 +5,7 @@ The Odin worker is deployed in the google cloud compute engine without a public 
 - Golang installed
 
 ## Worker setup
-- GCP instance groups with a minimum worker count of 1 is required.
+- GCP instance groups with a minimum worker count of 1 is required. 
 
 - Instance groups are created with a preemptable VMs (spot vm)
 - [Shared-nix-store](./shared_nix_store.md)
@@ -26,7 +26,9 @@ The Odin worker is deployed in the google cloud compute engine without a public 
     * ODIN_NIX_STORE=/nix
     * ODIN_WORKER_PODMAN_IMAGE=odin:0.0.3
     * ODIN_HOT_CONTAINER=1
-- For convenience, [worker setup script](https://valnix-stage-bucket.s3.amazonaws.com/stagedeploy.sh) has been added.
+- For convenience, [worker setup script](https://valnix-stage-bucket.s3.amazonaws.com/stagedeploy.sh) has been added.  
+  Although the  script will be executed in worker while setting up using opentofu it will serve as a reference.  
+- The script has gcp secrets reference, the instance groups should be created with a service account with access to gcp secrets as they will be fetched from the setup script.
 - Run the [odin binary](https://valnix-stage-bucket.s3.amazonaws.com/odinb)
   ```
   ./odinb worker start

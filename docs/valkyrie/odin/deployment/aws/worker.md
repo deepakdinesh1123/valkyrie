@@ -27,7 +27,9 @@ The Odin worker is deployed in the AWS ec2 without a public endpoint. Workers ar
     * ODIN_NIX_STORE=/nix
     * ODIN_WORKER_PODMAN_IMAGE=odin:0.0.3
     * ODIN_HOT_CONTAINER=1
-- For convenience, [worker setup script](https://valnix-stage-bucket.s3.amazonaws.com/deploy.sh) has been added.
+- For convenience, [worker setup script](https://valnix-stage-bucket.s3.amazonaws.com/deploy.sh) has been added.  
+  Although the  script will be executed in worker while setting up using opentofu it will serve as a reference.  
+  The script has aws secrets in it.
 - Run the [odin binary](https://valnix-stage-bucket.s3.amazonaws.com/odinb)
   ```
   ./odinb worker start
