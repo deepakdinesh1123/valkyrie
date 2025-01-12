@@ -26,6 +26,12 @@ variable "ebs_iops" {
   type = number
 }
 variable "shared_nix_store_id" {
-  type = string
+  type    = string
   default = ""
+}
+variable "ec2_instance_type" {
+  type = string
+}
+variable "rds_compute_type" {
+  type = string
 }
