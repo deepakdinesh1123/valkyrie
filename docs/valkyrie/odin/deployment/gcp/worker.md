@@ -1,5 +1,5 @@
 # Odin Worker
-The Odin worker is deployed in the google cloud compute engine without a public endpoint. Workers are run in gcp instance groups, these groups help us maintain minimum number of workers and are scalable as utilization.
+The Odin worker is deployed in the google cloud compute engine. Workers are run in gcp instance groups, these groups help us maintain minimum number of workers and are scalable as utilization.
 ## Prerequisites
 - Container Engine (Podman/Docker) installed and running on your system
 - Golang installed

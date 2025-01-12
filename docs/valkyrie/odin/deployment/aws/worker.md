@@ -1,5 +1,5 @@
 # Odin Worker
-The Odin worker is deployed in the AWS ec2 without a public endpoint. Workers are run in aws spot fleet, this fleet help us maintain minimum number of workers and are scalable as utilization.
+The Odin worker is deployed in the AWS ec2. Workers are run in aws spot fleet, this fleet help us maintain minimum number of workers and are scalable as utilization.
 ## Prerequisites
 - Container Engine (Podman/Docker) installed and running on your system
 - Golang installed
