@@ -18,6 +18,16 @@ provider "aws" {
 ### Step3: Configure your aws settings
 Take sample odin.tfvars file. Use it to define AWS resources like VM size, region. Note that this template creates a new resource group for your Odin deployment.
 ```
+location                = "us-east-1"
+snet_availability_zone1 = "us-east-1a"
+snet_availability_zone2 = "us-east-1b"
+key_pair_name           = "ec2_key_pair"
+ebs_size             = 80
+multi_attach_enabled = true
+ebs_iops             = 1000
+ebs_type             = "io1"
+ec2_instance_type = "t3.micro"
+rds_compute_type  = "db.t3.micro"
 ```
 
 ### Step 4: Initialize and deploy with Tofu
