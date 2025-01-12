@@ -24,5 +24,8 @@ jobs:
           path: .cache
           restore-keys: |
             mkdocs-material-
-      - run: pip install mkdocs-material mkdocs-minify-plugin markdown
+      - run: curl -fsSL https://uv.fyi/install/uv.sh | bash  # Installs uv
+      - run: |
+          cd docs
+          uv sync
       - run: mkdocs gh-deploy --force
