@@ -1,15 +1,19 @@
-resource "google_compute_instance_template" "new_template" {
+resource "google_compute_instance_template" "odin_worker_template" {
   name         = var.template_name
   machine_type = var.machine_type
 
   network_interface {
     network        = var.vpc_name # Change this if using a custom VPC
     subnetwork     = var.snet_name
+    access_config {
+      network_tier = "STANDARD"
+    }
     # network_tier   = "STANDARD"
     stack_type     = "IPV4_ONLY"
   }
 
   service_account {
+    email  = var.service_account_email
     scopes = [ "cloud-platform" ]
   }
 
@@ -48,4 +52,22 @@ resource "google_compute_instance_template" "new_template" {
   reservation_affinity {
     type = "ANY_RESERVATION"
   }
+  metadata = {
+  startup-script = <<-EOF
+  #!/bin/bash
+
+  BUCKET_NAME="valnix-stage-bucket"
+  SCRIPT_NAME="stageDeploy.sh"
+  SCRIPT_PATH="/home/ubuntu/$SCRIPT_NAME"
+
+  wget -P /home/ubuntu/ https://valnix-stage-bucket.s3.amazonaws.com/stageDeploy.sh
+
+  cd /home/ubuntu
+
+  chmod +x $SCRIPT_NAME
+
+  su ubuntu -c ./$SCRIPT_NAME
+  EOF
+}
+
 }

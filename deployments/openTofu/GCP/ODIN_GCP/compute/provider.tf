@@ -8,15 +8,14 @@ terraform {
 
   required_version = ">= 1.5.0"
 
-  backend "gcs" {
-    bucket  = "tofu-statefile-bucket"
-    prefix  = "tofustate/compute"
-    # project = "valkyrie-project"
-  }
+  # backend "gcs" {
+  #   bucket  = "tofu-statefile-bucket"
+  #   prefix  = "tofustate/compute"
+  # }
 }
 
 provider "google" {
   credentials = "./keys.json"
-  project     = "valkyrie-project"
-  region      = "asia-south1"
+  project     = var.project_name
+  region      = var.location
 }   

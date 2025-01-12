@@ -25,3 +25,6 @@ variable "data_disk_access_mode" {
 variable "os_disk_access_mode" {
   
 }
+variable "service_account_email" {
+  
+}
