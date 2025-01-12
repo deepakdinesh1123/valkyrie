@@ -19,3 +19,6 @@ variable "security_group_ids" {
 variable "ami_id" {
   type = string
 }
+variable "aws_arn" {
+  type = string
+}

@@ -1,5 +1,5 @@
 resource "aws_spot_fleet_request" "example" {
-  iam_fleet_role = "arn:aws:iam::775188627313:role/aws-service-role/spotfleet.amazonaws.com/AWSServiceRoleForEC2SpotFleet"
+  iam_fleet_role = var.aws_arn
   target_capacity = 1
 	terminate_instances_on_delete = true
 

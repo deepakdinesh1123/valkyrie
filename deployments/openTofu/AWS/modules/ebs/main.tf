@@ -4,7 +4,7 @@ resource "aws_ebs_volume" "ebs" {
   multi_attach_enabled = var.multi_attach_enabled
   type = var.ebs_type
   iops = var.ebs_iops
-  snapshot_id = var.snapshot_id
+  snapshot_id = ""#var.snapshot_id
 
   tags = {
     Name = var.ebs_name
