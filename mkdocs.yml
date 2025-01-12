@@ -13,20 +13,9 @@ theme:
   logo: images/odin.svg
   favicon: images/odin.svg
   palette:
-    - media: "(prefers-color-scheme: light)"
-      scheme: default
-      toggle:
-        icon: material/brightness-7
-        name: Switch to dark mode
-      primary: black
-      accent: red
-    - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      toggle:
-        icon: material/brightness-4
-        name: Switch to light mode
       primary: black
-      accent: lime
+      accent: indigo
   font:
     text: Roboto
     code: Roboto Mono
@@ -61,7 +50,6 @@ nav:
   - Odin:
       - Home: valkyrie/odin/index.md
       - Architecture: valkyrie/odin/architecture.md
-      - Getting Started: valkyrie/odin/getting_started.md
       - Installation: valkyrie/odin/installation.md
       - Setup:
           - Home: valkyrie/odin/setup/index.md
