@@ -1,0 +1,4 @@
+- The Shared nix store is a persistent compute disk which contains all the packages in a nix release.
+- The disk is attached as read-only to the Odin worker.
+- The disk population steps:
+    - 
