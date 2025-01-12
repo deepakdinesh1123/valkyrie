@@ -1,4 +1,10 @@
-- The Odin server is deployed in the google cloud compute engine with a public IP. 
+The Odin server is deployed in the google cloud compute engine with a public endpoint. 
+
+## Prerequisites
+- Caddy installed and running on your system
+- Golang installed
+
+## Server Setup 
 - Caddy will be running as a reverse proxy, routing traffic from client requests to the Odin server running on a compute engine.
 - The environment variables will include 
     * DB Secrets 
@@ -8,10 +14,7 @@
     * Odin worker hot containers
     * Log level
 
-!!! note "Prerequisites"
-    - Caddy
-
-    **Caddyfile**
+!!! info "**Caddyfile**"
     ```
     backend.evnix.cloud {  
         reverse_proxy localhost:8080  
