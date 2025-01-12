@@ -24,7 +24,7 @@ jobs:
           path: .cache
           restore-keys: |
             mkdocs-material-
-      - run: curl -fsSL https://uv.fyi/install/uv.sh | bash  # Installs uv
+      - run: curl -LsSf https://astral.sh/uv/install.sh | sh
       - run: |
           cd docs
           uv sync
