@@ -2,18 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/utils/api';
 import { LanguageVersion } from '@/api-client';
 
-const initLanguageVersion: LanguageVersion = {
-  language_id: 1,
-  version: "3.11",
-  nix_package_name: "python311",
-  template: "python/python.script.tmpl",
-  search_query: "python311Packages",
-  default_version: true,
-};
-
 export const useLanguageVersions = (languageId: number) => {
   const [languageVersions, setLanguageVersions] = useState<LanguageVersion[]>([]);
-  const [selectedLanguageVersion, setSelectedLanguageVersion] = useState<LanguageVersion>(initLanguageVersion);
+  const [selectedLanguageVersion, setSelectedLanguageVersion] = useState<LanguageVersion | null>(null);
 
   const fetchLanguageVersions = useCallback(async () => {
     if (!languageId) return; 

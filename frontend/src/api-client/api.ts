@@ -348,6 +348,19 @@ export interface FetchSystemPackages200Response {
 /**
  * 
  * @export
+ * @interface FlakeJobIdGet200Response
+ */
+export interface FlakeJobIdGet200Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof FlakeJobIdGet200Response
+     */
+    'flake': string;
+}
+/**
+ * 
+ * @export
  * @interface GetAllExecutionJobs200Response
  */
 export interface GetAllExecutionJobs200Response {
@@ -1083,6 +1096,40 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (xAuthToken != null) {
                 localVarHeaderParameter['X-Auth-Token'] = String(xAuthToken);
             }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Fetches flake of a given job
+         * @summary Fetch Flake
+         * @param {number} jobId Job ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        flakeJobIdGet: async (jobId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'jobId' is not null or undefined
+            assertParamExists('flakeJobIdGet', 'jobId', jobId)
+            const localVarPath = `/flake/{jobId}`
+                .replace(`{${"jobId"}}`, encodeURIComponent(String(jobId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
 
     
@@ -1927,6 +1974,19 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
+         * Fetches flake of a given job
+         * @summary Fetch Flake
+         * @param {number} jobId Job ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async flakeJobIdGet(jobId: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FlakeJobIdGet200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.flakeJobIdGet(jobId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.flakeJobIdGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * Get all execution jobs
          * @summary Get all execution jobs
          * @param {number} [page] The page number to retrieve.
@@ -2276,6 +2336,16 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
             return localVarFp.fetchSystemPackages(xAuthToken, options).then((request) => request(axios, basePath));
         },
         /**
+         * Fetches flake of a given job
+         * @summary Fetch Flake
+         * @param {number} jobId Job ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        flakeJobIdGet(jobId: number, options?: RawAxiosRequestConfig): AxiosPromise<FlakeJobIdGet200Response> {
+            return localVarFp.flakeJobIdGet(jobId, options).then((request) => request(axios, basePath));
+        },
+        /**
          * Get all execution jobs
          * @summary Get all execution jobs
          * @param {number} [page] The page number to retrieve.
@@ -2589,6 +2659,18 @@ export class DefaultApi extends BaseAPI {
      */
     public fetchSystemPackages(xAuthToken?: string, options?: RawAxiosRequestConfig) {
         return DefaultApiFp(this.configuration).fetchSystemPackages(xAuthToken, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Fetches flake of a given job
+     * @summary Fetch Flake
+     * @param {number} jobId Job ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public flakeJobIdGet(jobId: number, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).flakeJobIdGet(jobId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

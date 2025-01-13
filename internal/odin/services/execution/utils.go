@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"path/filepath"
 	"text/template"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
+	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
+	"github.com/jackc/pgx/v5"
 )
 
 func ConvertExecSpecToNixScript(ctx context.Context, execReq *db.ExecRequest, queries db.Store) (string, *ExecutionRequest, error) {
@@ -15,10 +16,12 @@ func ConvertExecSpecToNixScript(ctx context.Context, execReq *db.ExecRequest, qu
 	execSpec.LanguageDependencies = execReq.LanguageDependencies
 	execSpec.SystemDependencies = execReq.SystemDependencies
 	execSpec.CmdLineArgs = execReq.CmdLineArgs.String
-	execSpec.CompileArgs = execReq.CompileArgs.String
+	execSpec.CompilerArgs = execReq.CompileArgs.String
 	execSpec.Input = execReq.Input.String
 	execSpec.Command = execReq.Command.String
 	execSpec.Setup = execReq.Setup.String
+
+	fmt.Println(execReq.LanguageDependencies, execReq.SystemDependencies, execReq.Setup.String, execReq.Command.String)
 
 	langVersion, err := queries.GetLanguageVersionByID(ctx, execReq.LanguageVersion)
 	if err != nil {
@@ -35,19 +38,32 @@ func ConvertExecSpecToNixScript(ctx context.Context, execReq *db.ExecRequest, qu
 	execSpec.ScriptName = scriptName
 
 	execSpec.IsFlake = false
-	tmplName := filepath.Join("templates", language.Name, langVersion.Template)
 
 	var res bytes.Buffer
-	tmpl, err := template.New(string("base.exec.tmpl")).ParseFS(
-		ExecTemplates,
-		"templates/base.exec.tmpl",
-		tmplName,
-	)
+	var langTemplate string
+
+	if langVersion.Template.String != "" {
+		langTemplate = langVersion.Template.String
+	} else {
+		langTemplate = language.Template
+	}
+
+	baseTemplate, err := ExecTemplates.ReadFile("templates/base.exec.tmpl")
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to read base template")
+	}
+
+	baseTmpl, err := template.New("base").Parse(string(baseTemplate))
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to parse template")
 	}
 
-	err = tmpl.Execute(&res, execSpec)
+	langTmpl, err := template.Must(baseTmpl.Clone()).Parse(langTemplate)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to parse language template")
+	}
+
+	err = langTmpl.Execute(&res, execSpec)
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to execute template")
 	}
@@ -59,27 +75,72 @@ func ConvertExecSpecToNixScript(ctx context.Context, execReq *db.ExecRequest, qu
 
 func (s *ExecutionService) convertExecSpecToFlake(execSpec ExecutionRequest) (string, error) {
 	execSpec.IsFlake = true
-	tmplName := filepath.Join("templates", execSpec.Language, execSpec.Template)
 
-	s.logger.Debug().Str("Name", tmplName).Msg("Template is")
+	s.logger.Debug().Str("cmdLineArgs", execSpec.CmdLineArgs).Str("compileArgs", execSpec.CompilerArgs).Msg("Args are")
 
 	var res bytes.Buffer
-	tmpl, err := template.New("base.flake.tmpl").ParseFS(ExecTemplates, "templates/base.flake.tmpl", tmplName)
+
+	baseTemplate, err := ExecTemplates.ReadFile("templates/base.flake.tmpl")
 	if err != nil {
-		s.logger.Err(err).Msg("failed to parse template")
-		return "", &ExecutionServiceError{
-			Type:    "template",
-			Message: "failed to parse template",
+		return "", fmt.Errorf("failed to read base template")
+	}
+
+	baseTmpl, err := template.New("base").Parse(string(baseTemplate))
+	if err != nil {
+		return "", fmt.Errorf("failed to parse template")
+	}
+
+	langTmpl, err := template.Must(baseTmpl.Clone()).Parse(execSpec.Template)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse language template")
+	}
+
+	err = langTmpl.Execute(&res, execSpec)
+	if err != nil {
+		return "", fmt.Errorf("failed to execute template")
+	}
+	return res.String(), nil
+}
+
+func (s *ExecutionService) CheckExecRequest(ctx context.Context, req *api.ExecutionRequest) error {
+	language, err := s.queries.GetLanguageByName(ctx, req.Language.Value)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return fmt.Errorf("specified language is not supported")
 		}
 	}
 
-	err = tmpl.Execute(&res, execSpec)
-	if err != nil {
-		s.logger.Err(err).Msg("failed to execute template")
-		return "", &ExecutionServiceError{
-			Type:    "template",
-			Message: "failed to execute template",
+	if req.Version.Set {
+		_, err = s.queries.GetLanguageVersion(ctx, db.GetLanguageVersionParams{
+			LanguageID: language.ID,
+			Version:    req.Version.Value,
+		})
+		if err != nil {
+			return fmt.Errorf("specified version is not supported")
 		}
 	}
-	return res.String(), nil
+
+	// if req.Environment.Set {
+	// 	var packages []string
+	// 	if len(req.Environment.Value.LanguageDependencies) != 0 {
+	// 		packages = append(packages, req.Environment.Value.LanguageDependencies...)
+	// 	}
+	// 	if len(req.Environment.Value.SystemDependencies) != 0 {
+	// 		packages = append(packages, req.Environment.Value.SystemDependencies...)
+	// 	}
+
+	// 	if len(packages) > 0 {
+	// 		res, err := s.queries.PackagesExist(ctx, db.PackagesExistParams{
+	// 			Packages: packages,
+	// 			Language: req.Language.Value,
+	// 		})
+	// 		if err != nil {
+	// 			return fmt.Errorf("error checking if packages exist: %s", err)
+	// 		}
+	// 		if !res.Exists {
+	// 			return fmt.Errorf("following packages does not exist: %s", res.NonexistingPackages)
+	// 		}
+	// 	}
+	// }
+	return nil
 }

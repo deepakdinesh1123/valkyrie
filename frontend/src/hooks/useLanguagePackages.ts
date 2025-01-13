@@ -3,7 +3,7 @@ import { api } from '@/utils/api';
 
 export const useLanguagePackages = ( selectedLanguage: string, searchString: string,) => {
   const [languagePackages, setLanguagePackages] = useState<{ name: string; version: string }[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {

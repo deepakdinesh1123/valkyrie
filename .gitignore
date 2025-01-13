@@ -59,4 +59,5 @@ odinb
 *.tfstate.backup
 *.terraform.lock*
 .terraform/
+rippkgs*
 **keys.json

@@ -1,1 +1,0 @@
-python311, requests, numpy, pandas, scipy, scikit-learn, matplotlib, TensorFlow, PyTorch, statsmodels, nltk, gensim, openpyxl, lxml, SQLAlchemy, PyYAML, pytest, pydantic, asyncio, regex, tqdm, jinja2, attrs, jsonschema, cryptography, cx_Oracle, pymongo, h5py, Pytest-bdd, fastparquet
