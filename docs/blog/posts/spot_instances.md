@@ -12,7 +12,7 @@ title: Saving money using spot instances
 
 # Saving money using spot instances
 
-**You can read about why and how we started using spot instances for Odin workers [here](spot_instances.md)**
+**You can read about how spot instances for saves us 60-70% costs on Odin workers [here](spot_instances.md)**
 
 ## Requirements:
 - AWS/GCP Account
