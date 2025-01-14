@@ -39,7 +39,7 @@ func (s *OdinServer) Execute(ctx context.Context, req *api.ExecutionRequest, par
 
 func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
-	jobIDStr := req.PathValue("executionId")
+	jobIDStr := req.PathValue("jobId")
 	jobID, err := strconv.ParseInt(jobIDStr, 10, 64)
 	if err != nil {
 		s.logger.Error().Stack().Err(err).Msg("Failed to get executionId")
