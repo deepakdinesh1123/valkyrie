@@ -1,8 +1,12 @@
 services:
+  # ide:
+  #   build:
+  #     context: frontend
+  #   ports:
+  #     - "5173:5173"
+
   odin:
-    build:
-      context: .
-      dockerfile: build/package/dockerfiles/odin.dockerfile
+    image: odin:binary
     env_file:
       - .env
     depends_on:
@@ -13,9 +17,7 @@ services:
       - "8080:8080"
 
   odin-worker:
-    build:
-      context: .
-      dockerfile: build/package/dockerfiles/odin.dockerfile
+    image: odin:binary
     env_file:
       - .env
     depends_on:
@@ -26,14 +28,11 @@ services:
     deploy:
       replicas: 1
     command: ["worker", "start"]
-    privileged: true
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    user: "root"
     environment:
       - DOCKER_HOST=unix:///var/run/docker.sock
-      - ODIN_WORKER_EXECUTOR=container
-      - ODIN_WORKER_CONTAINER_ENGINE=docker
-      - POSTGRES_HOST=postgres
 
   postgres:
     image: postgres

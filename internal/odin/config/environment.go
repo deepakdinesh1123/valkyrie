@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/user"
 	"path/filepath"
 	"sync"
 
@@ -61,7 +60,9 @@ type EnvConfig struct {
 	ODIN_USER_TOKEN  string `mapstructure:"ODIN_USER_TOKEN"`
 	ODIN_ADMIN_TOKEN string `mapstructure:"ODIN_ADMIN_TOKEN"`
 
-	USER_HOME_DIR string
+	RIPPKGS_URL string `mapstructure:"RIPPKGS_URL"`
+
+	ODIN_BASE_DIR string `mapstructure:"ODIN_BASE_DIR"`
 }
 
 var (
@@ -87,28 +88,19 @@ func GetEnvConfig() (*EnvConfig, error) {
 			log.Fatalf("Failed to unmarshal configuration: %v", err)
 		}
 
-		fmt.Println("Executor is ", envConfig.ODIN_WORKER_EXECUTOR)
-
-		usr, err := user.Current()
-		if err != nil {
-			log.Printf("Warning: Failed to get current user: %v", err)
-		} else {
-			envConfig.USER_HOME_DIR = filepath.Join("/home", usr.Name)
+		if envConfig.POSTGRES_STANDALONE_PATH == "" {
+			envConfig.POSTGRES_STANDALONE_PATH = filepath.Join(envConfig.ODIN_BASE_DIR, ".zango", "stdb")
 		}
 
-		if envConfig.USER_HOME_DIR == "" {
-			if homeDir, err := os.UserHomeDir(); err == nil {
-				envConfig.USER_HOME_DIR = homeDir
-			} else {
-				log.Printf("Warning: Could not determine user home directory: %v", err)
+		envConfig.ODIN_INFO_DIR = filepath.Join(envConfig.ODIN_BASE_DIR, ".odin_info")
+		_, err := os.Stat(envConfig.ODIN_INFO_DIR)
+		if os.IsNotExist(err) {
+			err = os.MkdirAll(envConfig.ODIN_INFO_DIR, 0755)
+			if err != nil {
+				log.Fatalf("Failed to created odin ino dir %s : %s", envConfig.ODIN_BASE_DIR, err)
 			}
 		}
 
-		if envConfig.POSTGRES_STANDALONE_PATH == "" {
-			envConfig.POSTGRES_STANDALONE_PATH = filepath.Join(envConfig.USER_HOME_DIR, ".zango", "stdb")
-		}
-
-		envConfig.ODIN_INFO_DIR = filepath.Join(os.TempDir(), ".odin_info")
 		envConfig.ODIN_WORKER_INFO_FILE = filepath.Join(envConfig.ODIN_INFO_DIR, "worker.json")
 	})
 
@@ -150,4 +142,15 @@ func setDefaults() {
 	viper.SetDefault("ODIN_LOG_LEVEL", "info")
 	viper.SetDefault("ODIN_WORKER_DOCKER_IMAGE", "odin:alpine")
 	viper.SetDefault("ODIN_WORKER_PODMAN_IMAGE", "odin:alpine")
+	viper.SetDefault("RIPPKGS_URL", "https://valnix-stage-bucket.s3.us-east-1.amazonaws.com/rippkgs-24.11.sqlite")
+
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		viper.SetDefault("ODIN_BASE_DIR", os.TempDir())
+	}
+	if homeDir == "/root" {
+		viper.SetDefault("ODIN_BASE_DIR", os.TempDir())
+	} else {
+		viper.SetDefault("ODIN_BASE_DIR", homeDir)
+	}
 }

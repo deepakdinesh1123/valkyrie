@@ -80,7 +80,6 @@ func GetDBConnection(ctx context.Context, envConfig *config.EnvConfig, logger *z
 		envConfig.POSTGRES_USER, envConfig.POSTGRES_PASSWORD, envConfig.POSTGRES_HOST,
 		envConfig.POSTGRES_PORT, envConfig.POSTGRES_DB, envConfig.POSTGRES_SSL_MODE)
 
-	logger.Info().Str("URL", POSTGRES_URL).Msg("POSTGRES CONNECTION")
 	connPool, err := pgxpool.NewWithConfig(ctx, config.PgxConfig(POSTGRES_URL, dbOpts.tp, logger))
 	if err != nil {
 		return nil, err

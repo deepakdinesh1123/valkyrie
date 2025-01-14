@@ -19,6 +19,11 @@ var ServerStartCmd = &cobra.Command{
 	RunE:  serverExec,
 }
 
+var (
+	migrateDB    bool
+	initialiseDB bool
+)
+
 func serverExec(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 
@@ -37,13 +42,7 @@ func serverExec(cmd *cobra.Command, args []string) error {
 	logger := logs.GetLogger(config)
 	logger.Info().Msg("Starting Odin server")
 
-	applyMigrations, err := cmd.Flags().GetBool("migrate")
-	if err != nil {
-		logger.Err(err).Msg("Failed to get migrate flag")
-		return err
-	}
-
-	srv, err := server.NewServer(ctx, envConfig, false, applyMigrations, logger)
+	srv, err := server.NewServer(ctx, envConfig, false, migrateDB, initialiseDB, logger)
 	if err != nil {
 		logger.Err(err).Msg("Failed to create server")
 		return err
@@ -57,5 +56,6 @@ func serverExec(cmd *cobra.Command, args []string) error {
 }
 
 func init() {
-	ServerStartCmd.Flags().Bool("migrate", true, "Migrate database")
+	ServerStartCmd.Flags().BoolVarP(&migrateDB, "migrate", "m", true, "Migrate database")
+	ServerStartCmd.Flags().BoolVarP(&initialiseDB, "initdb", "i", true, "Initialise database")
 }

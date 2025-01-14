@@ -21,7 +21,7 @@ func realisePackages(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 	envConfig, err := config.GetEnvConfig()
 	if err != nil {
-		return logError("Error fetching environment config", err)
+		return fmt.Errorf("error fetching environment config %s", err)
 	}
 
 	dbConnectionOpts := db.DBConnectionOpts(
@@ -35,7 +35,7 @@ func realisePackages(cmd *cobra.Command, args []string) error {
 
 	queries, err := db.GetDBConnection(ctx, envConfig, logger, dbConnectionOpts)
 	if err != nil {
-		return logError("Error getting DB connection", err)
+		return fmt.Errorf("error getting DB connection: %s", err)
 	}
 
 	packages, err := queries.GetAllPackages(ctx)

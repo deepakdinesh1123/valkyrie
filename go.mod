@@ -10,7 +10,6 @@ require (
 	github.com/fergusstrange/embedded-postgres v1.27.0
 	github.com/go-faster/errors v0.7.1
 	github.com/go-faster/jx v1.1.0
-	github.com/goccy/go-yaml v1.13.7
 	github.com/gofrs/flock v0.12.1
 	github.com/golang-migrate/migrate/v4 v4.17.1
 	github.com/gorilla/handlers v1.5.2
@@ -34,6 +33,7 @@ require (
 	go.uber.org/multierr v1.11.0
 	golang.org/x/sync v0.8.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
+	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
@@ -194,7 +194,6 @@ require (
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 	tags.cncf.io/container-device-interface v0.8.0 // indirect

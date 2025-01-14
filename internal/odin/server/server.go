@@ -6,8 +6,10 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/services/execution"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/store"
 	"github.com/deepakdinesh1123/valkyrie/internal/telemetry"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
+	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/propagation"
@@ -26,7 +28,7 @@ type OdinServer struct {
 	otelShutdown     func(context.Context) error
 }
 
-func NewServer(ctx context.Context, envConfig *config.EnvConfig, standalone bool, applyMigrations bool, logger *zerolog.Logger) (*OdinServer, error) {
+func NewServer(ctx context.Context, envConfig *config.EnvConfig, standalone bool, applyMigrations bool, initialiseDB bool, logger *zerolog.Logger) (*OdinServer, error) {
 	otelShutdown, tp, mp, prop, err := telemetry.SetupOTelSDK(ctx, "Odin Server", envConfig)
 	if err != nil {
 		logger.Err(err).Msg("Failed to setup OpenTelemetry")
@@ -43,6 +45,20 @@ func NewServer(ctx context.Context, envConfig *config.EnvConfig, standalone bool
 	if err != nil {
 		return nil, err
 	}
+
+	if initialiseDB {
+		langs, err := queries.GetAllLanguages(ctx)
+		if err != nil {
+			if err == pgx.ErrNoRows {
+				logger.Err(err).Msg("Generating store packages")
+				store.GeneratePackages(ctx, "", "", false, envConfig, logger)
+			}
+		} else if len(langs) == 0 {
+			logger.Info().Msg("Generating store packages")
+			store.GeneratePackages(ctx, "", "", false, envConfig, logger)
+		}
+	}
+
 	executionService := execution.NewExecutionService(queries, envConfig, logger)
 	odinServer := &OdinServer{
 		queries:          queries,

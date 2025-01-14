@@ -17,7 +17,9 @@ import (
 )
 
 var (
-	cleanDB bool
+	cleanDB      bool
+	migrateDB    bool
+	initialiseDB bool
 )
 
 var StandaloneCmd = &cobra.Command{
@@ -48,7 +50,7 @@ func standaloneExec(cmd *cobra.Command, args []string) error {
 		os.RemoveAll(envConfig.POSTGRES_STANDALONE_PATH)
 	}
 
-	srv, err := server.NewServer(ctx, envConfig, true, true, logger)
+	srv, err := server.NewServer(ctx, envConfig, true, true, initialiseDB, logger)
 	if err != nil {
 		logger.Err(err).Msg("Failed to create server")
 		return err
@@ -82,4 +84,6 @@ func standaloneExec(cmd *cobra.Command, args []string) error {
 
 func init() {
 	StandaloneCmd.Flags().BoolVarP(&cleanDB, "clean-db", "c", false, "Delete existing DB")
+	StandaloneCmd.Flags().BoolVarP(&migrateDB, "migrate", "m", true, "Migrate database")
+	StandaloneCmd.Flags().BoolVarP(&initialiseDB, "initdb", "i", true, "Initialise database")
 }

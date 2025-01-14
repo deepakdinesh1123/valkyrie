@@ -14,8 +14,7 @@ COPY pkg /valkyrie/pkg
 COPY go.mod /valkyrie
 COPY go.sum /valkyrie
 
-RUN nix --option filter-syscalls false \
-    build .#odin
+RUN nix build
 
 RUN mkdir /tmp/nix-store-closure
 RUN cp -R $(nix-store -qR result/) /tmp/nix-store-closure
