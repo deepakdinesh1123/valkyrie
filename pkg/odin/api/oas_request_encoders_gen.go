@@ -11,34 +11,6 @@ import (
 	ht "github.com/ogen-go/ogen/http"
 )
 
-func encodeCreateLanguageRequest(
-	req *Language,
-	r *http.Request,
-) error {
-	const contentType = "application/json"
-	e := new(jx.Encoder)
-	{
-		req.Encode(e)
-	}
-	encoded := e.Bytes()
-	ht.SetBody(r, bytes.NewReader(encoded), contentType)
-	return nil
-}
-
-func encodeCreateLanguageVersionRequest(
-	req *LanguageVersion,
-	r *http.Request,
-) error {
-	const contentType = "application/json"
-	e := new(jx.Encoder)
-	{
-		req.Encode(e)
-	}
-	encoded := e.Bytes()
-	ht.SetBody(r, bytes.NewReader(encoded), contentType)
-	return nil
-}
-
 func encodeExecuteRequest(
 	req *ExecutionRequest,
 	r *http.Request,
@@ -55,34 +27,6 @@ func encodeExecuteRequest(
 
 func encodePackagesExistRequest(
 	req *PackageExistRequest,
-	r *http.Request,
-) error {
-	const contentType = "application/json"
-	e := new(jx.Encoder)
-	{
-		req.Encode(e)
-	}
-	encoded := e.Bytes()
-	ht.SetBody(r, bytes.NewReader(encoded), contentType)
-	return nil
-}
-
-func encodeUpdateLanguageRequest(
-	req *Language,
-	r *http.Request,
-) error {
-	const contentType = "application/json"
-	e := new(jx.Encoder)
-	{
-		req.Encode(e)
-	}
-	encoded := e.Bytes()
-	ht.SetBody(r, bytes.NewReader(encoded), contentType)
-	return nil
-}
-
-func encodeUpdateLanguageVersionRequest(
-	req *LanguageVersion,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

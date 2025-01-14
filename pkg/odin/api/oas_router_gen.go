@@ -442,32 +442,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 							break
 						}
 
-						if len(elem) == 0 {
-							break
-						}
-						switch elem[0] {
-						case 'c': // Prefix: "create"
-							origElem := elem
-							if l := len("create"); len(elem) >= l && elem[0:l] == "create" {
-								elem = elem[l:]
-							} else {
-								break
-							}
-
-							if len(elem) == 0 {
-								// Leaf node.
-								switch r.Method {
-								case "POST":
-									s.handleCreateLanguageVersionRequest([0]string{}, elemIsEscaped, w, r)
-								default:
-									s.notAllowed(w, r, "POST")
-								}
-
-								return
-							}
-
-							elem = origElem
-						}
 						// Param: "id"
 						// Leaf parameter
 						args[0] = elem
@@ -476,20 +450,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 						if len(elem) == 0 {
 							// Leaf node.
 							switch r.Method {
-							case "DELETE":
-								s.handleDeleteLanguageVersionRequest([1]string{
-									args[0],
-								}, elemIsEscaped, w, r)
 							case "GET":
 								s.handleGetLanguageVersionByIdRequest([1]string{
 									args[0],
 								}, elemIsEscaped, w, r)
-							case "PUT":
-								s.handleUpdateLanguageVersionRequest([1]string{
-									args[0],
-								}, elemIsEscaped, w, r)
 							default:
-								s.notAllowed(w, r, "DELETE,GET,PUT")
+								s.notAllowed(w, r, "GET")
 							}
 
 							return
@@ -526,32 +492,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 							break
 						}
 
-						if len(elem) == 0 {
-							break
-						}
-						switch elem[0] {
-						case 'c': // Prefix: "create"
-							origElem := elem
-							if l := len("create"); len(elem) >= l && elem[0:l] == "create" {
-								elem = elem[l:]
-							} else {
-								break
-							}
-
-							if len(elem) == 0 {
-								// Leaf node.
-								switch r.Method {
-								case "POST":
-									s.handleCreateLanguageRequest([0]string{}, elemIsEscaped, w, r)
-								default:
-									s.notAllowed(w, r, "POST")
-								}
-
-								return
-							}
-
-							elem = origElem
-						}
 						// Param: "id"
 						// Match until "/"
 						idx := strings.IndexByte(elem, '/')
@@ -563,20 +503,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 						if len(elem) == 0 {
 							switch r.Method {
-							case "DELETE":
-								s.handleDeleteLanguageRequest([1]string{
-									args[0],
-								}, elemIsEscaped, w, r)
 							case "GET":
 								s.handleGetLanguageByIdRequest([1]string{
 									args[0],
 								}, elemIsEscaped, w, r)
-							case "PUT":
-								s.handleUpdateLanguageRequest([1]string{
-									args[0],
-								}, elemIsEscaped, w, r)
 							default:
-								s.notAllowed(w, r, "DELETE,GET,PUT")
+								s.notAllowed(w, r, "GET")
 							}
 
 							return
@@ -1237,36 +1169,6 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							break
 						}
 
-						if len(elem) == 0 {
-							break
-						}
-						switch elem[0] {
-						case 'c': // Prefix: "create"
-							origElem := elem
-							if l := len("create"); len(elem) >= l && elem[0:l] == "create" {
-								elem = elem[l:]
-							} else {
-								break
-							}
-
-							if len(elem) == 0 {
-								// Leaf node.
-								switch method {
-								case "POST":
-									r.name = CreateLanguageVersionOperation
-									r.summary = "Create a language version"
-									r.operationID = "createLanguageVersion"
-									r.pathPattern = "/language-versions/create"
-									r.args = args
-									r.count = 0
-									return r, true
-								default:
-									return
-								}
-							}
-
-							elem = origElem
-						}
 						// Param: "id"
 						// Leaf parameter
 						args[0] = elem
@@ -1275,26 +1177,10 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						if len(elem) == 0 {
 							// Leaf node.
 							switch method {
-							case "DELETE":
-								r.name = DeleteLanguageVersionOperation
-								r.summary = "Delete a language version"
-								r.operationID = "deleteLanguageVersion"
-								r.pathPattern = "/language-versions/{id}"
-								r.args = args
-								r.count = 1
-								return r, true
 							case "GET":
 								r.name = GetLanguageVersionByIdOperation
 								r.summary = "Get language version by ID"
 								r.operationID = "getLanguageVersionById"
-								r.pathPattern = "/language-versions/{id}"
-								r.args = args
-								r.count = 1
-								return r, true
-							case "PUT":
-								r.name = UpdateLanguageVersionOperation
-								r.summary = "Update a language version"
-								r.operationID = "updateLanguageVersion"
 								r.pathPattern = "/language-versions/{id}"
 								r.args = args
 								r.count = 1
@@ -1339,36 +1225,6 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							break
 						}
 
-						if len(elem) == 0 {
-							break
-						}
-						switch elem[0] {
-						case 'c': // Prefix: "create"
-							origElem := elem
-							if l := len("create"); len(elem) >= l && elem[0:l] == "create" {
-								elem = elem[l:]
-							} else {
-								break
-							}
-
-							if len(elem) == 0 {
-								// Leaf node.
-								switch method {
-								case "POST":
-									r.name = CreateLanguageOperation
-									r.summary = "Create a language"
-									r.operationID = "createLanguage"
-									r.pathPattern = "/languages/create"
-									r.args = args
-									r.count = 0
-									return r, true
-								default:
-									return
-								}
-							}
-
-							elem = origElem
-						}
 						// Param: "id"
 						// Match until "/"
 						idx := strings.IndexByte(elem, '/')
@@ -1380,26 +1236,10 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 
 						if len(elem) == 0 {
 							switch method {
-							case "DELETE":
-								r.name = DeleteLanguageOperation
-								r.summary = "Delete a language"
-								r.operationID = "deleteLanguage"
-								r.pathPattern = "/languages/{id}"
-								r.args = args
-								r.count = 1
-								return r, true
 							case "GET":
 								r.name = GetLanguageByIdOperation
 								r.summary = "Get language by ID"
 								r.operationID = "getLanguageById"
-								r.pathPattern = "/languages/{id}"
-								r.args = args
-								r.count = 1
-								return r, true
-							case "PUT":
-								r.name = UpdateLanguageOperation
-								r.summary = "Update a language"
-								r.operationID = "updateLanguage"
 								r.pathPattern = "/languages/{id}"
 								r.args = args
 								r.count = 1

@@ -7,11 +7,7 @@ type OperationName = string
 
 const (
 	CancelExecutionJobOperation     OperationName = "CancelExecutionJob"
-	CreateLanguageOperation         OperationName = "CreateLanguage"
-	CreateLanguageVersionOperation  OperationName = "CreateLanguageVersion"
 	DeleteExecutionJobOperation     OperationName = "DeleteExecutionJob"
-	DeleteLanguageOperation         OperationName = "DeleteLanguage"
-	DeleteLanguageVersionOperation  OperationName = "DeleteLanguageVersion"
 	ExecuteOperation                OperationName = "Execute"
 	FetchLanguagePackagesOperation  OperationName = "FetchLanguagePackages"
 	FetchSystemPackagesOperation    OperationName = "FetchSystemPackages"
@@ -32,6 +28,4 @@ const (
 	PackagesExistOperation          OperationName = "PackagesExist"
 	SearchLanguagePackagesOperation OperationName = "SearchLanguagePackages"
 	SearchSystemPackagesOperation   OperationName = "SearchSystemPackages"
-	UpdateLanguageOperation         OperationName = "UpdateLanguage"
-	UpdateLanguageVersionOperation  OperationName = "UpdateLanguageVersion"
 )
