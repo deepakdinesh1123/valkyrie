@@ -9,8 +9,8 @@ get:
       schema:
         type: integer
         format: int64
-    - $ref: ../components/parameters/PageNumber.yml
-    - $ref: ../components/parameters/PageSize.yml
+    - $ref: ../components/parameters/Cursor.yml
+    - $ref: ../components/parameters/Limit.yml
     - $ref: ../components/parameters/AuthHeader.yml
   responses:
     '200':

@@ -1,0 +1,8 @@
+name: cursor
+in: query
+description: The current position of the cursor
+required: false
+schema:
+  type: integer
+  format: int64
+  default: 1

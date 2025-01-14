@@ -8,8 +8,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/coder/websocket"
-	"github.com/coder/websocket/wsjson"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
@@ -19,7 +17,7 @@ import (
 
 type SSEMessage struct {
 	Status   string      `json:"status"`
-	ExecID   int64       `json:"execId"`
+	JobID    int64       `json:"execId"`
 	Logs     interface{} `json:"logs,omitempty"`
 	ErrorMsg string      `json:"error,omitempty"`
 }
@@ -41,8 +39,8 @@ func (s *OdinServer) Execute(ctx context.Context, req *api.ExecutionRequest, par
 
 func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
-	execIdStr := req.PathValue("executionId")
-	execId, err := strconv.ParseInt(execIdStr, 10, 64)
+	jobIDStr := req.PathValue("executionId")
+	jobID, err := strconv.ParseInt(jobIDStr, 10, 64)
 	if err != nil {
 		s.logger.Error().Stack().Err(err).Msg("Failed to get executionId")
 		http.Error(w, "Failed to get executionId", http.StatusBadRequest)
@@ -64,74 +62,70 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 	for {
 		select {
 		case <-ctx.Done():
-			job, err := s.queries.GetJob(context.TODO(), execId)
+			job, err := s.queries.GetJob(context.TODO(), jobID)
 			if err != nil {
 				s.logger.Error().Stack().Err(err).Msg("Failed to get job status")
 				return
 			}
 			if job.CurrentState == "pending" {
-				if _, err := s.queries.DeleteJob(context.TODO(), execId); err != nil {
+				if _, err := s.queries.DeleteJob(context.TODO(), jobID); err != nil {
 					s.logger.Error().Stack().Err(err).Msg("Failed to delete pending job on disconnect")
 				} else {
-					s.logger.Info().Int64("executionId", execId).Msg("Deleted pending job due to client disconnection")
+					s.logger.Info().Int64("executionId", jobID).Msg("Deleted pending job due to client disconnection")
 				}
 			}
 			return
 		default:
-			job, err := s.queries.GetJob(ctx, execId)
+			job, err := s.queries.GetJob(ctx, jobID)
 			if err != nil {
 				s.logger.Error().Stack().Err(err).Msg("Failed to get job")
 				sendSSEMessage(w, flusher, SSEMessage{
 					Status:   "error",
-					ExecID:   execId,
+					JobID:    jobID,
 					ErrorMsg: fmt.Sprintf("Failed to get job: %s", err),
 				})
 				return
 			}
 			switch job.CurrentState {
 			case "completed":
-				res, err := s.queries.GetExecutionsForJob(ctx, db.GetExecutionsForJobParams{
-					JobID:  pgtype.Int8{Int64: execId, Valid: true},
-					Limit:  1,
-					Offset: 0,
-				})
+				res, err := s.queries.GetLatestExecution(ctx, pgtype.Int8{Int64: jobID, Valid: true})
 				if err != nil {
 					s.logger.Error().Stack().Err(err).Msg("Failed to get execution logs")
 					sendSSEMessage(w, flusher, SSEMessage{
 						Status:   "error",
-						ExecID:   execId,
+						JobID:    jobID,
 						ErrorMsg: fmt.Sprintf("failed to get execution logs: %s", err),
 					})
 					return
 				}
 				sendSSEMessage(w, flusher, SSEMessage{
 					Status: "completed",
-					ExecID: execId,
-					Logs:   res[0].ExecLogs,
+					JobID:  jobID,
+					Logs:   res.ExecLogs,
 				})
 				return
 
 			case "failed":
 				sendSSEMessage(w, flusher, SSEMessage{
 					Status: "failed",
-					ExecID: execId,
+					JobID:  jobID,
 				})
 				return
 
 			case "pending":
 				sendSSEMessage(w, flusher, SSEMessage{
 					Status: "pending",
-					ExecID: execId,
+					JobID:  jobID,
 				})
 			case "scheduled":
 				sendSSEMessage(w, flusher, SSEMessage{
 					Status: "scheduled",
-					ExecID: execId,
+					JobID:  jobID,
 				})
 			case "cancelled":
 				sendSSEMessage(w, flusher, SSEMessage{
 					Status: "canceled",
-					ExecID: execId,
+					JobID:  jobID,
 				})
 			default:
 				s.logger.Warn().Str("status", job.CurrentState).Msg("Unknown status")
@@ -142,77 +136,85 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func (s *OdinServer) ExecuteWS(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	c, err := websocket.Accept(w, r, nil)
-	if err != nil {
-		s.logger.Error().Stack().Err(err).Msg("Failed to accept websocket")
-		http.Error(w, "Failed to accept websocket", http.StatusInternalServerError)
-		return
-	}
-	defer c.Close(websocket.StatusNormalClosure, "Closing connection")
-	var execReq api.ExecutionRequest
-	err = wsjson.Read(ctx, c, &execReq)
-	if err != nil {
-		s.logger.Error().Stack().Err(err).Msg("Failed to read request")
-		http.Error(w, "Failed to read request", http.StatusInternalServerError)
-		return
-	}
-	execId, err := s.executionService.AddJob(ctx, &execReq)
-	if err != nil {
-		s.logger.Error().Stack().Err(err).Msg("Failed to execute")
-		http.Error(w, "Failed to execute", http.StatusInternalServerError)
-		return
-	}
+// func (s *OdinServer) ExecuteWS(w http.ResponseWriter, r *http.Request) {
+// 	ctx := r.Context()
+// 	c, err := websocket.Accept(w, r, nil)
+// 	if err != nil {
+// 		s.logger.Error().Stack().Err(err).Msg("Failed to accept websocket")
+// 		http.Error(w, "Failed to accept websocket", http.StatusInternalServerError)
+// 		return
+// 	}
+// 	defer c.Close(websocket.StatusNormalClosure, "Closing connection")
+// 	var execReq api.ExecutionRequest
+// 	err = wsjson.Read(ctx, c, &execReq)
+// 	if err != nil {
+// 		s.logger.Error().Stack().Err(err).Msg("Failed to read request")
+// 		http.Error(w, "Failed to read request", http.StatusInternalServerError)
+// 		return
+// 	}
+// 	execId, err := s.executionService.AddJob(ctx, &execReq)
+// 	if err != nil {
+// 		s.logger.Error().Stack().Err(err).Msg("Failed to execute")
+// 		http.Error(w, "Failed to execute", http.StatusInternalServerError)
+// 		return
+// 	}
 
-	for {
-		select {
-		case <-ctx.Done():
-			s.logger.Info().Int64("executionId", execId).Msg("Client disconnected")
-			return
-		default:
-			job, err := s.queries.GetJob(ctx, execId)
-			if err != nil {
-				s.logger.Error().Stack().Err(err).Msg("Failed to get job")
-				return
-			}
+// 	for {
+// 		select {
+// 		case <-ctx.Done():
+// 			s.logger.Info().Int64("executionId", execId).Msg("Client disconnected")
+// 			return
+// 		default:
+// 			job, err := s.queries.GetJob(ctx, execId)
+// 			if err != nil {
+// 				s.logger.Error().Stack().Err(err).Msg("Failed to get job")
+// 				return
+// 			}
 
-			s.logger.Debug().Str("status", job.CurrentState).Msg("CurrentState fetched")
+// 			s.logger.Debug().Str("status", job.CurrentState).Msg("CurrentState fetched")
 
-			switch job.CurrentState {
-			case "completed":
-				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("completed: %d\n\n", execId)))
-				res, err := s.queries.GetExecutionsForJob(ctx, db.GetExecutionsForJobParams{
-					JobID:  pgtype.Int8{Int64: execId, Valid: true},
-					Limit:  1,
-					Offset: 0,
-				})
-				if err != nil {
-					s.logger.Error().Stack().Err(err).Msg("Failed to get execution executions")
-					c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("failed: %s\n\n", err)))
-					return
-				}
-				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("data: %s\n\n", res[0].ExecLogs)))
-				return
-			case "failed":
-				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("failed: %d\n\n", execId)))
-				return
-			case "pending":
-				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("pending: %d\n\n", execId)))
-			case "scheduled":
-				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("scheduled: %d\n\n", execId)))
-			default:
-				s.logger.Warn().Str("status", job.CurrentState).Msg("Unknown status")
-			}
-			time.Sleep(3 * time.Second)
-		}
-	}
-}
+// 			switch job.CurrentState {
+// 			case "completed":
+// 				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("completed: %d\n\n", execId)))
+// 				res, err := s.queries.GetExecutionsForJob(ctx, db.GetExecutionsForJobParams{
+// 					JobID:  pgtype.Int8{Int64: execId, Valid: true},
+// 					Limit:  1,
+// 					Offset: 0,
+// 				})
+// 				if err != nil {
+// 					s.logger.Error().Stack().Err(err).Msg("Failed to get execution executions")
+// 					c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("failed: %s\n\n", err)))
+// 					return
+// 				}
+// 				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("data: %s\n\n", res[0].ExecLogs)))
+// 				return
+// 			case "failed":
+// 				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("failed: %d\n\n", execId)))
+// 				return
+// 			case "pending":
+// 				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("pending: %d\n\n", execId)))
+// 			case "scheduled":
+// 				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("scheduled: %d\n\n", execId)))
+// 			default:
+// 				s.logger.Warn().Str("status", job.CurrentState).Msg("Unknown status")
+// 			}
+// 			time.Sleep(3 * time.Second)
+// 		}
+// 	}
+// }
 
 func (s *OdinServer) GetAllExecutions(ctx context.Context, params api.GetAllExecutionsParams) (api.GetAllExecutionsRes, error) {
+	auth := ctx.Value(config.AuthKey).(string)
+	if auth == "auth" {
+		user := ctx.Value(config.UserKey).(string)
+
+		if user != "admin" {
+			return &api.GetAllExecutionsForbidden{}, nil
+		}
+	}
 	execResDB, err := s.queries.GetAllExecutions(ctx, db.GetAllExecutionsParams{
-		Limit:  params.PageSize.Value,
-		Offset: params.Page.Value * params.PageSize.Value,
+		Limit:  int32(params.Limit.Value),
+		ExecID: params.Cursor.Value,
 	})
 	if err != nil {
 		return &api.GetAllExecutionsInternalServerError{
@@ -247,8 +249,8 @@ func (s *OdinServer) GetAllExecutions(ctx context.Context, params api.GetAllExec
 func (s *OdinServer) GetExecutionsForJob(ctx context.Context, params api.GetExecutionsForJobParams) (api.GetExecutionsForJobRes, error) {
 	execRes, err := s.queries.GetExecutionsForJob(ctx, db.GetExecutionsForJobParams{
 		JobID:  pgtype.Int8{Int64: params.JobId, Valid: true},
-		Limit:  params.PageSize.Value,
-		Offset: params.Page.Value * params.PageSize.Value,
+		ExecID: params.Cursor.Value,
+		Limit:  int32(params.Limit.Value),
 	})
 	if err != nil {
 		return &api.GetExecutionsForJobInternalServerError{
@@ -272,24 +274,34 @@ func (s *OdinServer) GetExecutionsForJob(ctx context.Context, params api.GetExec
 			FinishedAt: execution.FinishedAt.Time,
 		})
 	}
+	var cursor int64
+	cursor = 0
+	if len(executions) > 0 {
+		cursor = executions[len(executions)-1].ExecId
+	}
 	resp := api.GetExecutionsForJobOK{
 		Executions: executions,
 		Pagination: api.PaginationResponse{
-			Total: total,
+			Total:  total,
+			Limit:  params.Limit.Value,
+			Cursor: cursor,
 		},
 	}
 	return &resp, nil
 }
 
 func (s *OdinServer) GetAllExecutionJobs(ctx context.Context, params api.GetAllExecutionJobsParams) (api.GetAllExecutionJobsRes, error) {
-	user := ctx.Value(config.UserKey).(string)
+	auth := ctx.Value(config.AuthKey).(string)
+	if auth == "auth" {
+		user := ctx.Value(config.UserKey).(string)
 
-	if user != "admin" {
-		return &api.GetAllExecutionJobsForbidden{}, nil
+		if user != "admin" {
+			return &api.GetAllExecutionJobsForbidden{}, nil
+		}
 	}
 	executionsDB, err := s.queries.GetAllJobs(ctx, db.GetAllJobsParams{
-		Limit:  params.PageSize.Value,
-		Offset: params.Page.Value * params.PageSize.Value,
+		Limit: int32(params.Limit.Value),
+		JobID: params.Cursor.Value,
 	})
 	if err != nil {
 		return &api.GetAllExecutionJobsInternalServerError{
@@ -312,10 +324,17 @@ func (s *OdinServer) GetAllExecutionJobs(ctx context.Context, params api.GetAllE
 			UpdatedAt: api.OptDateTime{Value: job.UpdatedAt.Time, Set: true},
 		})
 	}
+	var cursor int64
+	cursor = 0
+	if len(jobs) > 0 {
+		cursor = jobs[len(jobs)-1].JobId
+	}
 	resp := api.GetAllExecutionJobsOK{
 		Jobs: jobs,
 		Pagination: api.PaginationResponse{
-			Total: total,
+			Total:  total,
+			Limit:  params.Limit.Value,
+			Cursor: cursor,
 		},
 	}
 	return &resp, nil

@@ -40,8 +40,15 @@ func encodeCancelExecutionJobResponse(response CancelExecutionJobRes, w http.Res
 		return nil
 
 	case *CancelExecutionJobForbidden:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(403)
 		span.SetStatus(codes.Error, http.StatusText(403))
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
 
 		return nil
 
@@ -85,8 +92,15 @@ func encodeDeleteExecutionJobResponse(response DeleteExecutionJobRes, w http.Res
 		return nil
 
 	case *DeleteExecutionJobForbidden:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(403)
 		span.SetStatus(codes.Error, http.StatusText(403))
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
 
 		return nil
 
@@ -353,8 +367,15 @@ func encodeGetAllExecutionJobsResponse(response GetAllExecutionJobsRes, w http.R
 		return nil
 
 	case *GetAllExecutionJobsForbidden:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(403)
 		span.SetStatus(codes.Error, http.StatusText(403))
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
 
 		return nil
 
@@ -405,8 +426,15 @@ func encodeGetAllExecutionsResponse(response GetAllExecutionsRes, w http.Respons
 		return nil
 
 	case *GetAllExecutionsForbidden:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(403)
 		span.SetStatus(codes.Error, http.StatusText(403))
+
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
 
 		return nil
 
@@ -582,12 +610,19 @@ func encodeGetExecutionConfigResponse(response GetExecutionConfigRes, w http.Res
 		return nil
 
 	case *GetExecutionConfigForbidden:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(403)
 		span.SetStatus(codes.Error, http.StatusText(403))
 
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
 		return nil
 
-	case *Error:
+	case *GetExecutionConfigInternalServerError:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
 		span.SetStatus(codes.Error, http.StatusText(500))

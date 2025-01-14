@@ -1,30 +1,3 @@
-create table jobs (
-    job_id bigint primary key default nextval('jobs_id_seq'),
-    created_at timestamptz not null  default now(),
-    updated_at timestamptz,
-    time_out int,
-    started_at timestamptz,
-    exec_request_id int references exec_request on delete set null,
-    current_state TEXT NOT NULL CHECK (current_state IN ('pending', 'scheduled', 'completed', 'failed', 'cancelled')) DEFAULT 'pending',
-    retries int default 0,
-    max_retries int default 5,
-    worker_id int references workers on delete set null
-);
-
-create table executions (
-    exec_id bigint primary key default nextval('executions_id_seq'),
-    job_id bigint not null references jobs on delete set null,
-    worker_id int not null references workers on delete set null,
-    created_at timestamptz not null default now(),
-    started_at timestamptz not null,
-    finished_at timestamptz not null,
-    exec_request_id int references exec_request on delete set null,
-    exec_logs text not null,
-    nix_logs text,
-    success boolean
-);
-
-
 -- name: GetFlake :one
 select flake from exec_request where id = (select exec_request_id from jobs where job_id = $1);
 
@@ -64,10 +37,13 @@ values
 returning *;
 
 -- name: GetAllJobs :many
-select * from jobs
-inner join exec_request on jobs.exec_request_id = exec_request.id
-order by jobs.job_id
-limit $1 offset $2;
+SELECT * 
+FROM jobs
+INNER JOIN exec_request 
+ON jobs.exec_request_id = exec_request.id 
+WHERE job_id >= $1
+ORDER BY jobs.job_id
+LIMIT $2;
 
 -- name: GetJob :one
 select * from jobs inner join exec_request on jobs.exec_request_id = exec_request.id where jobs.job_id = $1;
@@ -76,6 +52,13 @@ select * from jobs inner join exec_request on jobs.exec_request_id = exec_reques
 select * from executions
 inner join exec_request on executions.exec_request_id = exec_request.id
 where executions.exec_id = $1;
+
+-- name: GetLatestExecution :one
+select * from executions
+inner join exec_request on executions.exec_request_id = exec_request.id
+where executions.job_id = $1
+order by finished_at desc
+limit 1;
 
 -- name: GetJobState :one
 select current_state from jobs where job_id = $1;
@@ -89,15 +72,16 @@ SELECT count(*) FROM jobs;
 -- name: GetExecutionsForJob :many
 select * from executions
 inner join exec_request on executions.exec_request_id = exec_request.id
-where executions.job_id = $1
+where executions.job_id = $1 and exec_id >= $2
 order by finished_at desc
-limit $2 offset $3;
+limit $3;
 
 -- name: GetAllExecutions :many
 select * from executions
 inner join exec_request on executions.exec_request_id = exec_request.id
+where exec_id >= $1
 order by started_at desc
-limit $1 offset $2;
+limit $2;
 
 -- name: GetTotalExecutionsForJob :one
 select count(*) from executions where job_id = $1;

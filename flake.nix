@@ -20,22 +20,22 @@
           arch = "amd64";
           sha256 = "sha256-USv9xcTnGqG78ep3wEPPuidyL27nehNqjRioZDx+iQo=";
         };
-        devDependencies = with pkgs; [
+        odinDependencies = with pkgs; [
           sqlc
           go-migrate
           go_1_22
-          nodejs_20
-          # podman-compose
-          # caddy
-          postgresql_16
-          pkg-config ] ++ lib.optionals stdenv.isLinux [
-            nsjail
-            gpgme
-            libgpg-error
-            libassuan
-            btrfs-progs
-            fuse-overlayfs
-          ];
+          caddy
+          pkg-config 
+        ] 
+        ++ lib.optionals stdenv.isLinux 
+        [
+          nsjail
+          gpgme
+          libgpg-error
+          libassuan
+          btrfs-progs
+          fuse-overlayfs
+        ];
 
         packages = {
           odin = pkgs.callPackage ./build/package/nix/odin.nix { inherit pkgs; };
@@ -52,10 +52,10 @@
 
         devShells = {
           default = pkgs.mkShell {
-            buildInputs = devDependencies;
+            buildInputs = odinDependencies ++ import ./frontend/deps.nix { inherit pkgs; } ;
           };
-          dev = pkgs.mkShell {
-            buildInputs = devDependencies;
+          odin = pkgs.mkShell {
+            buildInputs = odinDependencies;
           };
           docs = import ./docs/shell.nix { inherit pkgs; };
           oas = import ./oas/shell.nix { inherit pkgs; };

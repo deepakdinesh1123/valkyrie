@@ -979,13 +979,13 @@ func (s *Server) handleGetAllExecutionJobsRequest(args [0]string, argsEscaped bo
 			Body:             nil,
 			Params: middleware.Parameters{
 				{
-					Name: "page",
+					Name: "cursor",
 					In:   "query",
-				}: params.Page,
+				}: params.Cursor,
 				{
-					Name: "pageSize",
+					Name: "limit",
 					In:   "query",
-				}: params.PageSize,
+				}: params.Limit,
 				{
 					Name: "X-Auth-Token",
 					In:   "header",
@@ -1125,13 +1125,13 @@ func (s *Server) handleGetAllExecutionsRequest(args [0]string, argsEscaped bool,
 			Body:             nil,
 			Params: middleware.Parameters{
 				{
-					Name: "page",
+					Name: "cursor",
 					In:   "query",
-				}: params.Page,
+				}: params.Cursor,
 				{
-					Name: "pageSize",
+					Name: "limit",
 					In:   "query",
-				}: params.PageSize,
+				}: params.Limit,
 				{
 					Name: "X-Auth-Token",
 					In:   "header",
@@ -2115,13 +2115,13 @@ func (s *Server) handleGetExecutionsForJobRequest(args [1]string, argsEscaped bo
 					In:   "path",
 				}: params.JobId,
 				{
-					Name: "page",
+					Name: "cursor",
 					In:   "query",
-				}: params.Page,
+				}: params.Cursor,
 				{
-					Name: "pageSize",
+					Name: "limit",
 					In:   "query",
-				}: params.PageSize,
+				}: params.Limit,
 				{
 					Name: "X-Auth-Token",
 					In:   "header",

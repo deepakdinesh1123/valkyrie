@@ -10,8 +10,7 @@ type CancelExecutionJobBadRequest Error
 
 func (*CancelExecutionJobBadRequest) cancelExecutionJobRes() {}
 
-// CancelExecutionJobForbidden is response for CancelExecutionJob operation.
-type CancelExecutionJobForbidden struct{}
+type CancelExecutionJobForbidden Error
 
 func (*CancelExecutionJobForbidden) cancelExecutionJobRes() {}
 
@@ -39,8 +38,7 @@ type DeleteExecutionJobBadRequest Error
 
 func (*DeleteExecutionJobBadRequest) deleteExecutionJobRes() {}
 
-// DeleteExecutionJobForbidden is response for DeleteExecutionJob operation.
-type DeleteExecutionJobForbidden struct{}
+type DeleteExecutionJobForbidden Error
 
 func (*DeleteExecutionJobForbidden) deleteExecutionJobRes() {}
 
@@ -99,8 +97,7 @@ func (s *Error) SetMessage(val string) {
 	s.Message = val
 }
 
-func (*Error) getExecutionConfigRes() {}
-func (*Error) getVersionRes()         {}
+func (*Error) getVersionRes() {}
 
 type ExecuteBadRequest Error
 
@@ -627,8 +624,7 @@ type GetAllExecutionJobsBadRequest Error
 
 func (*GetAllExecutionJobsBadRequest) getAllExecutionJobsRes() {}
 
-// GetAllExecutionJobsForbidden is response for GetAllExecutionJobs operation.
-type GetAllExecutionJobsForbidden struct{}
+type GetAllExecutionJobsForbidden Error
 
 func (*GetAllExecutionJobsForbidden) getAllExecutionJobsRes() {}
 
@@ -667,8 +663,7 @@ type GetAllExecutionsBadRequest Error
 
 func (*GetAllExecutionsBadRequest) getAllExecutionsRes() {}
 
-// GetAllExecutionsForbidden is response for GetAllExecutions operation.
-type GetAllExecutionsForbidden struct{}
+type GetAllExecutionsForbidden Error
 
 func (*GetAllExecutionsForbidden) getAllExecutionsRes() {}
 
@@ -775,10 +770,13 @@ func (s *GetAllVersionsOK) SetLanguageVersions(val []LanguageVersionResponse) {
 
 func (*GetAllVersionsOK) getAllVersionsRes() {}
 
-// GetExecutionConfigForbidden is response for GetExecutionConfig operation.
-type GetExecutionConfigForbidden struct{}
+type GetExecutionConfigForbidden Error
 
 func (*GetExecutionConfigForbidden) getExecutionConfigRes() {}
+
+type GetExecutionConfigInternalServerError Error
+
+func (*GetExecutionConfigInternalServerError) getExecutionConfigRes() {}
 
 type GetExecutionJobByIdBadRequest Error
 
@@ -1388,6 +1386,52 @@ func (o OptInt32) Or(d int32) int32 {
 	return d
 }
 
+// NewOptInt64 returns new OptInt64 with value set to v.
+func NewOptInt64(v int64) OptInt64 {
+	return OptInt64{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptInt64 is optional int64.
+type OptInt64 struct {
+	Value int64
+	Set   bool
+}
+
+// IsSet returns true if OptInt64 was set.
+func (o OptInt64) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptInt64) Reset() {
+	var v int64
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptInt64) SetTo(v int64) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptInt64) Get() (v int64, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptInt64) Or(d int64) int64 {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptString returns new OptString with value set to v.
 func NewOptString(v string) OptString {
 	return OptString{
@@ -1535,13 +1579,10 @@ func (*PackagesExistOK) packagesExistRes() {}
 type PaginationResponse struct {
 	// Represents the total number of items.
 	Total int64 `json:"total"`
-	// Represents the total number of pages.
-	Pages OptInt32 `json:"pages"`
-	// Represents the current page.
-	Page OptInt32 `json:"page"`
 	// Represents the number of items per page.
-	Limit int32     `json:"limit"`
-	Next  OptString `json:"next"`
+	Limit int64 `json:"limit"`
+	// Represents the start of the cursor.
+	Cursor int64 `json:"cursor"`
 }
 
 // GetTotal returns the value of Total.
@@ -1549,24 +1590,14 @@ func (s *PaginationResponse) GetTotal() int64 {
 	return s.Total
 }
 
-// GetPages returns the value of Pages.
-func (s *PaginationResponse) GetPages() OptInt32 {
-	return s.Pages
-}
-
-// GetPage returns the value of Page.
-func (s *PaginationResponse) GetPage() OptInt32 {
-	return s.Page
-}
-
 // GetLimit returns the value of Limit.
-func (s *PaginationResponse) GetLimit() int32 {
+func (s *PaginationResponse) GetLimit() int64 {
 	return s.Limit
 }
 
-// GetNext returns the value of Next.
-func (s *PaginationResponse) GetNext() OptString {
-	return s.Next
+// GetCursor returns the value of Cursor.
+func (s *PaginationResponse) GetCursor() int64 {
+	return s.Cursor
 }
 
 // SetTotal sets the value of Total.
@@ -1574,24 +1605,14 @@ func (s *PaginationResponse) SetTotal(val int64) {
 	s.Total = val
 }
 
-// SetPages sets the value of Pages.
-func (s *PaginationResponse) SetPages(val OptInt32) {
-	s.Pages = val
-}
-
-// SetPage sets the value of Page.
-func (s *PaginationResponse) SetPage(val OptInt32) {
-	s.Page = val
-}
-
 // SetLimit sets the value of Limit.
-func (s *PaginationResponse) SetLimit(val int32) {
+func (s *PaginationResponse) SetLimit(val int64) {
 	s.Limit = val
 }
 
-// SetNext sets the value of Next.
-func (s *PaginationResponse) SetNext(val OptString) {
-	s.Next = val
+// SetCursor sets the value of Cursor.
+func (s *PaginationResponse) SetCursor(val int64) {
+	s.Cursor = val
 }
 
 type SearchLanguagePackagesBadRequest Error

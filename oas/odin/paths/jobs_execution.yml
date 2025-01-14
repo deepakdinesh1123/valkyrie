@@ -3,8 +3,8 @@ get:
   description: Get all execution jobs
   operationId: getAllExecutionJobs
   parameters:
-    - $ref: ../components/parameters/PageNumber.yml
-    - $ref: ../components/parameters/PageSize.yml
+    - $ref: ../components/parameters/Cursor.yml
+    - $ref: ../components/parameters/Limit.yml
     - $ref: ../components/parameters/AuthHeader.yml
   responses:
     '200':
@@ -31,6 +31,10 @@ get:
             $ref: ../components/schemas/Error.yml
     '403':
       description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml
     '500':
       description: Internal Server Error
       content:

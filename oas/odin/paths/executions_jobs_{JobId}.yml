@@ -63,6 +63,10 @@ put:
             $ref: ../components/schemas/Error.yml
     '403':
       description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml
     '500':
       description: Internal Server Error
       content:
@@ -92,6 +96,10 @@ delete:
             $ref: ../components/schemas/Error.yml
     '403':
       description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml
     '404':
       description: Execution job not found
     '500':

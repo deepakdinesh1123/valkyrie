@@ -64,8 +64,8 @@ paths:
       description: Get all execution jobs
       operationId: getAllExecutionJobs
       parameters:
-        - $ref: '#/components/parameters/PageNumber'
-        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
@@ -92,6 +92,10 @@ paths:
                 $ref: '#/components/schemas/Error'
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           description: Internal Server Error
           content:
@@ -104,8 +108,8 @@ paths:
       description: Get all executions
       operationId: getAllExecutions
       parameters:
-        - $ref: '#/components/parameters/PageNumber'
-        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
@@ -132,6 +136,10 @@ paths:
                 $ref: '#/components/schemas/Error'
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           description: Internal Server Error
           content:
@@ -150,8 +158,8 @@ paths:
           schema:
             type: integer
             format: int64
-        - $ref: '#/components/parameters/PageNumber'
-        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
@@ -284,6 +292,10 @@ paths:
                 $ref: '#/components/schemas/Error'
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           description: Internal Server Error
           content:
@@ -313,6 +325,10 @@ paths:
                 $ref: '#/components/schemas/Error'
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '404':
           description: Execution job not found
         '500':
@@ -362,6 +378,10 @@ paths:
                 $ref: '#/components/schemas/ExecutionConfig'
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           description: Internal Server Error
           content:
@@ -816,24 +836,24 @@ components:
       required: false
       schema:
         type: string
-    PageNumber:
-      name: page
+    Cursor:
+      name: cursor
       in: query
-      description: The page number to retrieve.
+      description: The current position of the cursor
       required: false
       schema:
         type: integer
-        format: int32
-        default: 0
-    PageSize:
-      name: pageSize
+        format: int64
+        default: 1
+    Limit:
+      name: limit
       in: query
-      description: The number of items per page.
+      description: The limit for the records
       required: false
       schema:
         type: integer
-        format: int32
-        default: 20
+        format: int64
+        default: 10
     SearchString:
       name: searchString
       in: query
@@ -940,26 +960,20 @@ components:
       required:
         - total
         - limit
-        - offset
+        - cursor
       properties:
         total:
           type: integer
           format: int64
           description: Represents the total number of items.
-        pages:
-          type: integer
-          format: int32
-          description: Represents the total number of pages.
-        page:
-          type: integer
-          format: int32
-          description: Represents the current page.
         limit:
           type: integer
-          format: int32
+          format: int64
           description: Represents the number of items per page.
-        next:
-          type: string
+        cursor:
+          type: integer
+          format: int64
+          description: Represents the start of the cursor
     ExecutionResult:
       allOf:
         - $ref: '#/components/schemas/Job'
