@@ -140,6 +140,12 @@ type Handler interface {
 	//
 	// GET /version
 	GetVersion(ctx context.Context, params GetVersionParams) (GetVersionRes, error)
+	// Health implements health operation.
+	//
+	// Health Check.
+	//
+	// GET /health
+	Health(ctx context.Context) error
 	// PackagesExist implements PackagesExist operation.
 	//
 	// Verify the package list is available for the language version while switching between language

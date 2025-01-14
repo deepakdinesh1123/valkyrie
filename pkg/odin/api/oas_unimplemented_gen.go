@@ -211,6 +211,15 @@ func (UnimplementedHandler) GetVersion(ctx context.Context, params GetVersionPar
 	return r, ht.ErrNotImplemented
 }
 
+// Health implements health operation.
+//
+// Health Check.
+//
+// GET /health
+func (UnimplementedHandler) Health(ctx context.Context) error {
+	return ht.ErrNotImplemented
+}
+
 // PackagesExist implements PackagesExist operation.
 //
 // Verify the package list is available for the language version while switching between language

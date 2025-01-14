@@ -104,7 +104,7 @@ func PodConstructor(ctx context.Context) (Container, error) {
 	}
 
 	memunit := 1024 * 1024
-	mem := int64(envConfig.ODIN_WORKER_MEMORY_LIMIT * int64(memunit))
+	mem := int64(envConfig.ODIN_WORKER_CONTAINER_MEMORY_LIMIT * int64(memunit))
 
 	quota := int64(300000)
 	burst := uint64(100000)

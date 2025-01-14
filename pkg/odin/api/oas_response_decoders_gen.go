@@ -2803,6 +2803,15 @@ func decodeGetVersionResponse(resp *http.Response) (res GetVersionRes, _ error) 
 	return res, validate.UnexpectedStatusCode(resp.StatusCode)
 }
 
+func decodeHealthResponse(resp *http.Response) (res *HealthOK, _ error) {
+	switch resp.StatusCode {
+	case 200:
+		// Code 200.
+		return &HealthOK{}, nil
+	}
+	return res, validate.UnexpectedStatusCode(resp.StatusCode)
+}
+
 func decodePackagesExistResponse(resp *http.Response) (res PackagesExistRes, _ error) {
 	switch resp.StatusCode {
 	case 200:

@@ -35,8 +35,10 @@ type EnvConfig struct {
 	ODIN_WORKER_DOCKER_IMAGE    string `mapstructure:"ODIN_WORKER_DOCKER_IMAGE"`
 	ODIN_MAX_RETRIES            int    `mapstructure:"ODIN_MAX_RETRIES"`
 
-	ODIN_WORKER_MEMORY_LIMIT int64  `mapstructure:"ODIN_WORKER_MEMORY_LIMIT"`
-	ODIN_WORKER_CPU_LIMIT    string `mapstructure:"ODIN_WORKER_CPU_LIMIT"`
+	ODIN_WORKER_CONTAINER_MEMORY_LIMIT int64 `mapstructure:"ODIN_WORKER_CONTAINER_MEMORY_LIMIT"`
+
+	ODIN_MEMORY_LIMIT float64 `mapstructure:"ODIN_MEMORY_LIMIT"`
+	ODIN_CPU_LIMIT    float64 `mapstructure:"ODIN_CPU_LIMIT"`
 
 	ODIN_LOG_LEVEL string `mapstructure:"ODIN_LOG_LEVEL"`
 
@@ -129,8 +131,14 @@ func setDefaults() {
 	viper.SetDefault("ODIN_WORKER_POLL_FREQ", 30)
 	viper.SetDefault("ODIN_WORKER_RUNTIME", "runc")
 	viper.SetDefault("ODIN_MAX_RETRIES", 5)
-	viper.SetDefault("ODIN_WORKER_MEMORY_LIMIT", 500)
+
+	viper.SetDefault("ODIN_WORKER_CONTAINER_MEMORY_LIMIT", 500)
+
+	viper.SetDefault("ODIN_MEMORY_LIMIT", 75)
+	viper.SetDefault("ODIN_CPU_LIMIT", 75)
+
 	viper.SetDefault("ODIN_NIX_STORE", "/nix")
+
 	viper.SetDefault("ODIN_ENABLE_TELEMETRY", false)
 	viper.SetDefault("ODIN_OTLP_ENDPOINT", "localhost:4317")
 	viper.SetDefault("ODIN_OTEL_RESOURCE_NAME", "Odin")

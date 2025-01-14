@@ -1038,6 +1038,9 @@ func (s *GetVersionOK) SetVersion(val string) {
 
 func (*GetVersionOK) getVersionRes() {}
 
+// HealthOK is response for Health operation.
+type HealthOK struct{}
+
 // Ref: #/components/schemas/Job
 type Job struct {
 	JobId     int64       `json:"jobId"`

@@ -1174,6 +1174,13 @@ func encodeGetVersionResponse(response GetVersionRes, w http.ResponseWriter, spa
 	}
 }
 
+func encodeHealthResponse(response *HealthOK, w http.ResponseWriter, span trace.Span) error {
+	w.WriteHeader(200)
+	span.SetStatus(codes.Ok, http.StatusText(200))
+
+	return nil
+}
+
 func encodePackagesExistResponse(response PackagesExistRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *PackagesExistOK:

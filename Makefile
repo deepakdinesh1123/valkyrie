@@ -1,5 +1,5 @@
 # Include other Makefiles
-include .env oas/Makefile build/Makefile testing/Makefile
+include .env oas/Makefile build/Makefile
 
 # PostgreSQL Connection URL
 POSTGRES_URL = postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=${POSTGRES_SSL_MODE}
@@ -67,7 +67,3 @@ dump:
 		exit 1; \
 	fi
 	./hack/packages/dump_packages.sh $(filter-out $@,$(MAKECMDGOALS))
-
-# Catch-all target to suppress errors for non-existent targets
-%:
-	@:

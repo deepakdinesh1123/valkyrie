@@ -58,6 +58,7 @@
             buildInputs = devDependencies;
           };
           docs = import ./docs/shell.nix { inherit pkgs; };
+          oas = import ./oas/shell.nix { inherit pkgs; };
         };
     }
   );

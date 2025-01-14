@@ -8,6 +8,14 @@ info:
 servers:
   - url: https://backend.evnix.cloud/api
 paths:
+  /health:
+    get:
+      summary: Health Check
+      description: Health Check
+      operationId: health
+      responses:
+        '200':
+          description: OK
   /executions/execute:
     post:
       summary: Execute a script

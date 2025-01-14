@@ -18,10 +18,7 @@ func (w *Worker) updateStats() error {
 		return nil
 	}
 	w.WorkerStats.CPUUsage = cpuPercent[0]
-	w.WorkerStats.MemAvail = vmm.Available
-	w.WorkerStats.MemTotal = vmm.Total
-	w.WorkerStats.MemUsed = vmm.Available * 100 / vmm.Total
-	w.WorkerStats.Timestamp = time.Now()
+	w.WorkerStats.MemUsage = vmm.UsedPercent
 
 	return nil
 }

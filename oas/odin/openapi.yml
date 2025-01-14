@@ -8,6 +8,8 @@ info:
 servers:
   - url: https://backend.evnix.cloud/api
 paths:
+  /health:
+    $ref: paths/health.yml
   /executions/execute:
     $ref: paths/executions_execute.yml
   /jobs/execution:

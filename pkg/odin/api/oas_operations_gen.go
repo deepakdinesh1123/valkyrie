@@ -28,6 +28,7 @@ const (
 	GetLanguageByIdOperation        OperationName = "GetLanguageById"
 	GetLanguageVersionByIdOperation OperationName = "GetLanguageVersionById"
 	GetVersionOperation             OperationName = "GetVersion"
+	HealthOperation                 OperationName = "Health"
 	PackagesExistOperation          OperationName = "PackagesExist"
 	SearchLanguagePackagesOperation OperationName = "SearchLanguagePackages"
 	SearchSystemPackagesOperation   OperationName = "SearchSystemPackages"
