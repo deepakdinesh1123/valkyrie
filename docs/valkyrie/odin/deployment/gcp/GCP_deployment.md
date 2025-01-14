@@ -52,4 +52,3 @@ tofu apply -var-file odin.tfvars
 ```
 tofu output -raw public_ip_address
 ```
-Add the ip as A record to your domain example.com given in caddyfile
