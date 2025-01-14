@@ -31,4 +31,4 @@ This fleet ensures a minimum number of workers are always operational and can au
 
 ### GCP Instance Groups
 
-Similarly this instancw group ensures a minimum number of workers are always operational and can autoscale based on demand.
+Similarly the instance group ensures a minimum number of workers are always operational and can autoscale based on demand.
