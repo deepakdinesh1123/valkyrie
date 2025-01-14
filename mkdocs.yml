@@ -63,14 +63,17 @@ nav:
       - Deployment:
           - Home: valkyrie/odin/deployment/index.md
           - AWS:
+              - Tofu Deployment: valkyrie/odin/deployment/aws/AWS_deployment.md
               - Odin Server: valkyrie/odin/deployment/aws/server.md
               - Shared Nix Store: valkyrie/odin/deployment/aws/shared_nix_store.md
               - Odin Worker: valkyrie/odin/deployment/aws/worker.md
           - GCP:
+              - Tofu Deployment: valkyrie/odin/deployment/gcp/GCP_deployment.md
               - Odin Server: valkyrie/odin/deployment/gcp/server.md
               - Shared Nix Store: valkyrie/odin/deployment/gcp/shared_nix_store.md
               - Odin Worker: valkyrie/odin/deployment/gcp/worker.md
   - Blog: blog/index.md
+
 
 markdown_extensions:
   - attr_list
@@ -87,6 +90,9 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
+  - def_list
+  - pymdownx.tasklist:
+      custom_checkbox: true
 
 plugins:
   - privacy
