@@ -1,4 +1,4 @@
-nix_channel: https://nixos.org/channels/nixos-24.11
+nix_channel: 24.11
 
 languages:
   - name: python
