@@ -26,6 +26,7 @@
           go_1_22
           caddy
           pkg-config 
+          just
         ] 
         ++ lib.optionals stdenv.isLinux 
         [
@@ -58,7 +59,7 @@
             buildInputs = odinDependencies;
           };
           docs = import ./docs/shell.nix { inherit pkgs; };
-          oas = import ./oas/shell.nix { inherit pkgs; };
+          schemas = import ./schemas/shell.nix { inherit pkgs; };
         };
     }
   );

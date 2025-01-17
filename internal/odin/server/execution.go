@@ -213,7 +213,7 @@ func (s *OdinServer) GetAllExecutions(ctx context.Context, params api.GetAllExec
 		}
 	}
 	execResDB, err := s.queries.GetAllExecutions(ctx, db.GetAllExecutionsParams{
-		Limit:  int32(params.Limit.Value),
+		Limit:  int64(params.Limit.Value),
 		ExecID: params.Cursor.Value,
 	})
 	if err != nil {
@@ -250,7 +250,7 @@ func (s *OdinServer) GetExecutionsForJob(ctx context.Context, params api.GetExec
 	execRes, err := s.queries.GetExecutionsForJob(ctx, db.GetExecutionsForJobParams{
 		JobID:  pgtype.Int8{Int64: params.JobId, Valid: true},
 		ExecID: params.Cursor.Value,
-		Limit:  int32(params.Limit.Value),
+		Limit:  int64(params.Limit.Value),
 	})
 	if err != nil {
 		return &api.GetExecutionsForJobInternalServerError{
@@ -300,7 +300,7 @@ func (s *OdinServer) GetAllExecutionJobs(ctx context.Context, params api.GetAllE
 		}
 	}
 	executionsDB, err := s.queries.GetAllJobs(ctx, db.GetAllJobsParams{
-		Limit: int32(params.Limit.Value),
+		Limit: int64(params.Limit.Value),
 		JobID: params.Cursor.Value,
 	})
 	if err != nil {
