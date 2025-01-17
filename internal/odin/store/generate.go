@@ -19,8 +19,11 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-//go:embed store_config.yml
-var Content []byte
+//go:embed store_config.prod.yml
+var ProdConfig []byte
+
+//go:embed store_config.dev.yml
+var DevConfig []byte
 
 type StoreConfig struct {
 	NixChannel string     `yaml:"nix_channel"`
@@ -57,13 +60,49 @@ type NixPackageInfo struct {
 
 func GeneratePackages(ctx context.Context, odinStoreConfig string, ripPkgDBPath string, genDockerConfig bool, envConfig *config.EnvConfig, logger *zerolog.Logger) error {
 
+	var storeConfig StoreConfig
+
+	if odinStoreConfig == "" {
+		if envConfig.ODIN_ENVIRONMENT == "prod" {
+			err := yaml.Unmarshal(ProdConfig, &storeConfig)
+			if err != nil {
+				logger.Error().Err(err).Msg("Error unmarshalling store configuration")
+				return err
+			}
+		} else if envConfig.ODIN_ENVIRONMENT == "dev" {
+			err := yaml.Unmarshal(DevConfig, &storeConfig)
+			if err != nil {
+				logger.Error().Err(err).Msg("Error unmarshalling store configuration")
+				return err
+			}
+		} else {
+			return fmt.Errorf("specified Odin environment is not supported")
+		}
+	} else {
+		conf, err := os.ReadFile(odinStoreConfig)
+		if err != nil {
+			logger.Error().Err(err).Msg("Error reading config file")
+			return err
+		}
+		err = yaml.Unmarshal(conf, &storeConfig)
+		if err != nil {
+			logger.Error().Err(err).Msg("Error unmarshalling store configuration")
+			return err
+		}
+	}
+
+	if storeConfig.NixChannel != "24.11" {
+		return fmt.Errorf("only channel 24.11 is supported currently we will support more channels in the future")
+	}
+
 	if ripPkgDBPath == "" {
-		ripPkgDBPath = filepath.Join(envConfig.ODIN_INFO_DIR, "rippkgs.sqlite")
+		ripPkgDBPath = filepath.Join(envConfig.ODIN_INFO_DIR, fmt.Sprintf("rippkgs-%s.sqlite", storeConfig.NixChannel))
 
 		_, err := os.Stat(ripPkgDBPath)
 		if os.IsNotExist(err) {
-			logger.Info().Str("path", ripPkgDBPath).Msg("Donwloading rippkgs DB-------------------")
-			err = downloadRipPkgsDB(ripPkgDBPath, envConfig)
+			logger.Info().Str("path", ripPkgDBPath).Msg("Donwloading rippkgs DB:")
+			ripPkgDBURL := fmt.Sprintf("%s/rippkgs-%s.sqlite", envConfig.RIPPKGS_BASE_URL, storeConfig.NixChannel)
+			err = downloadRipPkgsDB(ripPkgDBPath, ripPkgDBURL)
 			if err != nil {
 				logger.Error().Err(err).Msg("Error generating packages")
 				return err
@@ -94,30 +133,6 @@ func GeneratePackages(ctx context.Context, odinStoreConfig string, ripPkgDBPath 
 	err = truncateStore(ctx, queries, logger)
 	if err != nil {
 		return err
-	}
-
-	var storeConfig StoreConfig
-
-	if odinStoreConfig == "" {
-		err = yaml.Unmarshal(Content, &storeConfig)
-		if err != nil {
-			truncateStore(ctx, queries, logger) // Truncate in case of error
-			logger.Error().Err(err).Msg("Error unmarshalling store configuration")
-			return err
-		}
-	} else {
-		conf, err := os.ReadFile(odinStoreConfig)
-		if err != nil {
-			truncateStore(ctx, queries, logger) // Truncate in case of error
-			logger.Error().Err(err).Msg("Error reading config file")
-			return err
-		}
-		err = yaml.Unmarshal(conf, &storeConfig)
-		if err != nil {
-			truncateStore(ctx, queries, logger) // Truncate in case of error
-			logger.Error().Err(err).Msg("Error unmarshalling store configuration")
-			return err
-		}
 	}
 
 	err = addLanguages(ctx, queries, &storeConfig, logger)
@@ -371,13 +386,13 @@ func generateDockerStoreConfig(pkgs []db.InsertPackagesParams) error {
 	return nil
 }
 
-func downloadRipPkgsDB(ripPkgDBPath string, envConfig *config.EnvConfig) error {
+func downloadRipPkgsDB(ripPkgDBPath string, ripPkgDBURL string) error {
 	out, err := os.Create(ripPkgDBPath)
 	if err != nil {
 		return fmt.Errorf("failed to create file: %w", err)
 	}
 	defer out.Close()
-	resp, err := http.Get(envConfig.RIPPKGS_URL)
+	resp, err := http.Get(ripPkgDBURL)
 	if err != nil {
 		return fmt.Errorf("failed to download file: %w", err)
 	}

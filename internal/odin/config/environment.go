@@ -62,7 +62,7 @@ type EnvConfig struct {
 	ODIN_USER_TOKEN  string `mapstructure:"ODIN_USER_TOKEN"`
 	ODIN_ADMIN_TOKEN string `mapstructure:"ODIN_ADMIN_TOKEN"`
 
-	RIPPKGS_URL string `mapstructure:"RIPPKGS_URL"`
+	RIPPKGS_BASE_URL string `mapstructure:"RIPPKGS_BASE_URL"`
 
 	ODIN_BASE_DIR string `mapstructure:"ODIN_BASE_DIR"`
 }
@@ -150,7 +150,7 @@ func setDefaults() {
 	viper.SetDefault("ODIN_LOG_LEVEL", "info")
 	viper.SetDefault("ODIN_WORKER_DOCKER_IMAGE", "odin:alpine")
 	viper.SetDefault("ODIN_WORKER_PODMAN_IMAGE", "odin:alpine")
-	viper.SetDefault("RIPPKGS_URL", "https://valnix-stage-bucket.s3.us-east-1.amazonaws.com/rippkgs-24.11.sqlite")
+	viper.SetDefault("RIPPKGS_BASE_URL", "https://valnix-stage-bucket.s3.us-east-1.amazonaws.com")
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
