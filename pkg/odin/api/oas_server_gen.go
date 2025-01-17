@@ -14,42 +14,12 @@ type Handler interface {
 	//
 	// PUT /executions/jobs/{JobId}
 	CancelExecutionJob(ctx context.Context, params CancelExecutionJobParams) (CancelExecutionJobRes, error)
-	// CreateLanguage implements createLanguage operation.
-	//
-	// Create a new language entry in the database.
-	//
-	// POST /languages/create
-	CreateLanguage(ctx context.Context, req *Language, params CreateLanguageParams) (CreateLanguageRes, error)
-	// CreateLanguageVersion implements createLanguageVersion operation.
-	//
-	// Create a new language version entry in the database.
-	//
-	// POST /language-versions/create
-	CreateLanguageVersion(ctx context.Context, req *LanguageVersion, params CreateLanguageVersionParams) (CreateLanguageVersionRes, error)
-	// CreateSandbox implements createSandbox operation.
-	//
-	// Create a sandbox.
-	//
-	// POST /sandbox
-	CreateSandbox(ctx context.Context, params CreateSandboxParams) (CreateSandboxRes, error)
 	// DeleteExecutionJob implements deleteExecutionJob operation.
 	//
 	// Delete execution job.
 	//
 	// DELETE /executions/jobs/{JobId}
 	DeleteExecutionJob(ctx context.Context, params DeleteExecutionJobParams) (DeleteExecutionJobRes, error)
-	// DeleteLanguage implements deleteLanguage operation.
-	//
-	// Delete a specific language by its ID.
-	//
-	// DELETE /languages/{id}
-	DeleteLanguage(ctx context.Context, params DeleteLanguageParams) (DeleteLanguageRes, error)
-	// DeleteLanguageVersion implements deleteLanguageVersion operation.
-	//
-	// Delete a specific language version by its ID.
-	//
-	// DELETE /language-versions/{id}
-	DeleteLanguageVersion(ctx context.Context, params DeleteLanguageVersionParams) (DeleteLanguageVersionRes, error)
 	// Execute implements execute operation.
 	//
 	// Execute a script.
@@ -152,6 +122,12 @@ type Handler interface {
 	//
 	// GET /version
 	GetVersion(ctx context.Context, params GetVersionParams) (GetVersionRes, error)
+	// Health implements health operation.
+	//
+	// Health Check.
+	//
+	// GET /health
+	Health(ctx context.Context) error
 	// PackagesExist implements PackagesExist operation.
 	//
 	// Verify the package list is available for the language version while switching between language
@@ -171,18 +147,6 @@ type Handler interface {
 	//
 	// GET /search/system
 	SearchSystemPackages(ctx context.Context, params SearchSystemPackagesParams) (SearchSystemPackagesRes, error)
-	// UpdateLanguage implements updateLanguage operation.
-	//
-	// Update the details of a specific language by its ID.
-	//
-	// PUT /languages/{id}
-	UpdateLanguage(ctx context.Context, req *Language, params UpdateLanguageParams) (UpdateLanguageRes, error)
-	// UpdateLanguageVersion implements updateLanguageVersion operation.
-	//
-	// Update the details of a specific language version by its ID.
-	//
-	// PUT /language-versions/{id}
-	UpdateLanguageVersion(ctx context.Context, req *LanguageVersion, params UpdateLanguageVersionParams) (UpdateLanguageVersionRes, error)
 }
 
 // Server implements http server based on OpenAPI v3 specification and

@@ -1,15 +1,17 @@
-post:
-  summary: Create a language version
-  description: Create a new language version entry in the database.
-  operationId: createLanguageVersion
+get:
+  summary: Get language version by ID
+  description: Retrieve a language version entry from the database using its ID.
+  operationId: getLanguageVersionById
   parameters:
+    - name: id
+      in: path
+      required: true
+      description: The ID of the language version to retrieve.
+      schema:
+        type: integer
+        format: int64
+        example: 1
     - $ref: ../components/parameters/AuthHeader.yml
-  requestBody:
-    required: true
-    content:
-      application/json:
-        schema:
-          $ref: ../components/schemas/LanguageVersion.yml
   responses:
     '200':
       description: OK
@@ -23,14 +25,14 @@ post:
               language:
                 type: object
                 $ref: ../components/schemas/LanguageVersionResponse.yml
-    '400':
-      description: Bad Request
+    '403':
+      description: Forbidden
       content:
         application/json:
           schema:
             $ref: ../components/schemas/Error.yml
-    '403':
-      description: Forbidden
+    '404':
+      description: Language version not found
       content:
         application/json:
           schema:

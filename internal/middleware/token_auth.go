@@ -22,10 +22,12 @@ func TokenAuth() Middleware {
 			envConfig, _ := config.GetEnvConfig()
 
 			if envConfig.ODIN_USER_TOKEN == "" && envConfig.ODIN_ADMIN_TOKEN == "" {
+				r = r.WithContext(context.WithValue(ctx, config.AuthKey, "noauth"))
 				h.ServeHTTP(w, r)
 				return
 			}
 
+			r = r.WithContext(context.WithValue(ctx, config.AuthKey, "auth"))
 			headerValue := r.Header.Get("X-Auth-Token")
 			switch headerValue {
 			case envConfig.ODIN_USER_TOKEN:

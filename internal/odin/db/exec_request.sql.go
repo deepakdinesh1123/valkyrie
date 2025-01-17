@@ -128,7 +128,7 @@ func (q *Queries) InsertExecRequest(ctx context.Context, arg InsertExecRequestPa
 
 const listExecRequests = `-- name: ListExecRequests :many
 select id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, language_version from exec_request
-where id > $1
+where id >= $1
 limit $2
 `
 

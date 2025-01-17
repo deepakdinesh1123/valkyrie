@@ -37,11 +37,8 @@ type Worker struct {
 	otelShutdown   func(context.Context) error
 
 	WorkerStats struct {
-		CPUUsage  float64
-		MemAvail  uint64
-		MemTotal  uint64
-		MemUsed   uint64
-		Timestamp time.Time
+		CPUUsage float64
+		MemUsage float64
 	}
 }
 
@@ -218,14 +215,24 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 				return fmt.Errorf("context error: %s", err)
 			}
 		case <-fetchJobTicker.C:
-			// w.updateStats()
-			// if w.WorkerStats.CPUUsage > 75 {
-			// 	w.logger.Info().Float64("CPU Usage", w.WorkerStats.CPUUsage).Msg("Worker: high usage")
-			// 	continue
-			// }
-			if w.envConfig.ODIN_ENABLE_EXECUTION {
-				if swg.Count() >= w.envConfig.ODIN_WORKER_CONCURRENCY {
-					w.logger.Info().Int("Tasks in progress", int(swg.Count())).Int32("Concurrency limit", w.envConfig.ODIN_WORKER_CONCURRENCY).Msg("Worker: concurrency limit reached")
+			w.updateStats()
+			if w.WorkerStats.CPUUsage > w.envConfig.ODIN_CPU_LIMIT {
+				w.logger.Info().Float64("high CPU Usage", w.WorkerStats.CPUUsage).Msg("Worker: ")
+				continue
+			}
+			if w.WorkerStats.MemUsage > w.envConfig.ODIN_MEMORY_LIMIT {
+				w.logger.Info().Float64("high memory usage", w.WorkerStats.MemUsage).Msg("Worker: ")
+				continue
+			}
+
+			if swg.Count() >= w.envConfig.ODIN_WORKER_CONCURRENCY {
+				w.logger.Info().Int("Tasks in progress", int(swg.Count())).Int32("Concurrency limit", w.envConfig.ODIN_WORKER_CONCURRENCY).Msg("Worker: concurrency limit reached")
+				continue
+			}
+			res, err := w.queries.FetchJobTx(ctx, db.FetchJobTxParams{WorkerID: int32(w.ID)})
+			if err != nil {
+				switch err {
+				case pgx.ErrNoRows:
 					continue
 				}
 				res, err := w.queries.FetchJob(ctx, db.FetchJobParams{

@@ -15,3 +15,4 @@ properties:
   cursor:
     type: integer
     format: int64
+    description: Represents the start of the cursor

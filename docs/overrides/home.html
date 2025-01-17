@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+
+ <!-- Hero Section -->
+ <div class="hero">
+    <div class="container grid">
+      <div class="hero-content">
+        <h2>Development Environments <span class="highlight">That Just Work</span></h2>
+        <p>Eliminate "it works on my machine" with reproducible environments powered by Nix. From development to production, ensure consistency across all stages.</p>
+        <div class="button-group">
+          <a href="/valkyrie/valkyrie" class="btn btn-primary">Quick Start Guide</a>
+          <a href="https://github.com/deepakdinesh1123/valkyrie" target="_blank" class="btn btn-outline">View on GitHub</a>
+        </div>
+      </div>
+      <div class="code-preview">
+        <pre>
+# Example Valkyrie configuration
+environment:
+  name: "my-project"
+  dependencies:
+    - python3
+    - numpy
+    - pandas
+
+build:
+  reproducible: true
+  cache: true
+  
+deploy:
+  environments:
+    - development
+    - staging
+    - production</pre>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- About Section -->
+  <section id="about">
+    <div class="container">
+        <div class="grid">
+            <div class="content-left about-content animate__animated animate__fadeInLeft">
+                    <h2>What is Valkyrie?</h2>
+                <p>
+                    Valkyrie is a collection of projects designed to free developers from environment management concerns. By leveraging Nix, it ensures consistent and reproducible environments across all stages of development.
+                </p>
+                <p>
+                    Whether you're developing locally, running tests, or deploying to production, Valkyrie guarantees that your code runs in identical environments.
+                </p>
+
+            </div>
+            <div class="content-right animate__animated animate__fadeInRight">
+                <div class="about-card">
+                    <div class="about-list">
+                        <div class="about-item">
+                            <div class="about-icon-container">
+                                <svg class="about-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" >
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                  </svg>
+                            </div>
+                            <div class="about-content">
+                                <h3>Environment Consistency</h3>
+                                <p>Identical setups across all development stages</p>
+                            </div>
+                        </div>
+                        <div class="about-item">
+                            <div class="about-icon-container">
+                                <svg class="about-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" >
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                  </svg>
+                              </div>
+                            <div class="about-content">
+                                <h3>Powered by Nix</h3>
+                                <p>Leveraging Nix for reproducible environments</p>
+                            </div>
+                        </div>
+                        <div class="about-item">
+                            <div class="about-icon-container">
+                                <svg class="about-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                                  </svg>
+                              </div>
+                            <div class="about-content">
+                                <h3>Easy Integration</h3>
+                                <p>Seamless integration with existing workflows</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+  <!-- Features Section -->
+<section class="features">
+    <div class="container">
+      <div class="features-header">
+        <h2>Key Features</h2>
+        <p>Discover how Valkyrie transforms your development workflow</p>
+      </div>
+  
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="icon-container">
+            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+            </svg>
+          </div>
+          <h3>Reproducible Environments</h3>
+          <p>Identical environments across all development stages, eliminating configuration inconsistencies.</p>
+        </div>
+  
+        <div class="feature-card">
+          <div class="icon-container">
+            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+          </div>
+          <h3>Zero Setup Required</h3>
+          <p>Get started instantly with pre-configured development environments powered by Nix.</p>
+        </div>
+  
+        <div class="feature-card">
+          <div class="icon-container">
+            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path>
+            </svg>
+          </div>
+          <h3>Cross-Stage Compatibility</h3>
+          <p>Seamless transition between development, testing, and production environments.</p>
+        </div>
+  
+        <div class="feature-card">
+          <div class="icon-container">
+            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+            </svg>
+          </div>
+          <h3>Flexible Configuration</h3>
+          <p>Easy specification of languages and dependencies to match your project needs.</p>
+        </div>
+  
+        <div class="feature-card">
+          <div class="icon-container">
+            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+            </svg>
+          </div>
+          <h3>Built-in Security</h3>
+          <p>Secure development environments with reproducible dependencies and configurations.</p>
+        </div>
+  
+        <div class="feature-card">
+          <div class="icon-container">
+            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+            </svg>
+          </div>
+          <h3>Comprehensive Documentation</h3>
+          <p>Detailed guides and documentation to help you get the most out of Valkyrie.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  
+
+  <!-- Odin Section -->
+  <section class="odin">
+    <div class="container grid">
+      <div class="odin-content">
+        <h2>Meet Odin</h2>
+        <p>Our flagship project for code execution in reproducible environments. No local setup required for languages and packages - just specify your dependencies and start coding.</p>
+        <ul class="check-list">
+          <li>Instant development environments</li>
+          <li>Precise dependency management</li>
+          <li>Language-agnostic support</li>
+        </ul>
+        <a href="https://github.com/deepakdinesh1123/valkyrie" target="_blank" class="btn btn-primary">Try Odin Now</a>
+      </div>
+      <div class="code-preview">
+        <pre>
+# Odin example
+run:
+  language: python
+  dependencies:
+    - numpy==1.21.0
+    - pandas==1.3.0
+  
+code: |
+  import numpy as np
+  import pandas as pd
+  
+  # Your code runs in an
+  # isolated environment
+  data = pd.DataFrame({
+    'x': np.random.randn(100)
+  })</pre>
+      </div>
+    </div>
+  </section>
+
+    <!-- Choose Section -->
+<section class="features">
+    <div class="container">
+      <div class="features-header">
+        <h2>Why Choose Valkyrie?</h2>
+        <p>Transform your development workflow with these powerful benefits</p>
+      </div>
+  
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="icon-container">
+            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+          </div>
+          <h3>Time Savings</h3>
+          <p>Eliminate hours spent on environment setup and configuration. Get your team productive from day one.</p>
+        </div>
+  
+        <div class="feature-card">
+          <div class="icon-container">
+            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+              </svg>
+          </div>
+          <h3>Consistency Guaranteed</h3>
+          <p>Never hear "it works on my machine" again. Ensure identical environments across your entire team.</p>
+        </div>
+  
+        <div class="feature-card">
+          <div class="icon-container">
+            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+              </svg>
+          </div>
+          <h3>Simplified Workflow</h3>
+          <p>Focus on writing code, not managing environments. Let Valkyrie handle the complexity.</p>
+        </div>
+  
+        <div class="feature-card">
+          <div class="icon-container">
+            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
+              </svg>
+          </div>
+          <h3>Version Control</h3>
+          <p>Perfect reproducibility with exact version matching of all dependencies and tools.</p>
+        </div>
+  
+        <div class="feature-card">
+          <div class="icon-container">
+            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+              </svg>
+          </div>
+          <h3>Flexible Configuration</h3>
+          <p>Easily customize environments to match your specific project needs and requirements.</p>
+        </div>
+  
+        <div class="feature-card">
+          <div class="icon-container">
+            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+              </svg>
+          </div>
+          <h3>Seamless Integration</h3>
+          <p>Works with your existing tools and workflows, enhancing rather than replacing.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  
+
+  <!-- Footer -->
+
+{% endblock %}

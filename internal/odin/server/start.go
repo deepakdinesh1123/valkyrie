@@ -24,8 +24,8 @@ func (s *OdinServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 	var server *http.Server
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/executions/{executionId}/events", s.ExecuteSSE)
-	mux.HandleFunc("/executions/execute/ws", s.ExecuteWS)
+	mux.HandleFunc("/executions/{jobId}/events", s.ExecuteSSE)
+	// mux.HandleFunc("/executions/execute/ws", s.ExecuteWS)
 	mux.Handle("/", s.server)
 
 	route_finder := middleware.MakeRouteFinder(s.server)

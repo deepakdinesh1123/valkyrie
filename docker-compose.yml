@@ -1,31 +1,38 @@
 services:
-  # odin:
-  #   build:
-  #     context: .
-  #     dockerfile: build/package/dockerfiles/odin.server.dockerfile
-  #   env_file:
-  #     - .env
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #   command: ["server", "start"]
-  #   ports:
-  #     - "8080:8080"
+  ide:
+    build:
+      context: frontend
+    ports:
+      - "5173:5173"
 
-  # odin-worker:
-  #   build:
-  #     context: .
-  #     dockerfile: build/package/dockerfiles/odin.worker.dockerfile
-  #   env_file:
-  #     - .env
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     odin:
-  #       condition: service_started
-  #   deploy:
-  #     replicas: 3
-  #   command: ["worker", "start"]
+  odin:
+    image: odin:binary
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["server", "start"]
+    ports:
+      - "8080:8080"
+
+  odin-worker:
+    image: odin:binary
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      odin:
+        condition: service_started
+    deploy:
+      replicas: 1
+    command: ["worker", "start"]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    user: "root"
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
 
   postgres:
     image: postgres
@@ -76,10 +83,3 @@ services:
   #     - ./configs/telemetry/prometheus.yml:/etc/prometheus/prometheus.yml
   #   ports:
   #     - "9090:9090"
-
-networks:
-  caddy:
-    external: true
-
-volumes:
-  caddy_data: {}

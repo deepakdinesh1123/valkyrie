@@ -8,6 +8,14 @@ info:
 servers:
   - url: https://backend.evnix.cloud/api
 paths:
+  /health:
+    get:
+      summary: Health Check
+      description: Health Check
+      operationId: health
+      responses:
+        '200':
+          description: OK
   /executions/execute:
     post:
       summary: Execute a script
@@ -84,6 +92,10 @@ paths:
                 $ref: '#/components/schemas/Error'
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           description: Internal Server Error
           content:
@@ -124,6 +136,10 @@ paths:
                 $ref: '#/components/schemas/Error'
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           description: Internal Server Error
           content:
@@ -276,6 +292,10 @@ paths:
                 $ref: '#/components/schemas/Error'
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           description: Internal Server Error
           content:
@@ -305,6 +325,10 @@ paths:
                 $ref: '#/components/schemas/Error'
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '404':
           description: Execution job not found
         '500':
@@ -354,6 +378,10 @@ paths:
                 $ref: '#/components/schemas/ExecutionConfig'
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           description: Internal Server Error
           content:
@@ -636,50 +664,6 @@ paths:
               schema:
                 type: object
                 $ref: '#/components/schemas/Error'
-  /languages/create:
-    post:
-      summary: Create a language
-      description: Create a new language entry in the database.
-      operationId: createLanguage
-      parameters:
-        - $ref: '#/components/parameters/AuthHeader'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Language'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - language
-                properties:
-                  language:
-                    type: object
-                    $ref: '#/components/schemas/LanguageResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
   /languages/{id}:
     get:
       summary: Get language by ID
@@ -726,113 +710,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-    put:
-      summary: Update a language
-      description: Update the details of a specific language by its ID.
-      operationId: updateLanguage
-      parameters:
-        - name: id
-          in: path
-          description: ID of the language to update.
-          required: true
-          schema:
-            type: integer
-            format: int64
-            example: 1
-        - $ref: '#/components/parameters/AuthHeader'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Language'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - language
-                properties:
-                  language:
-                    type: object
-                    $ref: '#/components/schemas/LanguageResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '404':
-          description: Language not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-    delete:
-      summary: Delete a language
-      description: Delete a specific language by its ID.
-      operationId: deleteLanguage
-      parameters:
-        - name: id
-          in: path
-          description: ID of the language to delete.
-          required: true
-          schema:
-            type: integer
-            format: int64
-            example: 1
-        - $ref: '#/components/parameters/AuthHeader'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - message
-                properties:
-                  message:
-                    type: string
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '404':
-          description: Language not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
   /language-versions:
     get:
       summary: Get all language versions
@@ -854,50 +731,6 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/LanguageVersionResponse'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-  /language-versions/create:
-    post:
-      summary: Create a language version
-      description: Create a new language version entry in the database.
-      operationId: createLanguageVersion
-      parameters:
-        - $ref: '#/components/parameters/AuthHeader'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LanguageVersion'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - language
-                properties:
-                  language:
-                    type: object
-                    $ref: '#/components/schemas/LanguageVersionResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
         '403':
           description: Forbidden
           content:
@@ -950,206 +783,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-    put:
-      summary: Update a language version
-      description: Update the details of a specific language version by its ID.
-      operationId: updateLanguageVersion
-      parameters:
-        - name: id
-          in: path
-          description: ID of the language version to update.
-          required: true
-          schema:
-            type: integer
-            format: int64
-            example: 1
-        - $ref: '#/components/parameters/AuthHeader'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LanguageVersion'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - language
-                properties:
-                  language:
-                    type: object
-                    $ref: '#/components/schemas/LanguageVersionResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '404':
-          description: Language version not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-    delete:
-      summary: Delete a language version
-      description: Delete a specific language version by its ID.
-      operationId: deleteLanguageVersion
-      parameters:
-        - name: id
-          in: path
-          description: ID of the language version to delete.
-          required: true
-          schema:
-            type: integer
-            format: int64
-            example: 1
-        - $ref: '#/components/parameters/AuthHeader'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - message
-                properties:
-                  message:
-                    type: string
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '404':
-          description: Language version not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-  /sandbox:
-    post:
-      summary: Create a sandbox
-      description: Create a sandbox
-      operationId: createSandbox
-      parameters:
-        - $ref: '#/components/parameters/AuthHeader'
-      responses:
-        '200':
-          description: ok
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - result
-                  - sandboxId
-                properties:
-                  result:
-                    type: string
-                  sandboxId:
-                    type: integer
-                    format: int64
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-  /sandbox/{sandboxId}:
-    get:
-      summary: Get Sandbox
-      description: Retrieve Sandbox details
-      operationId: getSandbox
-      parameters:
-        - name: sandboxId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - $ref: '#/components/parameters/AuthHeader'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ExecutionRequest'
-      responses:
-        '200':
-          description: ok
-          content:
-            application/json:
-              schema:
-                type: object
-                $ref: '#/components/schemas/Sandbox'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-    post:
-      summary: Add sandbox action
-      operationId: addSandboxAction
-      parameters:
-        - name: sandboxId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - $ref: '#/components/parameters/AuthHeader'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SandboxAction'
-      responses:
-        '200':
-          description: ok
-          content:
-            application/json:
-              schema:
-                type: object
-                $ref: '#/components/schemas/SandboxActionResponse'
         '500':
           description: Internal Server Error
           content:
@@ -1212,11 +845,11 @@ components:
       schema:
         type: integer
         format: int64
-        default: 0
+        default: 1
     Limit:
       name: limit
       in: query
-      description: The current position of the cursor
+      description: The limit for the records
       required: false
       schema:
         type: integer
@@ -1341,6 +974,7 @@ components:
         cursor:
           type: integer
           format: int64
+          description: Represents the start of the cursor
     ExecutionResult:
       allOf:
         - $ref: '#/components/schemas/Job'

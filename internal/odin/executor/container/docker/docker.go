@@ -1,4 +1,4 @@
-//go:build docker || all
+//go:build docker || all || darwin
 
 package docker
 

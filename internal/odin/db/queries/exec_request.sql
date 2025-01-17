@@ -26,7 +26,7 @@ select * from exec_request where hash = $1;
 
 -- name: ListExecRequests :many
 select * from exec_request
-where id > $1
+where id >= $1
 limit $2;
 
 -- name: DeleteExecRequest :exec

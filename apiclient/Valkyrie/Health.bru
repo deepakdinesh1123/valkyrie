@@ -1,0 +1,27 @@
+meta {
+  name: Health
+  type: http
+  seq: 23
+}
+
+get {
+  url: {{BASE_URL}}/api/health
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhZG1pbiIsImV4cCI6MTcyNjk4OTc2NiwiaWF0IjoxNzI2OTAzMzY2LCJpc3MiOiJvZGluIn0.7s3fFHfftadIMQXOi12-2eQgAIFTq244pbpteDQe8zk
+}
+
+body:json {
+  {
+    
+    "code": "print('hello')",
+    "language": "python",
+    "version": "3.12",
+    "environment": {
+      "setup": "echo world"
+    }
+  }
+}

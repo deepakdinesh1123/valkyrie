@@ -5,28 +5,8 @@ type CancelExecutionJobRes interface {
 	cancelExecutionJobRes()
 }
 
-type CreateLanguageRes interface {
-	createLanguageRes()
-}
-
-type CreateLanguageVersionRes interface {
-	createLanguageVersionRes()
-}
-
-type CreateSandboxRes interface {
-	createSandboxRes()
-}
-
 type DeleteExecutionJobRes interface {
 	deleteExecutionJobRes()
-}
-
-type DeleteLanguageRes interface {
-	deleteLanguageRes()
-}
-
-type DeleteLanguageVersionRes interface {
-	deleteLanguageVersionRes()
 }
 
 type ExecuteRes interface {
@@ -107,12 +87,4 @@ type SearchLanguagePackagesRes interface {
 
 type SearchSystemPackagesRes interface {
 	searchSystemPackagesRes()
-}
-
-type UpdateLanguageRes interface {
-	updateLanguageRes()
-}
-
-type UpdateLanguageVersionRes interface {
-	updateLanguageVersionRes()
 }

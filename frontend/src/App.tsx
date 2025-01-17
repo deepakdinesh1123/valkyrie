@@ -40,7 +40,7 @@ const App: React.FC = () => {
   const [isRequestModalOpen, setIsRequestModalOpen] = useState<boolean>(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState<boolean>(false);
   const calculatedHeight = `calc(100% - ${terminalHeight}px)`;
-  const [isAnnouncmentModalOpen, setIsAnnouncementModalOpen] = useState<boolean>(true);
+  const [isAnnouncmentModalOpen, setIsAnnouncementModalOpen] = useState<boolean>(false);
   const { systemPackages } = useSystemPackages(systemSearchString);
   const { languagePackages, resetLanguagePackages } = useLanguagePackages(languageSearchString, selectedLanguageVersion?.search_query || "");
   const { defaultSystemPackages, defaultLanguagePackages } = useDefaultPackages(selectedLanguageVersion?.search_query || "");
@@ -165,9 +165,9 @@ const App: React.FC = () => {
         />
       </div>
       <div className="editor-container flex-1 w-full">
-        <div className="top-bar flex flex-wrap justify-between items-center p-2 bg-transparent mr-44">
-          <div className="flex flex-wrap items-center w-full sm:w-auto mb-2 sm:mb-0">
-            <div className="w-full sm:w-auto mb-2 sm:mb-0 sm:mr-2 border-none">
+        <div className="top-bar flex flex-wrap justify-between items-center p-2 pt-4 bg-transparent mr-32">
+          <div className="flex flex-wrap items-center w-full sm:w-auto  sm:mb-0">
+            <div className="w-full sm:w-auto  sm:mb-0 sm:mr-2 border-none">
               <LanguageSelector
                 onLanguageChange={handleLanguageChange}
                 selectedLanguage={selectedLanguage}

@@ -22,57 +22,12 @@ func (UnimplementedHandler) CancelExecutionJob(ctx context.Context, params Cance
 	return r, ht.ErrNotImplemented
 }
 
-// CreateLanguage implements createLanguage operation.
-//
-// Create a new language entry in the database.
-//
-// POST /languages/create
-func (UnimplementedHandler) CreateLanguage(ctx context.Context, req *Language, params CreateLanguageParams) (r CreateLanguageRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
-// CreateLanguageVersion implements createLanguageVersion operation.
-//
-// Create a new language version entry in the database.
-//
-// POST /language-versions/create
-func (UnimplementedHandler) CreateLanguageVersion(ctx context.Context, req *LanguageVersion, params CreateLanguageVersionParams) (r CreateLanguageVersionRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
-// CreateSandbox implements createSandbox operation.
-//
-// Create a sandbox.
-//
-// POST /sandbox
-func (UnimplementedHandler) CreateSandbox(ctx context.Context, params CreateSandboxParams) (r CreateSandboxRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
 // DeleteExecutionJob implements deleteExecutionJob operation.
 //
 // Delete execution job.
 //
 // DELETE /executions/jobs/{JobId}
 func (UnimplementedHandler) DeleteExecutionJob(ctx context.Context, params DeleteExecutionJobParams) (r DeleteExecutionJobRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
-// DeleteLanguage implements deleteLanguage operation.
-//
-// Delete a specific language by its ID.
-//
-// DELETE /languages/{id}
-func (UnimplementedHandler) DeleteLanguage(ctx context.Context, params DeleteLanguageParams) (r DeleteLanguageRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
-// DeleteLanguageVersion implements deleteLanguageVersion operation.
-//
-// Delete a specific language version by its ID.
-//
-// DELETE /language-versions/{id}
-func (UnimplementedHandler) DeleteLanguageVersion(ctx context.Context, params DeleteLanguageVersionParams) (r DeleteLanguageVersionRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -229,6 +184,15 @@ func (UnimplementedHandler) GetVersion(ctx context.Context, params GetVersionPar
 	return r, ht.ErrNotImplemented
 }
 
+// Health implements health operation.
+//
+// Health Check.
+//
+// GET /health
+func (UnimplementedHandler) Health(ctx context.Context) error {
+	return ht.ErrNotImplemented
+}
+
 // PackagesExist implements PackagesExist operation.
 //
 // Verify the package list is available for the language version while switching between language
@@ -254,23 +218,5 @@ func (UnimplementedHandler) SearchLanguagePackages(ctx context.Context, params S
 //
 // GET /search/system
 func (UnimplementedHandler) SearchSystemPackages(ctx context.Context, params SearchSystemPackagesParams) (r SearchSystemPackagesRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
-// UpdateLanguage implements updateLanguage operation.
-//
-// Update the details of a specific language by its ID.
-//
-// PUT /languages/{id}
-func (UnimplementedHandler) UpdateLanguage(ctx context.Context, req *Language, params UpdateLanguageParams) (r UpdateLanguageRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
-// UpdateLanguageVersion implements updateLanguageVersion operation.
-//
-// Update the details of a specific language version by its ID.
-//
-// PUT /language-versions/{id}
-func (UnimplementedHandler) UpdateLanguageVersion(ctx context.Context, req *LanguageVersion, params UpdateLanguageVersionParams) (r UpdateLanguageVersionRes, _ error) {
 	return r, ht.ErrNotImplemented
 }

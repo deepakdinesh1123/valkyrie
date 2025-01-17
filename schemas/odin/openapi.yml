@@ -8,6 +8,8 @@ info:
 servers:
   - url: https://backend.evnix.cloud/api
 paths:
+  /health:
+    $ref: paths/health.yml
   /executions/execute:
     $ref: paths/executions_execute.yml
   /jobs/execution:
@@ -38,14 +40,10 @@ paths:
     $ref: paths/languages_{id}_versions.yml
   /languages:
     $ref: paths/languages.yml
-  /languages/create:
-    $ref: paths/languages_create.yml
   /languages/{id}:
     $ref: paths/languages_{id}.yml
   /language-versions:
     $ref: paths/language-versions.yml
-  /language-versions/create:
-    $ref: paths/language-versions_create.yml
   /language-versions/{id}:
     $ref: paths/language-versions_{id}.yml
   /sandbox:

@@ -53,7 +53,7 @@ SELECT *
 FROM jobs
 INNER JOIN exec_request 
 ON CAST(arguments->'ExecConfig'->>'exec_req_id' AS INT) = exec_request.id
-WHERE job_id <= $1
+WHERE job_id >= $1
 ORDER BY jobs.job_id
 LIMIT $2;
 
@@ -64,6 +64,13 @@ select * from jobs inner join exec_request on CAST(arguments->'ExecConfig'->>'ex
 select * from executions
 inner join exec_request on executions.exec_request_id = exec_request.id
 where executions.exec_id = $1;
+
+-- name: GetLatestExecution :one
+select * from executions
+inner join exec_request on executions.exec_request_id = exec_request.id
+where executions.job_id = $1
+order by finished_at desc
+limit 1;
 
 -- name: GetJobState :one
 select current_state from jobs where job_id = $1;
@@ -77,21 +84,14 @@ SELECT count(*) FROM jobs;
 -- name: GetExecutionsForJob :many
 select * from executions
 inner join exec_request on executions.exec_request_id = exec_request.id
-where executions.job_id = $1 and exec_id > $2
+where executions.job_id = $1 and exec_id >= $2
 order by finished_at desc
 limit $3;
-
--- name: GetLatestExecution :one
-select * from executions
-inner join exec_request on executions.exec_request_id = exec_request.id
-where executions.job_id = $1
-order by finished_at desc
-limit 1;
 
 -- name: GetAllExecutions :many
 select * from executions
 inner join exec_request on executions.exec_request_id = exec_request.id
-where exec_id > $1
+where exec_id >= $1
 order by started_at desc
 limit $2;
 

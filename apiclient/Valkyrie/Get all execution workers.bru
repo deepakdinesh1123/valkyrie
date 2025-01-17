@@ -5,7 +5,12 @@ meta {
 }
 
 get {
-  url: http://localhost:8080/executions/workers
+  url: http://localhost:8080/api/jobs/execution?cursor=2
   body: none
   auth: none
+}
+
+params:query {
+  cursor: 2
+  ~limit: 2
 }

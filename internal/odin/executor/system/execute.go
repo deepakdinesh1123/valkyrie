@@ -1,4 +1,4 @@
-//go:build system || all
+//go:build system || all || darwin
 
 package system
 

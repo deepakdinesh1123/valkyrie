@@ -5,4 +5,4 @@ required: false
 schema:
   type: integer
   format: int64
-  default: 0
+  default: 1

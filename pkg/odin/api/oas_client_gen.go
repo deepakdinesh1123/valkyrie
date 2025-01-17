@@ -29,42 +29,12 @@ type Invoker interface {
 	//
 	// PUT /executions/jobs/{JobId}
 	CancelExecutionJob(ctx context.Context, params CancelExecutionJobParams) (CancelExecutionJobRes, error)
-	// CreateLanguage invokes createLanguage operation.
-	//
-	// Create a new language entry in the database.
-	//
-	// POST /languages/create
-	CreateLanguage(ctx context.Context, request *Language, params CreateLanguageParams) (CreateLanguageRes, error)
-	// CreateLanguageVersion invokes createLanguageVersion operation.
-	//
-	// Create a new language version entry in the database.
-	//
-	// POST /language-versions/create
-	CreateLanguageVersion(ctx context.Context, request *LanguageVersion, params CreateLanguageVersionParams) (CreateLanguageVersionRes, error)
-	// CreateSandbox invokes createSandbox operation.
-	//
-	// Create a sandbox.
-	//
-	// POST /sandbox
-	CreateSandbox(ctx context.Context, params CreateSandboxParams) (CreateSandboxRes, error)
 	// DeleteExecutionJob invokes deleteExecutionJob operation.
 	//
 	// Delete execution job.
 	//
 	// DELETE /executions/jobs/{JobId}
 	DeleteExecutionJob(ctx context.Context, params DeleteExecutionJobParams) (DeleteExecutionJobRes, error)
-	// DeleteLanguage invokes deleteLanguage operation.
-	//
-	// Delete a specific language by its ID.
-	//
-	// DELETE /languages/{id}
-	DeleteLanguage(ctx context.Context, params DeleteLanguageParams) (DeleteLanguageRes, error)
-	// DeleteLanguageVersion invokes deleteLanguageVersion operation.
-	//
-	// Delete a specific language version by its ID.
-	//
-	// DELETE /language-versions/{id}
-	DeleteLanguageVersion(ctx context.Context, params DeleteLanguageVersionParams) (DeleteLanguageVersionRes, error)
 	// Execute invokes execute operation.
 	//
 	// Execute a script.
@@ -167,6 +137,12 @@ type Invoker interface {
 	//
 	// GET /version
 	GetVersion(ctx context.Context, params GetVersionParams) (GetVersionRes, error)
+	// Health invokes health operation.
+	//
+	// Health Check.
+	//
+	// GET /health
+	Health(ctx context.Context) error
 	// PackagesExist invokes PackagesExist operation.
 	//
 	// Verify the package list is available for the language version while switching between language
@@ -186,18 +162,6 @@ type Invoker interface {
 	//
 	// GET /search/system
 	SearchSystemPackages(ctx context.Context, params SearchSystemPackagesParams) (SearchSystemPackagesRes, error)
-	// UpdateLanguage invokes updateLanguage operation.
-	//
-	// Update the details of a specific language by its ID.
-	//
-	// PUT /languages/{id}
-	UpdateLanguage(ctx context.Context, request *Language, params UpdateLanguageParams) (UpdateLanguageRes, error)
-	// UpdateLanguageVersion invokes updateLanguageVersion operation.
-	//
-	// Update the details of a specific language version by its ID.
-	//
-	// PUT /language-versions/{id}
-	UpdateLanguageVersion(ctx context.Context, request *LanguageVersion, params UpdateLanguageVersionParams) (UpdateLanguageVersionRes, error)
 }
 
 // Client implements OAS client.
@@ -355,279 +319,6 @@ func (c *Client) sendCancelExecutionJob(ctx context.Context, params CancelExecut
 	return result, nil
 }
 
-// CreateLanguage invokes createLanguage operation.
-//
-// Create a new language entry in the database.
-//
-// POST /languages/create
-func (c *Client) CreateLanguage(ctx context.Context, request *Language, params CreateLanguageParams) (CreateLanguageRes, error) {
-	res, err := c.sendCreateLanguage(ctx, request, params)
-	return res, err
-}
-
-func (c *Client) sendCreateLanguage(ctx context.Context, request *Language, params CreateLanguageParams) (res CreateLanguageRes, err error) {
-	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("createLanguage"),
-		semconv.HTTPRequestMethodKey.String("POST"),
-		semconv.HTTPRouteKey.String("/languages/create"),
-	}
-
-	// Run stopwatch.
-	startTime := time.Now()
-	defer func() {
-		// Use floating point division here for higher precision (instead of Millisecond method).
-		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
-	}()
-
-	// Increment request counter.
-	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-
-	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, CreateLanguageOperation,
-		trace.WithAttributes(otelAttrs...),
-		clientSpanKind,
-	)
-	// Track stage for error reporting.
-	var stage string
-	defer func() {
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, stage)
-			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-		}
-		span.End()
-	}()
-
-	stage = "BuildURL"
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [1]string
-	pathParts[0] = "/languages/create"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	stage = "EncodeRequest"
-	r, err := ht.NewRequest(ctx, "POST", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-	if err := encodeCreateLanguageRequest(request, r); err != nil {
-		return res, errors.Wrap(err, "encode request")
-	}
-
-	stage = "EncodeHeaderParams"
-	h := uri.NewHeaderEncoder(r.Header)
-	{
-		cfg := uri.HeaderParameterEncodingConfig{
-			Name:    "X-Auth-Token",
-			Explode: false,
-		}
-		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.XAuthToken.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode header")
-		}
-	}
-
-	stage = "SendRequest"
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	defer resp.Body.Close()
-
-	stage = "DecodeResponse"
-	result, err := decodeCreateLanguageResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// CreateLanguageVersion invokes createLanguageVersion operation.
-//
-// Create a new language version entry in the database.
-//
-// POST /language-versions/create
-func (c *Client) CreateLanguageVersion(ctx context.Context, request *LanguageVersion, params CreateLanguageVersionParams) (CreateLanguageVersionRes, error) {
-	res, err := c.sendCreateLanguageVersion(ctx, request, params)
-	return res, err
-}
-
-func (c *Client) sendCreateLanguageVersion(ctx context.Context, request *LanguageVersion, params CreateLanguageVersionParams) (res CreateLanguageVersionRes, err error) {
-	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("createLanguageVersion"),
-		semconv.HTTPRequestMethodKey.String("POST"),
-		semconv.HTTPRouteKey.String("/language-versions/create"),
-	}
-
-	// Run stopwatch.
-	startTime := time.Now()
-	defer func() {
-		// Use floating point division here for higher precision (instead of Millisecond method).
-		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
-	}()
-
-	// Increment request counter.
-	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-
-	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, CreateLanguageVersionOperation,
-		trace.WithAttributes(otelAttrs...),
-		clientSpanKind,
-	)
-	// Track stage for error reporting.
-	var stage string
-	defer func() {
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, stage)
-			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-		}
-		span.End()
-	}()
-
-	stage = "BuildURL"
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [1]string
-	pathParts[0] = "/language-versions/create"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	stage = "EncodeRequest"
-	r, err := ht.NewRequest(ctx, "POST", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-	if err := encodeCreateLanguageVersionRequest(request, r); err != nil {
-		return res, errors.Wrap(err, "encode request")
-	}
-
-	stage = "EncodeHeaderParams"
-	h := uri.NewHeaderEncoder(r.Header)
-	{
-		cfg := uri.HeaderParameterEncodingConfig{
-			Name:    "X-Auth-Token",
-			Explode: false,
-		}
-		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.XAuthToken.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode header")
-		}
-	}
-
-	stage = "SendRequest"
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	defer resp.Body.Close()
-
-	stage = "DecodeResponse"
-	result, err := decodeCreateLanguageVersionResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// CreateSandbox invokes createSandbox operation.
-//
-// Create a sandbox.
-//
-// POST /sandbox
-func (c *Client) CreateSandbox(ctx context.Context, params CreateSandboxParams) (CreateSandboxRes, error) {
-	res, err := c.sendCreateSandbox(ctx, params)
-	return res, err
-}
-
-func (c *Client) sendCreateSandbox(ctx context.Context, params CreateSandboxParams) (res CreateSandboxRes, err error) {
-	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("createSandbox"),
-		semconv.HTTPRequestMethodKey.String("POST"),
-		semconv.HTTPRouteKey.String("/sandbox"),
-	}
-
-	// Run stopwatch.
-	startTime := time.Now()
-	defer func() {
-		// Use floating point division here for higher precision (instead of Millisecond method).
-		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
-	}()
-
-	// Increment request counter.
-	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-
-	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, CreateSandboxOperation,
-		trace.WithAttributes(otelAttrs...),
-		clientSpanKind,
-	)
-	// Track stage for error reporting.
-	var stage string
-	defer func() {
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, stage)
-			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-		}
-		span.End()
-	}()
-
-	stage = "BuildURL"
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [1]string
-	pathParts[0] = "/sandbox"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	stage = "EncodeRequest"
-	r, err := ht.NewRequest(ctx, "POST", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-
-	stage = "EncodeHeaderParams"
-	h := uri.NewHeaderEncoder(r.Header)
-	{
-		cfg := uri.HeaderParameterEncodingConfig{
-			Name:    "X-Auth-Token",
-			Explode: false,
-		}
-		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.XAuthToken.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode header")
-		}
-	}
-
-	stage = "SendRequest"
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	defer resp.Body.Close()
-
-	stage = "DecodeResponse"
-	result, err := decodeCreateSandboxResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
 // DeleteExecutionJob invokes deleteExecutionJob operation.
 //
 // Delete execution job.
@@ -728,220 +419,6 @@ func (c *Client) sendDeleteExecutionJob(ctx context.Context, params DeleteExecut
 
 	stage = "DecodeResponse"
 	result, err := decodeDeleteExecutionJobResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// DeleteLanguage invokes deleteLanguage operation.
-//
-// Delete a specific language by its ID.
-//
-// DELETE /languages/{id}
-func (c *Client) DeleteLanguage(ctx context.Context, params DeleteLanguageParams) (DeleteLanguageRes, error) {
-	res, err := c.sendDeleteLanguage(ctx, params)
-	return res, err
-}
-
-func (c *Client) sendDeleteLanguage(ctx context.Context, params DeleteLanguageParams) (res DeleteLanguageRes, err error) {
-	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("deleteLanguage"),
-		semconv.HTTPRequestMethodKey.String("DELETE"),
-		semconv.HTTPRouteKey.String("/languages/{id}"),
-	}
-
-	// Run stopwatch.
-	startTime := time.Now()
-	defer func() {
-		// Use floating point division here for higher precision (instead of Millisecond method).
-		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
-	}()
-
-	// Increment request counter.
-	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-
-	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, DeleteLanguageOperation,
-		trace.WithAttributes(otelAttrs...),
-		clientSpanKind,
-	)
-	// Track stage for error reporting.
-	var stage string
-	defer func() {
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, stage)
-			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-		}
-		span.End()
-	}()
-
-	stage = "BuildURL"
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [2]string
-	pathParts[0] = "/languages/"
-	{
-		// Encode "id" parameter.
-		e := uri.NewPathEncoder(uri.PathEncoderConfig{
-			Param:   "id",
-			Style:   uri.PathStyleSimple,
-			Explode: false,
-		})
-		if err := func() error {
-			return e.EncodeValue(conv.Int64ToString(params.ID))
-		}(); err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		encoded, err := e.Result()
-		if err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		pathParts[1] = encoded
-	}
-	uri.AddPathParts(u, pathParts[:]...)
-
-	stage = "EncodeRequest"
-	r, err := ht.NewRequest(ctx, "DELETE", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-
-	stage = "EncodeHeaderParams"
-	h := uri.NewHeaderEncoder(r.Header)
-	{
-		cfg := uri.HeaderParameterEncodingConfig{
-			Name:    "X-Auth-Token",
-			Explode: false,
-		}
-		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.XAuthToken.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode header")
-		}
-	}
-
-	stage = "SendRequest"
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	defer resp.Body.Close()
-
-	stage = "DecodeResponse"
-	result, err := decodeDeleteLanguageResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// DeleteLanguageVersion invokes deleteLanguageVersion operation.
-//
-// Delete a specific language version by its ID.
-//
-// DELETE /language-versions/{id}
-func (c *Client) DeleteLanguageVersion(ctx context.Context, params DeleteLanguageVersionParams) (DeleteLanguageVersionRes, error) {
-	res, err := c.sendDeleteLanguageVersion(ctx, params)
-	return res, err
-}
-
-func (c *Client) sendDeleteLanguageVersion(ctx context.Context, params DeleteLanguageVersionParams) (res DeleteLanguageVersionRes, err error) {
-	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("deleteLanguageVersion"),
-		semconv.HTTPRequestMethodKey.String("DELETE"),
-		semconv.HTTPRouteKey.String("/language-versions/{id}"),
-	}
-
-	// Run stopwatch.
-	startTime := time.Now()
-	defer func() {
-		// Use floating point division here for higher precision (instead of Millisecond method).
-		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
-	}()
-
-	// Increment request counter.
-	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-
-	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, DeleteLanguageVersionOperation,
-		trace.WithAttributes(otelAttrs...),
-		clientSpanKind,
-	)
-	// Track stage for error reporting.
-	var stage string
-	defer func() {
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, stage)
-			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-		}
-		span.End()
-	}()
-
-	stage = "BuildURL"
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [2]string
-	pathParts[0] = "/language-versions/"
-	{
-		// Encode "id" parameter.
-		e := uri.NewPathEncoder(uri.PathEncoderConfig{
-			Param:   "id",
-			Style:   uri.PathStyleSimple,
-			Explode: false,
-		})
-		if err := func() error {
-			return e.EncodeValue(conv.Int64ToString(params.ID))
-		}(); err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		encoded, err := e.Result()
-		if err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		pathParts[1] = encoded
-	}
-	uri.AddPathParts(u, pathParts[:]...)
-
-	stage = "EncodeRequest"
-	r, err := ht.NewRequest(ctx, "DELETE", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-
-	stage = "EncodeHeaderParams"
-	h := uri.NewHeaderEncoder(r.Header)
-	{
-		cfg := uri.HeaderParameterEncodingConfig{
-			Name:    "X-Auth-Token",
-			Explode: false,
-		}
-		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.XAuthToken.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode header")
-		}
-	}
-
-	stage = "SendRequest"
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	defer resp.Body.Close()
-
-	stage = "DecodeResponse"
-	result, err := decodeDeleteLanguageVersionResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -1320,6 +797,95 @@ func (c *Client) sendFetchSystemPackages(ctx context.Context, params FetchSystem
 
 	stage = "DecodeResponse"
 	result, err := decodeFetchSystemPackagesResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// FlakeJobIdGet invokes GET /flake/{jobId} operation.
+//
+// Fetches flake of a given job.
+//
+// GET /flake/{jobId}
+func (c *Client) FlakeJobIdGet(ctx context.Context, params FlakeJobIdGetParams) (FlakeJobIdGetRes, error) {
+	res, err := c.sendFlakeJobIdGet(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendFlakeJobIdGet(ctx context.Context, params FlakeJobIdGetParams) (res FlakeJobIdGetRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/flake/{jobId}"),
+	}
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, FlakeJobIdGetOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [2]string
+	pathParts[0] = "/flake/"
+	{
+		// Encode "jobId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "jobId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			return e.EncodeValue(conv.Int64ToString(params.JobId))
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodeFlakeJobIdGetResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -2726,6 +2292,78 @@ func (c *Client) sendGetVersion(ctx context.Context, params GetVersionParams) (r
 	return result, nil
 }
 
+// Health invokes health operation.
+//
+// Health Check.
+//
+// GET /health
+func (c *Client) Health(ctx context.Context) error {
+	_, err := c.sendHealth(ctx)
+	return err
+}
+
+func (c *Client) sendHealth(ctx context.Context) (res *HealthOK, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("health"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/health"),
+	}
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, HealthOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/health"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodeHealthResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // PackagesExist invokes PackagesExist operation.
 //
 // Verify the package list is available for the language version while switching between language
@@ -3040,226 +2678,6 @@ func (c *Client) sendSearchSystemPackages(ctx context.Context, params SearchSyst
 
 	stage = "DecodeResponse"
 	result, err := decodeSearchSystemPackagesResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// UpdateLanguage invokes updateLanguage operation.
-//
-// Update the details of a specific language by its ID.
-//
-// PUT /languages/{id}
-func (c *Client) UpdateLanguage(ctx context.Context, request *Language, params UpdateLanguageParams) (UpdateLanguageRes, error) {
-	res, err := c.sendUpdateLanguage(ctx, request, params)
-	return res, err
-}
-
-func (c *Client) sendUpdateLanguage(ctx context.Context, request *Language, params UpdateLanguageParams) (res UpdateLanguageRes, err error) {
-	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("updateLanguage"),
-		semconv.HTTPRequestMethodKey.String("PUT"),
-		semconv.HTTPRouteKey.String("/languages/{id}"),
-	}
-
-	// Run stopwatch.
-	startTime := time.Now()
-	defer func() {
-		// Use floating point division here for higher precision (instead of Millisecond method).
-		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
-	}()
-
-	// Increment request counter.
-	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-
-	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, UpdateLanguageOperation,
-		trace.WithAttributes(otelAttrs...),
-		clientSpanKind,
-	)
-	// Track stage for error reporting.
-	var stage string
-	defer func() {
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, stage)
-			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-		}
-		span.End()
-	}()
-
-	stage = "BuildURL"
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [2]string
-	pathParts[0] = "/languages/"
-	{
-		// Encode "id" parameter.
-		e := uri.NewPathEncoder(uri.PathEncoderConfig{
-			Param:   "id",
-			Style:   uri.PathStyleSimple,
-			Explode: false,
-		})
-		if err := func() error {
-			return e.EncodeValue(conv.Int64ToString(params.ID))
-		}(); err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		encoded, err := e.Result()
-		if err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		pathParts[1] = encoded
-	}
-	uri.AddPathParts(u, pathParts[:]...)
-
-	stage = "EncodeRequest"
-	r, err := ht.NewRequest(ctx, "PUT", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-	if err := encodeUpdateLanguageRequest(request, r); err != nil {
-		return res, errors.Wrap(err, "encode request")
-	}
-
-	stage = "EncodeHeaderParams"
-	h := uri.NewHeaderEncoder(r.Header)
-	{
-		cfg := uri.HeaderParameterEncodingConfig{
-			Name:    "X-Auth-Token",
-			Explode: false,
-		}
-		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.XAuthToken.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode header")
-		}
-	}
-
-	stage = "SendRequest"
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	defer resp.Body.Close()
-
-	stage = "DecodeResponse"
-	result, err := decodeUpdateLanguageResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// UpdateLanguageVersion invokes updateLanguageVersion operation.
-//
-// Update the details of a specific language version by its ID.
-//
-// PUT /language-versions/{id}
-func (c *Client) UpdateLanguageVersion(ctx context.Context, request *LanguageVersion, params UpdateLanguageVersionParams) (UpdateLanguageVersionRes, error) {
-	res, err := c.sendUpdateLanguageVersion(ctx, request, params)
-	return res, err
-}
-
-func (c *Client) sendUpdateLanguageVersion(ctx context.Context, request *LanguageVersion, params UpdateLanguageVersionParams) (res UpdateLanguageVersionRes, err error) {
-	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("updateLanguageVersion"),
-		semconv.HTTPRequestMethodKey.String("PUT"),
-		semconv.HTTPRouteKey.String("/language-versions/{id}"),
-	}
-
-	// Run stopwatch.
-	startTime := time.Now()
-	defer func() {
-		// Use floating point division here for higher precision (instead of Millisecond method).
-		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
-	}()
-
-	// Increment request counter.
-	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-
-	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, UpdateLanguageVersionOperation,
-		trace.WithAttributes(otelAttrs...),
-		clientSpanKind,
-	)
-	// Track stage for error reporting.
-	var stage string
-	defer func() {
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, stage)
-			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-		}
-		span.End()
-	}()
-
-	stage = "BuildURL"
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [2]string
-	pathParts[0] = "/language-versions/"
-	{
-		// Encode "id" parameter.
-		e := uri.NewPathEncoder(uri.PathEncoderConfig{
-			Param:   "id",
-			Style:   uri.PathStyleSimple,
-			Explode: false,
-		})
-		if err := func() error {
-			return e.EncodeValue(conv.Int64ToString(params.ID))
-		}(); err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		encoded, err := e.Result()
-		if err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		pathParts[1] = encoded
-	}
-	uri.AddPathParts(u, pathParts[:]...)
-
-	stage = "EncodeRequest"
-	r, err := ht.NewRequest(ctx, "PUT", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-	if err := encodeUpdateLanguageVersionRequest(request, r); err != nil {
-		return res, errors.Wrap(err, "encode request")
-	}
-
-	stage = "EncodeHeaderParams"
-	h := uri.NewHeaderEncoder(r.Header)
-	{
-		cfg := uri.HeaderParameterEncodingConfig{
-			Name:    "X-Auth-Token",
-			Explode: false,
-		}
-		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.XAuthToken.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode header")
-		}
-	}
-
-	stage = "SendRequest"
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	defer resp.Body.Close()
-
-	stage = "DecodeResponse"
-	result, err := decodeUpdateLanguageVersionResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
