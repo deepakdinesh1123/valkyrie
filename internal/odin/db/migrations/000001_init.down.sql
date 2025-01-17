@@ -1,22 +1,34 @@
-drop table if exists job_groups;
-drop table if exists job_types;
-drop table if exists workers;
-drop sequence if exists workers_id_seq;
+-- Drop executions table and related sequence
+drop table if exists executions;
+drop sequence if exists executions_id_seq;
+
+-- Drop jobs table and related sequence
 drop table if exists jobs;
 drop sequence if exists jobs_id_seq;
-drop table if exists job_runs;
-drop sequence if exists job_runs_id_seq;
-drop table if exists execute;
-drop sequence if exists execute_id_seq;
 
--- Drop the foreign key constraint and the table `language_versions` first
-DROP TABLE IF EXISTS language_versions CASCADE;
+-- Drop workers table and related sequence
+drop table if exists workers;
+drop sequence if exists workers_id_seq;
 
--- Drop the sequence for `language_versions`
-DROP SEQUENCE IF EXISTS language_versions_id_seq;
+-- Drop job_types table
+drop table if exists job_types;
 
--- Drop the table `languages`
-DROP TABLE IF EXISTS languages CASCADE;
+-- Drop job_groups table
+drop table if exists job_groups;
 
--- Drop the sequence for `languages`
-DROP SEQUENCE IF EXISTS languages_id_seq;
+-- Drop exec_request table and related sequence
+drop table if exists exec_request;
+drop sequence if exists exec_request_id_seq;
+
+-- Drop language_versions table and related index and sequence
+drop index if exists unique_default_version_per_language;
+drop table if exists language_versions;
+drop sequence if exists language_versions_id_seq;
+
+-- Drop languages table and related sequence
+drop table if exists languages;
+drop sequence if exists languages_id_seq;
+
+-- Drop packages table and related sequence
+drop table if exists packages;
+drop sequence if exists packages_id_seq;
