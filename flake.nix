@@ -42,7 +42,7 @@
           odin = pkgs.callPackage ./build/package/nix/odin.nix { inherit pkgs; };
           odinDockerImage = nix2containerPkgs.nix2container.buildImage {
             name="odin";
-            tag="binary";
+            tag="0.0.1";
             fromImage = alpine;
             config = {
               Entrypoint = ["${packages.odin}/bin/odin"];

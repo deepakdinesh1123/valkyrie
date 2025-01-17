@@ -2,6 +2,7 @@
 set dotenv-load := true
 
 import 'schemas/schemas.just'
+import 'build/build.just'
 
 # Common variables
 export PG_URL := "postgresql://" + env_var("POSTGRES_USER") + ":" + env_var("POSTGRES_PASSWORD") + "@" + env_var("POSTGRES_HOST") + ":" + env_var("POSTGRES_PORT") + "/" + env_var("POSTGRES_DB") + "?sslmode=" + env_var("POSTGRES_SSL_MODE")
@@ -64,4 +65,8 @@ docker-db:
 
 # Help command to list all available commands
 help:
+    @just --list
+
+# Default recipe lists all available recipes
+default:
     @just --list
