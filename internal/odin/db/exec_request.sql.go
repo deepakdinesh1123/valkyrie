@@ -134,7 +134,7 @@ limit $2
 
 type ListExecRequestsParams struct {
 	ID    int32 `db:"id" json:"id"`
-	Limit int32 `db:"limit" json:"limit"`
+	Limit int64 `db:"limit" json:"limit"`
 }
 
 func (q *Queries) ListExecRequests(ctx context.Context, arg ListExecRequestsParams) ([]ExecRequest, error) {

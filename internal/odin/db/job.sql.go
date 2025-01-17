@@ -74,7 +74,7 @@ limit $2
 
 type GetAllExecutionsParams struct {
 	ExecID int64 `db:"exec_id" json:"exec_id"`
-	Limit  int32 `db:"limit" json:"limit"`
+	Limit  int64 `db:"limit" json:"limit"`
 }
 
 type GetAllExecutionsRow struct {
@@ -159,7 +159,7 @@ LIMIT $2
 
 type GetAllJobsParams struct {
 	JobID int64 `db:"job_id" json:"job_id"`
-	Limit int32 `db:"limit" json:"limit"`
+	Limit int64 `db:"limit" json:"limit"`
 }
 
 type GetAllJobsRow struct {
@@ -306,7 +306,7 @@ limit $3
 type GetExecutionsForJobParams struct {
 	JobID  pgtype.Int8 `db:"job_id" json:"job_id"`
 	ExecID int64       `db:"exec_id" json:"exec_id"`
-	Limit  int32       `db:"limit" json:"limit"`
+	Limit  int64       `db:"limit" json:"limit"`
 }
 
 type GetExecutionsForJobRow struct {
