@@ -38,6 +38,7 @@ func init() {
 	RootCmd.AddCommand(worker.WorkerCmd)
 	RootCmd.AddCommand(StandaloneCmd)
 	RootCmd.AddCommand(store.StoreCmd)
+	RootCmd.AddCommand(CompletionCmd)
 
 	createDirs(envConfig)
 }
