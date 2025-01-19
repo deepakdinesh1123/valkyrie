@@ -789,6 +789,62 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /sandbox:
+    post:
+      summary: Create a sandbox
+      description: Create a sandbox
+      operationId: createSandbox
+      parameters:
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - result
+                  - sandboxId
+                properties:
+                  result:
+                    type: string
+                  sandboxId:
+                    type: integer
+                    format: int64
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /sandbox/{sandboxId}:
+    get:
+      summary: Get Sandbox
+      description: Retrieve Sandbox details
+      operationId: getSandbox
+      parameters:
+        - name: sandboxId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/Sandbox'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /flake/{jobId}:
     get:
       summary: Fetch Flake
@@ -1194,32 +1250,3 @@ components:
         created_at:
           type: string
           format: date-time
-    SandboxShellCommand:
-      type: object
-      required:
-        - command
-      properties:
-        command:
-          type: string
-          description: command to execute
-    SandboxOpenPort:
-      type: object
-      required:
-        - port
-      properties:
-        port:
-          type: integer
-          description: port to open
-    SandboxAction:
-      oneOf:
-        - $ref: '#/components/schemas/SandboxShellCommand'
-        - $ref: '#/components/schemas/SandboxOpenPort'
-    SandboxActionResponse:
-      type: object
-      properties:
-        success:
-          type: boolean
-          description: Sucess of the action
-        response:
-          type: string
-          description: Action response

@@ -35,6 +35,33 @@ func (s *CancelExecutionJobOK) SetMessage(val string) {
 
 func (*CancelExecutionJobOK) cancelExecutionJobRes() {}
 
+type CreateSandboxOK struct {
+	Result    string `json:"result"`
+	SandboxId int64  `json:"sandboxId"`
+}
+
+// GetResult returns the value of Result.
+func (s *CreateSandboxOK) GetResult() string {
+	return s.Result
+}
+
+// GetSandboxId returns the value of SandboxId.
+func (s *CreateSandboxOK) GetSandboxId() int64 {
+	return s.SandboxId
+}
+
+// SetResult sets the value of Result.
+func (s *CreateSandboxOK) SetResult(val string) {
+	s.Result = val
+}
+
+// SetSandboxId sets the value of SandboxId.
+func (s *CreateSandboxOK) SetSandboxId(val int64) {
+	s.SandboxId = val
+}
+
+func (*CreateSandboxOK) createSandboxRes() {}
+
 type DeleteExecutionJobBadRequest Error
 
 func (*DeleteExecutionJobBadRequest) deleteExecutionJobRes() {}
@@ -98,7 +125,9 @@ func (s *Error) SetMessage(val string) {
 	s.Message = val
 }
 
-func (*Error) getVersionRes() {}
+func (*Error) createSandboxRes() {}
+func (*Error) getSandboxRes()    {}
+func (*Error) getVersionRes()    {}
 
 type ExecuteBadRequest Error
 

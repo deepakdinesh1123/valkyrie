@@ -1,0 +1,38 @@
+{
+    "description": "Add a file to the sandbox",
+    "properties": {
+        "msgType": {
+            "default": "AddFile",
+            "title": "Msgtype",
+            "type": "string"
+        },
+        "sandboxId": {
+            "description": "ID of the sandbox to add the file to",
+            "title": "Sandboxid",
+            "type": "integer"
+        },
+        "file_name": {
+            "description": "Name of the file",
+            "title": "File Name",
+            "type": "string"
+        },
+        "path": {
+            "description": "Path where to create the file",
+            "title": "Path",
+            "type": "string"
+        },
+        "content": {
+            "description": "File content",
+            "title": "Content",
+            "type": "string"
+        }
+    },
+    "required": [
+        "sandboxId",
+        "file_name",
+        "path",
+        "content"
+    ],
+    "title": "AddFile",
+    "type": "object"
+}

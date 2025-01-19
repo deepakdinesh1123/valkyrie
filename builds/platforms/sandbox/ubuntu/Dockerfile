@@ -32,8 +32,11 @@ RUN curl -L https://nixos.org/nix/install -o /home/valnix/install_nix.sh && \
 # Ensure the Nix binaries are available in PATH
 ENV PATH="/home/valnix/.nix-profile/bin:${PATH}"
 
-RUN nix-env -iA nixpkgs.code-server
-RUN mkdir -p /home/valnix/.config/code-server
+RUN nix-channel --remove nixpkgs
+RUN nix-channel --add https://nixos.org/channels/nixos-24.11 nixpkgs && nix-channel --update
+
+# RUN nix-env -iA nixpkgs.code-server
+# RUN mkdir -p /home/valnix/.config/code-server
 
 # COPY configs/sandbox/code-server.yaml /home/valnix/.config/code-server/config.yaml
 

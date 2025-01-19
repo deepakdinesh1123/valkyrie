@@ -21,7 +21,10 @@ for file in "$SCHEMA_FOLDER"/*.json; do
 
     case $LANGUAGE in
         go)
-            quicktype -o agent/schema/$FILENAME.go --src-lang schema --package schema --lang go $file 
+            quicktype -o $TARGET_FOLDER/$FILENAME.go --src-lang schema --package schemas --lang go $file 
+            ;;
+        ts)
+            quicktype -o $TARGET_FOLDER/$FILENAME.ts --src-lang schema --lang typescript-zod $file
             ;;
         *)
             echo "Specified language $LANGUAGE is not supported"

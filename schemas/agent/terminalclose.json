@@ -1,0 +1,12 @@
+{
+    "description": "Close terminal session",
+    "properties": {
+        "msgType": {
+            "default": "TerminalClose",
+            "title": "Msgtype",
+            "type": "string"
+        }
+    },
+    "title": "TerminalClose",
+    "type": "object"
+}

@@ -5,6 +5,10 @@ type CancelExecutionJobRes interface {
 	cancelExecutionJobRes()
 }
 
+type CreateSandboxRes interface {
+	createSandboxRes()
+}
+
 type DeleteExecutionJobRes interface {
 	deleteExecutionJobRes()
 }

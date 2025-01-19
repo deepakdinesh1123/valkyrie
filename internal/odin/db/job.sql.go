@@ -82,7 +82,7 @@ SELECT job_id, created_at, updated_at, time_out, started_at, arguments, current_
 FROM jobs
 INNER JOIN exec_request 
 ON CAST(arguments->'ExecConfig'->>'exec_req_id' AS INT) = exec_request.id
-WHERE job_id <= $1
+WHERE job_id >= $1
 ORDER BY jobs.job_id
 LIMIT $2
 `
@@ -223,91 +223,6 @@ func (q *Queries) GetAllExecutions(ctx context.Context, arg GetAllExecutionsPara
 			&i.ExecLogs,
 			&i.NixLogs,
 			&i.Success,
-			&i.ID,
-			&i.Hash,
-			&i.Code,
-			&i.Flake,
-			&i.LanguageDependencies,
-			&i.SystemDependencies,
-			&i.CmdLineArgs,
-			&i.CompileArgs,
-			&i.Files,
-			&i.Input,
-			&i.Command,
-			&i.Setup,
-			&i.LanguageVersion,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getAllJobs = `-- name: GetAllJobs :many
-SELECT job_id, created_at, updated_at, time_out, started_at, exec_request_id, current_state, retries, max_retries, worker_id, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, language_version 
-FROM jobs
-INNER JOIN exec_request 
-ON jobs.exec_request_id = exec_request.id 
-WHERE job_id >= $1
-ORDER BY jobs.job_id
-LIMIT $2
-`
-
-type GetAllJobsParams struct {
-	JobID int64 `db:"job_id" json:"job_id"`
-	Limit int64 `db:"limit" json:"limit"`
-}
-
-type GetAllJobsRow struct {
-	JobID                int64              `db:"job_id" json:"job_id"`
-	CreatedAt            pgtype.Timestamptz `db:"created_at" json:"created_at"`
-	UpdatedAt            pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
-	TimeOut              pgtype.Int4        `db:"time_out" json:"time_out"`
-	StartedAt            pgtype.Timestamptz `db:"started_at" json:"started_at"`
-	ExecRequestID        pgtype.Int4        `db:"exec_request_id" json:"exec_request_id"`
-	CurrentState         string             `db:"current_state" json:"current_state"`
-	Retries              pgtype.Int4        `db:"retries" json:"retries"`
-	MaxRetries           pgtype.Int4        `db:"max_retries" json:"max_retries"`
-	WorkerID             pgtype.Int4        `db:"worker_id" json:"worker_id"`
-	ID                   int32              `db:"id" json:"id"`
-	Hash                 string             `db:"hash" json:"hash"`
-	Code                 pgtype.Text        `db:"code" json:"code"`
-	Flake                string             `db:"flake" json:"flake"`
-	LanguageDependencies []string           `db:"language_dependencies" json:"language_dependencies"`
-	SystemDependencies   []string           `db:"system_dependencies" json:"system_dependencies"`
-	CmdLineArgs          pgtype.Text        `db:"cmd_line_args" json:"cmd_line_args"`
-	CompileArgs          pgtype.Text        `db:"compile_args" json:"compile_args"`
-	Files                []byte             `db:"files" json:"files"`
-	Input                pgtype.Text        `db:"input" json:"input"`
-	Command              pgtype.Text        `db:"command" json:"command"`
-	Setup                pgtype.Text        `db:"setup" json:"setup"`
-	LanguageVersion      int64              `db:"language_version" json:"language_version"`
-}
-
-func (q *Queries) GetAllJobs(ctx context.Context, arg GetAllJobsParams) ([]GetAllJobsRow, error) {
-	rows, err := q.db.Query(ctx, getAllJobs, arg.JobID, arg.Limit)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetAllJobsRow
-	for rows.Next() {
-		var i GetAllJobsRow
-		if err := rows.Scan(
-			&i.JobID,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.TimeOut,
-			&i.StartedAt,
-			&i.ExecRequestID,
-			&i.CurrentState,
-			&i.Retries,
-			&i.MaxRetries,
-			&i.WorkerID,
 			&i.ID,
 			&i.Hash,
 			&i.Code,
@@ -557,82 +472,6 @@ func (q *Queries) GetFlake(ctx context.Context, jobID int64) (string, error) {
 	var flake string
 	err := row.Scan(&flake)
 	return flake, err
-}
-
-const getJobState = `-- name: GetJobState :one
-select current_state from jobs where job_id = $1
-`
-
-func (q *Queries) GetJobState(ctx context.Context, jobID int64) (string, error) {
-	row := q.db.QueryRow(ctx, getJobState, jobID)
-	var current_state string
-	err := row.Scan(&current_state)
-	return current_state, err
-}
-
-const getLatestExecution = `-- name: GetLatestExecution :one
-select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, success, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, language_version from executions
-inner join exec_request on executions.exec_request_id = exec_request.id
-where executions.job_id = $1
-order by finished_at desc
-limit 1
-`
-
-type GetLatestExecutionRow struct {
-	ExecID               int64              `db:"exec_id" json:"exec_id"`
-	JobID                pgtype.Int8        `db:"job_id" json:"job_id"`
-	WorkerID             pgtype.Int4        `db:"worker_id" json:"worker_id"`
-	StartedAt            pgtype.Timestamptz `db:"started_at" json:"started_at"`
-	FinishedAt           pgtype.Timestamptz `db:"finished_at" json:"finished_at"`
-	CreatedAt            pgtype.Timestamptz `db:"created_at" json:"created_at"`
-	ExecRequestID        pgtype.Int4        `db:"exec_request_id" json:"exec_request_id"`
-	ExecLogs             string             `db:"exec_logs" json:"exec_logs"`
-	NixLogs              pgtype.Text        `db:"nix_logs" json:"nix_logs"`
-	Success              pgtype.Bool        `db:"success" json:"success"`
-	ID                   int32              `db:"id" json:"id"`
-	Hash                 string             `db:"hash" json:"hash"`
-	Code                 pgtype.Text        `db:"code" json:"code"`
-	Flake                string             `db:"flake" json:"flake"`
-	LanguageDependencies []string           `db:"language_dependencies" json:"language_dependencies"`
-	SystemDependencies   []string           `db:"system_dependencies" json:"system_dependencies"`
-	CmdLineArgs          pgtype.Text        `db:"cmd_line_args" json:"cmd_line_args"`
-	CompileArgs          pgtype.Text        `db:"compile_args" json:"compile_args"`
-	Files                []byte             `db:"files" json:"files"`
-	Input                pgtype.Text        `db:"input" json:"input"`
-	Command              pgtype.Text        `db:"command" json:"command"`
-	Setup                pgtype.Text        `db:"setup" json:"setup"`
-	LanguageVersion      int64              `db:"language_version" json:"language_version"`
-}
-
-func (q *Queries) GetLatestExecution(ctx context.Context, jobID pgtype.Int8) (GetLatestExecutionRow, error) {
-	row := q.db.QueryRow(ctx, getLatestExecution, jobID)
-	var i GetLatestExecutionRow
-	err := row.Scan(
-		&i.ExecID,
-		&i.JobID,
-		&i.WorkerID,
-		&i.StartedAt,
-		&i.FinishedAt,
-		&i.CreatedAt,
-		&i.ExecRequestID,
-		&i.ExecLogs,
-		&i.NixLogs,
-		&i.Success,
-		&i.ID,
-		&i.Hash,
-		&i.Code,
-		&i.Flake,
-		&i.LanguageDependencies,
-		&i.SystemDependencies,
-		&i.CmdLineArgs,
-		&i.CompileArgs,
-		&i.Files,
-		&i.Input,
-		&i.Command,
-		&i.Setup,
-		&i.LanguageVersion,
-	)
-	return i, err
 }
 
 const getJobState = `-- name: GetJobState :one

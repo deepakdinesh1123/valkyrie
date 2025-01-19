@@ -1,0 +1,81 @@
+{
+    "$defs": {
+        "EnvironmentVariable": {
+            "description": "Environment variable configuration",
+            "properties": {
+                "key": {
+                    "description": "Environment variable name",
+                    "title": "Key",
+                    "type": "string"
+                },
+                "value": {
+                    "description": "Environment variable value",
+                    "title": "Value",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "key",
+                "value"
+            ],
+            "title": "EnvironmentVariable",
+            "type": "object"
+        }
+    },
+    "description": "Execute a command in the sandbox environment",
+    "properties": {
+        "msgType": {
+            "default": "ExecuteCommand",
+            "title": "Msgtype",
+            "type": "string"
+        },
+        "sandboxId": {
+            "description": "ID of the sandbox to execute the command in",
+            "title": "Sandboxid",
+            "type": "integer"
+        },
+        "command": {
+            "description": "Command to execute",
+            "title": "Command",
+            "type": "string"
+        },
+        "stdin": {
+            "default": false,
+            "description": "Enable stdin",
+            "title": "Stdin",
+            "type": "boolean"
+        },
+        "stderr": {
+            "default": true,
+            "description": "Enable stderr",
+            "title": "Stderr",
+            "type": "boolean"
+        },
+        "stdout": {
+            "default": true,
+            "description": "Enable stdout",
+            "title": "Stdout",
+            "type": "boolean"
+        },
+        "workDir": {
+            "default": "",
+            "description": "Working directory for command execution",
+            "title": "Workdir",
+            "type": "string"
+        },
+        "env": {
+            "description": "Environment variables",
+            "items": {
+                "$ref": "#/$defs/EnvironmentVariable"
+            },
+            "title": "Env",
+            "type": "array"
+        }
+    },
+    "required": [
+        "sandboxId",
+        "command"
+    ],
+    "title": "ExecuteCommand",
+    "type": "object"
+}

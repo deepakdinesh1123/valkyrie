@@ -14,6 +14,12 @@ type Handler interface {
 	//
 	// PUT /executions/jobs/{JobId}
 	CancelExecutionJob(ctx context.Context, params CancelExecutionJobParams) (CancelExecutionJobRes, error)
+	// CreateSandbox implements createSandbox operation.
+	//
+	// Create a sandbox.
+	//
+	// POST /sandbox
+	CreateSandbox(ctx context.Context, params CreateSandboxParams) (CreateSandboxRes, error)
 	// DeleteExecutionJob implements deleteExecutionJob operation.
 	//
 	// Delete execution job.

@@ -29,6 +29,12 @@ type Invoker interface {
 	//
 	// PUT /executions/jobs/{JobId}
 	CancelExecutionJob(ctx context.Context, params CancelExecutionJobParams) (CancelExecutionJobRes, error)
+	// CreateSandbox invokes createSandbox operation.
+	//
+	// Create a sandbox.
+	//
+	// POST /sandbox
+	CreateSandbox(ctx context.Context, params CreateSandboxParams) (CreateSandboxRes, error)
 	// DeleteExecutionJob invokes deleteExecutionJob operation.
 	//
 	// Delete execution job.
@@ -312,6 +318,95 @@ func (c *Client) sendCancelExecutionJob(ctx context.Context, params CancelExecut
 
 	stage = "DecodeResponse"
 	result, err := decodeCancelExecutionJobResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// CreateSandbox invokes createSandbox operation.
+//
+// Create a sandbox.
+//
+// POST /sandbox
+func (c *Client) CreateSandbox(ctx context.Context, params CreateSandboxParams) (CreateSandboxRes, error) {
+	res, err := c.sendCreateSandbox(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendCreateSandbox(ctx context.Context, params CreateSandboxParams) (res CreateSandboxRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("createSandbox"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/sandbox"),
+	}
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, CreateSandboxOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/sandbox"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	stage = "EncodeHeaderParams"
+	h := uri.NewHeaderEncoder(r.Header)
+	{
+		cfg := uri.HeaderParameterEncodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.XAuthToken.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode header")
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodeCreateSandboxResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -797,95 +892,6 @@ func (c *Client) sendFetchSystemPackages(ctx context.Context, params FetchSystem
 
 	stage = "DecodeResponse"
 	result, err := decodeFetchSystemPackagesResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// FlakeJobIdGet invokes GET /flake/{jobId} operation.
-//
-// Fetches flake of a given job.
-//
-// GET /flake/{jobId}
-func (c *Client) FlakeJobIdGet(ctx context.Context, params FlakeJobIdGetParams) (FlakeJobIdGetRes, error) {
-	res, err := c.sendFlakeJobIdGet(ctx, params)
-	return res, err
-}
-
-func (c *Client) sendFlakeJobIdGet(ctx context.Context, params FlakeJobIdGetParams) (res FlakeJobIdGetRes, err error) {
-	otelAttrs := []attribute.KeyValue{
-		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/flake/{jobId}"),
-	}
-
-	// Run stopwatch.
-	startTime := time.Now()
-	defer func() {
-		// Use floating point division here for higher precision (instead of Millisecond method).
-		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
-	}()
-
-	// Increment request counter.
-	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-
-	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, FlakeJobIdGetOperation,
-		trace.WithAttributes(otelAttrs...),
-		clientSpanKind,
-	)
-	// Track stage for error reporting.
-	var stage string
-	defer func() {
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, stage)
-			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-		}
-		span.End()
-	}()
-
-	stage = "BuildURL"
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [2]string
-	pathParts[0] = "/flake/"
-	{
-		// Encode "jobId" parameter.
-		e := uri.NewPathEncoder(uri.PathEncoderConfig{
-			Param:   "jobId",
-			Style:   uri.PathStyleSimple,
-			Explode: false,
-		})
-		if err := func() error {
-			return e.EncodeValue(conv.Int64ToString(params.JobId))
-		}(); err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		encoded, err := e.Result()
-		if err != nil {
-			return res, errors.Wrap(err, "encode path")
-		}
-		pathParts[1] = encoded
-	}
-	uri.AddPathParts(u, pathParts[:]...)
-
-	stage = "EncodeRequest"
-	r, err := ht.NewRequest(ctx, "GET", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-
-	stage = "SendRequest"
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	defer resp.Body.Close()
-
-	stage = "DecodeResponse"
-	result, err := decodeFlakeJobIdGetResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

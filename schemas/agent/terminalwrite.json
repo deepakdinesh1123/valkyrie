@@ -1,0 +1,20 @@
+{
+    "description": "Write to terminal",
+    "properties": {
+        "msgType": {
+            "default": "TerminalWrite",
+            "title": "Msgtype",
+            "type": "string"
+        },
+        "content": {
+            "description": "Content to write to terminal",
+            "title": "Content",
+            "type": "string"
+        }
+    },
+    "required": [
+        "content"
+    ],
+    "title": "TerminalWrite",
+    "type": "object"
+}

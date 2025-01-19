@@ -131,6 +131,69 @@ func decodeCancelExecutionJobParams(args [1]string, argsEscaped bool, r *http.Re
 	return params, nil
 }
 
+// CreateSandboxParams is parameters of createSandbox operation.
+type CreateSandboxParams struct {
+	// Authentication token.
+	XAuthToken OptString
+}
+
+func unpackCreateSandboxParams(packed middleware.Parameters) (params CreateSandboxParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "X-Auth-Token",
+			In:   "header",
+		}
+		if v, ok := packed[key]; ok {
+			params.XAuthToken = v.(OptString)
+		}
+	}
+	return params
+}
+
+func decodeCreateSandboxParams(args [0]string, argsEscaped bool, r *http.Request) (params CreateSandboxParams, _ error) {
+	h := uri.NewHeaderDecoder(r.Header)
+	// Decode header: X-Auth-Token.
+	if err := func() error {
+		cfg := uri.HeaderParameterDecodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.HasParam(cfg); err == nil {
+			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotXAuthTokenVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotXAuthTokenVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.XAuthToken.SetTo(paramsDotXAuthTokenVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "X-Auth-Token",
+			In:   "header",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // DeleteExecutionJobParams is parameters of deleteExecutionJob operation.
 type DeleteExecutionJobParams struct {
 	JobId int64

@@ -67,7 +67,7 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 	for {
 		select {
 		case <-ctx.Done():
-			job, err := s.queries.GetExecutionJob(context.TODO(), execId)
+			job, err := s.queries.GetExecutionJob(context.TODO(), jobID)
 			if err != nil {
 				s.logger.Error().Stack().Err(err).Msg("Failed to get job status")
 				return
@@ -82,7 +82,7 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 			return
 		default:
 			s.logger.Debug().Msg("getting job")
-			job, err := s.queries.GetExecutionJob(ctx, execId)
+			job, err := s.queries.GetExecutionJob(ctx, jobID)
 			s.logger.Debug().Msg("got job")
 			if err != nil {
 				s.logger.Error().Stack().Err(err).Msg("Failed to get job")

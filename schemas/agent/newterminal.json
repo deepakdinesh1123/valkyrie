@@ -1,0 +1,51 @@
+{
+    "$defs": {
+        "Shell": {
+            "enum": [
+                "nix",
+                "bash",
+                "sh",
+                "nix-shell"
+            ],
+            "title": "Shell",
+            "type": "string"
+        }
+    },
+    "description": "Create a new terminal session",
+    "properties": {
+        "msgType": {
+            "default": "NewTerminal",
+            "title": "Msgtype",
+            "type": "string"
+        },
+        "shell": {
+            "$ref": "#/$defs/Shell",
+            "description": "Shell type to use"
+        },
+        "nix_shell": {
+            "default": "",
+            "description": "Nix shell configuration",
+            "title": "Nix Shell",
+            "type": "string"
+        },
+        "nix_flake": {
+            "default": "",
+            "description": "Nix flake configuration",
+            "title": "Nix Flake",
+            "type": "string"
+        },
+        "packages": {
+            "description": "Packages to install",
+            "items": {
+                "type": "string"
+            },
+            "title": "Packages",
+            "type": "array"
+        }
+    },
+    "required": [
+        "shell"
+    ],
+    "title": "NewTerminal",
+    "type": "object"
+}

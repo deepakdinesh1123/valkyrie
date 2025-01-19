@@ -22,6 +22,15 @@ func (UnimplementedHandler) CancelExecutionJob(ctx context.Context, params Cance
 	return r, ht.ErrNotImplemented
 }
 
+// CreateSandbox implements createSandbox operation.
+//
+// Create a sandbox.
+//
+// POST /sandbox
+func (UnimplementedHandler) CreateSandbox(ctx context.Context, params CreateSandboxParams) (r CreateSandboxRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // DeleteExecutionJob implements deleteExecutionJob operation.
 //
 // Delete execution job.

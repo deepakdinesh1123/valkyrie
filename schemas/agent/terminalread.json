@@ -1,0 +1,25 @@
+{
+    "description": "Read from terminal",
+    "properties": {
+        "msgType": {
+            "default": "TerminalRead",
+            "title": "Msgtype",
+            "type": "string"
+        },
+        "timeout": {
+            "anyOf": [
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "description": "Read timeout in seconds",
+            "title": "Timeout"
+        }
+    },
+    "title": "TerminalRead",
+    "type": "object"
+}

@@ -7,6 +7,7 @@ type OperationName = string
 
 const (
 	CancelExecutionJobOperation     OperationName = "CancelExecutionJob"
+	CreateSandboxOperation          OperationName = "CreateSandbox"
 	DeleteExecutionJobOperation     OperationName = "DeleteExecutionJob"
 	ExecuteOperation                OperationName = "Execute"
 	FetchFlakeOperation             OperationName = "FetchFlake"

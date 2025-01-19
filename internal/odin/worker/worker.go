@@ -224,15 +224,9 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 				w.logger.Info().Float64("high memory usage", w.WorkerStats.MemUsage).Msg("Worker: ")
 				continue
 			}
-
-			if swg.Count() >= w.envConfig.ODIN_WORKER_CONCURRENCY {
-				w.logger.Info().Int("Tasks in progress", int(swg.Count())).Int32("Concurrency limit", w.envConfig.ODIN_WORKER_CONCURRENCY).Msg("Worker: concurrency limit reached")
-				continue
-			}
-			res, err := w.queries.FetchJobTx(ctx, db.FetchJobTxParams{WorkerID: int32(w.ID)})
-			if err != nil {
-				switch err {
-				case pgx.ErrNoRows:
+			if w.envConfig.ODIN_ENABLE_EXECUTION {
+				if swg.Count() >= w.envConfig.ODIN_WORKER_CONCURRENCY {
+					w.logger.Info().Int("Tasks in progress", int(swg.Count())).Int32("Concurrency limit", w.envConfig.ODIN_WORKER_CONCURRENCY).Msg("Worker: concurrency limit reached")
 					continue
 				}
 				res, err := w.queries.FetchJob(ctx, db.FetchJobParams{
