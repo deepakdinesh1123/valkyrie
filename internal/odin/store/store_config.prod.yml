@@ -346,9 +346,6 @@ languages:
         searchQuery: "nodePackages"
       - nixPackage: "nodejs_18"
         searchQuery: "nodePackages"
-      - nixPackage: "nodejs_23"
-        default: true
-        searchQuery: "nodePackages"
     template: |
       {{ define "execute" }} node main.js {{ end }}
     defaultCode: |
