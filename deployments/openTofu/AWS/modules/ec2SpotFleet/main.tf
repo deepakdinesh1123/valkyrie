@@ -9,7 +9,7 @@ resource "aws_spot_fleet_request" "example" {
       ami                  = var.ami_id
       instance_type        = launch_specification.value
       key_name             = var.key_Pair
-      spot_price           = "0.039"
+      spot_price           = "0.08"
       iam_instance_profile = "OdinBuilderWorker"
       subnet_id            = var.subnet_id
       availability_zone    = var.availability_zone
@@ -26,8 +26,9 @@ resource "aws_spot_fleet_request" "example" {
 				SCRIPT_NAME="deploy.sh"
 				SCRIPT_PATH="/home/ubuntu/$SCRIPT_NAME"
 
-				aws s3 cp s3://$BUCKET_NAME/$SCRIPT_NAME $SCRIPT_PATH --region $REGION
+				wget -P /home/ubuntu/ https://valnix-stage-bucket.s3.amazonaws.com/deploy.sh
 
+				cd /home/ubuntu
 
 				chmod +x $SCRIPT_NAME
 

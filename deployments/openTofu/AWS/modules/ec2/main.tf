@@ -13,6 +13,6 @@ resource "aws_instance" "ec2" {
   key_name                    = var.key_pair_name
   associate_public_ip_address = var.associate_pip
   tags = {
-    Name = Odin-server
+    Name = "odin-server"
   }
 }
