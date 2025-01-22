@@ -1,0 +1,28 @@
+terraform {
+  # backend "s3" {}
+  #   bucket         = "valnix-terraform-state-bucket"
+  #   key            = "AWS_Readiness/compute/compute01.tfstate"
+  #   region         = "us-east-1"
+  #   dynamodb_table = "tf-backend"
+  #   encrypt        = true
+  # }
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 4.0"
+    }
+    time = {
+      source  = "hashicorp/time"
+      version = "~> 0.9"
+    }
+  }
+
+  required_version = ">= 1.0"
+}
+
+provider "aws" {
+  region     = var.location
+  access_key = ""
+  secret_key = ""
+}
