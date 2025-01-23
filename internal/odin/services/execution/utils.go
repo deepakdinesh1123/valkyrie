@@ -110,7 +110,7 @@ func (s *ExecutionService) CheckExecRequest(ctx context.Context, req *api.Execut
 		}
 	}
 
-	if req.Version.Set {
+	if req.Version.Set && !(req.Version.Value == "") {
 		_, err = s.queries.GetLanguageVersion(ctx, db.GetLanguageVersionParams{
 			LanguageID: language.ID,
 			Version:    req.Version.Value,
