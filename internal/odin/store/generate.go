@@ -63,6 +63,7 @@ func GeneratePackages(ctx context.Context, odinStoreConfig string, ripPkgDBPath 
 	var storeConfig StoreConfig
 
 	if odinStoreConfig == "" {
+		logger.Debug().Str("Env", envConfig.ODIN_ENVIRONMENT).Msg("Odin")
 		if envConfig.ODIN_ENVIRONMENT == "prod" {
 			err := yaml.Unmarshal(ProdConfig, &storeConfig)
 			if err != nil {

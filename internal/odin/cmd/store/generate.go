@@ -1,9 +1,6 @@
 package store
 
 import (
-	"os"
-	"path/filepath"
-
 	"github.com/deepakdinesh1123/valkyrie/internal/logs"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/store"
@@ -23,7 +20,7 @@ var GenerateCmd = &cobra.Command{
 }
 
 func init() {
-	GenerateCmd.Flags().StringVarP(&ripDBPath, "rip-db", "r", filepath.Join(os.Getenv("XDG_DATA_HOME"), "rippkgs-index.sqlite"), "The rippkgs db to use")
+	GenerateCmd.Flags().StringVarP(&ripDBPath, "rip-db", "r", "", "The rippkgs db to use")
 	GenerateCmd.Flags().StringVarP(&odinStoreConfig, "config", "c", "", "Odin store config")
 	GenerateCmd.Flags().BoolVarP(&genDockerConfig, "docker", "d", false, "Generate docker config")
 }
