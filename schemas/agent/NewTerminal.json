@@ -22,16 +22,16 @@
             "$ref": "#/$defs/Shell",
             "description": "Shell type to use"
         },
-        "nix_shell": {
+        "nixShell": {
             "default": "",
             "description": "Nix shell configuration",
-            "title": "Nix Shell",
+            "title": "Nixshell",
             "type": "string"
         },
-        "nix_flake": {
+        "nixFlake": {
             "default": "",
             "description": "Nix flake configuration",
-            "title": "Nix Flake",
+            "title": "Nixflake",
             "type": "string"
         },
         "packages": {

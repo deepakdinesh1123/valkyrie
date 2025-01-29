@@ -1,0 +1,26 @@
+{
+    "properties": {
+        "terminalID": {
+            "description": "Terminal ID",
+            "title": "Terminalid",
+            "type": "string"
+        },
+        "msg": {
+            "description": "Message",
+            "title": "Msg",
+            "type": "string"
+        },
+        "success": {
+            "description": "Success",
+            "title": "Success",
+            "type": "boolean"
+        }
+    },
+    "required": [
+        "terminalID",
+        "msg",
+        "success"
+    ],
+    "title": "NewTerminalResponse",
+    "type": "object"
+}

@@ -1,5 +1,6 @@
 import * as z from "zod";
 
+// Shell type to use
 
 export const ShellSchema = z.enum([
     "bash",
@@ -9,11 +10,11 @@ export const ShellSchema = z.enum([
 ]);
 export type Shell = z.infer<typeof ShellSchema>;
 
-export const TerminalSchema = z.object({
+export const NewTerminalSchema = z.object({
     "msgType": z.string().optional(),
-    "nix_flake": z.string().optional(),
-    "nix_shell": z.string().optional(),
+    "nixFlake": z.string().optional(),
+    "nixShell": z.string().optional(),
     "packages": z.array(z.string()).optional(),
     "shell": ShellSchema,
 });
-export type Terminal = z.infer<typeof TerminalSchema>;
+export type NewTerminal = z.infer<typeof NewTerminalSchema>;

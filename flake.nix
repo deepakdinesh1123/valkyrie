@@ -27,6 +27,7 @@
           caddy
           pkg-config 
           just
+          websocat
         ] 
         ++ lib.optionals stdenv.isLinux 
         [
@@ -39,7 +40,8 @@
         ];
 
         packages = {
-          odin = pkgs.callPackage ./build/package/nix/odin.nix { inherit pkgs; };
+          odin = pkgs.callPackage ./builds/package/nix/odin.nix { inherit pkgs; };
+          agent = pkgs.callPackage ./builds/package/nix/agent.nix { inherit pkgs; };
           odinDockerImage = nix2containerPkgs.nix2container.buildImage {
             name="odin";
             tag="0.0.1";

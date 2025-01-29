@@ -5,8 +5,17 @@
             "default": "TerminalClose",
             "title": "Msgtype",
             "type": "string"
+        },
+        "terminalId": {
+            "description": "Unique identifier for the terminal session",
+            "format": "uuid",
+            "title": "Terminalid",
+            "type": "string"
         }
     },
+    "required": [
+        "terminalId"
+    ],
     "title": "TerminalClose",
     "type": "object"
 }

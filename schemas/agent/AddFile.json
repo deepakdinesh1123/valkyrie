@@ -11,9 +11,9 @@
             "title": "Sandboxid",
             "type": "integer"
         },
-        "file_name": {
+        "fileName": {
             "description": "Name of the file",
-            "title": "File Name",
+            "title": "Filename",
             "type": "string"
         },
         "path": {
@@ -29,7 +29,7 @@
     },
     "required": [
         "sandboxId",
-        "file_name",
+        "fileName",
         "path",
         "content"
     ],

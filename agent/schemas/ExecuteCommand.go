@@ -1,25 +1,25 @@
 // This file was generated from JSON Schema using quicktype, do not modify it directly.
 // To parse and unparse this JSON data, add this code to your project and do:
 //
-//    executecommand, err := UnmarshalExecutecommand(bytes)
-//    bytes, err = executecommand.Marshal()
+//    executeCommand, err := UnmarshalExecuteCommand(bytes)
+//    bytes, err = executeCommand.Marshal()
 
 package schemas
 
 import "encoding/json"
 
-func UnmarshalExecutecommand(data []byte) (Executecommand, error) {
-	var r Executecommand
+func UnmarshalExecuteCommand(data []byte) (ExecuteCommand, error) {
+	var r ExecuteCommand
 	err := json.Unmarshal(data, &r)
 	return r, err
 }
 
-func (r *Executecommand) Marshal() ([]byte, error) {
+func (r *ExecuteCommand) Marshal() ([]byte, error) {
 	return json.Marshal(r)
 }
 
 // Execute a command in the sandbox environment
-type Executecommand struct {
+type ExecuteCommand struct {
 	// Command to execute                                               
 	Command                                       string                `json:"command"`
 	// Environment variables                                            

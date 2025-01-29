@@ -6,6 +6,12 @@
             "title": "Msgtype",
             "type": "string"
         },
+        "terminalId": {
+            "description": "Unique identifier for the terminal session",
+            "format": "uuid",
+            "title": "Terminalid",
+            "type": "string"
+        },
         "timeout": {
             "anyOf": [
                 {
@@ -20,6 +26,9 @@
             "title": "Timeout"
         }
     },
+    "required": [
+        "terminalId"
+    ],
     "title": "TerminalRead",
     "type": "object"
 }

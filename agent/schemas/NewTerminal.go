@@ -1,30 +1,30 @@
 // This file was generated from JSON Schema using quicktype, do not modify it directly.
 // To parse and unparse this JSON data, add this code to your project and do:
 //
-//    newterminal, err := UnmarshalNewterminal(bytes)
-//    bytes, err = newterminal.Marshal()
+//    newTerminal, err := UnmarshalNewTerminal(bytes)
+//    bytes, err = newTerminal.Marshal()
 
 package schemas
 
 import "encoding/json"
 
-func UnmarshalNewterminal(data []byte) (Newterminal, error) {
-	var r Newterminal
+func UnmarshalNewTerminal(data []byte) (NewTerminal, error) {
+	var r NewTerminal
 	err := json.Unmarshal(data, &r)
 	return r, err
 }
 
-func (r *Newterminal) Marshal() ([]byte, error) {
+func (r *NewTerminal) Marshal() ([]byte, error) {
 	return json.Marshal(r)
 }
 
 // Create a new terminal session
-type Newterminal struct {
+type NewTerminal struct {
 	MsgType                   *string  `json:"msgType,omitempty"`
 	// Nix flake configuration         
-	NixFlake                  *string  `json:"nix_flake,omitempty"`
+	NixFlake                  *string  `json:"nixFlake,omitempty"`
 	// Nix shell configuration         
-	NixShell                  *string  `json:"nix_shell,omitempty"`
+	NixShell                  *string  `json:"nixShell,omitempty"`
 	// Packages to install             
 	Packages                  []string `json:"packages,omitempty"`
 	// Shell type to use               

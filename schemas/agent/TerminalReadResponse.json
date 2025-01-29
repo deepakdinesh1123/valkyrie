@@ -1,0 +1,40 @@
+{
+    "description": "Response after reading from terminal",
+    "properties": {
+        "terminalId": {
+            "description": "Unique identifier for the terminal session",
+            "format": "uuid",
+            "title": "Terminalid",
+            "type": "string"
+        },
+        "output": {
+            "description": "Content read from the terminal",
+            "title": "Output",
+            "type": "string"
+        },
+        "eof": {
+            "default": false,
+            "description": "Indicates if the end of the stream has been reached",
+            "title": "Eof",
+            "type": "boolean"
+        },
+        "success": {
+            "description": "Success",
+            "title": "Success",
+            "type": "boolean"
+        },
+        "msg": {
+            "description": "optional message",
+            "title": "Msg",
+            "type": "string"
+        }
+    },
+    "required": [
+        "terminalId",
+        "output",
+        "success",
+        "msg"
+    ],
+    "title": "TerminalReadResponse",
+    "type": "object"
+}

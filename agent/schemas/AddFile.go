@@ -1,29 +1,29 @@
 // This file was generated from JSON Schema using quicktype, do not modify it directly.
 // To parse and unparse this JSON data, add this code to your project and do:
 //
-//    addfile, err := UnmarshalAddfile(bytes)
-//    bytes, err = addfile.Marshal()
+//    addFile, err := UnmarshalAddFile(bytes)
+//    bytes, err = addFile.Marshal()
 
 package schemas
 
 import "encoding/json"
 
-func UnmarshalAddfile(data []byte) (Addfile, error) {
-	var r Addfile
+func UnmarshalAddFile(data []byte) (AddFile, error) {
+	var r AddFile
 	err := json.Unmarshal(data, &r)
 	return r, err
 }
 
-func (r *Addfile) Marshal() ([]byte, error) {
+func (r *AddFile) Marshal() ([]byte, error) {
 	return json.Marshal(r)
 }
 
 // Add a file to the sandbox
-type Addfile struct {
+type AddFile struct {
 	// File content                                
 	Content                                string  `json:"content"`
 	// Name of the file                            
-	FileName                               string  `json:"file_name"`
+	FileName                               string  `json:"fileName"`
 	MsgType                                *string `json:"msgType,omitempty"`
 	// Path where to create the file               
 	Path                                   string  `json:"path"`
