@@ -20,10 +20,10 @@ func (r *TerminalCloseResponse) Marshal() ([]byte, error) {
 
 // Response after closing a terminal session
 type TerminalCloseResponse struct {
-	// Message confirming terminal closure              
-	Msg                                          string `json:"msg"`
-	// Success                                          
-	Success                                      bool   `json:"success"`
-	// Unique identifier for the terminal session       
-	TerminalID                                   string `json:"terminalId"`
+	// Message confirming terminal closure
+	Msg string `json:"msg"`
+	// Success
+	Success bool `json:"success"`
+	// Unique identifier for the terminal session
+	TerminalID string `json:"terminalId"`
 }

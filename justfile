@@ -63,6 +63,9 @@ docker-db:
     sleep 5 # Wait for PostgreSQL to be ready
     just migrate
 
+update-nix-hash nix_file package_name:
+    hack/update_nix_hash.sh {{nix_file}} {{package_name}}
+
 # Help command to list all available commands
 help:
     @just --list

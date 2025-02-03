@@ -20,15 +20,25 @@ func (r *NewTerminal) Marshal() ([]byte, error) {
 
 // Create a new terminal session
 type NewTerminal struct {
-	MsgType                   *string  `json:"msgType,omitempty"`
-	// Nix flake configuration         
-	NixFlake                  *string  `json:"nixFlake,omitempty"`
-	// Nix shell configuration         
-	NixShell                  *string  `json:"nixShell,omitempty"`
-	// Packages to install             
-	Packages                  []string `json:"packages,omitempty"`
-	// Shell type to use               
-	Shell                     Shell    `json:"shell"`
+	// Environment variables to be added                      
+	Env                                 []EnvironmentVariable `json:"env,omitempty"`
+	MsgType                             *string               `json:"msgType,omitempty"`
+	// Nix flake configuration                                
+	NixFlake                            *string               `json:"nixFlake,omitempty"`
+	// Nix shell configuration                                
+	NixShell                            *string               `json:"nixShell,omitempty"`
+	// Packages to install                                    
+	Packages                            []string              `json:"packages,omitempty"`
+	// Shell type to use                                      
+	Shell                               Shell                 `json:"shell"`
+}
+
+// Environment variable configuration
+type EnvironmentVariable struct {
+	// Environment variable name        
+	Key                          string `json:"key"`
+	// Environment variable value       
+	Value                        string `json:"value"`
 }
 
 // Shell type to use

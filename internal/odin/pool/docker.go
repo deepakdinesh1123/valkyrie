@@ -5,6 +5,7 @@ package pool
 import (
 	"context"
 	"fmt"
+	"log"
 	"sync"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
@@ -20,6 +21,7 @@ func GetDockerClient() *client.Client {
 		func() {
 			c, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 			if err != nil {
+				log.Println("Error getting docker client")
 				return
 			}
 			dockerclient = c
@@ -72,6 +74,7 @@ func DockerSandboxConstructor(ctx context.Context) (Container, error) {
 	if dClient == nil {
 		return Container{}, fmt.Errorf("could not get docker client")
 	}
+
 	createResp, err := dClient.ContainerCreate(ctx, &container.Config{
 		Image:      envConfig.ODIN_SANDBOX_DOCKER_IMAGE,
 		StopSignal: "SIGKILL",

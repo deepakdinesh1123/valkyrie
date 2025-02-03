@@ -18,7 +18,7 @@ api-docs:
 	redocly preview-docs -p 8048 schemas/odin-schema.yml
 	
 generate-json-schema:
-	uv run --no-project sdk/python/pyvalkyrie/schema.py
+	uv run --no-project sdk/python/pyvalkyrie/generate.py
 
 generate-ts-sdk-schema:
 	#!/usr/bin/env sh

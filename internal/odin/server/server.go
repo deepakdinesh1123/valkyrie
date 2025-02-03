@@ -46,29 +46,31 @@ func NewServer(ctx context.Context, envConfig *config.EnvConfig, standalone bool
 		return nil, err
 	}
 
-	if initialiseDB {
-		langs, err := queries.GetAllLanguages(ctx)
-		if err != nil {
-			if err == pgx.ErrNoRows {
-				logger.Err(err).Msg("Generating store packages")
-				store.GeneratePackages(ctx, "", "", false, envConfig, logger)
-			}
-		} else if len(langs) == 0 {
-			logger.Info().Msg("Generating store packages")
-			store.GeneratePackages(ctx, "", "", false, envConfig, logger)
-		}
+	odinServer := &OdinServer{
+		queries:      queries,
+		envConfig:    envConfig,
+		logger:       logger,
+		tp:           tp,
+		mp:           mp,
+		otelShutdown: otelShutdown,
+		prop:         prop,
 	}
 
-	executionService := execution.NewExecutionService(queries, envConfig, logger)
-	odinServer := &OdinServer{
-		queries:          queries,
-		executionService: executionService,
-		envConfig:        envConfig,
-		logger:           logger,
-		tp:               tp,
-		mp:               mp,
-		otelShutdown:     otelShutdown,
-		prop:             prop,
+	if envConfig.ODIN_ENABLE_EXECUTION {
+		if initialiseDB {
+			langs, err := queries.GetAllLanguages(ctx)
+			if err != nil {
+				if err == pgx.ErrNoRows {
+					logger.Err(err).Msg("Generating store packages")
+					store.GeneratePackages(ctx, "", "", false, envConfig, logger)
+				}
+			} else if len(langs) == 0 {
+				logger.Info().Msg("Generating store packages")
+				store.GeneratePackages(ctx, "", "", false, envConfig, logger)
+			}
+		}
+		executionService := execution.NewExecutionService(queries, envConfig, logger)
+		odinServer.executionService = executionService
 	}
 	srv, err := api.NewServer(
 		odinServer,

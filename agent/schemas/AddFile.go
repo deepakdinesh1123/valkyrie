@@ -20,13 +20,13 @@ func (r *AddFile) Marshal() ([]byte, error) {
 
 // Add a file to the sandbox
 type AddFile struct {
-	// File content                                
-	Content                                string  `json:"content"`
-	// Name of the file                            
-	FileName                               string  `json:"fileName"`
-	MsgType                                *string `json:"msgType,omitempty"`
-	// Path where to create the file               
-	Path                                   string  `json:"path"`
-	// ID of the sandbox to add the file to        
-	SandboxID                              int64   `json:"sandboxId"`
+	// File content
+	Content string `json:"content"`
+	// Name of the file
+	FileName string  `json:"fileName"`
+	MsgType  *string `json:"msgType,omitempty"`
+	// Path where to create the file
+	Path string `json:"path"`
+	// ID of the sandbox to add the file to
+	SandboxID int64 `json:"sandboxId"`
 }

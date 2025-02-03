@@ -20,7 +20,7 @@ func (r *TerminalClose) Marshal() ([]byte, error) {
 
 // Close terminal session
 type TerminalClose struct {
-	MsgType                                      *string `json:"msgType,omitempty"`
-	// Unique identifier for the terminal session        
-	TerminalID                                   string  `json:"terminalId"`
+	MsgType *string `json:"msgType,omitempty"`
+	// Unique identifier for the terminal session
+	TerminalID string `json:"terminalId"`
 }

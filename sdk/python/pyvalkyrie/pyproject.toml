@@ -8,7 +8,7 @@ dependencies = [
     "pydantic-settings>=2.7.1",
     "pydantic>=2.10.4",
     "requests>=2.32.3",
-    "websockets>=14.2",
+    "websocket-client>=1.8.0",
 ]
 
 

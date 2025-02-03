@@ -4,7 +4,7 @@ go 1.22.0
 
 require (
 	github.com/containers/podman/v5 v5.2.2
-	github.com/creack/pty v1.1.18
+	github.com/creack/pty v1.1.24
 	github.com/docker/docker v27.1.1+incompatible
 	github.com/exaring/otelpgx v0.6.2
 	github.com/fergusstrange/embedded-postgres v1.27.0

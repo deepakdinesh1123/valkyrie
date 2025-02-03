@@ -1,19 +1,15 @@
-FROM ubuntu:24.04
+ARG NIX_CHANNEL=24.11
 
-# Copy the required files
-COPY hack/sandbox/start.sh /home/valnix/start.sh
-# COPY configs/sandbox/code-server.yaml /home/valnix/.config/code-server/config.yaml
+FROM ubuntu:24.04
 
 # Install required packages and configure system
 RUN apt update && \
     apt install -y adduser curl xz-utils && \
     groupadd -o -g 1024 -r valnix && \
     adduser --uid 1024 --gid 1024 --disabled-password --gecos "" valnix && \
-    echo 'valnix ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers && \
     mkdir /nix && \
     mkdir -p /home/valnix/.config/process-compose && \
     chown -R valnix:valnix /nix /home/valnix && \
-    chmod +x /home/valnix/start.sh && \
     # Configure Nix
     mkdir /etc/nix && \
     echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
@@ -32,14 +28,9 @@ RUN curl -L https://nixos.org/nix/install -o /home/valnix/install_nix.sh && \
 # Ensure the Nix binaries are available in PATH
 ENV PATH="/home/valnix/.nix-profile/bin:${PATH}"
 
+ARG NIX_CHANNEL
+
 RUN nix-channel --remove nixpkgs
-RUN nix-channel --add https://nixos.org/channels/nixos-24.11 nixpkgs && nix-channel --update
+RUN nix-channel --add https://nixos.org/channels/nixos-${NIX_CHANNEL} nixpkgs && nix-channel --update
 
-# RUN nix-env -iA nixpkgs.code-server
-# RUN mkdir -p /home/valnix/.config/code-server
-
-# COPY configs/sandbox/code-server.yaml /home/valnix/.config/code-server/config.yaml
-
-# Entry point to start the sandbox environment
-# ENTRYPOINT ["/home/valnix/start.sh"]
 ENTRYPOINT [ "/bin/sh", "-c", "sleep infinity"]

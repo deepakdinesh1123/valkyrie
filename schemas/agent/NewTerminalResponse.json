@@ -2,6 +2,7 @@
     "properties": {
         "terminalID": {
             "description": "Terminal ID",
+            "format": "uuid",
             "title": "Terminalid",
             "type": "string"
         },
