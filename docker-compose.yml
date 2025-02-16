@@ -14,11 +14,17 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      odin_store:
-        condition: service_healthy
+      odin-store:
+        condition: service_started
     command: ["server", "start"]
     ports:
       - "8080:8080"
+    environment:
+      - ODIN_COMPOSE_ENV=true
+    runtime: "runsc"
+    network_mode: "bridge"
+    links:
+      - "postgres"
       
 
   odin-worker:
@@ -30,18 +36,39 @@ services:
         condition: service_healthy
       odin:
         condition: service_started
-      odin_store:
-        condition: service_healthy
+      odin-store:
+        condition: service_started
     deploy:
       replicas: 1
     command: ["worker", "start"]
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    user: "root"
-    # environment:
-    #   - DOCKER_HOST=unix:///var/run/docker.sock
+    environment:
+      - DOCKER_HOST=tcp://docker-proxy:2375
+      - ODIN_COMPOSE_ENV=true
+    network_mode: "bridge"
+    links:
+      - "odin-store"
+      - "postgres"
+      - "docker-proxy"
+    runtime: "runsc"
   
-  odin_store:
+  docker-proxy:
+    image: tecnativa/docker-socket-proxy
+    restart: unless-stopped
+    environment:
+      - ALLOW_START=1
+      - ALLOW_STOP=1
+      - EXEC=1
+      - CONTAINERS=1
+      - POST=1
+    user: 'root'
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+        read_only: true
+    network_mode: "bridge"
+  
+  odin-store:
     build:
       context: .
       dockerfile: builds/images/store/store.dockerfile
@@ -53,9 +80,11 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+    runtime: "runsc"
+    network_mode: "bridge"
 
   postgres:
-    image: postgres
+    image: postgres:16
     env_file:
       - .env
     ports:
@@ -69,6 +98,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    network_mode: "bridge"
 
   valkyrie-otel-collector:
     image: otel/opentelemetry-collector-contrib

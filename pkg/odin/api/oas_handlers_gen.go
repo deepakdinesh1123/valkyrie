@@ -256,6 +256,21 @@ func (s *Server) handleCreateSandboxRequest(args [0]string, argsEscaped bool, w 
 		s.cfg.ErrorHandler(ctx, w, r, err)
 		return
 	}
+	request, close, err := s.decodeCreateSandboxRequest(r)
+	if err != nil {
+		err = &ogenerrors.DecodeRequestError{
+			OperationContext: opErrContext,
+			Err:              err,
+		}
+		defer recordError("DecodeRequest", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+	defer func() {
+		if err := close(); err != nil {
+			recordError("CloseRequest", err)
+		}
+	}()
 
 	var response CreateSandboxRes
 	if m := s.cfg.Middleware; m != nil {
@@ -264,7 +279,7 @@ func (s *Server) handleCreateSandboxRequest(args [0]string, argsEscaped bool, w 
 			OperationName:    CreateSandboxOperation,
 			OperationSummary: "Create a sandbox",
 			OperationID:      "createSandbox",
-			Body:             nil,
+			Body:             request,
 			Params: middleware.Parameters{
 				{
 					Name: "X-Auth-Token",
@@ -275,7 +290,7 @@ func (s *Server) handleCreateSandboxRequest(args [0]string, argsEscaped bool, w 
 		}
 
 		type (
-			Request  = struct{}
+			Request  = OptCreateSandbox
 			Params   = CreateSandboxParams
 			Response = CreateSandboxRes
 		)
@@ -288,12 +303,12 @@ func (s *Server) handleCreateSandboxRequest(args [0]string, argsEscaped bool, w 
 			mreq,
 			unpackCreateSandboxParams,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.CreateSandbox(ctx, params)
+				response, err = s.h.CreateSandbox(ctx, request, params)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.CreateSandbox(ctx, params)
+		response, err = s.h.CreateSandbox(ctx, request, params)
 	}
 	if err != nil {
 		defer recordError("Internal", err)

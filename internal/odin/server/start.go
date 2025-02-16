@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/middleware"
+	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/handlers"
 	"github.com/jackc/pgx/v5/pgtype"
 	"golang.org/x/sync/errgroup"
@@ -22,11 +23,14 @@ func (s *OdinServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 	done := make(chan bool, 1)
 
 	var server *http.Server
-	mux := http.NewServeMux()
 
-	mux.HandleFunc("/executions/{jobId}/events", s.ExecuteSSE)
+	r := chi.NewRouter()
+
+	r.Get("/executions/{jobId}/events", s.ExecuteSSE)
+	r.Get("/sandboxes/{sandboxId}/status/sse", s.GetSandboxSSE)
+	r.Get("/sandboxes/{sandboxId}/status/ws", s.GetSandboxWS)
 	// mux.HandleFunc("/executions/execute/ws", s.ExecuteWS)
-	mux.Handle("/", s.server)
+	r.Mount("/", s.server)
 
 	route_finder := middleware.MakeRouteFinder(s.server)
 
@@ -38,7 +42,7 @@ func (s *OdinServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 		ReadHeaderTimeout: time.Second * 5,
 		Addr:              addr,
 		Handler: handlers.CORS(corsOptions, corsMethods, corsHeaders)(
-			middleware.Wrap(mux,
+			middleware.Wrap(r,
 				middleware.Instrument("server", route_finder, s.tp, s.mp, s.prop),
 				middleware.Labeler(route_finder),
 				middleware.TokenAuth(),

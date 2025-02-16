@@ -7,7 +7,6 @@ package db
 import (
 	"context"
 
-	jsonschema "github.com/deepakdinesh1123/valkyrie/internal/odin/db/jsonschema"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -59,7 +58,7 @@ type Querier interface {
 	InsertLanguageVersions(ctx context.Context, arg []InsertLanguageVersionsParams) (int64, error)
 	InsertLanguages(ctx context.Context, arg []InsertLanguagesParams) (int64, error)
 	InsertPackages(ctx context.Context, arg []InsertPackagesParams) (int64, error)
-	InsertSandbox(ctx context.Context, config jsonschema.SandboxConfig) (Sandbox, error)
+	InsertSandbox(ctx context.Context, arg InsertSandboxParams) (Sandbox, error)
 	InsertWorker(ctx context.Context, arg InsertWorkerParams) (Worker, error)
 	ListExecRequests(ctx context.Context, arg ListExecRequestsParams) ([]ExecRequest, error)
 	MarkSandboxRunning(ctx context.Context, arg MarkSandboxRunningParams) error

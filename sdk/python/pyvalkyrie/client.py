@@ -1,83 +1,111 @@
 import requests
-from time import time, sleep
-from typing import Union, Tuple, Optional
+from typing import Optional
+from requests.exceptions import RequestException
+from dataclasses import dataclass
 
 from .config import Config
-from .schemas import Sandbox as SandboxResponse, Error
+from .schemas import SandboxConfig
 from .sandbox import Sandbox
+
+@dataclass
+class SandboxCreationResult:
+    sandbox_id: Optional[int] = None
+    error_message: Optional[str] = None
+    success: bool = False
+
+class SandboxError(Exception):
+    """Custom exception for sandbox-related errors."""
+    pass
 
 class Client:
     """
     Client for interacting with the sandboxes.
+    
+    This class provides methods to create and manage sandbox environments
     """
+    
     def __init__(self) -> None:
         """
-        Initializes the client with configuration settings.
-        """
-        self.config = Config()
-    
-    def _create_sandbox(self) -> Tuple[str, Optional[int]]:
-        """
-        Sends a request to create a new sandbox.
-        
-        Returns:
-            Tuple[Optional[str], Optional[int]]: A tuple containing an error message (if any) 
-            and the sandbox ID (if creation was successful).
-        """
-        resp = requests.post(url=f"{self.config.ODIN_URL}/sandbox")
-        response = resp.json()
-        
-        if resp.status_code != 200:
-            return response.get("message"), None
-        
-        return response.get("result"), response.get("sandboxId")
-
-    def check_sandbox_status(self, sandbox_id: int) -> Union[SandboxResponse, Error]:
-        """
-        Checks the status of a sandbox given its ID.
+        Initialize the sandbox client.
         
         Args:
-            sandbox_id (int): The ID of the sandbox to check.
-        
-        Returns:
-            Union[SandboxResponse, Error]: The sandbox status if successful, otherwise an error.
+            config (Optional[Config]): Configuration object. If None, creates a new Config instance.
         """
-        resp = requests.get(url=f"{self.config.ODIN_URL}/{sandbox_id}")
+        self._config = Config()
+        self._session = requests.Session()
+        self._session.headers.update({
+            "Content-Type": "application/json",
+            "User-Agent": f"SandboxClient/{self._config.VERSION}"
+        })
+    
+    @property
+    def config(self) -> Config:
+        """Get the current configuration."""
+        return self._config
+    
+    def _create_sandbox(self, sandbox_config: SandboxConfig) -> SandboxCreationResult:
+        """
+        Send a request to create a new sandbox.
         
-        if resp.status_code != 200:
-            return Error(**resp.json())
-        
-        return SandboxResponse(**resp.json())
+        Args:
+            sandbox_config (SandboxConfig): Configuration for the new sandbox
+            
+        Returns:
+            SandboxCreationResult: Object containing creation attempt results
+        """
+        try:
+            url = f"{self.config.ODIN_URL}/sandbox"
+            response = self._session.post(
+                url,
+                json=sandbox_config.model_dump()
+            )
+            response.raise_for_status()
+            response_data = response.json()
+            
+            return SandboxCreationResult(
+                sandbox_id=response_data.get("sandboxId"),
+                error_message=response_data.get("message"),
+                success=bool(response_data.get("sandboxId"))
+            )
+        except RequestException as e:
+            return SandboxCreationResult(
+                error_message=f"Request failed: {str(e)}",
+                success=False
+            )
+        except ValueError as e:
+            return SandboxCreationResult(
+                error_message="Invalid JSON response from server",
+                success=False
+            )
 
-    def new_sandbox(self) -> Sandbox:
+    def new_sandbox(self, 
+        sandbox_config: Optional[SandboxConfig] = None,
+    ) -> Sandbox:
         """
-        Creates a new sandbox and waits until it is running.
+        Create a new sandbox and wait until it is running.
+        
+        Args:
+            sandbox_config (Optional[SandboxConfig]): Configuration for the new sandbox.
+                If None, uses default configuration.
         
         Returns:
-            Sandbox: An instance of the Sandbox class with the sandbox details.
+            Sandbox: An instance of the Sandbox class with the sandbox details
         
         Raises:
-            Exception: If the sandbox could not be created or an error occurs during status checks.
+            SandboxError: If the sandbox could not be created or an error occurs
         """
-        start_time = time()
+        config = sandbox_config or SandboxConfig()
+        result = self._create_sandbox(config)
         
-        error_message, sandbox_id = self._create_sandbox()
-        
-        if not sandbox_id:
-            raise Exception(f"Could not create sandbox: {error_message}")
-        
-        while time() - start_time < self.config.SANDBOX_CREATION_TIMEOUT:
-            status_response = self.check_sandbox_status(sandbox_id)
+        if not result.success:
+            raise SandboxError(f"Failed to create sandbox: {result.error_message}")
             
-            if isinstance(status_response, Error):
-                raise Exception(f"Error checking sandbox status: {status_response.message}")
-            
-            if isinstance(status_response, SandboxResponse):
-                if status_response.state == "running":
-                    return Sandbox(sandboxId=status_response.sandboxId, sandboxURL=status_response.URL)
-                elif status_response.state == "pending":
-                    pass  # Continue waiting
-            
-            sleep(2)
-        
-        raise Exception("Sandbox creation timed out")
+        return Sandbox(self, result.sandbox_id)
+    
+    def __enter__(self) -> 'Client':
+        """Context manager entry."""
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        """Context manager exit with proper cleanup."""
+        self._session.close()

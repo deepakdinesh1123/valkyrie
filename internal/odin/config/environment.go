@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sync"
 
 	"github.com/spf13/viper"
@@ -25,6 +26,10 @@ type EnvConfig struct {
 	ODIN_SERVER_HOST string `mapstructure:"ODIN_SERVER_HOST"`
 	ODIN_SERVER_PORT string `mapstructure:"ODIN_SERVER_PORT"`
 
+	ODIN_STORE_URL       string
+	ODIN_STORE_IMAGE     string `mapstructure:"ODIN_STORE_IMAGE"`
+	ODIN_STORE_CONTAINER string
+
 	ODIN_CONTAINER_ENGINE       string `mapstructure:"ODIN_CONTAINER_ENGINE"`
 	ODIN_WORKER_EXECUTOR        string `mapstructure:"ODIN_WORKER_EXECUTOR"`
 	ODIN_WORKER_SYSTEM_EXECUTOR string `mapstructure:"ODIN_WORKER_SYSTEM_EXECUTOR"`
@@ -32,7 +37,7 @@ type EnvConfig struct {
 	ODIN_HOT_CONTAINER          int    `mapstructure:"ODIN_HOT_CONTAINER"`
 	ODIN_WORKER_TASK_TIMEOUT    int    `mapstructure:"ODIN_WORKER_TASK_TIMEOUT"`
 	ODIN_WORKER_POLL_FREQ       int    `mapstructure:"ODIN_WORKER_POLL_FREQ"`
-	ODIN_WORKER_RUNTIME         string `mapstructure:"ODIN_WORKER_RUNTIME"`
+	ODIN_CONTAINER_RUNTIME      string `mapstructure:"ODIN_CONTAINER_RUNTIME"`
 	ODIN_WORKER_PODMAN_IMAGE    string `mapstructure:"ODIN_WORKER_PODMAN_IMAGE"`
 	ODIN_WORKER_DOCKER_IMAGE    string `mapstructure:"ODIN_WORKER_DOCKER_IMAGE"`
 	ODIN_MAX_RETRIES            int    `mapstructure:"ODIN_MAX_RETRIES"`
@@ -51,6 +56,7 @@ type EnvConfig struct {
 	ODIN_OTEL_RESOURCE_NAME string `mapstructure:"ODIN_OTEL_RESOURCE_NAME"`
 	ODIN_EXPORT_LOGS        string `mapstructure:"ODIN_EXPORT_LOGS"`
 	ODIN_ENVIRONMENT        string `mapstructure:"ODIN_ENVIRONMENT"`
+	ODIN_COMPOSE_ENV        bool   `mapstructure:"ODIN_COMPOSE_ENV"`
 
 	ODIN_NIX_STORE                string `mapstructure:"ODIN_NIX_STORE"`
 	ODIN_NIX_USER_ENVIRONMENT     string `mapstructure:"ODIN_NIX_USER_ENVIRONMENT"`
@@ -91,7 +97,11 @@ func GetEnvConfig() (*EnvConfig, error) {
 		}
 
 		if err := viper.Unmarshal(&envConfig); err != nil {
-			log.Fatalf("Failed to unmarshal configuration: %v", err)
+			log.Fatalf("Failed to unmarshal .env configuration: %v", err)
+		}
+
+		if runtime.GOOS == "windows" || runtime.GOOS == "darwin" && envConfig.ODIN_CONTAINER_RUNTIME != "runc" {
+			log.Fatalf("The specified container runtime %s in not supported in %s", envConfig.ODIN_CONTAINER_RUNTIME, runtime.GOOS)
 		}
 
 		if envConfig.POSTGRES_STANDALONE_PATH == "" {
@@ -128,6 +138,12 @@ func setDefaults() {
 
 	viper.SetDefault("ODIN_SERVER_HOST", "0.0.0.0")
 	viper.SetDefault("ODIN_SERVER_PORT", "8080")
+
+	viper.SetDefault("ODIN_STORE_URL", "http://odin-store:5000")
+	viper.SetDefault("ODIN_STORE_IMAGE", "odin_store:0.0.1")
+	viper.SetDefault("ODIN_STORE_NETWORK", "odin_store_network")
+	viper.SetDefault("ODIN_STORE_CONTAINER", "odin-store")
+
 	viper.SetDefault("ODIN_CONTAINER_ENGINE", "podman")
 	viper.SetDefault("ODIN_WORKER_EXECUTOR", "system")
 	viper.SetDefault("ODIN_WORKER_SYSTEM_EXECUTOR", "native")
@@ -135,7 +151,9 @@ func setDefaults() {
 	viper.SetDefault("ODIN_HOT_CONTAINER", 5)
 	viper.SetDefault("ODIN_WORKER_TASK_TIMEOUT", 120)
 	viper.SetDefault("ODIN_WORKER_POLL_FREQ", 30)
-	viper.SetDefault("ODIN_WORKER_RUNTIME", "runc")
+
+	viper.SetDefault("ODIN_WORKER_SANDBOX_HANDLER", "docker")
+
 	viper.SetDefault("ODIN_MAX_RETRIES", 5)
 
 	viper.SetDefault("ODIN_WORKER_CONTAINER_MEMORY_LIMIT", 500)
@@ -148,7 +166,10 @@ func setDefaults() {
 	viper.SetDefault("ODIN_ENABLE_TELEMETRY", false)
 	viper.SetDefault("ODIN_OTLP_ENDPOINT", "localhost:4317")
 	viper.SetDefault("ODIN_OTEL_RESOURCE_NAME", "Odin")
+
 	viper.SetDefault("ODIN_ENVIRONMENT", "dev")
+	viper.SetDefault("ODIN_COMPOSE_ENV", false)
+
 	viper.SetDefault("ODIN_EXPORT_LOGS", "console")
 	viper.SetDefault("ODIN_SYSTEM_EXECUTOR_BASE_DIR", filepath.Join(os.TempDir(), "valkyrie"))
 	viper.SetDefault("ODIN_SYSTEM_EXECUTOR_CLEAN_UP", true)
@@ -157,6 +178,15 @@ func setDefaults() {
 	viper.SetDefault("ODIN_WORKER_DOCKER_IMAGE", "odin:alpine")
 	viper.SetDefault("ODIN_WORKER_PODMAN_IMAGE", "odin:alpine")
 	viper.SetDefault("RIPPKGS_BASE_URL", "https://valnix-stage-bucket.s3.us-east-1.amazonaws.com")
+
+	containerRuntime := "runsc"
+	switch runtime.GOOS {
+	case "darwin":
+		containerRuntime = "runc"
+	case "linux":
+		containerRuntime = "runsc"
+	}
+	viper.SetDefault("ODIN_CONTAINER_RUNTIME", containerRuntime)
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {

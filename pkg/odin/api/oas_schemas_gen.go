@@ -3,7 +3,6 @@
 package api
 
 import (
-	"net/url"
 	"time"
 )
 
@@ -35,9 +34,76 @@ func (s *CancelExecutionJobOK) SetMessage(val string) {
 
 func (*CancelExecutionJobOK) cancelExecutionJobRes() {}
 
+// Configuration for a sandbox environment request.
+// Ref: #/components/schemas/CreateSandbox
+type CreateSandbox struct {
+	// Nix flake configuration for the sandbox environment.
+	NixFlake OptString `json:"nix_flake"`
+	// List of programming languages required in the sandbox.
+	Languages []string `json:"languages"`
+	// List of system-level dependencies needed in the sandbox.
+	SystemDependencies []string `json:"system_dependencies"`
+	// Shell script to be executed during sandbox initialization.
+	ShellHook OptString `json:"shell_hook"`
+}
+
+// GetNixFlake returns the value of NixFlake.
+func (s *CreateSandbox) GetNixFlake() OptString {
+	return s.NixFlake
+}
+
+// GetLanguages returns the value of Languages.
+func (s *CreateSandbox) GetLanguages() []string {
+	return s.Languages
+}
+
+// GetSystemDependencies returns the value of SystemDependencies.
+func (s *CreateSandbox) GetSystemDependencies() []string {
+	return s.SystemDependencies
+}
+
+// GetShellHook returns the value of ShellHook.
+func (s *CreateSandbox) GetShellHook() OptString {
+	return s.ShellHook
+}
+
+// SetNixFlake sets the value of NixFlake.
+func (s *CreateSandbox) SetNixFlake(val OptString) {
+	s.NixFlake = val
+}
+
+// SetLanguages sets the value of Languages.
+func (s *CreateSandbox) SetLanguages(val []string) {
+	s.Languages = val
+}
+
+// SetSystemDependencies sets the value of SystemDependencies.
+func (s *CreateSandbox) SetSystemDependencies(val []string) {
+	s.SystemDependencies = val
+}
+
+// SetShellHook sets the value of ShellHook.
+func (s *CreateSandbox) SetShellHook(val OptString) {
+	s.ShellHook = val
+}
+
+type CreateSandboxBadRequest Error
+
+func (*CreateSandboxBadRequest) createSandboxRes() {}
+
+type CreateSandboxForbidden Error
+
+func (*CreateSandboxForbidden) createSandboxRes() {}
+
+type CreateSandboxInternalServerError Error
+
+func (*CreateSandboxInternalServerError) createSandboxRes() {}
+
 type CreateSandboxOK struct {
-	Result    string `json:"result"`
-	SandboxId int64  `json:"sandboxId"`
+	Result           string    `json:"result"`
+	SandboxId        int64     `json:"sandboxId"`
+	SandboxStatusSSE OptString `json:"sandboxStatusSSE"`
+	SandboxStatusWS  OptString `json:"sandboxStatusWS"`
 }
 
 // GetResult returns the value of Result.
@@ -50,6 +116,16 @@ func (s *CreateSandboxOK) GetSandboxId() int64 {
 	return s.SandboxId
 }
 
+// GetSandboxStatusSSE returns the value of SandboxStatusSSE.
+func (s *CreateSandboxOK) GetSandboxStatusSSE() OptString {
+	return s.SandboxStatusSSE
+}
+
+// GetSandboxStatusWS returns the value of SandboxStatusWS.
+func (s *CreateSandboxOK) GetSandboxStatusWS() OptString {
+	return s.SandboxStatusWS
+}
+
 // SetResult sets the value of Result.
 func (s *CreateSandboxOK) SetResult(val string) {
 	s.Result = val
@@ -58,6 +134,16 @@ func (s *CreateSandboxOK) SetResult(val string) {
 // SetSandboxId sets the value of SandboxId.
 func (s *CreateSandboxOK) SetSandboxId(val int64) {
 	s.SandboxId = val
+}
+
+// SetSandboxStatusSSE sets the value of SandboxStatusSSE.
+func (s *CreateSandboxOK) SetSandboxStatusSSE(val OptString) {
+	s.SandboxStatusSSE = val
+}
+
+// SetSandboxStatusWS sets the value of SandboxStatusWS.
+func (s *CreateSandboxOK) SetSandboxStatusWS(val OptString) {
+	s.SandboxStatusWS = val
 }
 
 func (*CreateSandboxOK) createSandboxRes() {}
@@ -125,9 +211,8 @@ func (s *Error) SetMessage(val string) {
 	s.Message = val
 }
 
-func (*Error) createSandboxRes() {}
-func (*Error) getSandboxRes()    {}
-func (*Error) getVersionRes()    {}
+func (*Error) getSandboxRes() {}
+func (*Error) getVersionRes() {}
 
 type ExecuteBadRequest Error
 
@@ -930,6 +1015,72 @@ func (s *GetLanguageVersionByIdOK) SetLanguage(val LanguageVersionResponse) {
 
 func (*GetLanguageVersionByIdOK) getLanguageVersionByIdRes() {}
 
+// GetSandboxOK represents sum type.
+type GetSandboxOK struct {
+	Type         GetSandboxOKType // switch on this field
+	Sandbox      Sandbox
+	SandboxState SandboxState
+}
+
+// GetSandboxOKType is oneOf type of GetSandboxOK.
+type GetSandboxOKType string
+
+// Possible values for GetSandboxOKType.
+const (
+	SandboxGetSandboxOK      GetSandboxOKType = "Sandbox"
+	SandboxStateGetSandboxOK GetSandboxOKType = "SandboxState"
+)
+
+// IsSandbox reports whether GetSandboxOK is Sandbox.
+func (s GetSandboxOK) IsSandbox() bool { return s.Type == SandboxGetSandboxOK }
+
+// IsSandboxState reports whether GetSandboxOK is SandboxState.
+func (s GetSandboxOK) IsSandboxState() bool { return s.Type == SandboxStateGetSandboxOK }
+
+// SetSandbox sets GetSandboxOK to Sandbox.
+func (s *GetSandboxOK) SetSandbox(v Sandbox) {
+	s.Type = SandboxGetSandboxOK
+	s.Sandbox = v
+}
+
+// GetSandbox returns Sandbox and true boolean if GetSandboxOK is Sandbox.
+func (s GetSandboxOK) GetSandbox() (v Sandbox, ok bool) {
+	if !s.IsSandbox() {
+		return v, false
+	}
+	return s.Sandbox, true
+}
+
+// NewSandboxGetSandboxOK returns new GetSandboxOK from Sandbox.
+func NewSandboxGetSandboxOK(v Sandbox) GetSandboxOK {
+	var s GetSandboxOK
+	s.SetSandbox(v)
+	return s
+}
+
+// SetSandboxState sets GetSandboxOK to SandboxState.
+func (s *GetSandboxOK) SetSandboxState(v SandboxState) {
+	s.Type = SandboxStateGetSandboxOK
+	s.SandboxState = v
+}
+
+// GetSandboxState returns SandboxState and true boolean if GetSandboxOK is SandboxState.
+func (s GetSandboxOK) GetSandboxState() (v SandboxState, ok bool) {
+	if !s.IsSandboxState() {
+		return v, false
+	}
+	return s.SandboxState, true
+}
+
+// NewSandboxStateGetSandboxOK returns new GetSandboxOK from SandboxState.
+func NewSandboxStateGetSandboxOK(v SandboxState) GetSandboxOK {
+	var s GetSandboxOK
+	s.SetSandboxState(v)
+	return s
+}
+
+func (*GetSandboxOK) getSandboxRes() {}
+
 type GetVersionOK struct {
 	Version string `json:"version"`
 }
@@ -1232,6 +1383,52 @@ func (o OptBool) Or(d bool) bool {
 	return d
 }
 
+// NewOptCreateSandbox returns new OptCreateSandbox with value set to v.
+func NewOptCreateSandbox(v CreateSandbox) OptCreateSandbox {
+	return OptCreateSandbox{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptCreateSandbox is optional CreateSandbox.
+type OptCreateSandbox struct {
+	Value CreateSandbox
+	Set   bool
+}
+
+// IsSet returns true if OptCreateSandbox was set.
+func (o OptCreateSandbox) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptCreateSandbox) Reset() {
+	var v CreateSandbox
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptCreateSandbox) SetTo(v CreateSandbox) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptCreateSandbox) Get() (v CreateSandbox, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptCreateSandbox) Or(d CreateSandbox) CreateSandbox {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptDateTime returns new OptDateTime with value set to v.
 func NewOptDateTime(v time.Time) OptDateTime {
 	return OptDateTime{
@@ -1508,52 +1705,6 @@ func (o OptString) Or(d string) string {
 	return d
 }
 
-// NewOptURI returns new OptURI with value set to v.
-func NewOptURI(v url.URL) OptURI {
-	return OptURI{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptURI is optional url.URL.
-type OptURI struct {
-	Value url.URL
-	Set   bool
-}
-
-// IsSet returns true if OptURI was set.
-func (o OptURI) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptURI) Reset() {
-	var v url.URL
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptURI) SetTo(v url.URL) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptURI) Get() (v url.URL, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptURI) Or(d url.URL) url.URL {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
 // Ref: #/components/schemas/Package
 type Package struct {
 	// Name of the package.
@@ -1693,11 +1844,11 @@ func (s *PaginationResponse) SetCursor(val int64) {
 
 // Ref: #/components/schemas/Sandbox
 type Sandbox struct {
-	SandboxId int64       `json:"sandboxId"`
-	State     string      `json:"state"`
-	URL       OptURI      `json:"URL"`
-	GitURL    OptURI      `json:"gitURL"`
-	CreatedAt OptDateTime `json:"created_at"`
+	SandboxId int64     `json:"sandboxId"`
+	State     string    `json:"state"`
+	URL       string    `json:"URL"`
+	AgentURL  string    `json:"agentURL"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 // GetSandboxId returns the value of SandboxId.
@@ -1711,17 +1862,17 @@ func (s *Sandbox) GetState() string {
 }
 
 // GetURL returns the value of URL.
-func (s *Sandbox) GetURL() OptURI {
+func (s *Sandbox) GetURL() string {
 	return s.URL
 }
 
-// GetGitURL returns the value of GitURL.
-func (s *Sandbox) GetGitURL() OptURI {
-	return s.GitURL
+// GetAgentURL returns the value of AgentURL.
+func (s *Sandbox) GetAgentURL() string {
+	return s.AgentURL
 }
 
 // GetCreatedAt returns the value of CreatedAt.
-func (s *Sandbox) GetCreatedAt() OptDateTime {
+func (s *Sandbox) GetCreatedAt() time.Time {
 	return s.CreatedAt
 }
 
@@ -1736,21 +1887,45 @@ func (s *Sandbox) SetState(val string) {
 }
 
 // SetURL sets the value of URL.
-func (s *Sandbox) SetURL(val OptURI) {
+func (s *Sandbox) SetURL(val string) {
 	s.URL = val
 }
 
-// SetGitURL sets the value of GitURL.
-func (s *Sandbox) SetGitURL(val OptURI) {
-	s.GitURL = val
+// SetAgentURL sets the value of AgentURL.
+func (s *Sandbox) SetAgentURL(val string) {
+	s.AgentURL = val
 }
 
 // SetCreatedAt sets the value of CreatedAt.
-func (s *Sandbox) SetCreatedAt(val OptDateTime) {
+func (s *Sandbox) SetCreatedAt(val time.Time) {
 	s.CreatedAt = val
 }
 
-func (*Sandbox) getSandboxRes() {}
+// Ref: #/components/schemas/SandboxState
+type SandboxState struct {
+	SandboxId int64  `json:"sandboxId"`
+	State     string `json:"state"`
+}
+
+// GetSandboxId returns the value of SandboxId.
+func (s *SandboxState) GetSandboxId() int64 {
+	return s.SandboxId
+}
+
+// GetState returns the value of State.
+func (s *SandboxState) GetState() string {
+	return s.State
+}
+
+// SetSandboxId sets the value of SandboxId.
+func (s *SandboxState) SetSandboxId(val int64) {
+	s.SandboxId = val
+}
+
+// SetState sets the value of State.
+func (s *SandboxState) SetState(val string) {
+	s.State = val
+}
 
 type SearchLanguagePackagesBadRequest Error
 

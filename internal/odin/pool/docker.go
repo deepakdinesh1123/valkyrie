@@ -41,9 +41,13 @@ func DockerExecConstructor(ctx context.Context) (Container, error) {
 		Image:       envConfig.ODIN_WORKER_DOCKER_IMAGE,
 		StopTimeout: &envConfig.ODIN_WORKER_TASK_TIMEOUT,
 		StopSignal:  "SIGKILL",
+		Env: []string{
+			fmt.Sprintf("ODIN_STORE_URL=%s", envConfig.ODIN_STORE_URL),
+		},
 	},
 		&container.HostConfig{
 			AutoRemove: true,
+			Runtime:    envConfig.ODIN_CONTAINER_RUNTIME,
 		},
 		nil,
 		nil,
@@ -79,7 +83,12 @@ func DockerSandboxConstructor(ctx context.Context) (Container, error) {
 		Image:      envConfig.ODIN_SANDBOX_DOCKER_IMAGE,
 		StopSignal: "SIGKILL",
 	},
-		nil,
+		&container.HostConfig{
+			AutoRemove:  true,
+			Runtime:     envConfig.ODIN_CONTAINER_RUNTIME,
+			NetworkMode: "bridge",
+			Links:       []string{envConfig.ODIN_STORE_CONTAINER},
+		},
 		nil,
 		nil,
 		"",

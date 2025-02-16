@@ -76,8 +76,6 @@ func ConvertExecSpecToNixScript(ctx context.Context, execReq *db.ExecRequest, qu
 func (s *ExecutionService) convertExecSpecToFlake(execSpec ExecutionRequest) (string, error) {
 	execSpec.IsFlake = true
 
-	s.logger.Debug().Str("cmdLineArgs", execSpec.CmdLineArgs).Str("compileArgs", execSpec.CompilerArgs).Msg("Args are")
-
 	var res bytes.Buffer
 
 	baseTemplate, err := ExecTemplates.ReadFile("templates/base.flake.tmpl")

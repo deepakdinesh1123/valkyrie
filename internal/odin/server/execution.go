@@ -11,6 +11,7 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
+	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -44,7 +45,7 @@ func (s *OdinServer) Execute(ctx context.Context, req *api.ExecutionRequest, par
 
 func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
-	jobIDStr := req.PathValue("jobId")
+	jobIDStr := chi.URLParam(req, "sandboxId")
 	jobID, err := strconv.ParseInt(jobIDStr, 10, 64)
 	if err != nil {
 		s.logger.Error().Stack().Err(err).Msg("Failed to get executionId")
@@ -463,7 +464,7 @@ func (s *OdinServer) GetExecutionConfig(ctx context.Context, params api.GetExecu
 		ODINWORKERCONCURRENCY: int32(s.envConfig.ODIN_WORKER_CONCURRENCY),
 		ODINWORKERTASKTIMEOUT: s.envConfig.ODIN_WORKER_TASK_TIMEOUT,
 		ODINWORKERPOLLFREQ:    s.envConfig.ODIN_WORKER_POLL_FREQ,
-		ODINWORKERRUNTIME:     s.envConfig.ODIN_WORKER_RUNTIME,
+		ODINWORKERRUNTIME:     s.envConfig.ODIN_CONTAINER_RUNTIME,
 		ODINLOGLEVEL:          s.envConfig.ODIN_LOG_LEVEL,
 	}, nil
 }

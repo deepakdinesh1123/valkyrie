@@ -6,6 +6,7 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/services/execution"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/services/sandbox"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/store"
 	"github.com/deepakdinesh1123/valkyrie/internal/telemetry"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
@@ -20,6 +21,7 @@ type OdinServer struct {
 	queries          db.Store
 	envConfig        *config.EnvConfig
 	executionService *execution.ExecutionService
+	sandboxService   *sandbox.SandboxService
 	logger           *zerolog.Logger
 	server           *api.Server
 	tp               trace.TracerProvider
@@ -72,6 +74,12 @@ func NewServer(ctx context.Context, envConfig *config.EnvConfig, standalone bool
 		executionService := execution.NewExecutionService(queries, envConfig, logger)
 		odinServer.executionService = executionService
 	}
+
+	if envConfig.ODIN_ENABLE_SANDBOX {
+		sandboxService := sandbox.NewSandboxService(queries, envConfig, logger)
+		odinServer.sandboxService = sandboxService
+	}
+
 	srv, err := api.NewServer(
 		odinServer,
 		api.WithTracerProvider(tp),

@@ -37,6 +37,8 @@
           libassuan
           btrfs-progs
           fuse-overlayfs
+          gvisor
+          crun
         ];
 
         packages = rec {
@@ -69,9 +71,12 @@
             buildInputs = odinDependencies;
           };
           python-sdk = import ./sdk/python/shell.nix { inherit pkgs; };
-          js-sdk = import ./sdk/js/shell.nix { inherit pkgs; };
+          js-sdk = import ./sdk/ts/shell.nix { inherit pkgs; };
           docs = import ./docs/shell.nix { inherit pkgs; };
           schemas = import ./schemas/shell.nix { inherit pkgs; };
+          agent = pkgs.mkShell {
+            buildInputs = [ pkgs.go_1_22 ];
+          };
         };
       }
     );

@@ -42,4 +42,9 @@ sql:
               import: "github.com/deepakdinesh1123/valkyrie/internal/odin/db/jsonschema"
               package: "jsonschema"
               type: "SandboxConfig"
+          - column: "sandboxes.details"
+            go_type:
+              import: "github.com/deepakdinesh1123/valkyrie/internal/odin/db/jsonschema"
+              package: "jsonschema"
+              type: "SandboxDetails"
           

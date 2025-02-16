@@ -21,6 +21,11 @@ import (
 	"github.com/ogen-go/ogen/uri"
 )
 
+func trimTrailingSlashes(u *url.URL) {
+	u.Path = strings.TrimRight(u.Path, "/")
+	u.RawPath = strings.TrimRight(u.RawPath, "/")
+}
+
 // Invoker invokes operations described by OpenAPI v3 specification.
 type Invoker interface {
 	// CancelExecutionJob invokes cancelExecutionJob operation.
@@ -34,7 +39,7 @@ type Invoker interface {
 	// Create a sandbox.
 	//
 	// POST /sandbox
-	CreateSandbox(ctx context.Context, params CreateSandboxParams) (CreateSandboxRes, error)
+	CreateSandbox(ctx context.Context, request OptCreateSandbox, params CreateSandboxParams) (CreateSandboxRes, error)
 	// DeleteExecutionJob invokes deleteExecutionJob operation.
 	//
 	// Delete execution job.
@@ -179,11 +184,6 @@ type Client struct {
 var _ Handler = struct {
 	*Client
 }{}
-
-func trimTrailingSlashes(u *url.URL) {
-	u.Path = strings.TrimRight(u.Path, "/")
-	u.RawPath = strings.TrimRight(u.RawPath, "/")
-}
 
 // NewClient initializes new Client defined by OAS.
 func NewClient(serverURL string, opts ...ClientOption) (*Client, error) {
@@ -330,12 +330,12 @@ func (c *Client) sendCancelExecutionJob(ctx context.Context, params CancelExecut
 // Create a sandbox.
 //
 // POST /sandbox
-func (c *Client) CreateSandbox(ctx context.Context, params CreateSandboxParams) (CreateSandboxRes, error) {
-	res, err := c.sendCreateSandbox(ctx, params)
+func (c *Client) CreateSandbox(ctx context.Context, request OptCreateSandbox, params CreateSandboxParams) (CreateSandboxRes, error) {
+	res, err := c.sendCreateSandbox(ctx, request, params)
 	return res, err
 }
 
-func (c *Client) sendCreateSandbox(ctx context.Context, params CreateSandboxParams) (res CreateSandboxRes, err error) {
+func (c *Client) sendCreateSandbox(ctx context.Context, request OptCreateSandbox, params CreateSandboxParams) (res CreateSandboxRes, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("createSandbox"),
 		semconv.HTTPRequestMethodKey.String("POST"),
@@ -379,6 +379,9 @@ func (c *Client) sendCreateSandbox(ctx context.Context, params CreateSandboxPara
 	r, err := ht.NewRequest(ctx, "POST", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeCreateSandboxRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
 	}
 
 	stage = "EncodeHeaderParams"

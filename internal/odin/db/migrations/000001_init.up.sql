@@ -109,6 +109,7 @@ create table sandboxes (
     created_at timestamptz not null default now(),
     updated_at timestamptz,
     sandbox_url text,
+    sandbox_agent_url text,
     password bytea,
     config jsonb,
     details jsonb,

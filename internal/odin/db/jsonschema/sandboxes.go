@@ -6,4 +6,6 @@ type SandboxConfig struct {
 	Memory  uint // in MegaBytes
 	Storage uint // in MegaBytes
 	CPU     uint
+
+	Flake string
 }

@@ -13,7 +13,7 @@ import (
 )
 
 const getSandbox = `-- name: GetSandbox :one
-select sandbox_id, worker_id, started_at, created_at, updated_at, sandbox_url, password, config, details, current_state
+select sandbox_id, worker_id, started_at, created_at, updated_at, sandbox_url, sandbox_agent_url, password, config, details, current_state
 from sandboxes
 where  sandbox_id = $1
 `
@@ -28,6 +28,7 @@ func (q *Queries) GetSandbox(ctx context.Context, sandboxID int64) (Sandbox, err
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.SandboxUrl,
+		&i.SandboxAgentUrl,
 		&i.Password,
 		&i.Config,
 		&i.Details,
@@ -37,13 +38,18 @@ func (q *Queries) GetSandbox(ctx context.Context, sandboxID int64) (Sandbox, err
 }
 
 const insertSandbox = `-- name: InsertSandbox :one
-insert into sandboxes (config)
-values ($1)
-returning sandbox_id, worker_id, started_at, created_at, updated_at, sandbox_url, password, config, details, current_state
+insert into sandboxes (config, details)
+values ($1, $2)
+returning sandbox_id, worker_id, started_at, created_at, updated_at, sandbox_url, sandbox_agent_url, password, config, details, current_state
 `
 
-func (q *Queries) InsertSandbox(ctx context.Context, config jsonschema.SandboxConfig) (Sandbox, error) {
-	row := q.db.QueryRow(ctx, insertSandbox, config)
+type InsertSandboxParams struct {
+	Config  jsonschema.SandboxConfig  `db:"config" json:"config"`
+	Details jsonschema.SandboxDetails `db:"details" json:"details"`
+}
+
+func (q *Queries) InsertSandbox(ctx context.Context, arg InsertSandboxParams) (Sandbox, error) {
+	row := q.db.QueryRow(ctx, insertSandbox, arg.Config, arg.Details)
 	var i Sandbox
 	err := row.Scan(
 		&i.SandboxID,
@@ -52,6 +58,7 @@ func (q *Queries) InsertSandbox(ctx context.Context, config jsonschema.SandboxCo
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.SandboxUrl,
+		&i.SandboxAgentUrl,
 		&i.Password,
 		&i.Config,
 		&i.Details,
@@ -65,19 +72,26 @@ update sandboxes set
 started_at = now(),
 sandbox_url = $2,
 password = $3,
+sandbox_agent_url = $4,
 current_state = 'running',
 updated_at = now()
 where sandbox_id = $1
 `
 
 type MarkSandboxRunningParams struct {
-	SandboxID  int64       `db:"sandbox_id" json:"sandbox_id"`
-	SandboxUrl pgtype.Text `db:"sandbox_url" json:"sandbox_url"`
-	Password   []byte      `db:"password" json:"password"`
+	SandboxID       int64       `db:"sandbox_id" json:"sandbox_id"`
+	SandboxUrl      pgtype.Text `db:"sandbox_url" json:"sandbox_url"`
+	Password        []byte      `db:"password" json:"password"`
+	SandboxAgentUrl pgtype.Text `db:"sandbox_agent_url" json:"sandbox_agent_url"`
 }
 
 func (q *Queries) MarkSandboxRunning(ctx context.Context, arg MarkSandboxRunningParams) error {
-	_, err := q.db.Exec(ctx, markSandboxRunning, arg.SandboxID, arg.SandboxUrl, arg.Password)
+	_, err := q.db.Exec(ctx, markSandboxRunning,
+		arg.SandboxID,
+		arg.SandboxUrl,
+		arg.Password,
+		arg.SandboxAgentUrl,
+	)
 	return err
 }
 
@@ -115,16 +129,18 @@ func (q *Queries) UpdateSandboxStartTime(ctx context.Context, arg UpdateSandboxS
 
 const updateSandboxState = `-- name: UpdateSandboxState :exec
 update  sandboxes set
-current_state = $2
+current_state = $2,
+details = $3
 where sandbox_id =  $1
 `
 
 type UpdateSandboxStateParams struct {
-	SandboxID    int64  `db:"sandbox_id" json:"sandbox_id"`
-	CurrentState string `db:"current_state" json:"current_state"`
+	SandboxID    int64                     `db:"sandbox_id" json:"sandbox_id"`
+	CurrentState string                    `db:"current_state" json:"current_state"`
+	Details      jsonschema.SandboxDetails `db:"details" json:"details"`
 }
 
 func (q *Queries) UpdateSandboxState(ctx context.Context, arg UpdateSandboxStateParams) error {
-	_, err := q.db.Exec(ctx, updateSandboxState, arg.SandboxID, arg.CurrentState)
+	_, err := q.db.Exec(ctx, updateSandboxState, arg.SandboxID, arg.CurrentState, arg.Details)
 	return err
 }

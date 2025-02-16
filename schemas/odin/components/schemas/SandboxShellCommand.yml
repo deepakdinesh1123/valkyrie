@@ -1,7 +1,0 @@
-type: object
-required:
-  - command
-properties:
-  command:
-    type: string
-    description: command to execute

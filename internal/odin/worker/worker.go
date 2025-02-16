@@ -117,6 +117,16 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 		if err != nil {
 			return nil, fmt.Errorf("could not get sandbox handler: %s", err)
 		}
+		if !envConfig.ODIN_COMPOSE_ENV {
+			err = sandboxHandler.StartOdinStore(ctx, envConfig.ODIN_STORE_IMAGE, envConfig.ODIN_STORE_CONTAINER, envConfig.ODIN_CONTAINER_RUNTIME)
+			if err != nil {
+				return nil, fmt.Errorf("could not start odin store: %v", err)
+			}
+		}
+		err = sandboxHandler.StartContainerPool(ctx, envConfig)
+		if err != nil {
+			return nil, fmt.Errorf("error starting container pool: %v", err)
+		}
 		wrkr.sandboxHandler = sandboxHandler
 	}
 	logger.Info().Msgf("Starting worker %d with name %s", wrkr.ID, wrkr.Name)
@@ -270,7 +280,7 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 				}
 				w.logger.Info().Msgf("Worker: fetched sandbox job %d", res.Sandbox.SandboxID)
 				swg.Add(1)
-				go w.sandboxHandler.Create(ctx, &swg, res.Sandbox)
+				go w.sandboxHandler.Create(ctx, &swg, res)
 			}
 		case <-heartBeatTicker.C:
 			w.queries.UpdateHeartbeat(ctx, int32(w.ID))

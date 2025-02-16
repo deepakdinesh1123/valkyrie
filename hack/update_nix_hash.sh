@@ -5,7 +5,7 @@ if [ "$#" -ne 2 ]; then
     exit 1
 fi
 
-nix_file="builds/package/nix/$1.nix"
+nix_file="builds/nix/$1.nix"
 package_name="$2"
 
 sed -i 's/^\s*vendorHash = ".*";/  vendorHash = "";/g' "$nix_file"

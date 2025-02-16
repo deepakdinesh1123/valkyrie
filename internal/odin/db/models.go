@@ -82,16 +82,17 @@ type Package struct {
 }
 
 type Sandbox struct {
-	SandboxID    int64                    `db:"sandbox_id" json:"sandbox_id"`
-	WorkerID     pgtype.Int4              `db:"worker_id" json:"worker_id"`
-	StartedAt    pgtype.Timestamptz       `db:"started_at" json:"started_at"`
-	CreatedAt    pgtype.Timestamptz       `db:"created_at" json:"created_at"`
-	UpdatedAt    pgtype.Timestamptz       `db:"updated_at" json:"updated_at"`
-	SandboxUrl   pgtype.Text              `db:"sandbox_url" json:"sandbox_url"`
-	Password     []byte                   `db:"password" json:"password"`
-	Config       jsonschema.SandboxConfig `db:"config" json:"config"`
-	Details      []byte                   `db:"details" json:"details"`
-	CurrentState string                   `db:"current_state" json:"current_state"`
+	SandboxID       int64                     `db:"sandbox_id" json:"sandbox_id"`
+	WorkerID        pgtype.Int4               `db:"worker_id" json:"worker_id"`
+	StartedAt       pgtype.Timestamptz        `db:"started_at" json:"started_at"`
+	CreatedAt       pgtype.Timestamptz        `db:"created_at" json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz        `db:"updated_at" json:"updated_at"`
+	SandboxUrl      pgtype.Text               `db:"sandbox_url" json:"sandbox_url"`
+	SandboxAgentUrl pgtype.Text               `db:"sandbox_agent_url" json:"sandbox_agent_url"`
+	Password        []byte                    `db:"password" json:"password"`
+	Config          jsonschema.SandboxConfig  `db:"config" json:"config"`
+	Details         jsonschema.SandboxDetails `db:"details" json:"details"`
+	CurrentState    string                    `db:"current_state" json:"current_state"`
 }
 
 type Worker struct {

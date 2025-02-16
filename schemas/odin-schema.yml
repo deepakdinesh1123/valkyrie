@@ -796,6 +796,12 @@ paths:
       operationId: createSandbox
       parameters:
         - $ref: '#/components/parameters/AuthHeader'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSandbox'
       responses:
         '200':
           description: ok
@@ -812,6 +818,22 @@ paths:
                   sandboxId:
                     type: integer
                     format: int64
+                  sandboxStatusSSE:
+                    type: string
+                  sandboxStatusWS:
+                    type: string
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           description: Internal Server Error
           content:
@@ -837,8 +859,9 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                $ref: '#/components/schemas/Sandbox'
+                oneOf:
+                  - $ref: '#/components/schemas/Sandbox'
+                  - $ref: '#/components/schemas/SandboxState'
         '500':
           description: Internal Server Error
           content:
@@ -1230,7 +1253,64 @@ components:
             default_code:
               type: string
               example: print('Hello, World!')
+    CreateSandbox:
+      type: object
+      description: Configuration for a sandbox environment request
+      properties:
+        nix_flake:
+          type: string
+          description: Nix flake configuration for the sandbox environment
+          example: |
+            {
+              inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+              outputs = { self, nixpkgs }: {
+                # flake configuration
+              };
+            }
+        languages:
+          type: array
+          description: List of programming languages required in the sandbox
+          items:
+            type: string
+          example:
+            - python
+            - javascript
+            - go
+        system_dependencies:
+          type: array
+          description: List of system-level dependencies needed in the sandbox
+          items:
+            type: string
+          example:
+            - gcc
+            - make
+            - git
+        shell_hook:
+          type: string
+          description: Shell script to be executed during sandbox initialization
+          example: echo 'Initializing sandbox...'
     Sandbox:
+      type: object
+      required:
+        - sandboxId
+        - state
+        - URL
+        - agentURL
+        - created_at
+      properties:
+        sandboxId:
+          type: integer
+          format: int64
+        state:
+          type: string
+        URL:
+          type: string
+        agentURL:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+    SandboxState:
       type: object
       required:
         - sandboxId
@@ -1241,12 +1321,3 @@ components:
           format: int64
         state:
           type: string
-        URL:
-          type: string
-          format: uri
-        gitURL:
-          type: string
-          format: uri
-        created_at:
-          type: string
-          format: date-time

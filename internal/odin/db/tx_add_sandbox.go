@@ -20,7 +20,12 @@ func (s *SQLStore) AddSandboxJobTx(ctx context.Context, arg AddSandboxTxParams) 
 	var addSandboxTxResult AddSandboxTxResult
 	err := s.execTx(ctx, func(q *Queries) error {
 
-		sandbox, err := q.InsertSandbox(ctx, arg.SandboxConfig)
+		sandbox, err := q.InsertSandbox(ctx, InsertSandboxParams{
+			Config: arg.SandboxConfig,
+			Details: jsonschema.SandboxDetails{
+				Message: "Adding sandbox job",
+			},
+		})
 		if err != nil {
 			return err
 		}

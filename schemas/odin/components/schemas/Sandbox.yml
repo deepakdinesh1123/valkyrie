@@ -2,6 +2,9 @@ type: object
 required:
   - sandboxId
   - state
+  - URL
+  - agentURL
+  - created_at
 properties:
   sandboxId:
     type: integer
@@ -10,10 +13,8 @@ properties:
     type: string
   URL:
     type: string
-    format: uri
-  gitURL:
+  agentURL:
     type: string
-    format: uri
   created_at:
     type: string
     format: date-time

@@ -3,14 +3,14 @@ module github.com/deepakdinesh1123/valkyrie
 go 1.22.0
 
 require (
+	github.com/coder/websocket v1.8.12
 	github.com/containers/podman/v5 v5.2.2
-	github.com/creack/pty v1.1.24
 	github.com/docker/docker v27.1.1+incompatible
 	github.com/exaring/otelpgx v0.6.2
 	github.com/fergusstrange/embedded-postgres v1.27.0
+	github.com/go-chi/chi/v5 v5.2.1
 	github.com/go-faster/errors v0.7.1
 	github.com/go-faster/jx v1.1.0
-	github.com/goccy/go-yaml v1.15.15
 	github.com/gofrs/flock v0.12.1
 	github.com/golang-migrate/migrate/v4 v4.17.1
 	github.com/gorilla/handlers v1.5.2
@@ -63,6 +63,7 @@ require (
 	github.com/containers/psgo v1.9.0 // indirect
 	github.com/containers/storage v1.55.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.5.1-0.20231103132048-7d375ecc2b09 // indirect
+	github.com/creack/pty v1.1.24 // indirect
 	github.com/cyberphone/json-canonicalization v0.0.0-20231217050601-ba74d44ecf5f // indirect
 	github.com/cyphar/filepath-securejoin v0.3.1 // indirect
 	github.com/disiqueira/gotree/v3 v3.0.2 // indirect

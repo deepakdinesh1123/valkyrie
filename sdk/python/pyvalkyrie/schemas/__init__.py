@@ -18,7 +18,7 @@ from .file import (
     AddFile
 )
 
-from .sandbox import Sandbox
+from .sandbox import Sandbox, SandboxConfig
 from .error import Error
 
 __all__ = [
@@ -41,6 +41,7 @@ __all__ = [
 
     # Sandbox related
     "Sandbox",
+    "SandboxConfig"
 
     # Error related
     "Error",

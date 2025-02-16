@@ -19,7 +19,7 @@ type Handler interface {
 	// Create a sandbox.
 	//
 	// POST /sandbox
-	CreateSandbox(ctx context.Context, params CreateSandboxParams) (CreateSandboxRes, error)
+	CreateSandbox(ctx context.Context, req OptCreateSandbox, params CreateSandboxParams) (CreateSandboxRes, error)
 	// DeleteExecutionJob implements deleteExecutionJob operation.
 	//
 	// Delete execution job.
