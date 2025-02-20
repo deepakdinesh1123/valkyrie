@@ -1,4 +1,5 @@
 from .command import ExecuteCommand
+from .error import Error
 from .file import AddFile
 from .sandbox import Sandbox, SandboxConfig
 from .terminal import (

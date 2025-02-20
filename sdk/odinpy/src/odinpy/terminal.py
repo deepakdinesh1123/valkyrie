@@ -1,12 +1,10 @@
 import json
 
-from typing import Union
 from uuid import UUID
 
 from websocket import WebSocket, WebSocketTimeoutException
 
 from .schemas import (
-    Error,
     TerminalClose,
     TerminalCloseResponse,
     TerminalRead,
@@ -25,7 +23,7 @@ class Terminal:
     def terminalId(self) -> UUID:
         return self._terminalId
 
-    def close_terminal(self) -> Union[TerminalCloseResponse, Error]:
+    def close_terminal(self) -> TerminalCloseResponse:
         self._agent.send(TerminalClose(terminalId=self.terminalId).model_dump_json())
         try:
             resp = self._agent.recv()
@@ -38,9 +36,9 @@ class Terminal:
             terminalCloseResp = TerminalCloseResponse(**message)
             return terminalCloseResp
         except Exception:
-            return Error(**message)
+            return TerminalCloseResponse(**message)
 
-    def read_terminal(self) -> Union[TerminalReadResponse, Error]:
+    def read_terminal(self) -> TerminalReadResponse:
         self._agent.send(TerminalRead(terminalId=self.terminalId).model_dump_json())
         try:
             resp = self._agent.recv()
@@ -53,9 +51,9 @@ class Terminal:
             terminalReadResp = TerminalReadResponse(**message)
             return terminalReadResp
         except Exception:
-            return Error(**message)
+            return TerminalReadResponse(**message)
 
-    def write_terminal(self, input: str) -> Union[TerminalWriteResponse, Error]:
+    def write_terminal(self, input: str) -> TerminalWriteResponse:
         self._agent.send(
             TerminalWrite(terminalId=self.terminalId, input=input).model_dump_json()
         )
@@ -70,4 +68,4 @@ class Terminal:
             terminalWriteResp = TerminalWriteResponse(**message)
             return terminalWriteResp
         except Exception:
-            return Error(**message)
+            return TerminalWriteResponse(**message)
