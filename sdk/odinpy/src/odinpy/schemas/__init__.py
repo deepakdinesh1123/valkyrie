@@ -1,6 +1,6 @@
 from .command import ExecuteCommand
 from .file import AddFile
-from .sandbox import Sandbox
+from .sandbox import Sandbox, SandboxConfig
 from .terminal import (
     NewTerminal,
     NewTerminalResponse,
@@ -31,7 +31,7 @@ __all__ = [
     "AddFile",
     # Sandbox related
     "Sandbox",
-    "SandboxConfig"
+    "SandboxConfig",
     # Error related
     "Error",
 ]
