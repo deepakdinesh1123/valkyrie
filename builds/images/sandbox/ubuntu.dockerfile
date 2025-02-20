@@ -53,4 +53,3 @@ USER valnix
 WORKDIR /home/valnix
 
 ENTRYPOINT [ "/home/valnix/bin/agent"]
-# CMD [ "/bin/sh", "-c", "sleep infinity" ]

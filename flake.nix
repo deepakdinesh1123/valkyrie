@@ -21,7 +21,12 @@
           arch = if arch == "x86_64" then "amd64" else "arm64";
           sha256 = "sha256-USv9xcTnGqG78ep3wEPPuidyL27nehNqjRioZDx+iQo=";
         };
-
+        ubuntu = nix2containerPkgs.nix2container.pullImage {
+          imageName = "ubuntu";
+          imageDigest = "sha256:72297848456d5d37d1262630108ab308d3e9ec7ed1c3286a32fe09856619a782"; 
+          arch = if arch == "x86_64" then "amd64" else "arm64";
+          sha256 = "sha256-H2ddt+ZxnnzrGBoTyAVMs/qkQuUHG+HelIgcqzVcjS4="; 
+        };
         odinDependencies = with pkgs; [
           sqlc
           go-migrate
@@ -46,7 +51,7 @@
           odinDockerImage = nix2containerPkgs.nix2container.buildImage {
             name = "odin";
             tag = "0.0.1";
-            fromImage = alpine;
+            fromImage = ubuntu;
             config = {
               Entrypoint = [ "${odin}/bin/odin" ];
             };

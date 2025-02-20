@@ -79,16 +79,21 @@ func DockerSandboxConstructor(ctx context.Context) (Container, error) {
 		return Container{}, fmt.Errorf("could not get docker client")
 	}
 
+	hostConfig := &container.HostConfig{
+		AutoRemove:  true,
+		Runtime:     envConfig.ODIN_CONTAINER_RUNTIME,
+		NetworkMode: "bridge",
+	}
+
+	if !envConfig.ODIN_COMPOSE_ENV {
+		hostConfig.Links = []string{envConfig.ODIN_STORE_CONTAINER}
+	}
+
 	createResp, err := dClient.ContainerCreate(ctx, &container.Config{
 		Image:      envConfig.ODIN_SANDBOX_DOCKER_IMAGE,
 		StopSignal: "SIGKILL",
 	},
-		&container.HostConfig{
-			AutoRemove:  true,
-			Runtime:     envConfig.ODIN_CONTAINER_RUNTIME,
-			NetworkMode: "bridge",
-			Links:       []string{envConfig.ODIN_STORE_CONTAINER},
-		},
+		hostConfig,
 		nil,
 		nil,
 		"",
