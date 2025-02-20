@@ -40,41 +40,76 @@
             "type": "string"
         },
         "shell": {
-            "$ref": "#/$defs/Shell",
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/Shell"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
             "description": "Shell type to use"
         },
         "nixShell": {
-            "default": "",
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
             "description": "Nix shell configuration",
-            "title": "Nixshell",
-            "type": "string"
+            "title": "Nixshell"
         },
         "nixFlake": {
-            "default": "",
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
             "description": "Nix flake configuration",
-            "title": "Nixflake",
-            "type": "string"
+            "title": "Nixflake"
         },
         "packages": {
+            "anyOf": [
+                {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
             "description": "Packages to install",
-            "items": {
-                "type": "string"
-            },
-            "title": "Packages",
-            "type": "array"
+            "title": "Packages"
         },
         "env": {
+            "anyOf": [
+                {
+                    "items": {
+                        "$ref": "#/$defs/EnvironmentVariable"
+                    },
+                    "type": "array"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
             "description": "Environment variables to be added",
-            "items": {
-                "$ref": "#/$defs/EnvironmentVariable"
-            },
-            "title": "Env",
-            "type": "array"
+            "title": "Env"
         }
     },
-    "required": [
-        "shell"
-    ],
     "title": "NewTerminal",
     "type": "object"
 }

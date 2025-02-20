@@ -36,7 +36,7 @@ func (s *Server) handleNewTerminal(ctx context.Context, c *websocket.Conn, data 
 
 	if err := json.Unmarshal(data, &nt); err != nil {
 		log.Printf("error parsing NewTerminal: %v", err)
-		resp = schemas.NewTerminalResponse{Success: false, Msg: "Invalid request"}
+		resp = schemas.NewTerminalResponse{Success: false, Msg: "Invalid request", TerminalID: ""}
 		SendJSONMessage(ctx, c, resp)
 		return
 	}
@@ -60,26 +60,26 @@ func (s *Server) handleTerminalRead(ctx context.Context, c *websocket.Conn, data
 
 	if err := json.Unmarshal(data, &tr); err != nil {
 		log.Printf("error parsing TerminalRead: %v", err)
-		resp = schemas.TerminalReadResponse{Success: false, Msg: "Invalid request"}
+		resp = schemas.TerminalReadResponse{Success: false, Msg: "Invalid request", TerminalID: tr.TerminalID}
 		SendJSONMessage(ctx, c, resp)
 		return
 	}
 
 	tty, ok := s.GetTerminal(tr.TerminalID)
 	if !ok {
-		resp = schemas.TerminalReadResponse{Success: false, Msg: "Terminal not found"}
+		resp = schemas.TerminalReadResponse{Success: false, Msg: "Terminal not found", TerminalID: tr.TerminalID}
 		SendJSONMessage(ctx, c, resp)
 		return
 	}
 
 	output, err := tty.Read()
 	if err != nil {
-		resp = schemas.TerminalReadResponse{Success: false, Msg: fmt.Sprintf("Read error: %v", err)}
+		resp = schemas.TerminalReadResponse{Success: false, Msg: fmt.Sprintf("Read error: %v", err), TerminalID: tr.TerminalID}
 		SendJSONMessage(ctx, c, resp)
 		return
 	}
 
-	resp = schemas.TerminalReadResponse{Success: true, Msg: "Read successful", Output: output}
+	resp = schemas.TerminalReadResponse{Success: true, Msg: "Read successful", Output: output, TerminalID: tr.TerminalID}
 	SendJSONMessage(ctx, c, resp)
 }
 
@@ -89,26 +89,26 @@ func (s *Server) handleTerminalWrite(ctx context.Context, c *websocket.Conn, dat
 
 	if err := json.Unmarshal(data, &tw); err != nil {
 		log.Printf("error parsing TerminalWrite: %v", err)
-		resp = schemas.TerminalWriteResponse{Success: false, Msg: "Invalid request"}
+		resp = schemas.TerminalWriteResponse{Success: false, Msg: "Invalid request", TerminalID: tw.TerminalID}
 		SendJSONMessage(ctx, c, resp)
 		return
 	}
 
 	tty, ok := s.GetTerminal(tw.TerminalID)
 	if !ok {
-		resp = schemas.TerminalWriteResponse{Success: false, Msg: "Terminal not found"}
+		resp = schemas.TerminalWriteResponse{Success: false, Msg: "Terminal not found", TerminalID: tw.TerminalID}
 		SendJSONMessage(ctx, c, resp)
 		return
 	}
 
 	err := tty.Write([]byte(tw.Input))
 	if err != nil {
-		resp = schemas.TerminalWriteResponse{Success: false, Msg: fmt.Sprintf("Write error: %v", err)}
+		resp = schemas.TerminalWriteResponse{Success: false, Msg: fmt.Sprintf("Write error: %v", err), TerminalID: tw.TerminalID}
 		SendJSONMessage(ctx, c, resp)
 		return
 	}
 
-	resp = schemas.TerminalWriteResponse{Success: true, Msg: "Write successful"}
+	resp = schemas.TerminalWriteResponse{Success: true, Msg: "Write successful", TerminalID: tw.TerminalID}
 	SendJSONMessage(ctx, c, resp)
 }
 
@@ -118,26 +118,26 @@ func (s *Server) handleTerminalClose(ctx context.Context, c *websocket.Conn, dat
 
 	if err := json.Unmarshal(data, &tc); err != nil {
 		log.Printf("error parsing TerminalClose: %v", err)
-		resp = schemas.TerminalCloseResponse{Success: false, Msg: "Invalid request"}
+		resp = schemas.TerminalCloseResponse{Success: false, Msg: "Invalid request", TerminalID: tc.TerminalID}
 		SendJSONMessage(ctx, c, resp)
 		return
 	}
 
 	tty, ok := s.GetTerminal(tc.TerminalID)
 	if !ok {
-		resp = schemas.TerminalCloseResponse{Success: false, Msg: "Terminal not found"}
+		resp = schemas.TerminalCloseResponse{Success: false, Msg: "Terminal not found", TerminalID: tc.TerminalID}
 		SendJSONMessage(ctx, c, resp)
 		return
 	}
 
 	err := tty.Close()
 	if err != nil {
-		resp = schemas.TerminalCloseResponse{Success: false, Msg: fmt.Sprintf("Close error: %v", err)}
+		resp = schemas.TerminalCloseResponse{Success: false, Msg: fmt.Sprintf("Close error: %v", err), TerminalID: tc.TerminalID}
 		SendJSONMessage(ctx, c, resp)
 		return
 	}
 
 	s.RemoveTerminal(tc.TerminalID)
-	resp = schemas.TerminalCloseResponse{Success: true, Msg: "Terminal closed"}
+	resp = schemas.TerminalCloseResponse{Success: true, Msg: "Terminal closed", TerminalID: tc.TerminalID}
 	SendJSONMessage(ctx, c, resp)
 }

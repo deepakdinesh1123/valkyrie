@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
-	"github.com/coder/websocket/wsjson"
 	"github.com/deepakdinesh1123/valkyrie/pkg/odin/api"
 	"github.com/go-chi/chi/v5"
 )
@@ -208,7 +207,7 @@ func (s *OdinServer) GetSandboxWS(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return fmt.Errorf("error marshaling message: %v", err)
 		}
-		return wsjson.Write(ctx, conn, string(msg))
+		return conn.Write(ctx, websocket.MessageText, msg)
 	}
 
 	for {

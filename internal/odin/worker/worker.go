@@ -271,6 +271,10 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 					case context.Canceled:
 						w.logger.Info().Msg("Worker: context canceled")
 						w.sandboxHandler.Cleanup(context.TODO())
+						err = w.queries.ClearSandboxes(context.TODO())
+						if err != nil {
+							w.logger.Err(err).Msg("error clearing sandboxes")
+						}
 						w.logger.Info().Msg("cleanup complete")
 						return nil
 					default:

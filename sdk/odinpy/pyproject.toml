@@ -1,7 +1,11 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
-name = "pyvalkyrie"
-version = "0.1.0"
-description = "Add your description here"
+name = "odinpy"
+version = "0.0.1"
+description = "Python library to interact with odin"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -58,5 +62,9 @@ section-order = ["future", "standard-library", "third-party", "local-folder"]
 
 [dependency-groups]
 dev = [
+    "ipykernel>=6.29.5",
     "pre-commit>=4.0.1",
 ]
+
+[tools.hatch.build.targets.wheel]
+packages = ["src/odinpy"]

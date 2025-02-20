@@ -8,7 +8,7 @@ COPY flake.lock /valkyrie
 RUN nix develop .#agent --command 'ls'
 
 COPY agent /valkyrie/agent
-COPY builds/package/nix/agent.nix /valkyrie/builds/package/nix/agent.nix
+COPY builds/nix/agent.nix /valkyrie/builds/nix/agent.nix
 
 RUN nix build .#agent
 

@@ -8,7 +8,7 @@ COPY flake.lock /valkyrie
 RUN nix develop --command 'ls'
 
 COPY cmd /valkyrie/cmd
-COPY build/package/nix/odin.nix /valkyrie/build/package/nix/odin.nix
+COPY builds/nix/odin.nix /valkyrie/builds/nix/odin.nix
 COPY internal /valkyrie/internal
 COPY pkg /valkyrie/pkg
 COPY go.mod /valkyrie

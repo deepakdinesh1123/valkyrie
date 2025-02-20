@@ -12,6 +12,7 @@ import (
 
 type Querier interface {
 	CancelJob(ctx context.Context, jobID int64) error
+	ClearSandboxes(ctx context.Context) error
 	CreateLanguage(ctx context.Context, arg CreateLanguageParams) (int64, error)
 	CreateLanguageVersion(ctx context.Context, arg CreateLanguageVersionParams) (int64, error)
 	CreateWorker(ctx context.Context, name string) (Worker, error)

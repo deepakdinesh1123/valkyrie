@@ -37,7 +37,7 @@ build-code-server:
 build-agent:
     {{build_tool}} build \
         -t {{agent_image}}:{{version}} \
-        -f builds/images/packages/dockerfiles/agent.dockerfile .
+        -f builds/images/packages/agent.dockerfile .
 
 # Docker-specific aliases
 docker-odin-worker: (build-worker "alpine")

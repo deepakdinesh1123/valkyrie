@@ -1,29 +1,16 @@
 {
     "description": "Read from terminal",
     "properties": {
-        "msgType": {
-            "default": "TerminalRead",
-            "title": "Msgtype",
-            "type": "string"
-        },
         "terminalId": {
             "description": "Unique identifier for the terminal session",
             "format": "uuid",
             "title": "Terminalid",
             "type": "string"
         },
-        "timeout": {
-            "anyOf": [
-                {
-                    "type": "number"
-                },
-                {
-                    "type": "null"
-                }
-            ],
-            "default": null,
-            "description": "Read timeout in seconds",
-            "title": "Timeout"
+        "msgType": {
+            "default": "TerminalRead",
+            "title": "Msgtype",
+            "type": "string"
         }
     },
     "required": [

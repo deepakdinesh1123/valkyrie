@@ -189,7 +189,7 @@ func (d *DockerSH) Create(ctx context.Context, wg *concurrency.SafeWaitGroup, sa
 	}
 
 	containerURL := fmt.Sprintf("http://%s", contInfo.NetworkSettings.Networks["bridge"].IPAddress)
-	sandboxAgentUrl := fmt.Sprintf("ws://%s:1618", contInfo.NetworkSettings.Networks["bridge"].IPAddress)
+	sandboxAgentUrl := fmt.Sprintf("ws://%s:1618/sandbox", contInfo.NetworkSettings.Networks["bridge"].IPAddress)
 	if d.envConfig.ODIN_ENVIRONMENT == "prod" {
 		// Handle prod url configuration here
 	}

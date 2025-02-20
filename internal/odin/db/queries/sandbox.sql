@@ -33,3 +33,6 @@ where sandbox_id = $1;
 update sandboxes set
 password = $2
 where sandbox_id = $1;
+
+-- name: ClearSandboxes :exec
+delete from sandboxes;

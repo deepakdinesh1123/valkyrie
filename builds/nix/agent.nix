@@ -11,7 +11,7 @@ buildGoModule rec {
   version = "0.0.1";
   vendorHash = "sha256-7jl532ORGhLAF04haXN4ekpOHeG30yftCdZxZaus43w=";
 
-  src = ../../../agent;
+  src = ../../agent;
 
   doCheck = false;
 

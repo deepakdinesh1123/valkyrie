@@ -29,7 +29,6 @@
           caddy
           pkg-config 
           just
-          websocat
         ] ++ lib.optionals stdenv.isLinux [
           nsjail
           gpgme
@@ -42,8 +41,8 @@
         ];
 
         packages = rec {
-          odin = pkgs.callPackage ./builds/package/nix/odin.nix { inherit pkgs; };
-          agent = pkgs.callPackage ./builds/package/nix/agent.nix { inherit pkgs; };
+          odin = pkgs.callPackage ./builds/nix/odin.nix { inherit pkgs; };
+          agent = pkgs.callPackage ./builds/nix/agent.nix { inherit pkgs; };
           odinDockerImage = nix2containerPkgs.nix2container.buildImage {
             name = "odin";
             tag = "0.0.1";
@@ -70,7 +69,7 @@
           odin = pkgs.mkShell {
             buildInputs = odinDependencies;
           };
-          python-sdk = import ./sdk/python/shell.nix { inherit pkgs; };
+          python-sdk = import ./sdk/odinpy/shell.nix { inherit pkgs; };
           js-sdk = import ./sdk/ts/shell.nix { inherit pkgs; };
           docs = import ./docs/shell.nix { inherit pkgs; };
           schemas = import ./schemas/shell.nix { inherit pkgs; };

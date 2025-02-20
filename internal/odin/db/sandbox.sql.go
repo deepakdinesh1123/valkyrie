@@ -12,6 +12,15 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const clearSandboxes = `-- name: ClearSandboxes :exec
+delete from sandboxes
+`
+
+func (q *Queries) ClearSandboxes(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, clearSandboxes)
+	return err
+}
+
 const getSandbox = `-- name: GetSandbox :one
 select sandbox_id, worker_id, started_at, created_at, updated_at, sandbox_url, sandbox_agent_url, password, config, details, current_state
 from sandboxes
