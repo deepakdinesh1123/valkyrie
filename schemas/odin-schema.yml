@@ -1285,10 +1285,6 @@ components:
             - gcc
             - make
             - git
-        shell_hook:
-          type: string
-          description: Shell script to be executed during sandbox initialization
-          example: echo 'Initializing sandbox...'
     Sandbox:
       type: object
       required:

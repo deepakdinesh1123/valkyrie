@@ -1,26 +1,5 @@
 {
     "$defs": {
-        "EnvironmentVariable": {
-            "description": "Environment variable configuration",
-            "properties": {
-                "key": {
-                    "description": "Environment variable name",
-                    "title": "Key",
-                    "type": "string"
-                },
-                "value": {
-                    "description": "Environment variable value",
-                    "title": "Value",
-                    "type": "string"
-                }
-            },
-            "required": [
-                "key",
-                "value"
-            ],
-            "title": "EnvironmentVariable",
-            "type": "object"
-        },
         "Shell": {
             "enum": [
                 "nix",
@@ -96,10 +75,10 @@
         "env": {
             "anyOf": [
                 {
-                    "items": {
-                        "$ref": "#/$defs/EnvironmentVariable"
+                    "additionalProperties": {
+                        "type": "string"
                     },
-                    "type": "array"
+                    "type": "object"
                 },
                 {
                     "type": "null"

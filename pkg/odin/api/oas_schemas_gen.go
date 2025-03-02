@@ -43,8 +43,6 @@ type CreateSandbox struct {
 	Languages []string `json:"languages"`
 	// List of system-level dependencies needed in the sandbox.
 	SystemDependencies []string `json:"system_dependencies"`
-	// Shell script to be executed during sandbox initialization.
-	ShellHook OptString `json:"shell_hook"`
 }
 
 // GetNixFlake returns the value of NixFlake.
@@ -62,11 +60,6 @@ func (s *CreateSandbox) GetSystemDependencies() []string {
 	return s.SystemDependencies
 }
 
-// GetShellHook returns the value of ShellHook.
-func (s *CreateSandbox) GetShellHook() OptString {
-	return s.ShellHook
-}
-
 // SetNixFlake sets the value of NixFlake.
 func (s *CreateSandbox) SetNixFlake(val OptString) {
 	s.NixFlake = val
@@ -80,11 +73,6 @@ func (s *CreateSandbox) SetLanguages(val []string) {
 // SetSystemDependencies sets the value of SystemDependencies.
 func (s *CreateSandbox) SetSystemDependencies(val []string) {
 	s.SystemDependencies = val
-}
-
-// SetShellHook sets the value of ShellHook.
-func (s *CreateSandbox) SetShellHook(val OptString) {
-	s.ShellHook = val
 }
 
 type CreateSandboxBadRequest Error

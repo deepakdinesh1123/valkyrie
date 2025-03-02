@@ -26,9 +26,11 @@ type EnvConfig struct {
 	ODIN_SERVER_HOST string `mapstructure:"ODIN_SERVER_HOST"`
 	ODIN_SERVER_PORT string `mapstructure:"ODIN_SERVER_PORT"`
 
-	ODIN_STORE_URL       string
-	ODIN_STORE_IMAGE     string `mapstructure:"ODIN_STORE_IMAGE"`
-	ODIN_STORE_CONTAINER string
+	ODIN_STORE_URL            string
+	ODIN_STORE_IMAGE          string `mapstructure:"ODIN_STORE_IMAGE"`
+	ODIN_STORE_CONTAINER      string
+	ODIN_SANDBOX_NIXPKGS_PATH string
+	ODIN_SANDBOX_NIXPKGS_REV  string `mapstructure:"ODIN_SANDBOX_NIXPKGS_REV"`
 
 	ODIN_CONTAINER_ENGINE       string `mapstructure:"ODIN_CONTAINER_ENGINE"`
 	ODIN_WORKER_EXECUTOR        string `mapstructure:"ODIN_WORKER_EXECUTOR"`
@@ -118,6 +120,7 @@ func GetEnvConfig() (*EnvConfig, error) {
 		}
 
 		envConfig.ODIN_WORKER_INFO_FILE = filepath.Join(envConfig.ODIN_INFO_DIR, "worker.json")
+		envConfig.ODIN_SANDBOX_NIXPKGS_PATH = fmt.Sprintf("/var/cache/nixpkgs/NixOS-nixpkgs-%s", envConfig.ODIN_SANDBOX_NIXPKGS_REV[:7])
 	})
 
 	if envConfig != nil {
@@ -143,6 +146,7 @@ func setDefaults() {
 	viper.SetDefault("ODIN_STORE_IMAGE", "odin_store:0.0.1")
 	viper.SetDefault("ODIN_STORE_NETWORK", "odin_store_network")
 	viper.SetDefault("ODIN_STORE_CONTAINER", "odin-store")
+	viper.SetDefault("ODIN_SANDBOX_NIXPKGS_REV", "b27ba4eb322d9d2bf2dc9ada9fd59442f50c8d7c") // pragma: allowlist secret
 
 	viper.SetDefault("ODIN_CONTAINER_ENGINE", "podman")
 	viper.SetDefault("ODIN_WORKER_EXECUTOR", "system")

@@ -20,19 +20,17 @@ func (r *ExecuteCommand) Marshal() ([]byte, error) {
 
 // Execute a command in the sandbox environment
 type ExecuteCommand struct {
-	// Command to execute
-	Command string `json:"command"`
-	// Environment variables
-	Env     []EnvironmentVariable `json:"env,omitempty"`
-	MsgType *string               `json:"msgType,omitempty"`
-	// ID of the sandbox to execute the command in
-	SandboxID int64 `json:"sandboxId"`
-	// Enable stderr
-	Stderr *bool `json:"stderr,omitempty"`
-	// Enable stdin
-	Stdin *bool `json:"stdin,omitempty"`
-	// Enable stdout
-	Stdout *bool `json:"stdout,omitempty"`
-	// Working directory for command execution
-	WorkDir *string `json:"workDir,omitempty"`
+	// Command                                                    
+	Command                                   string              `json:"command"`
+	// Environment variables                                      
+	Env                                       []map[string]string `json:"env,omitempty"`
+	MsgType                                   *string             `json:"msgType,omitempty"`
+	// Enable stderr                                              
+	Stderr                                    *bool               `json:"stderr,omitempty"`
+	// Enable stdin                                               
+	Stdin                                     *bool               `json:"stdin,omitempty"`
+	// Enable stdout                                              
+	Stdout                                    *bool               `json:"stdout,omitempty"`
+	// Working directory for command execution                    
+	WorkDir                                   *string             `json:"workDir,omitempty"`
 }

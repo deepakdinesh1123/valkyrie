@@ -1,26 +1,29 @@
 {
     "properties": {
+        "success": {
+            "title": "Success",
+            "type": "boolean"
+        },
+        "msg": {
+            "title": "Msg",
+            "type": "string"
+        },
+        "msgType": {
+            "default": "NewTerminalResponse",
+            "title": "Msgtype",
+            "type": "string"
+        },
         "terminalID": {
             "description": "Terminal ID",
             "format": "uuid",
             "title": "Terminalid",
             "type": "string"
-        },
-        "msg": {
-            "description": "Message",
-            "title": "Msg",
-            "type": "string"
-        },
-        "success": {
-            "description": "Success",
-            "title": "Success",
-            "type": "boolean"
         }
     },
     "required": [
-        "terminalID",
+        "success",
         "msg",
-        "success"
+        "terminalID"
     ],
     "title": "NewTerminalResponse",
     "type": "object"

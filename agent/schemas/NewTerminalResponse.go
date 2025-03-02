@@ -19,10 +19,9 @@ func (r *NewTerminalResponse) Marshal() ([]byte, error) {
 }
 
 type NewTerminalResponse struct {
-	// Message
-	Msg string `json:"msg"`
-	// Success
-	Success bool `json:"success"`
-	// Terminal ID
-	TerminalID string `json:"terminalID"`
+	Msg           string  `json:"msg"`
+	MsgType       *string `json:"msgType,omitempty"`
+	Success       bool    `json:"success"`
+	// Terminal ID        
+	TerminalID    string  `json:"terminalID"`
 }

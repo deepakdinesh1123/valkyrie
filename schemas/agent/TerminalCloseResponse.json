@@ -1,27 +1,30 @@
 {
     "description": "Response after closing a terminal session",
     "properties": {
+        "success": {
+            "title": "Success",
+            "type": "boolean"
+        },
+        "msg": {
+            "title": "Msg",
+            "type": "string"
+        },
         "terminalId": {
             "description": "Unique identifier for the terminal session",
             "format": "uuid",
             "title": "Terminalid",
             "type": "string"
         },
-        "msg": {
-            "description": "Message confirming terminal closure",
-            "title": "Msg",
+        "msgType": {
+            "default": "TerminalCloseResponse",
+            "title": "Msgtype",
             "type": "string"
-        },
-        "success": {
-            "description": "Success",
-            "title": "Success",
-            "type": "boolean"
         }
     },
     "required": [
-        "terminalId",
+        "success",
         "msg",
-        "success"
+        "terminalId"
     ],
     "title": "TerminalCloseResponse",
     "type": "object"

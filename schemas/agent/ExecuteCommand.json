@@ -1,42 +1,14 @@
 {
-    "$defs": {
-        "EnvironmentVariable": {
-            "description": "Environment variable configuration",
-            "properties": {
-                "key": {
-                    "description": "Environment variable name",
-                    "title": "Key",
-                    "type": "string"
-                },
-                "value": {
-                    "description": "Environment variable value",
-                    "title": "Value",
-                    "type": "string"
-                }
-            },
-            "required": [
-                "key",
-                "value"
-            ],
-            "title": "EnvironmentVariable",
-            "type": "object"
-        }
-    },
     "description": "Execute a command in the sandbox environment",
     "properties": {
+        "command": {
+            "description": "Command",
+            "title": "Command",
+            "type": "string"
+        },
         "msgType": {
             "default": "ExecuteCommand",
             "title": "Msgtype",
-            "type": "string"
-        },
-        "sandboxId": {
-            "description": "ID of the sandbox to execute the command in",
-            "title": "Sandboxid",
-            "type": "integer"
-        },
-        "command": {
-            "description": "Command to execute",
-            "title": "Command",
             "type": "string"
         },
         "stdin": {
@@ -66,14 +38,16 @@
         "env": {
             "description": "Environment variables",
             "items": {
-                "$ref": "#/$defs/EnvironmentVariable"
+                "additionalProperties": {
+                    "type": "string"
+                },
+                "type": "object"
             },
             "title": "Env",
             "type": "array"
         }
     },
     "required": [
-        "sandboxId",
         "command"
     ],
     "title": "ExecuteCommand",

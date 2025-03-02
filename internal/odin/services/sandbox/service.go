@@ -72,8 +72,14 @@ func (s *SandboxService) generateFlake(sandboxReq *api.OptCreateSandbox) (string
 		return "", fmt.Errorf("failed to parse flake template: %w", err)
 	}
 
+	flakeConfig := FlakeConfig{
+		NIXPKGS_URL:        fmt.Sprintf("path:%s", s.envConfig.ODIN_SANDBOX_NIXPKGS_PATH),
+		SystemDependencies: sandboxReq.Value.SystemDependencies,
+		Languages:          sandboxReq.Value.Languages,
+	}
+
 	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, sandboxReq.Value); err != nil {
+	if err := tmpl.Execute(&buf, flakeConfig); err != nil {
 		return "", fmt.Errorf("failed to execute flake template: %w", err)
 	}
 

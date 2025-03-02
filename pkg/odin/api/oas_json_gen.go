@@ -259,19 +259,12 @@ func (s *CreateSandbox) encodeFields(e *jx.Encoder) {
 			e.ArrEnd()
 		}
 	}
-	{
-		if s.ShellHook.Set {
-			e.FieldStart("shell_hook")
-			s.ShellHook.Encode(e)
-		}
-	}
 }
 
-var jsonFieldsNameOfCreateSandbox = [4]string{
+var jsonFieldsNameOfCreateSandbox = [3]string{
 	0: "nix_flake",
 	1: "languages",
 	2: "system_dependencies",
-	3: "shell_hook",
 }
 
 // Decode decodes CreateSandbox from json.
@@ -329,16 +322,6 @@ func (s *CreateSandbox) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"system_dependencies\"")
-			}
-		case "shell_hook":
-			if err := func() error {
-				s.ShellHook.Reset()
-				if err := s.ShellHook.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"shell_hook\"")
 			}
 		default:
 			return d.Skip()

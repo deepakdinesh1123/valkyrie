@@ -20,10 +20,9 @@ func (r *TerminalWriteResponse) Marshal() ([]byte, error) {
 
 // Response after writing to terminal
 type TerminalWriteResponse struct {
-	// Message confirming write operation               
-	Msg                                          string `json:"msg"`
-	// Success                                          
-	Success                                      bool   `json:"success"`
-	// Unique identifier for the terminal session       
-	TerminalID                                   string `json:"terminalId"`
+	Msg                                          string  `json:"msg"`
+	MsgType                                      *string `json:"msgType,omitempty"`
+	Success                                      bool    `json:"success"`
+	// Unique identifier for the terminal session        
+	TerminalID                                   string  `json:"terminalId"`
 }

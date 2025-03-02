@@ -1,6 +1,21 @@
-from .command import ExecuteCommand
+from .command import (
+    CommandReadOutput,
+    CommandReadOutputResponse,
+    CommandTerminate,
+    CommandTerminateResponse,
+    CommandWriteInput,
+    CommandWriteInputResponse,
+    ExecuteCommand,
+    ExecuteCommandResponse,
+)
 from .error import Error
-from .file import AddFile
+from .file import UpsertFile
+from .packages import (
+    InstallNixPackage,
+    InstallNixPackageResponse,
+    UninstallNixPackage,
+    UninstallNixPackageResponse,
+)
 from .sandbox import Sandbox, SandboxConfig
 from .terminal import (
     NewTerminal,
@@ -28,11 +43,22 @@ __all__ = [
     "TerminalCloseResponse",
     # Command related
     "ExecuteCommand",
+    "ExecuteCommandResponse",
+    "CommandTerminate",
+    "CommandTerminateResponse",
+    "CommandReadOutput",
+    "CommandReadOutputResponse",
+    "CommandWriteInput",
+    "CommandWriteInputResponse",
     # File related
-    "AddFile",
+    "UpsertFile",
     # Sandbox related
     "Sandbox",
     "SandboxConfig",
     # Error related
     "Error",
+    "InstallNixPackage",
+    "InstallNixPackageResponse",
+    "UninstallNixPackage",
+    "UninstallNixPackageResponse",
 ]

@@ -20,14 +20,13 @@ func (r *TerminalReadResponse) Marshal() ([]byte, error) {
 
 // Response after reading from terminal
 type TerminalReadResponse struct {
-	// Indicates if the end of the stream has been reached       
-	EOF                                                   *bool  `json:"eof,omitempty"`
-	// optional message                                          
-	Msg                                                   string `json:"msg"`
-	// Content read from the terminal                            
-	Output                                                string `json:"output"`
-	// Success                                                   
-	Success                                               bool   `json:"success"`
-	// Unique identifier for the terminal session                
-	TerminalID                                            string `json:"terminalId"`
+	// Indicates if the end of the stream has been reached        
+	EOF                                                   *bool   `json:"eof,omitempty"`
+	Msg                                                   string  `json:"msg"`
+	MsgType                                               *string `json:"msgType,omitempty"`
+	// Content read from the terminal                             
+	Output                                                string  `json:"output"`
+	Success                                               bool    `json:"success"`
+	// Unique identifier for the terminal session                 
+	TerminalID                                            string  `json:"terminalId"`
 }

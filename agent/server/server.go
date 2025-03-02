@@ -2,12 +2,14 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"sync"
 
 	"github.com/coder/websocket"
 	"github.com/deepakdinesh1123/valkyrie/agent/command"
+	"github.com/deepakdinesh1123/valkyrie/agent/schemas"
 	"github.com/deepakdinesh1123/valkyrie/agent/terminal"
 )
 
@@ -40,7 +42,7 @@ func (s *Server) handleSandbox(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if c.Subprotocol() != "sandbox" {
-		c.Close(websocket.StatusPolicyViolation, "client must speak the terminal subprotocol")
+		c.Close(websocket.StatusPolicyViolation, "client must speak the sandbox subprotocol")
 		return
 	}
 
@@ -70,8 +72,25 @@ func (s *Server) handleSandbox(w http.ResponseWriter, r *http.Request) {
 			s.handleTerminalWrite(ctx, c, data)
 		case "TerminalClose":
 			s.handleTerminalClose(ctx, c, data)
+		case "ExecuteCommand":
+			s.handleExecuteCommand(ctx, c, data)
+		case "CommandReadOutput":
+			s.handleCommandReadOutput(ctx, c, data)
+		case "CommandWriteInput":
+			s.handleCommandWriteInput(ctx, c, data)
+		case "CommandTerminate":
+			s.handleCommandTerminate(ctx, c, data)
+		case "InstallNixPackage":
+			s.handleInstallNixPackage(ctx, c, data)
+		case "UninstallNixPackage":
+			s.handleUninstallNixPackage(ctx, c, data)
 		default:
 			log.Printf("unknown message type: %v", msg.MsgType)
+
+			response := schemas.Error{
+				Message: fmt.Sprintf("Unrecognized message type: %s", msg.MsgType),
+			}
+			SendJSONMessage(ctx, c, response)
 		}
 	}
 }

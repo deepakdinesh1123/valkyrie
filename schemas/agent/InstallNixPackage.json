@@ -1,0 +1,25 @@
+{
+    "properties": {
+        "msgType": {
+            "default": "InstallNixPackage",
+            "title": "Msgtype",
+            "type": "string"
+        },
+        "pkgName": {
+            "description": "Nix package to install",
+            "title": "Pkgname",
+            "type": "string"
+        },
+        "channel": {
+            "default": "nixpkgs",
+            "description": "Name of the channel",
+            "title": "Channel",
+            "type": "string"
+        }
+    },
+    "required": [
+        "pkgName"
+    ],
+    "title": "InstallNixPackage",
+    "type": "object"
+}

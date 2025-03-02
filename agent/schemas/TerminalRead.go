@@ -20,9 +20,7 @@ func (r *TerminalRead) Marshal() ([]byte, error) {
 
 // Read from terminal
 type TerminalRead struct {
-	MsgType                                      *string  `json:"msgType,omitempty"`
-	// Unique identifier for the terminal session         
-	TerminalID                                   string   `json:"terminalId"`
-	// Read timeout in seconds                            
-	Timeout                                      *float64 `json:"timeout"`
+	MsgType                                      *string `json:"msgType,omitempty"`
+	// Unique identifier for the terminal session        
+	TerminalID                                   string  `json:"terminalId"`
 }

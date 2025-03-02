@@ -57,19 +57,11 @@
             };
           };
         };
-
         defaultPackage = packages.odin;
-
-        docsDependencies = with pkgs; [
-          python312Packages.mkdocs-material
-          redocly
-          quicktype
-          uv
-        ];
 
         devShells = {
           default = pkgs.mkShell {
-            buildInputs = odinDependencies ++ import ./frontend/deps.nix { inherit pkgs; };
+            buildInputs = odinDependencies;
           };
           odin = pkgs.mkShell {
             buildInputs = odinDependencies;

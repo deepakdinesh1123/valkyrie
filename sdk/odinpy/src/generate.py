@@ -1,10 +1,21 @@
 import json
+import os
+import shutil
 
 from pathlib import Path
 
-from odinpy.schemas.command import ExecuteCommand
-from odinpy.schemas.file import AddFile
-from odinpy.schemas.terminal import (
+from odinpy.schemas import (
+    CommandReadOutput,
+    CommandReadOutputResponse,
+    CommandTerminate,
+    CommandTerminateResponse,
+    CommandWriteInput,
+    CommandWriteInputResponse,
+    Error,
+    ExecuteCommand,
+    ExecuteCommandResponse,
+    InstallNixPackage,
+    InstallNixPackageResponse,
     NewTerminal,
     NewTerminalResponse,
     TerminalClose,
@@ -13,6 +24,9 @@ from odinpy.schemas.terminal import (
     TerminalReadResponse,
     TerminalWrite,
     TerminalWriteResponse,
+    UninstallNixPackage,
+    UninstallNixPackageResponse,
+    UpsertFile,
 )
 from pydantic import BaseModel
 
@@ -44,9 +58,20 @@ def generate():
     """Generate all schemas"""
     schemas_dir = Path(SCHEMAS_DIR)
 
+    shutil.rmtree(schemas_dir)
+    os.makedirs(schemas_dir, exist_ok=True)
+
     models = [
+        Error,
         ExecuteCommand,
-        AddFile,
+        ExecuteCommandResponse,
+        CommandTerminate,
+        CommandTerminateResponse,
+        CommandReadOutput,
+        CommandReadOutputResponse,
+        CommandWriteInput,
+        CommandWriteInputResponse,
+        UpsertFile,
         NewTerminal,
         NewTerminalResponse,
         TerminalWrite,
@@ -55,6 +80,10 @@ def generate():
         TerminalReadResponse,
         TerminalClose,
         TerminalCloseResponse,
+        InstallNixPackage,
+        InstallNixPackageResponse,
+        UninstallNixPackage,
+        UninstallNixPackageResponse,
     ]
 
     for model in models:

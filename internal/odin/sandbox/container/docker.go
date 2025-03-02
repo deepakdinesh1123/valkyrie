@@ -10,6 +10,7 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db/jsonschema"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/pool"
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -81,12 +82,34 @@ func (d *DockerSH) Create(ctx context.Context, wg *concurrency.SafeWaitGroup, sa
 		}
 	}
 
+	var cont *puddle.Resource[pool.Container]
 	cont, err := d.containerPool.Acquire(ctx)
 	if err != nil {
 		handleError(err, "could not acquire container")
 		return
 	}
 	go d.containerPool.CreateResource(ctx)
+
+	var contInfo types.ContainerJSON
+	contInfo, err = d.client.ContainerInspect(ctx, cont.Value().ID)
+	if err != nil {
+		if client.IsErrNotFound(err) {
+			// Container not found, acquire a new container from the pool
+			cont, err = d.containerPool.Acquire(ctx)
+			if err != nil {
+				handleError(err, "could not acquire container after not found")
+				return
+			}
+			contInfo, err = d.client.ContainerInspect(ctx, cont.Value().ID)
+			if err != nil {
+				handleError(err, "error getting container config after re-acquiring")
+				return
+			}
+		} else {
+			handleError(err, "error getting container config")
+			return
+		}
+	}
 
 	// CodeServerConfig, err := sandbox.GetCodeServerConfig()
 	// if err != nil {
@@ -147,7 +170,7 @@ func (d *DockerSH) Create(ctx context.Context, wg *concurrency.SafeWaitGroup, sa
 				Cmd: []string{
 					"/bin/sh",
 					"-c",
-					fmt.Sprintf("echo \"%s\" >> /home/valnix/flake.nix", sandBox.Config.Flake),
+					fmt.Sprintf("rm /home/valnix/work/flake.nix && echo \"%s\" >> /home/valnix/work/flake.nix", sandBox.Config.Flake),
 				},
 			},
 		)
@@ -164,10 +187,11 @@ func (d *DockerSH) Create(ctx context.Context, wg *concurrency.SafeWaitGroup, sa
 				AttachStdout: true,
 				Cmd: []string{
 					"nix",
-					"develop",
-					"--command",
-					"ls",
+					"profile",
+					"install",
+					".",
 				},
+				WorkingDir: "/home/valnix",
 			},
 		)
 		if err != nil {
@@ -180,12 +204,6 @@ func (d *DockerSH) Create(ctx context.Context, wg *concurrency.SafeWaitGroup, sa
 			d.logger.Err(err).Msgf("error evaluating flake in sandbox %s: %v", cont.Value().Name, err)
 			return
 		}
-	}
-
-	contInfo, err := d.client.ContainerInspect(ctx, cont.Value().ID)
-	if err != nil {
-		handleError(err, "error getting container config")
-		return
 	}
 
 	containerURL := fmt.Sprintf("http://%s", contInfo.NetworkSettings.Networks["bridge"].IPAddress)

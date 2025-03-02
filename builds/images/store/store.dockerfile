@@ -1,5 +1,5 @@
-ARG NIX_CHANNEL=24.11
 ARG UBUNTU_IMAGE=ubuntu:24.04
+ARG NIXPKGS_REV=b27ba4eb322d9d2bf2dc9ada9fd59442f50c8d7c
 
 FROM ${UBUNTU_IMAGE}
 
@@ -19,19 +19,16 @@ RUN apt update && \
 USER valnix
 WORKDIR /home/valnix/
 
-# Install Nixsource
-RUN curl -L https://nixos.org/nix/install -o /home/valnix/install_nix.sh && \
-    chmod +x install_nix.sh && \
-    sh install_nix.sh --no-daemon && \
+COPY --chown=1024:1024 hack/sandbox/install_nix.bash /tmp/install_nix.bash
+
+# Install Nix
+RUN chmod +x /tmp/install_nix.bash && \
+    bash /tmp/install_nix.bash && \
     # Cleanup the install script
-    rm -f install_nix.sh
+    rm -f /tmp/install_nix.bash
 
 # Ensure the Nix binaries are available in PATH
 ENV PATH="/home/valnix/.nix-profile/bin:${PATH}"
-
-ARG NIX_CHANNEL
-RUN nix-channel --remove nixpkgs
-RUN nix-channel --add https://nixos.org/channels/nixos-${NIX_CHANNEL} nixpkgs && nix-channel --update
 
 RUN nix-env -iA nixpkgs.nix-serve-ng
 RUN nix-store --generate-binary-cache-key odin-store cache-priv-key.pem cache-pub-key.pem && \

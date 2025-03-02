@@ -4,12 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-
-class EnvironmentVariable(BaseModel):
-    """Environment variable configuration"""
-
-    key: str = Field(..., description="Environment variable name")
-    value: str = Field(..., description="Environment variable value")
+from .base import ResponseBase
 
 
 class Shell(str, Enum):
@@ -29,15 +24,14 @@ class NewTerminal(BaseModel):
     packages: Optional[List[str]] = Field(
         default=None, description="Packages to install"
     )
-    env: Optional[List[EnvironmentVariable]] = Field(
+    env: Optional[dict[str, str]] = Field(
         default=None, description="Environment variables to be added"
     )
 
 
-class NewTerminalResponse(BaseModel):
+class NewTerminalResponse(ResponseBase):
+    msgType: str = Field(default="NewTerminalResponse", frozen=True)
     terminalID: UUID = Field(description="Terminal ID")
-    msg: str = Field(..., description="Message")
-    success: bool = Field(description="Success")
 
 
 class TerminalBaseModel(BaseModel):
@@ -55,11 +49,10 @@ class TerminalWrite(TerminalBaseModel):
     input: str = Field(..., description="input to write to terminal")
 
 
-class TerminalWriteResponse(TerminalBaseModel):
+class TerminalWriteResponse(TerminalBaseModel, ResponseBase):
     """Response after writing to terminal"""
 
-    msg: str = Field(..., description="Message confirming write operation")
-    success: bool = Field(description="Success")
+    msgType: str = Field(default="TerminalWriteResponse", frozen=True)
 
 
 class TerminalRead(TerminalBaseModel):
@@ -68,15 +61,14 @@ class TerminalRead(TerminalBaseModel):
     msgType: str = Field(default="TerminalRead", frozen=True)
 
 
-class TerminalReadResponse(TerminalBaseModel):
+class TerminalReadResponse(TerminalBaseModel, ResponseBase):
     """Response after reading from terminal"""
 
+    msgType: str = Field(default="TerminalReadResponse", frozen=True)
     output: str = Field(..., description="Content read from the terminal")
     eof: bool = Field(
         default=False, description="Indicates if the end of the stream has been reached"
     )
-    success: bool = Field(description="Success")
-    msg: str = Field(..., description="optional message")
 
 
 class TerminalClose(TerminalBaseModel):
@@ -85,8 +77,7 @@ class TerminalClose(TerminalBaseModel):
     msgType: str = Field(default="TerminalClose", frozen=True)
 
 
-class TerminalCloseResponse(TerminalBaseModel):
+class TerminalCloseResponse(TerminalBaseModel, ResponseBase):
     """Response after closing a terminal session"""
 
-    msg: str = Field(..., description="Message confirming terminal closure")
-    success: bool = Field(description="Success")
+    msgType: str = Field(default="TerminalCloseResponse", frozen=True)

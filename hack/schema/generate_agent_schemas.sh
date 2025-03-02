@@ -10,6 +10,9 @@ LANGUAGE="$1"
 SCHEMA_FOLDER="$2"
 TARGET_FOLDER="$3"
 
+rm -rf "$TARGET_FOLDER"
+mkdir -p "$TARGET_FOLDER"
+
 for file in "$SCHEMA_FOLDER"/*.json; do
     # Check if there are JSON files in the directory
     if [ ! -e "$file" ]; then
@@ -34,4 +37,3 @@ for file in "$SCHEMA_FOLDER"/*.json; do
 
     
 done
-

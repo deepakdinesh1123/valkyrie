@@ -1,0 +1,29 @@
+{
+    "properties": {
+        "success": {
+            "title": "Success",
+            "type": "boolean"
+        },
+        "msg": {
+            "title": "Msg",
+            "type": "string"
+        },
+        "commandId": {
+            "description": "Command ID",
+            "title": "Commandid",
+            "type": "string"
+        },
+        "msgType": {
+            "default": "CommandWriteInputResponse",
+            "title": "Msgtype",
+            "type": "string"
+        }
+    },
+    "required": [
+        "success",
+        "msg",
+        "commandId"
+    ],
+    "title": "CommandWriteInputResponse",
+    "type": "object"
+}
