@@ -11,6 +11,8 @@ from odinpy.schemas import (
     CommandTerminateResponse,
     CommandWriteInput,
     CommandWriteInputResponse,
+    DeleteFile,
+    DeleteFileResponse,
     Error,
     ExecuteCommand,
     ExecuteCommandResponse,
@@ -18,6 +20,8 @@ from odinpy.schemas import (
     InstallNixPackageResponse,
     NewTerminal,
     NewTerminalResponse,
+    ReadFile,
+    ReadFileResponse,
     TerminalClose,
     TerminalCloseResponse,
     TerminalRead,
@@ -27,6 +31,7 @@ from odinpy.schemas import (
     UninstallNixPackage,
     UninstallNixPackageResponse,
     UpsertFile,
+    UpsertFileResponse,
 )
 from pydantic import BaseModel
 
@@ -72,6 +77,11 @@ def generate():
         CommandWriteInput,
         CommandWriteInputResponse,
         UpsertFile,
+        UpsertFileResponse,
+        ReadFile,
+        ReadFileResponse,
+        DeleteFile,
+        DeleteFileResponse,
         NewTerminal,
         NewTerminalResponse,
         TerminalWrite,

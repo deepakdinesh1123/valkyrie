@@ -9,10 +9,6 @@ ARG NIX_CHANNEL
 RUN nix-channel --remove nixpkgs
 RUN nix-channel --add https://nixos.org/channels/nixos-${NIX_CHANNEL} nixpkgs && nix-channel --update
 
-COPY builds/base.go.nix /tmp/go/shell.nix
-WORKDIR /tmp/go
-RUN nix-shell --run 'exit'
-
 WORKDIR /valkyrie
 COPY flake.nix /valkyrie
 COPY flake.lock /valkyrie

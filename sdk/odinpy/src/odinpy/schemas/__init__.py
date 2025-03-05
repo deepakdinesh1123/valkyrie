@@ -9,7 +9,14 @@ from .command import (
     ExecuteCommandResponse,
 )
 from .error import Error
-from .file import UpsertFile
+from .file import (
+    DeleteFile,
+    DeleteFileResponse,
+    ReadFile,
+    ReadFileResponse,
+    UpsertFile,
+    UpsertFileResponse,
+)
 from .packages import (
     InstallNixPackage,
     InstallNixPackageResponse,
@@ -52,6 +59,11 @@ __all__ = [
     "CommandWriteInputResponse",
     # File related
     "UpsertFile",
+    "DeleteFile",
+    "ReadFile",
+    "UpsertFileResponse",
+    "DeleteFileResponse",
+    "ReadFileResponse",
     # Sandbox related
     "Sandbox",
     "SandboxConfig",

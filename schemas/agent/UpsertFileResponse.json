@@ -1,0 +1,37 @@
+{
+    "description": "Represents a response to a file upsert request in a sandbox.",
+    "properties": {
+        "success": {
+            "title": "Success",
+            "type": "boolean"
+        },
+        "msg": {
+            "title": "Msg",
+            "type": "string"
+        },
+        "msgType": {
+            "default": "UpsertFileResponse",
+            "description": "Type of the message",
+            "title": "Msgtype",
+            "type": "string"
+        },
+        "fileName": {
+            "description": "Name of the file that was upserted",
+            "title": "Filename",
+            "type": "string"
+        },
+        "path": {
+            "description": "Path where the file was upserted",
+            "title": "Path",
+            "type": "string"
+        }
+    },
+    "required": [
+        "success",
+        "msg",
+        "fileName",
+        "path"
+    ],
+    "title": "UpsertFileResponse",
+    "type": "object"
+}

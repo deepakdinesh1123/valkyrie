@@ -18,14 +18,9 @@ build-worker base_os="alpine":
 # Build sandbox image
 build-sandbox:
     {{build_tool}} build \
+        --build-arg NIX_CACHE_PUBLIC_KEY=$(cat "$HOME/.odin/store/setup/cache-pub-key.pem") \
         -t {{sandbox_image}}:{{version}}-ubuntu \
         -f builds/images/sandbox/ubuntu.dockerfile .
-
-# Build store image
-build-store:
-    {{build_tool}} build \
-        -t {{store_image}}:{{version}} \
-        -f builds/images/store/store.dockerfile .
 
 # Build code-server image
 build-code-server:
@@ -60,3 +55,21 @@ podman-code-server: build-code-server
     just --set build_tool "podman" build-code-server
 podman-odin-agent: build-agent
     just --set build_tool "podman" build-agent
+
+
+build-setup-store:
+    {{build_tool}} build -f builds/images/store/build.dockerfile -t odin_setup_store . 
+setup-store:
+	{{build_tool}} run --rm -v $HOME/.odin/store/nix:/nix -v $HOME/.odin/store/setup:/tmp/setup odin_setup_store
+
+# Build store image
+build-store:
+	export NIX_CHANNELS_ENVIRONMENT=$(grep -oP '(?<=^NIX_CHANNELS_ENVIRONMENT=).*' "$HOME/.odin/store/setup/.env"); \
+	export NIX_USER_ENVIRONMENT=$(grep -oP '(?<=^NIX_USER_ENVIRONMENT=).*' "$HOME/.odin/store/setup/.env"); \
+	{{build_tool}} build \
+		--build-arg NIX_CHANNELS_ENVIRONMENT="$NIX_CHANNELS_ENVIRONMENT" \
+		--build-arg NIX_USER_ENVIRONMENT="$NIX_USER_ENVIRONMENT" \
+		-t {{store_image}}:{{version}} \
+		-f builds/images/store/store.dockerfile .
+run-store:
+   {{build_tool}} run -d -p 5000:0.0.0.0:5000 -v $HOME/.odin/store/nix:/nix -v $HOME/.odin/store/setup:/tmp/setup {{store_image}}:{{version}}

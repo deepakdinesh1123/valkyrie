@@ -1,11 +1,9 @@
 ARG AGENT_BUILDER=odin_agent:0.0.1
 ARG UBUNTU_IMAGE=ubuntu:24.04
-ARG ODIN_STORE_BUILDER=odin_store:0.0.1
 ARG NIXPKGS_REV=b27ba4eb322d9d2bf2dc9ada9fd59442f50c8d7c
+ARG NIX_CACHE_PUBLIC_KEY
 
 FROM ${AGENT_BUILDER} AS agent
-
-FROM ${ODIN_STORE_BUILDER} AS odin_store
 
 FROM ${UBUNTU_IMAGE}
 
@@ -49,17 +47,17 @@ ENV PATH="/home/valnix/.nix-profile/bin:${PATH}"
 COPY --from=agent /tmp/nix-store-closure /tmp/agent/closure
 COPY --from=agent /valkyrie/result /home/valnix
 
+COPY --chown=1024:1024 configs/nix/flake.nix /home/valnix/flake.nix
+RUN nix profile install . --extra-experimental-features 'nix-command flakes'
+
 USER root
 COPY configs/nix/nix.conf /etc/nix/nix.conf
-COPY --from=odin_store /home/valnix/cache-pub-key.pem /tmp/cache-pub-key.pem
-RUN echo "trusted-public-keys = $(cat /tmp/cache-pub-key.pem) cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=" >> /etc/nix/nix.conf
+ARG NIX_CACHE_PUBLIC_KEY
+RUN echo "trusted-public-keys = ${NIX_CACHE_PUBLIC_KEY} cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=" >> /etc/nix/nix.conf
 RUN chown -R valnix:valnix /tmp/agent/closure
 RUN cp -a /tmp/agent/closure/* /nix/store
 
 USER valnix
-WORKDIR /home/valnix/work
-
-COPY --chown=1024:1024 configs/nix/flake.nix /home/valnix/work/flake.nix
-RUN nix profile install .
+WORKDIR /home/valnix/
 
 ENTRYPOINT [ "/home/valnix/bin/agent"]

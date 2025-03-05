@@ -20,6 +20,7 @@
           name = "Odin-Sandbox-Environment";
           paths = with pkgs; [
             vim
+            gnupatch
           ];
         };
       }

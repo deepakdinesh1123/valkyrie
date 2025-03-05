@@ -84,6 +84,18 @@ func (s *Server) handleSandbox(w http.ResponseWriter, r *http.Request) {
 			s.handleInstallNixPackage(ctx, c, data)
 		case "UninstallNixPackage":
 			s.handleUninstallNixPackage(ctx, c, data)
+		case "UpsertFile":
+			s.handleUpsertFile(ctx, c, data)
+		case "ReadFile":
+			s.handleReadFile(ctx, c, data)
+		case "DeleteFile":
+			s.handleDeleteFile(ctx, c, data)
+		case "UpsertDirectory":
+			s.handleUpsertDirectory(ctx, c, data)
+		case "ReadDirectory":
+			s.handleReadDirectory(ctx, c, data)
+		case "DeleteDirectory":
+			s.handleDeleteDirectory(ctx, c, data)
 		default:
 			log.Printf("unknown message type: %v", msg.MsgType)
 

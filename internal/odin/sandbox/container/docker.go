@@ -3,6 +3,7 @@ package container
 import (
 	"context"
 	"fmt"
+	"os"
 	"sync"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/concurrency"
@@ -12,6 +13,7 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/pool"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/puddle/v2"
@@ -242,12 +244,28 @@ func (d *DockerSH) Cleanup(ctx context.Context) error {
 }
 
 func (d *DockerSH) StartOdinStore(ctx context.Context, storeImage, storeContainerName, containerRuntime string) error {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("could not get user homeDir: %v", err)
+	}
 	contInfo, err := d.client.ContainerInspect(ctx, storeContainerName)
 	if err != nil {
 		if client.IsErrNotFound(err) { // Container doesn't exist, create it
 			_, err = d.client.ContainerCreate(ctx, &container.Config{Image: storeImage}, &container.HostConfig{
 				Runtime:     containerRuntime,
 				NetworkMode: "bridge",
+				Mounts: []mount.Mount{
+					{
+						Type:   mount.TypeBind,
+						Source: fmt.Sprintf("%s/.odin/store/nix", homeDir),
+						Target: "/nix",
+					},
+					{
+						Type:   mount.TypeBind,
+						Source: fmt.Sprintf("%s/.odin/store/setup", homeDir),
+						Target: "/tmp/setup",
+					},
+				},
 			}, nil, nil, storeContainerName)
 			if err != nil {
 				return fmt.Errorf("error creating odin store container: %w", err)
