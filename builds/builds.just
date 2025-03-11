@@ -73,4 +73,16 @@ build-store:
 		-t {{store_image}}:{{version}} \
 		-f builds/images/store/store.dockerfile .
 run-store:
-   {{build_tool}} run -d -p 5000:0.0.0.0:5000 -v $HOME/.odin/store/nix:/nix -v $HOME/.odin/store/setup:/tmp/setup {{store_image}}:{{version}}
+    #!/bin/bash
+    # Extract environment variables from the .env file
+    NIX_CHANNELS_ENVIRONMENT=$(grep -oP '(?<=^NIX_CHANNELS_ENVIRONMENT=).*' "$HOME/.odin/store/setup/.env")
+    NIX_USER_ENVIRONMENT=$(grep -oP '(?<=^NIX_USER_ENVIRONMENT=).*' "$HOME/.odin/store/setup/.env")
+
+    # Execute the build tool with the appropriate parameters
+    {{build_tool}} run --rm -it \
+        -p 5000:5000 \
+        -v "$HOME/.odin/store/nix:/nix" \
+        -v "$HOME/.odin/store/setup:/tmp/setup" \
+        -e NIX_CHANNELS_ENVIRONMENT="$NIX_CHANNELS_ENVIRONMENT" \
+        -e NIX_USER_ENVIRONMENT="$NIX_USER_ENVIRONMENT" \
+        {{store_image}}:{{version}}

@@ -104,15 +104,18 @@ func DockerSandboxConstructor(ctx context.Context) (Container, error) {
 		"",
 	)
 	if err != nil {
+		fmt.Printf("error creating container %v\n", err)
 		return Container{}, err
 	}
 	cont.ID = createResp.ID
 	err = dClient.ContainerStart(ctx, createResp.ID, container.StartOptions{})
 	if err != nil {
+		fmt.Printf("error starting container %v\n", err)
 		return Container{}, err
 	}
 	contInfo, err := dClient.ContainerInspect(ctx, createResp.ID)
 	if err != nil {
+		fmt.Printf("error inspecting container %v\n", err)
 		return Container{}, err
 	}
 	cont.Name = contInfo.Name

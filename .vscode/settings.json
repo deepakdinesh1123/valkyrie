@@ -11,7 +11,7 @@
     "editor.tabSize": 2
   },
   "go.buildFlags": [
-    "-tags=all"
+    "-tags=docker"
   ],
-  "svg.preview.background": "editor",
+  "svg.preview.background": "editor"
 }

@@ -17,4 +17,9 @@ if [ ! -d "/home/valnix/.nix-profile" ]; then
 fi
 source ~/.profile
 source ~/.bashrc
+
+echo "Printing environment variables"
+echo $NIX_CHANNELS_ENVIRONMENT
+echo $NIX_USER_ENVIRONMENT
+
 NIX_SECRET_KEY_FILE=/tmp/setup/cache-priv-key.pem nix-serve --listen 0.0.0.0:5000

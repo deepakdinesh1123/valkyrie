@@ -12,7 +12,7 @@
 buildGoModule rec {
   pname = "odin";
   version = "0.0.1";
-  vendorHash = "sha256-JYnSIGOHDd7NglW5oc1iXy3YkGZ+hq2StACgsasDXCw=";
+  vendorHash = "sha256-shMMfkiv/aLUsBjeHTiCRQ0v2gFvhdu1iHUhi1wjLx4=";
 
   src = ../..;
 
@@ -28,7 +28,7 @@ buildGoModule rec {
   nativeBuildInputs = [ pkg-config ];
 
   tags = lib.optionals stdenv.isDarwin [ "darwin" ]
-      ++ lib.optionals stdenv.isLinux [ "all" ];
+      ++ lib.optionals stdenv.isLinux [ "docker" ];
 
   subPackages = [ "cmd/odin" ];
 

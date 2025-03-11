@@ -250,10 +250,24 @@ func (d *DockerSH) StartOdinStore(ctx context.Context, storeImage, storeContaine
 	if err != nil {
 		return fmt.Errorf("could not get user homeDir: %v", err)
 	}
+
+	storeSetupEnvFile := fmt.Sprintf("%s/.odin/store/setup/.env", homeDir)
+
+	if _, err := os.Stat(storeSetupEnvFile); os.IsNotExist(err) {
+		fmt.Printf("File does not exist: %s\n", storeSetupEnvFile)
+	}
+
+	storeSetupEnv, err := config.LoadEnvFile(storeSetupEnvFile)
+	if err != nil {
+		return fmt.Errorf("error reading store setup env file")
+	}
+
+	d.logger.Info().Msgf("setup env variables are %s", storeSetupEnv)
+
 	contInfo, err := d.client.ContainerInspect(ctx, storeContainerName)
 	if err != nil {
 		if client.IsErrNotFound(err) { // Container doesn't exist, create it
-			_, err = d.client.ContainerCreate(ctx, &container.Config{Image: storeImage}, &container.HostConfig{
+			_, err = d.client.ContainerCreate(ctx, &container.Config{Image: storeImage, Env: storeSetupEnv}, &container.HostConfig{
 				Runtime:     containerRuntime,
 				NetworkMode: "bridge",
 				Mounts: []mount.Mount{

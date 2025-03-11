@@ -54,7 +54,7 @@ start-observability:
 # Build the odin binary
 odin:
     @echo "Building odin binary..."
-    go build -o odinb -tags all cmd/odin/main.go
+    go build -o odinb -tags docker cmd/odin/main.go
 
 # Start PostgreSQL with Docker and run migrations
 docker-db: 

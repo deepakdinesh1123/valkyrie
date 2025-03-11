@@ -1,11 +1,13 @@
 package config
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"sync"
 
 	"github.com/spf13/viper"
@@ -69,7 +71,7 @@ type EnvConfig struct {
 
 	RIPPKGS_BASE_URL string `mapstructure:"RIPPKGS_BASE_URL"`
 
-	ODIN_SANDBOX_IMAGE string `mapstructure:"ODIN_SANDBOX_DOCKER_IMAGE"`
+	ODIN_SANDBOX_IMAGE string `mapstructure:"ODIN_SANDBOX_IMAGE"`
 	ODIN_BASE_DIR      string `mapstructure:"ODIN_BASE_DIR"`
 }
 
@@ -77,6 +79,52 @@ var (
 	envConfig        *EnvConfig
 	getEnvConfigOnce sync.Once
 )
+
+func LoadEnvFile(filename string) ([]string, error) {
+	// Open the .env file
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	// Create a slice to store key-value pairs
+	var envPairs []string
+
+	// Create a scanner to read the file line by line
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		// Skip empty lines and comments
+		if len(line) == 0 || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		// Split the line into key and value
+		parts := strings.SplitN(line, "=", 2)
+		if len(parts) != 2 {
+			continue // Skip malformed lines
+		}
+
+		// Trim spaces
+		key := strings.TrimSpace(parts[0])
+		value := strings.TrimSpace(parts[1])
+
+		// Remove quotes if present
+		value = strings.Trim(value, `"'`)
+
+		// Add the pair in the format "key=value"
+		envPairs = append(envPairs, fmt.Sprintf("%s=%s", key, value))
+	}
+
+	// Check for scanner errors
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return envPairs, nil
+}
 
 // GetEnvConfig initializes and retrieves the configuration settings.
 func GetEnvConfig() (*EnvConfig, error) {
