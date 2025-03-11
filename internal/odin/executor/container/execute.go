@@ -32,7 +32,7 @@ func NewContainerExecutor(ctx context.Context, env *config.EnvConfig, queries db
 	if err != nil {
 		return nil, err
 	}
-	pool, err := pool.NewContainerExecutionPool(ctx, int32(env.ODIN_HOT_CONTAINER), env.ODIN_WORKER_CONCURRENCY, env.ODIN_CONTAINER_ENGINE)
+	pool, err := pool.NewContainerExecutionPool(ctx, int32(env.ODIN_HOT_CONTAINER), env.ODIN_WORKER_CONCURRENCY, env.ODIN_RUNTIME)
 	if err != nil {
 		return nil, err
 	}

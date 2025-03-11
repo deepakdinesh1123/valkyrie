@@ -43,6 +43,8 @@ type CreateSandbox struct {
 	Languages []string `json:"languages"`
 	// List of system-level dependencies needed in the sandbox.
 	SystemDependencies []string `json:"system_dependencies"`
+	// The services to enable in the odin sandbox.
+	Services OptString `json:"services"`
 }
 
 // GetNixFlake returns the value of NixFlake.
@@ -60,6 +62,11 @@ func (s *CreateSandbox) GetSystemDependencies() []string {
 	return s.SystemDependencies
 }
 
+// GetServices returns the value of Services.
+func (s *CreateSandbox) GetServices() OptString {
+	return s.Services
+}
+
 // SetNixFlake sets the value of NixFlake.
 func (s *CreateSandbox) SetNixFlake(val OptString) {
 	s.NixFlake = val
@@ -73,6 +80,11 @@ func (s *CreateSandbox) SetLanguages(val []string) {
 // SetSystemDependencies sets the value of SystemDependencies.
 func (s *CreateSandbox) SetSystemDependencies(val []string) {
 	s.SystemDependencies = val
+}
+
+// SetServices sets the value of Services.
+func (s *CreateSandbox) SetServices(val OptString) {
+	s.Services = val
 }
 
 type CreateSandboxBadRequest Error

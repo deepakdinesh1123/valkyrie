@@ -1,4 +1,4 @@
-//go:build all
+//go:build podman
 
 package store
 
@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/containers/podman/v5/pkg/api/handlers"
 	"github.com/containers/podman/v5/pkg/bindings"
@@ -15,7 +14,6 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/client"
 	"github.com/spf13/cobra"
 )
 
@@ -54,18 +52,7 @@ func realisePackages(cmd *cobra.Command, args []string) error {
 
 	switch envConfig.ODIN_RUNTIME {
 	case "docker":
-		cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-		if err != nil {
-			return fmt.Errorf("failed to create Docker client: %w", err)
-		}
-
-		contInfo, err := cli.ContainerInspect(cmd.Context(), "odin-store")
-		for _, pkg := range packages {
-			err = realiseDockerStore(pkg, contInfo.ID, cli)
-			if err != nil {
-				logger.Err(err).Msgf("could not realise package %s", pkg.Name)
-			}
-		}
+		return fmt.Errorf("Docker provider is not supported")
 	case "podman":
 		sock_dir := os.Getenv("XDG_RUNTIME_DIR")
 		socket := "unix:" + sock_dir + "/podman/podman.sock"
@@ -83,48 +70,6 @@ func realisePackages(cmd *cobra.Command, args []string) error {
 				logger.Err(err).Msgf("could not realise package %s", pkg.Name)
 			}
 		}
-	}
-
-	return nil
-}
-
-func realiseDockerStore(pkg db.GetAllPackagesRow, containerID string, cli *client.Client) error {
-	var pkgName string
-	if pkg.Pkgtype == "system" {
-		pkgName = pkg.Name
-	} else {
-		pkgName = fmt.Sprintf("%s.%s", pkg.Language.String, pkg.Name)
-	}
-	fmt.Printf("Realising package %s in container %s\n", pkgName, containerID)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
-	defer cancel()
-
-	execConfig := container.ExecOptions{
-		Cmd:          []string{"nix-shell", "-p", pkgName, "--run", "exit 0"},
-		AttachStdout: true,
-		AttachStderr: true,
-	}
-
-	respID, err := cli.ContainerExecCreate(ctx, containerID, execConfig)
-	if err != nil {
-		return fmt.Errorf("failed to create exec configuration: %w", err)
-	}
-
-	resp, err := cli.ContainerExecAttach(ctx, respID.ID, container.ExecAttachOptions{})
-	if err != nil {
-		return fmt.Errorf("failed to attach to exec instance: %w", err)
-	}
-	defer resp.Close()
-
-	// Inspect the exec instance to get the exit code
-	execInspect, err := cli.ContainerExecInspect(ctx, respID.ID)
-	if err != nil {
-		return fmt.Errorf("failed to inspect exec instance: %w", err)
-	}
-
-	if execInspect.ExitCode != 0 {
-		return fmt.Errorf("command exited with non-zero status: %d", execInspect.ExitCode)
 	}
 
 	return nil

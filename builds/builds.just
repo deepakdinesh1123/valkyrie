@@ -3,16 +3,17 @@ build_tool := "docker"
 version := "0.0.1"
 
 # Image names
-nix_env_image := "odin_nix_env"
+odin_exec_image := "odin_execution"
 sandbox_image := "odin_sandbox"
 store_image := "odin_store"
 agent_image := "odin_agent"
 sandbox_cs_image := "odin_sandbox_cs"
 
-# Build worker images with specified base
-build-worker base_os="alpine":
+# Build execution images with specified base
+build-execution base_os="ubuntu":
     {{build_tool}} build \
-        -t {{nix_env_image}}:{{version}}-{{base_os}} \
+        --build-arg NIX_CACHE_PUBLIC_KEY=$(cat "$HOME/.odin/store/setup/cache-pub-key.pem") \
+        -t {{odin_exec_image}}:{{version}}-{{base_os}} \
         -f builds/images/execution/{{base_os}}.dockerfile .
 
 # Build sandbox image
@@ -35,18 +36,18 @@ build-agent:
         -f builds/images/packages/agent.dockerfile .
 
 # Docker-specific aliases
-docker-odin-worker: (build-worker "alpine")
-docker-odin-worker-ubuntu: (build-worker "ubuntu")
+docker-odin-worker: (build-execution "alpine")
+docker-odin-worker-ubuntu: (build-execution "ubuntu")
 docker-odin-sandbox: build-sandbox
 docker-odin-store: build-store
 docker-code-server: build-code-server
 docker-odin-agent: build-agent
 
 # Podman-specific aliases
-podman-odin-worker: (build-worker "alpine")
-    just --set build_tool "podman" build-worker "alpine"
-podman-odin-worker-ubuntu: (build-worker "ubuntu")
-    just --set build_tool "podman" build-worker "ubuntu"
+podman-odin-worker: (build-execution "alpine")
+    just --set build_tool "podman" build-execution "alpine"
+podman-odin-worker-ubuntu: (build-execution "ubuntu")
+    just --set build_tool "podman" build-execution "ubuntu"
 podman-odin-sandbox: build-sandbox
     just --set build_tool "podman" build-sandbox
 podman-odin-store: build-store

@@ -460,7 +460,7 @@ func (s *OdinServer) GetExecutionConfig(ctx context.Context, params api.GetExecu
 	}
 
 	return &api.ExecutionConfig{
-		ODINWORKERPROVIDER:    s.envConfig.ODIN_CONTAINER_ENGINE,
+		ODINWORKERPROVIDER:    s.envConfig.ODIN_RUNTIME,
 		ODINWORKERCONCURRENCY: int32(s.envConfig.ODIN_WORKER_CONCURRENCY),
 		ODINWORKERTASKTIMEOUT: s.envConfig.ODIN_WORKER_TASK_TIMEOUT,
 		ODINWORKERPOLLFREQ:    s.envConfig.ODIN_WORKER_POLL_FREQ,

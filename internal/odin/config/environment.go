@@ -13,8 +13,9 @@ import (
 
 // EnvConfig represents the configuration settings for the application.
 type EnvConfig struct {
-	ODIN_ENABLE_EXECUTION    bool   `mapstructure:"ODIN_ENABLE_EXECUTION"`
-	ODIN_ENABLE_SANDBOX      bool   `mapstructure:"ODIN_ENABLE_SANDBOX"`
+	ODIN_ENABLE_EXECUTION bool `mapstructure:"ODIN_ENABLE_EXECUTION"`
+	ODIN_ENABLE_SANDBOX   bool `mapstructure:"ODIN_ENABLE_SANDBOX"`
+
 	POSTGRES_HOST            string `mapstructure:"POSTGRES_HOST"`
 	POSTGRES_PORT            uint32 `mapstructure:"POSTGRES_PORT"`
 	POSTGRES_USER            string `mapstructure:"POSTGRES_USER"`
@@ -26,23 +27,20 @@ type EnvConfig struct {
 	ODIN_SERVER_HOST string `mapstructure:"ODIN_SERVER_HOST"`
 	ODIN_SERVER_PORT string `mapstructure:"ODIN_SERVER_PORT"`
 
-	ODIN_STORE_URL            string
+	ODIN_STORE_URL            string `mapstructure:"ODIN_STORE_URL"`
 	ODIN_STORE_IMAGE          string `mapstructure:"ODIN_STORE_IMAGE"`
 	ODIN_STORE_CONTAINER      string
 	ODIN_SANDBOX_NIXPKGS_PATH string
 	ODIN_SANDBOX_NIXPKGS_REV  string `mapstructure:"ODIN_SANDBOX_NIXPKGS_REV"`
 
-	ODIN_CONTAINER_ENGINE       string `mapstructure:"ODIN_CONTAINER_ENGINE"`
-	ODIN_WORKER_EXECUTOR        string `mapstructure:"ODIN_WORKER_EXECUTOR"`
-	ODIN_WORKER_SYSTEM_EXECUTOR string `mapstructure:"ODIN_WORKER_SYSTEM_EXECUTOR"`
-	ODIN_WORKER_CONCURRENCY     int32  `mapstructure:"ODIN_WORKER_CONCURRENCY"`
-	ODIN_HOT_CONTAINER          int    `mapstructure:"ODIN_HOT_CONTAINER"`
-	ODIN_WORKER_TASK_TIMEOUT    int    `mapstructure:"ODIN_WORKER_TASK_TIMEOUT"`
-	ODIN_WORKER_POLL_FREQ       int    `mapstructure:"ODIN_WORKER_POLL_FREQ"`
-	ODIN_CONTAINER_RUNTIME      string `mapstructure:"ODIN_CONTAINER_RUNTIME"`
-	ODIN_WORKER_PODMAN_IMAGE    string `mapstructure:"ODIN_WORKER_PODMAN_IMAGE"`
-	ODIN_WORKER_DOCKER_IMAGE    string `mapstructure:"ODIN_WORKER_DOCKER_IMAGE"`
-	ODIN_MAX_RETRIES            int    `mapstructure:"ODIN_MAX_RETRIES"`
+	ODIN_RUNTIME             string `mapstructure:"ODIN_RUNTIME"`
+	ODIN_CONTAINER_RUNTIME   string `mapstructure:"ODIN_CONTAINER_RUNTIME"`
+	ODIN_WORKER_CONCURRENCY  int32  `mapstructure:"ODIN_WORKER_CONCURRENCY"`
+	ODIN_HOT_CONTAINER       int    `mapstructure:"ODIN_HOT_CONTAINER"`
+	ODIN_WORKER_TASK_TIMEOUT int    `mapstructure:"ODIN_WORKER_TASK_TIMEOUT"`
+	ODIN_WORKER_POLL_FREQ    int    `mapstructure:"ODIN_WORKER_POLL_FREQ"`
+	ODIN_EXECUTION_IMAGE     string `mapstructure:"ODIN_EXECUTION_IMAGE"`
+	ODIN_MAX_RETRIES         int    `mapstructure:"ODIN_MAX_RETRIES"`
 
 	ODIN_WORKER_CONTAINER_MEMORY_LIMIT int64 `mapstructure:"ODIN_WORKER_CONTAINER_MEMORY_LIMIT"`
 
@@ -66,17 +64,13 @@ type EnvConfig struct {
 
 	ODIN_JOB_PRUNE_FREQ int `mapstructure:"ODIN_JOB_PRUNE_FREQ"`
 
-	ODIN_SYSTEM_EXECUTOR_BASE_DIR string `mapstructure:"ODIN_SYSTEM_EXECUTOR_BASE_DIR"`
-	ODIN_SYSTEM_EXECUTOR_CLEAN_UP bool   `mapstructure:"ODIN_SYSTEM_PROVIDER_CLEAN_UP"`
-
 	ODIN_USER_TOKEN  string `mapstructure:"ODIN_USER_TOKEN"`
 	ODIN_ADMIN_TOKEN string `mapstructure:"ODIN_ADMIN_TOKEN"`
 
 	RIPPKGS_BASE_URL string `mapstructure:"RIPPKGS_BASE_URL"`
 
-	ODIN_WORKER_SANDBOX_HANDLER string `mapstructure:"ODIN_WORKER_SANDBOX_HANDLER"`
-	ODIN_SANDBOX_DOCKER_IMAGE   string `mapstructure:"ODIN_SANDBOX_DOCKER_IMAGE"`
-	ODIN_BASE_DIR               string `mapstructure:"ODIN_BASE_DIR"`
+	ODIN_SANDBOX_IMAGE string `mapstructure:"ODIN_SANDBOX_DOCKER_IMAGE"`
+	ODIN_BASE_DIR      string `mapstructure:"ODIN_BASE_DIR"`
 }
 
 var (
@@ -130,6 +124,7 @@ func GetEnvConfig() (*EnvConfig, error) {
 }
 
 func setDefaults() {
+	viper.SetDefault("ODIN_ENABLE_EXECUTION", true)
 	viper.SetDefault("ODIN_ENABLE_SANDBOX", true)
 
 	viper.SetDefault("POSTGRES_HOST", "localhost")
@@ -144,20 +139,15 @@ func setDefaults() {
 
 	viper.SetDefault("ODIN_STORE_URL", "http://odin-store:5000")
 	viper.SetDefault("ODIN_STORE_IMAGE", "odin_store:0.0.1")
-	viper.SetDefault("ODIN_STORE_NETWORK", "odin_store_network")
 	viper.SetDefault("ODIN_STORE_CONTAINER", "odin-store")
 	viper.SetDefault("ODIN_SANDBOX_NIXPKGS_REV", "b27ba4eb322d9d2bf2dc9ada9fd59442f50c8d7c") // pragma: allowlist secret
 
-	viper.SetDefault("ODIN_CONTAINER_ENGINE", "podman")
-	viper.SetDefault("ODIN_WORKER_EXECUTOR", "system")
-	viper.SetDefault("ODIN_WORKER_SYSTEM_EXECUTOR", "native")
+	viper.SetDefault("ODIN_RUNTIME", "docker")
 	viper.SetDefault("ODIN_WORKER_CONCURRENCY", 10)
 	viper.SetDefault("ODIN_HOT_CONTAINER", 5)
 	viper.SetDefault("ODIN_WORKER_TASK_TIMEOUT", 120)
 	viper.SetDefault("ODIN_WORKER_POLL_FREQ", 30)
-
-	viper.SetDefault("ODIN_WORKER_SANDBOX_HANDLER", "docker")
-
+	viper.SetDefault("ODIN_EXECUTION_IMAGE", "odin_execution:0.0.1-ubuntu")
 	viper.SetDefault("ODIN_MAX_RETRIES", 5)
 
 	viper.SetDefault("ODIN_WORKER_CONTAINER_MEMORY_LIMIT", 500)
@@ -165,25 +155,20 @@ func setDefaults() {
 	viper.SetDefault("ODIN_MEMORY_LIMIT", 75)
 	viper.SetDefault("ODIN_CPU_LIMIT", 75)
 
-	viper.SetDefault("ODIN_NIX_STORE", "/nix")
-
 	viper.SetDefault("ODIN_ENABLE_TELEMETRY", false)
 	viper.SetDefault("ODIN_OTLP_ENDPOINT", "localhost:4317")
 	viper.SetDefault("ODIN_OTEL_RESOURCE_NAME", "Odin")
-
 	viper.SetDefault("ODIN_ENVIRONMENT", "dev")
 	viper.SetDefault("ODIN_COMPOSE_ENV", false)
 
 	viper.SetDefault("ODIN_EXPORT_LOGS", "console")
-	viper.SetDefault("ODIN_SYSTEM_EXECUTOR_BASE_DIR", filepath.Join(os.TempDir(), "valkyrie"))
-	viper.SetDefault("ODIN_SYSTEM_EXECUTOR_CLEAN_UP", true)
 	viper.SetDefault("ODIN_JOB_PRUNE_FREQ", 1)
 	viper.SetDefault("ODIN_LOG_LEVEL", "info")
-	viper.SetDefault("ODIN_WORKER_DOCKER_IMAGE", "odin:alpine")
-	viper.SetDefault("ODIN_WORKER_PODMAN_IMAGE", "odin:alpine")
 	viper.SetDefault("RIPPKGS_BASE_URL", "https://valnix-stage-bucket.s3.us-east-1.amazonaws.com")
 
-	containerRuntime := "runsc"
+	viper.SetDefault("ODIN_SANDBOX_IMAGE", "odin_sandbox:0.0.1-ubuntu")
+
+	containerRuntime := ""
 	switch runtime.GOOS {
 	case "darwin":
 		containerRuntime = "runc"

@@ -37,18 +37,18 @@ func DockerExecConstructor(ctx context.Context) (Container, error) {
 	if dClient == nil {
 		return Container{}, fmt.Errorf("could not get docker client")
 	}
+
+	hostConfig := &container.HostConfig{
+		AutoRemove:  true,
+		Runtime:     envConfig.ODIN_CONTAINER_RUNTIME,
+		NetworkMode: "bridge",
+	}
 	createResp, err := dClient.ContainerCreate(ctx, &container.Config{
-		Image:       envConfig.ODIN_WORKER_DOCKER_IMAGE,
+		Image:       envConfig.ODIN_EXECUTION_IMAGE,
 		StopTimeout: &envConfig.ODIN_WORKER_TASK_TIMEOUT,
 		StopSignal:  "SIGKILL",
-		Env: []string{
-			fmt.Sprintf("ODIN_STORE_URL=%s", envConfig.ODIN_STORE_URL),
-		},
 	},
-		&container.HostConfig{
-			AutoRemove: true,
-			Runtime:    envConfig.ODIN_CONTAINER_RUNTIME,
-		},
+		hostConfig,
 		nil,
 		nil,
 		"",
@@ -57,6 +57,11 @@ func DockerExecConstructor(ctx context.Context) (Container, error) {
 		return Container{}, err
 	}
 	cont.ID = createResp.ID
+
+	if !envConfig.ODIN_COMPOSE_ENV {
+		hostConfig.Links = []string{envConfig.ODIN_STORE_CONTAINER}
+	}
+
 	err = dClient.ContainerStart(ctx, createResp.ID, container.StartOptions{})
 	if err != nil {
 		return Container{}, err
@@ -90,7 +95,7 @@ func DockerSandboxConstructor(ctx context.Context) (Container, error) {
 	}
 
 	createResp, err := dClient.ContainerCreate(ctx, &container.Config{
-		Image:      envConfig.ODIN_SANDBOX_DOCKER_IMAGE,
+		Image:      envConfig.ODIN_SANDBOX_IMAGE,
 		StopSignal: "SIGKILL",
 	},
 		hostConfig,

@@ -18,12 +18,6 @@ RUN apt update && \
 USER valnix
 WORKDIR /home/valnix/
 
-ARG NIX_CHANNELS_ENVIRONMENT
-ARG NIX_USER_ENVIRONMENT
-
-ENV NIX_CHANNELS_ENVIRONMENT=${NIX_CHANNELS_ENVIRONMENT}
-ENV NIX_USER_ENVIRONMENT=${NIX_USER_ENVIRONMENT}
-
 COPY --chown=1024:1024 hack/store/start_store.bash /tmp/start_store.bash
 
 ENTRYPOINT [ "/bin/bash", "/tmp/start_store.bash" ]

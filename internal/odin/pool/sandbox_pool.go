@@ -1,3 +1,5 @@
+//go:build all && !darwin
+
 package pool
 
 import (

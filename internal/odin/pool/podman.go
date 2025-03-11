@@ -42,52 +42,19 @@ func PodConstructor(ctx context.Context) (Container, error) {
 	if connection == nil {
 		return Container{}, fmt.Errorf("could not get podman connection")
 	}
-
-	// _, err := volumes.Create(connection, types.VolumeCreateOptions{
-	// 	Name:           "shared-cache",
-	// 	IgnoreIfExists: true,
-	// }, &volumes.CreateOptions{})
-
-	// if err != nil {
-	// 	return Container{}, fmt.Errorf("could not create volume: %s", err)
-	// }
 	s := specgen.NewSpecGenerator(
-		envConfig.ODIN_WORKER_PODMAN_IMAGE,
+		envConfig.ODIN_EXECUTION_IMAGE,
 		false,
 	)
 	stopTimeout := uint(envConfig.ODIN_WORKER_TASK_TIMEOUT)
 	s.StopTimeout = &stopTimeout
 	stopSignal := syscall.SIGKILL
 	s.StopSignal = &stopSignal
-	s.OCIRuntime = "crun"
-
-	s.ContainerBasicConfig = specgen.ContainerBasicConfig{
-		Env: map[string]string{
-			"NIX_CHANNELS_ENVIRONMENT": envConfig.ODIN_NIX_CHANNELS_ENVIRONMENT,
-			"NIX_USER_ENVIRONMENT":     envConfig.ODIN_NIX_USER_ENVIRONMENT,
-		},
-	}
-
-	// s.ContainerStorageConfig.Volumes = []*specgen.NamedVolume{
-	// 	{
-	// 		Dest: "/home/valnix/.cache/cached-nix-shell",
-	// 		Name: "shared-cache",
-	// 	},
-	// }
-	s.ContainerStorageConfig.OverlayVolumes = []*specgen.OverlayVolume{
-		{
-			Destination: "/nix",
-			Source:      envConfig.ODIN_NIX_STORE,
-		},
-	}
+	s.OCIRuntime = envConfig.ODIN_CONTAINER_RUNTIME
 
 	readOnlyFileSystem := true
 	readWriteTmpfs := true
 	s.ContainerSecurityConfig = specgen.ContainerSecurityConfig{
-		UserNS: specgen.Namespace{
-			NSMode: specgen.KeepID,
-			Value:  "uid=2048,gid=2048",
-		},
 		ReadOnlyFilesystem: &readOnlyFileSystem,
 		ReadWriteTmpfs:     &readWriteTmpfs,
 		CapDrop: []string{

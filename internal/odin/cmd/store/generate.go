@@ -10,7 +10,6 @@ import (
 
 var ripDBPath string
 var odinStoreConfig string
-var genDockerConfig bool
 
 var GenerateCmd = &cobra.Command{
 	Use:   "generate",
@@ -22,7 +21,6 @@ var GenerateCmd = &cobra.Command{
 func init() {
 	GenerateCmd.Flags().StringVarP(&ripDBPath, "rip-db", "r", "", "The rippkgs db to use")
 	GenerateCmd.Flags().StringVarP(&odinStoreConfig, "config", "c", "", "Odin store config")
-	GenerateCmd.Flags().BoolVarP(&genDockerConfig, "docker", "d", false, "Generate docker config")
 }
 
 func generatePackages(cmd *cobra.Command, args []string) error {
@@ -38,6 +36,6 @@ func generatePackages(cmd *cobra.Command, args []string) error {
 		logs.WithSource("cli"),
 	)
 	logger := logs.GetLogger(config)
-	err = store.GeneratePackages(ctx, odinStoreConfig, ripDBPath, genDockerConfig, envConfig, logger)
+	err = store.GeneratePackages(ctx, odinStoreConfig, ripDBPath, envConfig, logger)
 	return err
 }

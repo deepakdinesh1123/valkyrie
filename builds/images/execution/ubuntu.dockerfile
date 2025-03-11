@@ -1,18 +1,43 @@
-FROM ubuntu:22.04
+ARG UBUNTU_IMAGE=ubuntu:24.04
+ARG NIXPKGS_REV=b27ba4eb322d9d2bf2dc9ada9fd59442f50c8d7c
+ARG NIX_CACHE_PUBLIC_KEY
 
+FROM ${UBUNTU_IMAGE}
+
+# Install required packages and configure system
 RUN apt update && \
-    apt install -y adduser xz-utils curl && \
+    apt install -y adduser curl xz-utils unzip && \
     groupadd -o -g 1024 -r valnix && \
     adduser --uid 1024 --gid 1024 --disabled-password --gecos "" valnix && \
-    echo 'valnix ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
-RUN curl -L https://nixos.org/nix/install -o install_nix.sh
-RUN chmod +x install_nix.sh
-RUN mkdir /nix
-RUN chown -R valnix /nix
-RUN mkdir /etc/nix && echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
+    mkdir /nix && \
+    mkdir -p /home/valnix/.config/process-compose && \
+    chown -R valnix:valnix /nix /home/valnix && \
+    # Configure Nix
+    mkdir /etc/nix
 
+# Switch to the valnix user
 USER valnix
-RUN sh install_nix.sh --no-daemon
-ENV PATH="$PATH:/home/valnix/.nix-profile/bin"
+WORKDIR /home/valnix/
 
-CMD [ "/bin/sh", "-c", "sleep infinity" ]
+COPY --chown=valnix:valnix hack/sandbox/install_nix.bash /tmp/install_nix.bash
+
+# Install Nix
+RUN chmod +x /tmp/install_nix.bash && \
+    bash /tmp/install_nix.bash && \
+    # Cleanup the install script
+    rm -f /tmp/install_nix.bash
+
+# Ensure the Nix binaries are available in PATH
+ENV PATH="/home/valnix/.nix-profile/bin:${PATH}"
+
+USER root
+COPY configs/nix/nix.conf /etc/nix/nix.conf
+ARG NIX_CACHE_PUBLIC_KEY
+RUN echo "trusted-public-keys = ${NIX_CACHE_PUBLIC_KEY} cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=" >> /etc/nix/nix.conf
+
+COPY --chown=valnix:valnix hack/execution/* /home/valnix/
+
+VOLUME [ "/home/valnix" ]
+WORKDIR /home/valnix/
+
+ENTRYPOINT [ "/bin/sh", "-c", "sleep infinity"]

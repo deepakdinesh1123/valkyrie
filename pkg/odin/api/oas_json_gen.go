@@ -259,12 +259,19 @@ func (s *CreateSandbox) encodeFields(e *jx.Encoder) {
 			e.ArrEnd()
 		}
 	}
+	{
+		if s.Services.Set {
+			e.FieldStart("services")
+			s.Services.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfCreateSandbox = [3]string{
+var jsonFieldsNameOfCreateSandbox = [4]string{
 	0: "nix_flake",
 	1: "languages",
 	2: "system_dependencies",
+	3: "services",
 }
 
 // Decode decodes CreateSandbox from json.
@@ -322,6 +329,16 @@ func (s *CreateSandbox) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"system_dependencies\"")
+			}
+		case "services":
+			if err := func() error {
+				s.Services.Reset()
+				if err := s.Services.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"services\"")
 			}
 		default:
 			return d.Skip()

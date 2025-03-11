@@ -3,7 +3,6 @@ package store
 import (
 	"context"
 	"database/sql"
-	"encoding/csv"
 	"fmt"
 	"io"
 	"net/http"
@@ -58,7 +57,7 @@ type NixPackageInfo struct {
 	Description sql.NullString
 }
 
-func GeneratePackages(ctx context.Context, odinStoreConfig string, ripPkgDBPath string, genDockerConfig bool, envConfig *config.EnvConfig, logger *zerolog.Logger) error {
+func GeneratePackages(ctx context.Context, odinStoreConfig string, ripPkgDBPath string, envConfig *config.EnvConfig, logger *zerolog.Logger) error {
 
 	var storeConfig StoreConfig
 
@@ -147,7 +146,7 @@ func GeneratePackages(ctx context.Context, odinStoreConfig string, ripPkgDBPath 
 		return err
 	}
 
-	err = addPackages(ctx, queries, &storeConfig, sqliteClient, genDockerConfig, logger)
+	err = addPackages(ctx, queries, &storeConfig, sqliteClient, logger)
 	if err != nil {
 		return err
 	}
@@ -233,7 +232,7 @@ func addLanguageVersions(ctx context.Context, queries db.Store, config *StoreCon
 	return nil
 }
 
-func addPackages(ctx context.Context, queries db.Store, config *StoreConfig, sqliteClient *sql.DB, genDockerConfig bool, logger *zerolog.Logger) error {
+func addPackages(ctx context.Context, queries db.Store, config *StoreConfig, sqliteClient *sql.DB, logger *zerolog.Logger) error {
 	var packages []db.InsertPackagesParams
 
 	for _, language := range config.Languages {
@@ -312,13 +311,6 @@ func addPackages(ctx context.Context, queries db.Store, config *StoreConfig, sql
 		return err
 	}
 
-	if genDockerConfig {
-		if err := generateDockerStoreConfig(packages); err != nil {
-			logger.Error().Err(err).Msg("Error generating docker store config")
-			return err
-		}
-	}
-
 	return nil
 }
 
@@ -352,39 +344,6 @@ func getPackageData(pkg string, sqliteClient *sql.DB) (NixPackageInfo, error) {
 		return nixPkgInfo, fmt.Errorf("no rows: %s", err)
 	}
 	return nixPkgInfo, nil
-}
-
-func generateDockerStoreConfig(pkgs []db.InsertPackagesParams) error {
-	file, err := os.Create("configs/nix/packages.csv")
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	// Create a CSV writer
-	writer := csv.NewWriter(file)
-
-	data := [][]string{
-		{"name", "type", "language"},
-	}
-	for _, pkg := range pkgs {
-		data = append(data, []string{pkg.Name, pkg.Pkgtype, pkg.Language.String})
-	}
-	for _, record := range data {
-		if err := writer.Write(record); err != nil {
-			return err
-		}
-	}
-
-	// Write any buffered data to the underlying writer
-	writer.Flush()
-
-	// Check if any error occurred during the flush
-	if err := writer.Error(); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func downloadRipPkgsDB(ripPkgDBPath string, ripPkgDBURL string) error {

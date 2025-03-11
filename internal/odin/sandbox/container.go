@@ -13,7 +13,7 @@ import (
 )
 
 func GetSandboxHandler(ctx context.Context, queries db.Store, workerId int32, tp trace.TracerProvider, mp metric.MeterProvider, envConfig *config.EnvConfig, logger *zerolog.Logger) (SandboxHandler, error) {
-	switch envConfig.ODIN_WORKER_SANDBOX_HANDLER {
+	switch envConfig.ODIN_RUNTIME {
 	case "docker":
 		return container.NewDockerSandboxHandler(ctx, queries, workerId, tp, mp, envConfig, logger)
 	default:

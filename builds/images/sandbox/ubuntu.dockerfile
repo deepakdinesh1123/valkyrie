@@ -22,7 +22,7 @@ RUN apt update && \
 USER valnix
 WORKDIR /home/valnix/
 
-COPY --chown=1024:1024 hack/sandbox/install_nix.bash /tmp/install_nix.bash
+COPY --chown=valnix:valnix hack/sandbox/install_nix.bash /tmp/install_nix.bash
 
 # Install Nix
 RUN chmod +x /tmp/install_nix.bash && \
@@ -33,7 +33,9 @@ RUN chmod +x /tmp/install_nix.bash && \
 USER root
 ARG NIXPKGS_REV
 RUN curl -L "https://api.github.com/repos/NixOS/nixpkgs/zipball/${NIXPKGS_REV}" -o commit.zip && unzip commit.zip -d /var/cache/nixpkgs && rm commit.zip
-RUN curl -L "https://api.github.com/repos/numtide/flake-utils/zipball/11707dc2f618dd54ca8739b309ec4fc024de578b" -o utils.zip && unzip utils.zip -d /var/cache/flake-utils && rm utils.zip
+RUN curl -L "https://github.com/hercules-ci/flake-parts/archive/refs/heads/main.zip" -o parts.zip && unzip parts.zip -d /var/cache && rm parts.zip
+RUN curl -L "https://github.com/Platonic-Systems/process-compose-flake/archive/refs/heads/main.zip" -o pcompose.zip && unzip pcompose.zip -d /var/cache && rm pcompose.zip
+RUN curl -L "https://github.com/juspay/services-flake/archive/refs/heads/main.zip" -o services.zip && unzip services.zip -d /var/cache && rm services.zip
 USER valnix
 
 # Ensure the Nix binaries are available in PATH

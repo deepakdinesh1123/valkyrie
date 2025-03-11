@@ -1,3 +1,5 @@
+//go:build all || docker
+
 package container
 
 import (
@@ -53,7 +55,7 @@ func NewDockerSandboxHandler(ctx context.Context, queries db.Store, workerId int
 }
 
 func (d *DockerSH) StartContainerPool(ctx context.Context, envConfig *config.EnvConfig) error {
-	containerPool, err := pool.NewSandboxPool(ctx, int32(envConfig.ODIN_HOT_CONTAINER), int32(envConfig.ODIN_WORKER_CONCURRENCY), envConfig.ODIN_CONTAINER_ENGINE)
+	containerPool, err := pool.NewSandboxPool(ctx, int32(envConfig.ODIN_HOT_CONTAINER), int32(envConfig.ODIN_WORKER_CONCURRENCY), envConfig.ODIN_RUNTIME)
 	if err != nil {
 		return fmt.Errorf("error creating sandbox pool: %s", err)
 	}

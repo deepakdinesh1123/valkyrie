@@ -11,7 +11,7 @@ import (
 )
 
 func GetContainerClient(ctx context.Context, ce *ContainerExecutor) (ContainerClient, error) {
-	switch ce.EnvConfig.ODIN_CONTAINER_ENGINE {
+	switch ce.EnvConfig.ODIN_RUNTIME {
 	case "docker":
 		containerClient, err := docker.GetDockerProvider(
 			ce.EnvConfig,

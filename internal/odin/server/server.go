@@ -64,11 +64,11 @@ func NewServer(ctx context.Context, envConfig *config.EnvConfig, standalone bool
 			if err != nil {
 				if err == pgx.ErrNoRows {
 					logger.Err(err).Msg("Generating store packages")
-					store.GeneratePackages(ctx, "", "", false, envConfig, logger)
+					store.GeneratePackages(ctx, "", "", envConfig, logger)
 				}
 			} else if len(langs) == 0 {
 				logger.Info().Msg("Generating store packages")
-				store.GeneratePackages(ctx, "", "", false, envConfig, logger)
+				store.GeneratePackages(ctx, "", "", envConfig, logger)
 			}
 		}
 		executionService := execution.NewExecutionService(queries, envConfig, logger)
