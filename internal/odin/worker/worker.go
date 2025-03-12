@@ -250,9 +250,11 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 					case context.Canceled:
 						w.logger.Info().Msg("Worker: context canceled")
 						swg.Wait()
+						w.cleanup()
 						return nil
 					default:
 						w.logger.Err(err).Msgf("Worker: failed to fetch job")
+						w.cleanup()
 						return fmt.Errorf("failed to fetch job: %s", err)
 					}
 				}
@@ -270,15 +272,12 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 						continue
 					case context.Canceled:
 						w.logger.Info().Msg("Worker: context canceled")
-						w.sandboxHandler.Cleanup(context.TODO())
-						err = w.queries.ClearSandboxes(context.TODO())
-						if err != nil {
-							w.logger.Err(err).Msg("error clearing sandboxes")
-						}
+						w.cleanup()
 						w.logger.Info().Msg("cleanup complete")
 						return nil
 					default:
 						w.logger.Err(err).Msgf("Worker: failed to fetch sandbox job")
+						w.cleanup()
 						return &WorkerError{Type: "FetchSandboxJob", Message: err.Error()}
 					}
 				}
@@ -290,6 +289,19 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 			w.queries.UpdateHeartbeat(ctx, int32(w.ID))
 		}
 	}
+}
+
+func (w *Worker) cleanup() error {
+	if w.envConfig.ODIN_ENABLE_SANDBOX {
+		if w.sandboxHandler != nil {
+			w.sandboxHandler.Cleanup(context.TODO())
+			err := w.queries.ClearSandboxes(context.TODO())
+			if err != nil {
+				return fmt.Errorf("error clearing sandboxes %v", err)
+			}
+		}
+	}
+	return nil
 }
 
 func writeWorkerInfo(infoFile string, worker *Worker) error {

@@ -23,6 +23,7 @@ services:
       - "8080:8080"
     environment:
       - ODIN_COMPOSE_ENV=true
+      - POSTGRES_HOST=postgres
     runtime: "runsc"
     network_mode: "bridge"
     links:
@@ -52,6 +53,7 @@ services:
     environment:
       - DOCKER_HOST=tcp://docker-proxy:2375
       - ODIN_COMPOSE_ENV=true
+      - POSTGRES_HOST=postgres
     network_mode: "bridge"
     links:
       - "odin-store"
