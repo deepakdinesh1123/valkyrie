@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Default values
-NIX_VERSION="2.24.0"
+NIX_VERSION="2.26.3"
 EXTRA_NIX_CONFIG=""
 INSTALL_OPTIONS=""
 NIX_CHANNEL_REV="b27ba4eb322d9d2bf2dc9ada9fd59442f50c8d7c" # pragma: allowlist secret

@@ -36,21 +36,25 @@ RUN curl -L "https://api.github.com/repos/NixOS/nixpkgs/zipball/${NIXPKGS_REV}" 
 RUN curl -L "https://github.com/hercules-ci/flake-parts/archive/refs/heads/main.zip" -o parts.zip && unzip parts.zip -d /var/cache && rm parts.zip
 RUN curl -L "https://github.com/Platonic-Systems/process-compose-flake/archive/refs/heads/main.zip" -o pcompose.zip && unzip pcompose.zip -d /var/cache && rm pcompose.zip
 RUN curl -L "https://github.com/juspay/services-flake/archive/refs/heads/main.zip" -o services.zip && unzip services.zip -d /var/cache && rm services.zip
+
 USER valnix
 
 # Ensure the Nix binaries are available in PATH
 ENV PATH="/home/valnix/.nix-profile/bin:${PATH}"
 
-# RUN nix profile install nixpkgs#nix-direnv --extra-experimental-features 'nix-command flakes'
-# RUN nix profile install nixpkgs#direnv --extra-experimental-features 'nix-command flakes'
-# RUN echo 'source $HOME/.nix-profile/share/nix-direnv/direnvrc' >> /home/valnix/.bashrc && \
-#     echo 'eval "$(direnv hook bash)"' >> /home/valnix/.bashrc
+RUN nix-env -iA nixpkgs.nix-direnv --extra-experimental-features 'nix-command flakes'
+RUN nix-env -iA nixpkgs.direnv --extra-experimental-features 'nix-command flakes'
+RUN echo 'source $HOME/.nix-profile/share/nix-direnv/direnvrc' >> /home/valnix/.bashrc && \
+    echo 'eval "$(direnv hook bash)"' >> /home/valnix/.bashrc
+
+RUN mkdir -p /home/valnix/work
+RUN echo "use flake" >> /home/valnix/work/.envrc
 
 COPY --from=agent /tmp/nix-store-closure /tmp/agent/closure
 COPY --from=agent /valkyrie/result /home/valnix
 
-COPY --chown=1024:1024 configs/nix/flake.nix /home/valnix/flake.nix
-RUN nix profile install . --extra-experimental-features 'nix-command flakes'
+COPY --chown=1024:1024 configs/nix/flake.nix /home/valnix/work/flake.nix
+RUN cd /home/valnix/work && direnv allow && nix develop --extra-experimental-features 'nix-command flakes' --command 'ls' 
 
 USER root
 COPY configs/nix/nix.conf /etc/nix/nix.conf
@@ -60,6 +64,6 @@ RUN chown -R valnix:valnix /tmp/agent/closure
 RUN cp -a /tmp/agent/closure/* /nix/store
 
 USER valnix
-WORKDIR /home/valnix/
+WORKDIR /home/valnix/work/
 
 ENTRYPOINT [ "/home/valnix/bin/agent"]
