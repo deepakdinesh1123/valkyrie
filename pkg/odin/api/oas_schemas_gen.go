@@ -43,8 +43,8 @@ type CreateSandbox struct {
 	Languages []string `json:"languages"`
 	// List of system-level dependencies needed in the sandbox.
 	SystemDependencies []string `json:"system_dependencies"`
-	// The services to enable in the odin sandbox.
-	Services OptString `json:"services"`
+	// List of services to be added to the sandbox.
+	Services []string `json:"services"`
 }
 
 // GetNixFlake returns the value of NixFlake.
@@ -63,7 +63,7 @@ func (s *CreateSandbox) GetSystemDependencies() []string {
 }
 
 // GetServices returns the value of Services.
-func (s *CreateSandbox) GetServices() OptString {
+func (s *CreateSandbox) GetServices() []string {
 	return s.Services
 }
 
@@ -83,7 +83,7 @@ func (s *CreateSandbox) SetSystemDependencies(val []string) {
 }
 
 // SetServices sets the value of Services.
-func (s *CreateSandbox) SetServices(val OptString) {
+func (s *CreateSandbox) SetServices(val []string) {
 	s.Services = val
 }
 

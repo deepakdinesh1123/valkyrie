@@ -76,6 +76,7 @@ func (s *SandboxService) generateFlake(sandboxReq *api.OptCreateSandbox) (string
 		NIXPKGS_URL:        fmt.Sprintf("path:%s", s.envConfig.ODIN_SANDBOX_NIXPKGS_PATH),
 		SystemDependencies: sandboxReq.Value.SystemDependencies,
 		Languages:          sandboxReq.Value.Languages,
+		Services:           sandboxReq.Value.Services,
 	}
 
 	var buf bytes.Buffer

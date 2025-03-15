@@ -42,19 +42,16 @@ USER valnix
 # Ensure the Nix binaries are available in PATH
 ENV PATH="/home/valnix/.nix-profile/bin:${PATH}"
 
-RUN nix-env -iA nixpkgs.nix-direnv --extra-experimental-features 'nix-command flakes'
-RUN nix-env -iA nixpkgs.direnv --extra-experimental-features 'nix-command flakes'
-RUN echo 'source $HOME/.nix-profile/share/nix-direnv/direnvrc' >> /home/valnix/.bashrc && \
-    echo 'eval "$(direnv hook bash)"' >> /home/valnix/.bashrc
-
 RUN mkdir -p /home/valnix/work
-RUN echo "use flake" >> /home/valnix/work/.envrc
 
 COPY --from=agent /tmp/nix-store-closure /tmp/agent/closure
 COPY --from=agent /valkyrie/result /home/valnix
 
-COPY --chown=1024:1024 configs/nix/flake.nix /home/valnix/work/flake.nix
-RUN cd /home/valnix/work && direnv allow && nix develop --extra-experimental-features 'nix-command flakes' --command 'ls' 
+COPY --chown=valnix:valnix configs/nix/flake.nix /home/valnix/work/flake.nix
+RUN cd /home/valnix/work && nix profile install . --extra-experimental-features 'nix-command flakes'
+
+RUN nix profile install nixpkgs#vim --extra-experimental-features 'nix-command flakes'
+RUN nix profile install nixpkgs#gnupatch --extra-experimental-features 'nix-command flakes'
 
 USER root
 COPY configs/nix/nix.conf /etc/nix/nix.conf

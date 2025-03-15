@@ -9,4 +9,6 @@ type FlakeConfig struct {
 
 	// SystemDependencies is a list of system packages to be included in the development shell
 	SystemDependencies []string `json:"system_dependencies"`
+
+	Services []string `json:"services"`
 }

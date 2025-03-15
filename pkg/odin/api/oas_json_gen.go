@@ -260,9 +260,13 @@ func (s *CreateSandbox) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
-		if s.Services.Set {
+		if s.Services != nil {
 			e.FieldStart("services")
-			s.Services.Encode(e)
+			e.ArrStart()
+			for _, elem := range s.Services {
+				e.Str(elem)
+			}
+			e.ArrEnd()
 		}
 	}
 }
@@ -332,8 +336,17 @@ func (s *CreateSandbox) Decode(d *jx.Decoder) error {
 			}
 		case "services":
 			if err := func() error {
-				s.Services.Reset()
-				if err := s.Services.Decode(d); err != nil {
+				s.Services = make([]string, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem string
+					v, err := d.Str()
+					elem = string(v)
+					if err != nil {
+						return err
+					}
+					s.Services = append(s.Services, elem)
+					return nil
+				}); err != nil {
 					return err
 				}
 				return nil

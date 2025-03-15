@@ -174,14 +174,34 @@ func (d *DockerSH) Create(ctx context.Context, wg *concurrency.SafeWaitGroup, sa
 				Cmd: []string{
 					"/bin/sh",
 					"-c",
-					fmt.Sprintf("rm /home/valnix/work/flake.nix && echo \"%s\" >> /home/valnix/work/flake.nix", sandBox.Config.Flake),
+					fmt.Sprintf("rm /home/valnix/work/flake.nix && echo \"%s\" >> /home/valnix/work/flake.nix && nix profile remove work", sandBox.Config.Flake),
 				},
 			},
 		)
 
-		_, err = d.client.ContainerExecAttach(ctx, flakeExec.ID, container.ExecAttachOptions{})
+		// start execution
+		if err := d.client.ContainerExecStart(ctx, flakeExec.ID, container.ExecStartOptions{}); err != nil {
+			d.logger.Err(err).Msgf("error adding flake in sandbox %s: %v", cont.Value().Name, err)
+			return
+		}
+
+		// wait for execution to complete
+		resp, err := d.client.ContainerExecAttach(ctx, flakeExec.ID, container.ExecAttachOptions{})
 		if err != nil {
-			d.logger.Err(err).Msgf("error adding flake to sandbox %s: %v", cont.Value().Name, err)
+			d.logger.Err(err).Msgf("error attaching to flake addition process in sandbox %s: %v", cont.Value().Name, err)
+			return
+		}
+		defer resp.Close() // Ensure stream is closed
+
+		// Inspect the execution result
+		execInspect, err := d.client.ContainerExecInspect(ctx, flakeExec.ID)
+		if err != nil {
+			d.logger.Err(err).Msgf("error inspecting flake addition process in sandbox %s: %v", cont.Value().Name, err)
+			return
+		}
+
+		if execInspect.ExitCode != 0 {
+			d.logger.Error().Msgf("flake addition process failed in sandbox %s with exit code %d", cont.Value().Name, execInspect.ExitCode)
 			return
 		}
 
@@ -195,7 +215,7 @@ func (d *DockerSH) Create(ctx context.Context, wg *concurrency.SafeWaitGroup, sa
 					"install",
 					".",
 				},
-				WorkingDir: "/home/valnix",
+				WorkingDir: "/home/valnix/work",
 			},
 		)
 		if err != nil {
@@ -203,9 +223,29 @@ func (d *DockerSH) Create(ctx context.Context, wg *concurrency.SafeWaitGroup, sa
 			return
 		}
 
-		err = d.client.ContainerExecStart(ctx, flakeEvalExec.ID, container.ExecStartOptions{Detach: true})
+		// start execution
+		if err := d.client.ContainerExecStart(ctx, flakeEvalExec.ID, container.ExecStartOptions{}); err != nil {
+			d.logger.Err(err).Msgf("error starting flake install process in sandbox %s: %v", cont.Value().Name, err)
+			return
+		}
+
+		// wait for execution to complete
+		resp, err = d.client.ContainerExecAttach(ctx, flakeEvalExec.ID, container.ExecAttachOptions{})
 		if err != nil {
-			d.logger.Err(err).Msgf("error evaluating flake in sandbox %s: %v", cont.Value().Name, err)
+			d.logger.Err(err).Msgf("error attaching to flake install process in sandbox %s: %v", cont.Value().Name, err)
+			return
+		}
+		defer resp.Close() // Ensure stream is closed
+
+		// Inspect the execution result
+		execInspect, err = d.client.ContainerExecInspect(ctx, flakeEvalExec.ID)
+		if err != nil {
+			d.logger.Err(err).Msgf("error inspecting flake install process in sandbox %s: %v", cont.Value().Name, err)
+			return
+		}
+
+		if execInspect.ExitCode != 0 {
+			d.logger.Error().Msgf("flake install process failed in sandbox %s with exit code %d", cont.Value().Name, execInspect.ExitCode)
 			return
 		}
 	}

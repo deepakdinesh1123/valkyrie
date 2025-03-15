@@ -535,7 +535,7 @@ func decodeFetchLanguagePackagesParams(args [0]string, argsEscaped bool, r *http
 				return err
 			}
 		} else {
-			return validate.ErrFieldRequired
+			return err
 		}
 		return nil
 	}(); err != nil {
@@ -2317,7 +2317,7 @@ func decodeSearchLanguagePackagesParams(args [0]string, argsEscaped bool, r *htt
 				return err
 			}
 		} else {
-			return validate.ErrFieldRequired
+			return err
 		}
 		return nil
 	}(); err != nil {
@@ -2353,7 +2353,7 @@ func decodeSearchLanguagePackagesParams(args [0]string, argsEscaped bool, r *htt
 				return err
 			}
 		} else {
-			return validate.ErrFieldRequired
+			return err
 		}
 		return nil
 	}(); err != nil {
@@ -2462,7 +2462,7 @@ func decodeSearchSystemPackagesParams(args [0]string, argsEscaped bool, r *http.
 				return err
 			}
 		} else {
-			return validate.ErrFieldRequired
+			return err
 		}
 		return nil
 	}(); err != nil {

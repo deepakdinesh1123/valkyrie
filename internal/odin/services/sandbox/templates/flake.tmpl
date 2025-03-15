@@ -1,13 +1,13 @@
 {
   inputs = {
-    nixpkgs.url = "{{ .NIXPKGS_URL }}";
-    flake-parts.url = "/var/cache/flake-parts-main";
-    process-compose-flake.url = "/var/cache/process-compose-flake-main";
-    services-flake.url = "/var/cache/services-flake-main";
+    nixpkgs.url = \"{{ .NIXPKGS_URL }}\";
+    flake-parts.url = \"/var/cache/flake-parts-main\";
+    process-compose-flake.url = \"/var/cache/process-compose-flake-main\";
+    services-flake.url = \"/var/cache/services-flake-main\";
   };
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } {
-    systems = [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" "aarch64-linux" ];
+    systems = [ \"x86_64-linux\" \"aarch64-darwin\" \"x86_64-darwin\" \"aarch64-linux\" ];
     imports = [
       inputs.process-compose-flake.flakeModule
     ];
@@ -18,9 +18,9 @@
       };
 
       packages.default = pkgs.buildEnv {
-        name = "Odin-Sandbox-Env";
+        name = \"Odin-Sandbox-Env\";
         paths = with pkgs; [
-          {{ range .Languages -}}
+          {{- range .Languages -}}
           {{ . }}
           {{- end }}
           {{- range .SystemDependencies }}
@@ -31,7 +31,7 @@
 
       devShells.default = pkgs.mkShell {
         buildInputs = with pkgs; [
-          {{ range .Languages -}}
+          {{- range .Languages -}}
           {{ . }}
           {{- end }}
           {{- range .SystemDependencies }}
@@ -40,12 +40,14 @@
         ];
       };
 
-      process-compose."odin" = pc: {
+      process-compose.\"odin\" = pc: {
         imports = [
           inputs.services-flake.processComposeModules.default
         ];
         services = {
-          {{ .Services }}
+          {{- range .Services }}
+          {{ . }}
+          {{- end }}
         };
       };
     };

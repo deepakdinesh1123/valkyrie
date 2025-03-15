@@ -20,15 +20,11 @@
       packages.default = pkgs.buildEnv {
         name = "Odin-Sandbox-Env";
         paths = with pkgs; [
-          vim
-          gnupatch
         ];
       };
 
       devShells.default = pkgs.mkShell {
         buildInputs = with pkgs; [
-          vim
-          gnupatch
         ];
       };
       process-compose."odin" = pc: {

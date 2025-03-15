@@ -24,10 +24,7 @@ properties:
       type: string
     example: ["gcc", "make", "git"]
   services:
-    type: string
-    description: The services to enable in the odin sandbox
-    example: |
-      mongodb."m1" = {
-        enable = true;
-        package = pkgs.mongodb;
-      };
+    type: array
+    description: List of services to be added to the sandbox
+    items:
+      type: string
