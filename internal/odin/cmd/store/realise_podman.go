@@ -88,7 +88,7 @@ func realisePodmanStore(pkg db.GetAllPackagesRow, containerID string, cli contex
 		ExecConfig: container.ExecOptions{
 			AttachStderr: true,
 			AttachStdout: true,
-			Cmd:          []string{"nix-shell", "-p", pkgName, "--run", "exit 0"},
+			Cmd:          []string{"/home/valnix/.nix-profile/bin/nix-shell", "-p", pkgName, "--run", "exit 0"},
 		},
 	})
 

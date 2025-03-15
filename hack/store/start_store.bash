@@ -14,12 +14,9 @@ if [ ! -d "/home/valnix/.nix-profile" ]; then
 
     echo 'export PATH="$PATH:~/.nix-profile/bin"' >> ~/.profile
     echo 'export PATH="$PATH:~/.nix-profile/bin"' >> ~/.bashrc
+    echo 'https://github.com/NixOS/nixpkgs/archive/b27ba4eb322d9d2bf2dc9ada9fd59442f50c8d7c.tar.gz nixpkgs' >> ~/.nix-channels
 fi
 source ~/.profile
 source ~/.bashrc
-
-echo "Printing environment variables"
-echo $NIX_CHANNELS_ENVIRONMENT
-echo $NIX_USER_ENVIRONMENT
 
 NIX_SECRET_KEY_FILE=/tmp/setup/cache-priv-key.pem nix-serve --listen 0.0.0.0:5000
