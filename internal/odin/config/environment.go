@@ -192,7 +192,7 @@ func setDefaults() {
 
 	viper.SetDefault("ODIN_RUNTIME", "docker")
 	viper.SetDefault("ODIN_WORKER_CONCURRENCY", 10)
-	viper.SetDefault("ODIN_HOT_CONTAINER", 5)
+	viper.SetDefault("ODIN_HOT_CONTAINER", 1)
 	viper.SetDefault("ODIN_WORKER_TASK_TIMEOUT", 120)
 	viper.SetDefault("ODIN_WORKER_POLL_FREQ", 30)
 	viper.SetDefault("ODIN_EXECUTION_IMAGE", "odin_execution:0.0.1-ubuntu")

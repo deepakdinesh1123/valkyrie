@@ -50,21 +50,22 @@ func WithSource(source string) LogOptsFunc {
 }
 
 func GetLogger(config *LogConfig) *zerolog.Logger {
+	var logLevel zerolog.Level
 	switch config.level {
 	case "debug":
-		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+		logLevel = zerolog.DebugLevel
 	case "info":
-		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+		logLevel = zerolog.InfoLevel
 	case "warn":
-		zerolog.SetGlobalLevel(zerolog.WarnLevel)
+		logLevel = zerolog.WarnLevel
 	case "error":
-		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+		logLevel = zerolog.ErrorLevel
 	case "fatal":
-		zerolog.SetGlobalLevel(zerolog.FatalLevel)
+		logLevel = zerolog.FatalLevel
 	case "panic":
-		zerolog.SetGlobalLevel(zerolog.PanicLevel)
+		logLevel = zerolog.PanicLevel
 	default:
-		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+		logLevel = zerolog.InfoLevel
 	}
 
 	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
@@ -83,7 +84,7 @@ func GetLogger(config *LogConfig) *zerolog.Logger {
 		}
 	}
 	logger := zerolog.New(logOut).
-		Level(zerolog.TraceLevel).
+		Level(logLevel).
 		With().
 		Timestamp().
 		Caller().
