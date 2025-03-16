@@ -246,7 +246,6 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 				if err != nil {
 					switch err {
 					case pgx.ErrNoRows:
-						continue
 					case context.Canceled:
 						w.logger.Info().Msg("Worker: context canceled")
 						swg.Wait()
@@ -258,10 +257,12 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 						return fmt.Errorf("failed to fetch job: %s", err)
 					}
 				}
-				w.logger.Info().Msgf("Worker: fetched job %d", res.JobID)
-				swg.Add(1)
 				// span.AddEvent("Executing job")
-				go w.exectr.Execute(ctx, &swg, &res, w.logger.With().Int64("JOB_ID", res.JobID).Logger())
+				if err == nil {
+					w.logger.Info().Msgf("Worker: fetched job %d", res.JobID)
+					swg.Add(1)
+					go w.exectr.Execute(ctx, &swg, &res, w.logger.With().Int64("JOB_ID", res.JobID).Logger())
+				}
 			}
 
 			if w.envConfig.ODIN_ENABLE_SANDBOX {
@@ -269,7 +270,6 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 				if err != nil {
 					switch err {
 					case pgx.ErrNoRows:
-						continue
 					case context.Canceled:
 						w.logger.Info().Msg("Worker: context canceled")
 						w.cleanup()
@@ -281,9 +281,11 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 						return &WorkerError{Type: "FetchSandboxJob", Message: err.Error()}
 					}
 				}
-				w.logger.Info().Msgf("Worker: fetched sandbox job %d", res.Sandbox.SandboxID)
-				swg.Add(1)
-				go w.sandboxHandler.Create(ctx, &swg, res)
+				if err == nil {
+					w.logger.Info().Msgf("Worker: fetched sandbox job %d", res.Sandbox.SandboxID)
+					swg.Add(1)
+					go w.sandboxHandler.Create(ctx, &swg, res)
+				}
 			}
 		case <-heartBeatTicker.C:
 			w.queries.UpdateHeartbeat(ctx, int32(w.ID))

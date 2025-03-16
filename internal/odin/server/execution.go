@@ -47,8 +47,6 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	jobIDStr := chi.URLParam(req, "jobId")
 
-	s.logger.Debug().Str("jobID", jobIDStr).Msg("from sse url")
-
 	jobID, err := strconv.ParseInt(jobIDStr, 10, 64)
 	if err != nil {
 		s.logger.Error().Stack().Err(err).Msg("Failed to get executionId")
@@ -112,7 +110,6 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 					JobID:  jobID,
 					Logs:   res.ExecLogs,
 				})
-				s.logger.Debug().Msg("completed sent")
 				return
 
 			case "failed":
@@ -123,18 +120,15 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 				return
 
 			case "pending":
-				s.logger.Debug().Msg("sending pending")
 				sendSSEMessage(w, flusher, SSEMessage{
 					Status: "pending",
 					JobID:  jobID,
 				})
 			case "scheduled":
-				s.logger.Debug().Msg("sending scheduled")
 				sendSSEMessage(w, flusher, SSEMessage{
 					Status: "scheduled",
 					JobID:  jobID,
 				})
-				s.logger.Debug().Msg("scheduled sent")
 			case "cancelled":
 				sendSSEMessage(w, flusher, SSEMessage{
 					Status: "canceled",
