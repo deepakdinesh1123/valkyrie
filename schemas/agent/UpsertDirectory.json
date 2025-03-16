@@ -1,0 +1,21 @@
+{
+    "description": "Represents a request to add or update a directory in a sandbox.",
+    "properties": {
+        "msgType": {
+            "default": "UpsertDirectory",
+            "description": "Type of the message",
+            "title": "Msgtype",
+            "type": "string"
+        },
+        "path": {
+            "description": "Path where the directory should be created or updated",
+            "title": "Path",
+            "type": "string"
+        }
+    },
+    "required": [
+        "path"
+    ],
+    "title": "UpsertDirectory",
+    "type": "object"
+}

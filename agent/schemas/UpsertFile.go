@@ -21,13 +21,13 @@ func (r *UpsertFile) Marshal() ([]byte, error) {
 // Represents a request to add or update a file in a sandbox.
 type UpsertFile struct {
 	// Content of the file                                     
-	Content                                            string  `json:"content"`
+	Content                                            *string `json:"content"`
 	// Name of the file to be added or updated                 
 	FileName                                           string  `json:"fileName"`
 	// Type of the message                                     
 	MsgType                                            *string `json:"msgType,omitempty"`
 	// Diff patch to apply to the file                         
-	Patch                                              string  `json:"patch"`
+	Patch                                              *string `json:"patch"`
 	// Path where the file should be created or updated        
 	Path                                               string  `json:"path"`
 }

@@ -1,0 +1,31 @@
+{
+    "description": "Represents a response to a directory delete request in a sandbox.",
+    "properties": {
+        "success": {
+            "title": "Success",
+            "type": "boolean"
+        },
+        "msg": {
+            "title": "Msg",
+            "type": "string"
+        },
+        "msgType": {
+            "default": "DeleteDirectoryResponse",
+            "description": "Type of the message",
+            "title": "Msgtype",
+            "type": "string"
+        },
+        "path": {
+            "description": "Path of the directory that was deleted",
+            "title": "Path",
+            "type": "string"
+        }
+    },
+    "required": [
+        "success",
+        "msg",
+        "path"
+    ],
+    "title": "DeleteDirectoryResponse",
+    "type": "object"
+}

@@ -18,21 +18,35 @@
             "type": "string"
         },
         "content": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
             "description": "Content of the file",
-            "title": "Content",
-            "type": "string"
+            "title": "Content"
         },
         "patch": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
             "description": "Diff patch to apply to the file",
-            "title": "Patch",
-            "type": "string"
+            "title": "Patch"
         }
     },
     "required": [
         "fileName",
-        "path",
-        "content",
-        "patch"
+        "path"
     ],
     "title": "UpsertFile",
     "type": "object"
