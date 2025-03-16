@@ -24,7 +24,7 @@ services:
     environment:
       - ODIN_COMPOSE_ENV=true
       - POSTGRES_HOST=postgres
-    runtime: "runsc"
+    # runtime: "runsc"
     network_mode: "bridge"
     links:
       - "postgres"
@@ -59,7 +59,7 @@ services:
       - "odin-store"
       - "postgres"
       - "docker-proxy"
-    runtime: "runsc"
+    # runtime: "runsc"
     profiles:
       - dev
       - production
@@ -112,7 +112,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
-    runtime: "runsc"
+    # runtime: "runsc"
     network_mode: "bridge"
     env_file:
       - $HOME/.odin/store/setup/.env

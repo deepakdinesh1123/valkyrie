@@ -1,12 +1,11 @@
-ARG BASE_IMAGE=odin_sandbox:ubuntu
+ARG BASE_IMAGE=odin_sandbox:0.0.1-ubuntu
 
 FROM ${BASE_IMAGE}
 
-# Copy the required files
+RUN nix profile install nixpkgs#code-server
+
 COPY hack/sandbox/start.sh /home/valnix/start.sh
 COPY configs/sandbox/code-server.yaml /home/valnix/.config/code-server/config.yaml
+COPY configs/sandbox/code-server-settings.json /home/valnix/.local/share/code-server/User/settings.json
 
-RUN nix-env -iA nixpkgs.code-server
-RUN mkdir -p /home/valnix/.config/code-server
-
-ENTRYPOINT ["/home/valnix/start.sh"]
+ENTRYPOINT ["/bin/sh", "/home/valnix/start.sh"]

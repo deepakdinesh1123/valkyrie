@@ -26,7 +26,7 @@ build-sandbox:
 # Build code-server image
 build-code-server:
     {{build_tool}} build \
-        -t {{sandbox_cs_image}}:{{version}}ubuntu \
+        -t {{sandbox_cs_image}}:{{version}}-ubuntu \
         -f builds/images/sandbox/code_server.dockerfile .
 
 # Build agent image
