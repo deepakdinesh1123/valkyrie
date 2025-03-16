@@ -53,7 +53,7 @@ func GetPodmanClient(envConfig *config.EnvConfig, queries db.Store, workerId int
 }
 
 func (p *PodmanClient) WriteFiles(ctx context.Context, containerID string, prepDir string, job *db.Job) error {
-	execReq, err := p.queries.GetExecRequest(ctx, job.Arguments.ExecReqId)
+	execReq, err := p.queries.GetExecRequest(ctx, job.Arguments.ExecConfig.ExecReqId)
 	if err != nil {
 		return err
 	}

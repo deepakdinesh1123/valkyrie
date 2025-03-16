@@ -26,7 +26,7 @@ func (s *SQLStore) FetchSandboxJobTx(ctx context.Context, arg FetchSandboxJobTxP
 			return err
 		}
 
-		sandbox, err := q.GetSandbox(ctx, job.Arguments.SandboxId)
+		sandbox, err := q.GetSandbox(ctx, job.Arguments.SandboxConfig.SandboxId)
 		if err != nil {
 			return fmt.Errorf("failed to get sandbox: %w", err)
 		}

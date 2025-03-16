@@ -48,7 +48,7 @@ func (s *SQLStore) UpdateJobResultTx(ctx context.Context, arg UpdateJobResultTxP
 			WorkerID:      pgtype.Int4{Int32: arg.WorkerId, Valid: true},
 			StartedAt:     pgtype.Timestamptz{Time: arg.StartTime, Valid: true},
 			FinishedAt:    pgtype.Timestamptz{Time: time.Now(), Valid: true},
-			ExecRequestID: pgtype.Int4{Int32: arg.Job.Arguments.ExecReqId, Valid: true},
+			ExecRequestID: pgtype.Int4{Int32: arg.Job.Arguments.ExecConfig.ExecReqId, Valid: true},
 			ExecLogs:      arg.ExecLogs,
 			NixLogs:       pgtype.Text{String: arg.NixLogs, Valid: true},
 			Success:       pgtype.Bool{Bool: arg.Success, Valid: true},

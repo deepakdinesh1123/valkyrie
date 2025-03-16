@@ -81,7 +81,7 @@ const getAllExecutionJobs = `-- name: GetAllExecutionJobs :many
 SELECT job_id, created_at, updated_at, time_out, started_at, arguments, current_state, retries, max_retries, worker_id, job_type, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, language_version 
 FROM jobs
 INNER JOIN exec_request 
-ON CAST(arguments->'ExecConfig'->>'exec_req_id' AS INT) = exec_request.id
+ON CAST(arguments->'ExecConfig'->>'ExecReqId' AS INT) = exec_request.id
 WHERE job_id >= $1
 ORDER BY jobs.job_id
 LIMIT $2
@@ -311,7 +311,7 @@ func (q *Queries) GetExecution(ctx context.Context, execID int64) (GetExecutionR
 }
 
 const getExecutionJob = `-- name: GetExecutionJob :one
-select job_id, created_at, updated_at, time_out, started_at, arguments, current_state, retries, max_retries, worker_id, job_type, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, language_version from jobs inner join exec_request on CAST(arguments->'ExecConfig'->>'exec_req_id' AS INT) = exec_request.id where jobs.job_id = $1
+select job_id, created_at, updated_at, time_out, started_at, arguments, current_state, retries, max_retries, worker_id, job_type, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, language_version from jobs inner join exec_request on CAST(arguments->'ExecConfig'->>'ExecReqId' AS INT) = exec_request.id where jobs.job_id = $1
 `
 
 type GetExecutionJobRow struct {
@@ -461,7 +461,7 @@ const getFlake = `-- name: GetFlake :one
 SELECT flake 
 FROM exec_request 
 WHERE id = (
-    SELECT CAST(arguments->'ExecConfig'->>'exec_req_id' AS INT) 
+    SELECT CAST(arguments->'ExecConfig'->>'ExecReqId' AS INT) 
     FROM jobs 
     WHERE job_id = $1
 )

@@ -1,6 +1,6 @@
 package jsonschema
 
 type JobArguments struct {
-	ExecConfig
-	SandboxConfig
+	ExecConfig    ExecConfig
+	SandboxConfig SandboxConfig
 }

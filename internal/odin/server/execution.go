@@ -45,7 +45,10 @@ func (s *OdinServer) Execute(ctx context.Context, req *api.ExecutionRequest, par
 
 func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
-	jobIDStr := chi.URLParam(req, "sandboxId")
+	jobIDStr := chi.URLParam(req, "jobId")
+
+	s.logger.Debug().Str("jobID", jobIDStr).Msg("from sse url")
+
 	jobID, err := strconv.ParseInt(jobIDStr, 10, 64)
 	if err != nil {
 		s.logger.Error().Stack().Err(err).Msg("Failed to get executionId")
@@ -82,9 +85,7 @@ func (s *OdinServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 			}
 			return
 		default:
-			s.logger.Debug().Msg("getting job")
 			job, err := s.queries.GetExecutionJob(ctx, jobID)
-			s.logger.Debug().Msg("got job")
 			if err != nil {
 				s.logger.Error().Stack().Err(err).Msg("Failed to get job")
 				sendSSEMessage(w, flusher, SSEMessage{

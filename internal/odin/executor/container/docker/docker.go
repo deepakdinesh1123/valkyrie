@@ -55,7 +55,7 @@ func GetDockerProvider(envConfig *config.EnvConfig, queries db.Store, workerId i
 
 func (d *DockerProvider) WriteFiles(ctx context.Context, containerID string, prepDir string, job *db.Job) error {
 
-	execReq, err := d.queries.GetExecRequest(ctx, job.Arguments.ExecReqId)
+	execReq, err := d.queries.GetExecRequest(ctx, job.Arguments.ExecConfig.ExecReqId)
 	if err != nil {
 		return err
 	}

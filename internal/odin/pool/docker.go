@@ -43,6 +43,9 @@ func DockerExecConstructor(ctx context.Context) (Container, error) {
 		Runtime:     envConfig.ODIN_CONTAINER_RUNTIME,
 		NetworkMode: "bridge",
 	}
+	if !envConfig.ODIN_COMPOSE_ENV {
+		hostConfig.Links = []string{envConfig.ODIN_STORE_CONTAINER}
+	}
 	createResp, err := dClient.ContainerCreate(ctx, &container.Config{
 		Image:       envConfig.ODIN_EXECUTION_IMAGE,
 		StopTimeout: &envConfig.ODIN_WORKER_TASK_TIMEOUT,
@@ -57,10 +60,6 @@ func DockerExecConstructor(ctx context.Context) (Container, error) {
 		return Container{}, err
 	}
 	cont.ID = createResp.ID
-
-	if !envConfig.ODIN_COMPOSE_ENV {
-		hostConfig.Links = []string{envConfig.ODIN_STORE_CONTAINER}
-	}
 
 	err = dClient.ContainerStart(ctx, createResp.ID, container.StartOptions{})
 	if err != nil {

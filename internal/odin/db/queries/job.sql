@@ -2,7 +2,7 @@
 SELECT flake 
 FROM exec_request 
 WHERE id = (
-    SELECT CAST(arguments->'ExecConfig'->>'exec_req_id' AS INT) 
+    SELECT CAST(arguments->'ExecConfig'->>'ExecReqId' AS INT) 
     FROM jobs 
     WHERE job_id = $1
 );
@@ -52,13 +52,13 @@ returning *;
 SELECT * 
 FROM jobs
 INNER JOIN exec_request 
-ON CAST(arguments->'ExecConfig'->>'exec_req_id' AS INT) = exec_request.id
+ON CAST(arguments->'ExecConfig'->>'ExecReqId' AS INT) = exec_request.id
 WHERE job_id >= $1
 ORDER BY jobs.job_id
 LIMIT $2;
 
 -- name: GetExecutionJob :one
-select * from jobs inner join exec_request on CAST(arguments->'ExecConfig'->>'exec_req_id' AS INT) = exec_request.id where jobs.job_id = $1;
+select * from jobs inner join exec_request on CAST(arguments->'ExecConfig'->>'ExecReqId' AS INT) = exec_request.id where jobs.job_id = $1;
 
 -- name: GetExecution :one
 select * from executions
@@ -149,6 +149,3 @@ set
     updated_at = now()
 where current_state = 'scheduled' 
   and worker_id = $1;
-
-
-
