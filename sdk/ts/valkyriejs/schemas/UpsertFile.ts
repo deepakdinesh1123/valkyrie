@@ -1,11 +1,11 @@
 import * as z from "zod";
 
 
-export const AddFileSchema = z.object({
+export const UpsertFileSchema = z.object({
     "content": z.string(),
     "fileName": z.string(),
     "msgType": z.string().optional(),
+    "patch": z.string(),
     "path": z.string(),
-    "sandboxId": z.number(),
 });
-export type AddFile = z.infer<typeof AddFileSchema>;
+export type UpsertFile = z.infer<typeof UpsertFileSchema>;

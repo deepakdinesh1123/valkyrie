@@ -34,21 +34,9 @@ func NewTTY(terminal *schemas.NewTerminal, opts ...TTYOpts) (*TTY, string, error
 		opt(t)
 	}
 
-	switch *terminal.Shell {
-	case schemas.Bash:
-		{
-			t, err := bashShell(t)
-			if err != nil {
-				return t, "", err
-			}
-		}
-	default:
-		{
-			t, err := bashShell(t)
-			if err != nil {
-				return t, "", err
-			}
-		}
+	t, err := bashShell(t)
+	if err != nil {
+		return t, "", err
 	}
 
 	tid := uuid.NewString()

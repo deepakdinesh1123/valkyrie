@@ -232,3 +232,7 @@ packages:
   - bzip2
   - sqlite
   - gcc14
+  - postgresql
+  - vim
+  - gnupatch
+  - perl

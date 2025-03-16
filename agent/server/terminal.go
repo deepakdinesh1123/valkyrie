@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/coder/websocket"
 	"github.com/deepakdinesh1123/valkyrie/agent/schemas"
@@ -44,14 +43,14 @@ func (s *Server) handleNewTerminal(ctx context.Context, c *websocket.Conn, data 
 	}
 
 	if err := json.Unmarshal(data, &nt); err != nil {
-		log.Printf("error parsing NewTerminal: %v", err)
+		s.logger.Err(err).Msg("error parsing NewTerminal")
 		sendResponse("", false, "Invalid request")
 		return
 	}
 
 	tty, tid, err := terminal.NewTTY(&nt)
 	if err != nil {
-		log.Printf("error creating terminal: %v", err)
+		s.logger.Err(err).Msg("error creating terminal")
 		sendResponse("", false, fmt.Sprintf("error creating terminal: %v", err))
 		return
 	}
@@ -76,7 +75,7 @@ func (s *Server) handleTerminalRead(ctx context.Context, c *websocket.Conn, data
 	}
 
 	if err := json.Unmarshal(data, &tr); err != nil {
-		log.Printf("error parsing TerminalRead: %v", err)
+		s.logger.Err(err).Msg("error parsing TerminalRead")
 		sendResponse(tr.TerminalID, false, "Invalid request", "")
 		return
 	}
@@ -111,7 +110,7 @@ func (s *Server) handleTerminalWrite(ctx context.Context, c *websocket.Conn, dat
 	}
 
 	if err := json.Unmarshal(data, &tw); err != nil {
-		log.Printf("error parsing TerminalWrite: %v", err)
+		s.logger.Err(err).Msg("error parsing TerminalWrite")
 		sendResponse(tw.TerminalID, false, "Invalid request")
 		return
 	}
@@ -145,7 +144,7 @@ func (s *Server) handleTerminalClose(ctx context.Context, c *websocket.Conn, dat
 	}
 
 	if err := json.Unmarshal(data, &tc); err != nil {
-		log.Printf("error parsing TerminalClose: %v", err)
+		s.logger.Err(err).Msg("error parsing TerminalClose")
 		sendResponse(tc.TerminalID, false, "Invalid request")
 		return
 	}

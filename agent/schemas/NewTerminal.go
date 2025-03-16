@@ -29,15 +29,4 @@ type NewTerminal struct {
 	NixShell                            *string           `json:"nixShell"`
 	// Packages to install                                
 	Packages                            []string          `json:"packages"`
-	// Shell type to use                                  
-	Shell                               *Shell            `json:"shell"`
 }
-
-type Shell string
-
-const (
-	Bash     Shell = "bash"
-	Nix      Shell = "nix"
-	NixShell Shell = "nix-shell"
-	Sh       Shell = "sh"
-)

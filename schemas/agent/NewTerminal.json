@@ -1,34 +1,10 @@
 {
-    "$defs": {
-        "Shell": {
-            "enum": [
-                "nix",
-                "bash",
-                "sh",
-                "nix-shell"
-            ],
-            "title": "Shell",
-            "type": "string"
-        }
-    },
     "description": "Create a new terminal session",
     "properties": {
         "msgType": {
             "default": "NewTerminal",
             "title": "Msgtype",
             "type": "string"
-        },
-        "shell": {
-            "anyOf": [
-                {
-                    "$ref": "#/$defs/Shell"
-                },
-                {
-                    "type": "null"
-                }
-            ],
-            "default": null,
-            "description": "Shell type to use"
         },
         "nixShell": {
             "anyOf": [

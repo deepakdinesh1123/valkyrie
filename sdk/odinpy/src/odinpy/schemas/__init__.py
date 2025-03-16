@@ -27,7 +27,6 @@ from .sandbox import Sandbox, SandboxConfig
 from .terminal import (
     NewTerminal,
     NewTerminalResponse,
-    Shell,
     TerminalClose,
     TerminalCloseResponse,
     TerminalRead,
@@ -39,7 +38,6 @@ from .terminal import (
 
 __all__ = [
     # Terminal related
-    "Shell",
     "NewTerminal",
     "NewTerminalResponse",
     "TerminalWrite",

@@ -1,4 +1,3 @@
-from enum import Enum
 from typing import List, Optional
 from uuid import UUID
 
@@ -7,18 +6,10 @@ from pydantic import BaseModel, Field
 from .base import ResponseBase
 
 
-class Shell(str, Enum):
-    NIX = "nix"
-    BASH = "bash"
-    SH = "sh"
-    NIX_SHELL = "nix-shell"
-
-
 class NewTerminal(BaseModel):
     """Create a new terminal session"""
 
     msgType: str = Field(default="NewTerminal", frozen=True)
-    shell: Optional[Shell] = Field(default=None, description="Shell type to use")
     nixShell: Optional[str] = Field(default=None, description="Nix shell configuration")
     nixFlake: Optional[str] = Field(default=None, description="Nix flake configuration")
     packages: Optional[List[str]] = Field(

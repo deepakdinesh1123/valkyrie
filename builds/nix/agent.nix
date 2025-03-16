@@ -9,7 +9,7 @@
 buildGoModule rec {
   pname = "agent";
   version = "0.0.1";
-  vendorHash = "sha256-7jl532ORGhLAF04haXN4ekpOHeG30yftCdZxZaus43w=";
+  vendorHash = "sha256-5B9kZUCDIM9hXRaMZcVUDHa7H4Qn7D9iUl+J51LPoOE=";
 
   src = ../../agent;
 

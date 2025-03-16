@@ -11,6 +11,7 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/agent/command"
 	"github.com/deepakdinesh1123/valkyrie/agent/schemas"
 	"github.com/deepakdinesh1123/valkyrie/agent/terminal"
+	"github.com/rs/zerolog"
 )
 
 type Server struct {
@@ -18,12 +19,14 @@ type Server struct {
 
 	terminals map[string]terminal.TTY
 	commands  map[string]command.Command
+	logger    *zerolog.Logger
 }
 
-func NewServer() *Server {
+func NewServer(logger *zerolog.Logger) *Server {
 	return &Server{
 		terminals: make(map[string]terminal.TTY),
 		commands:  make(map[string]command.Command),
+		logger:    logger,
 	}
 }
 
@@ -37,7 +40,7 @@ func (s *Server) handleSandbox(w http.ResponseWriter, r *http.Request) {
 		Subprotocols:       []string{"sandbox"},
 	})
 	if err != nil {
-		log.Printf("websocket accept error: %v", err)
+		s.logger.Err(err).Msg("websocket accept error")
 		return
 	}
 
@@ -53,13 +56,13 @@ func (s *Server) handleSandbox(w http.ResponseWriter, r *http.Request) {
 	for {
 		_, data, err := c.Read(ctx)
 		if err != nil {
-			log.Printf("read error: %v", err)
+			s.logger.Err(err).Msg("read error")
 			return
 		}
 
 		var msg Message
 		if err := json.Unmarshal(data, &msg); err != nil {
-			log.Printf("json unmarshal error: %v", err)
+			s.logger.Err(err).Msg("json unmarshal error")
 			continue
 		}
 
@@ -110,8 +113,8 @@ func (s *Server) handleSandbox(w http.ResponseWriter, r *http.Request) {
 func (s *Server) Start(addr string) {
 	http.HandleFunc("/sandbox", s.handleSandbox)
 
-	log.Printf("Starting server on %s", addr)
+	s.logger.Info().Msgf("Starting server on %s", addr)
 	if err := http.ListenAndServe(addr, nil); err != nil {
-		log.Fatal(err)
+		s.logger.Fatal().Err(err)
 	}
 }

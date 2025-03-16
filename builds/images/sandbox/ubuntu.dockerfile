@@ -44,14 +44,14 @@ ENV PATH="/home/valnix/.nix-profile/bin:${PATH}"
 
 RUN mkdir -p /home/valnix/work
 
-COPY --from=agent /tmp/nix-store-closure /tmp/agent/closure
-COPY --from=agent /valkyrie/result /home/valnix
-
 COPY --chown=valnix:valnix configs/nix/flake.nix /home/valnix/work/flake.nix
 RUN cd /home/valnix/work && nix profile install . --extra-experimental-features 'nix-command flakes'
 
 RUN nix profile install nixpkgs#vim --extra-experimental-features 'nix-command flakes'
 RUN nix profile install nixpkgs#gnupatch --extra-experimental-features 'nix-command flakes'
+
+COPY --from=agent /tmp/nix-store-closure /tmp/agent/closure
+COPY --from=agent /valkyrie/result /home/valnix
 
 USER root
 COPY configs/nix/nix.conf /etc/nix/nix.conf
