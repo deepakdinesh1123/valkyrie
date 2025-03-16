@@ -1,6 +1,3 @@
-#!/bin/sh
-# cat  /home/valnix/.config/code-server/config.yaml
-# code-server
+!/bin/sh
 
-echo "Starting sandbox" >> start.txt
-sleep infinity
+code-server /home/valnix/work

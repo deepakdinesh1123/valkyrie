@@ -216,14 +216,14 @@ func setDefaults() {
 
 	viper.SetDefault("ODIN_SANDBOX_IMAGE", "odin_sandbox:0.0.1-ubuntu")
 
-	containerRuntime := ""
-	switch runtime.GOOS {
-	case "darwin":
-		containerRuntime = "runc"
-	case "linux":
-		containerRuntime = "runsc"
-	}
-	viper.SetDefault("ODIN_CONTAINER_RUNTIME", containerRuntime)
+	// containerRuntime := ""
+	// switch runtime.GOOS {
+	// case "darwin":
+	// 	containerRuntime = "runc"
+	// case "linux":
+	// 	containerRuntime = "runsc"
+	// }
+	viper.SetDefault("ODIN_CONTAINER_RUNTIME", "runc")
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
