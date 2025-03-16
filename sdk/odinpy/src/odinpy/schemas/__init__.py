@@ -17,6 +17,14 @@ from .file import (
     UpsertFile,
     UpsertFileResponse,
 )
+from .directory import (
+    DeleteDirectory,
+    DeleteDirectoryResponse,
+    ReadDirectory,
+    ReadDirectoryResponse,
+    UpsertDirectory,
+    UpsertDirectoryResponse,
+)
 from .packages import (
     InstallNixPackage,
     InstallNixPackageResponse,
@@ -62,6 +70,13 @@ __all__ = [
     "UpsertFileResponse",
     "DeleteFileResponse",
     "ReadFileResponse",
+    # Directory related
+    "UpsertDirectory",
+    "DeleteDirectory",
+    "ReadDirectory",
+    "UpsertDirectoryResponse",
+    "DeleteDirectoryResponse",
+    "ReadDirectoryResponse",
     # Sandbox related
     "Sandbox",
     "SandboxConfig",

@@ -6,6 +6,7 @@ from typing import Literal, Optional, Union
 
 import requests
 
+
 from websocket import WebSocket, WebSocketException, WebSocketTimeoutException
 
 from .config import config
@@ -14,9 +15,18 @@ from .log import logger
 from .schemas import Error, NewTerminal, NewTerminalResponse
 from .schemas import Sandbox as SandboxResponse
 from .terminal import Terminal
+from .file import File
+from .directory import Directory
 from .websocket import websocket_connection
 
-
+from .schemas import (
+    UpsertFileResponse,
+    DeleteFileResponse,
+    ReadFileResponse,
+    UpsertDirectoryResponse,
+    DeleteDirectoryResponse,    
+    ReadDirectoryResponse,
+)
 class Sandbox:
     def __init__(self, sandboxId: int):
         self._sandboxId: int = sandboxId
@@ -208,3 +218,146 @@ class Sandbox:
             return Error(message="Failed to decode JSON response from the agent.")
         except Exception as e:
             return Error(message=f"An unexpected error occurred: {str(e)}")
+        
+
+    def get_file(self, path: str) -> File:
+        """
+        Get a File object for the specified path.
+
+        Args:
+            path: Path of the file in the sandbox
+
+        Returns:
+            File: A File object for the specified path
+        """
+        if self.state != "running":
+            return Error(
+                message=f"Sandbox is not running, current state is: {self.state}"
+            )
+
+        return File(path=path, agent=self.agent)
+    
+    def upsert_file(self, path: str, content: Optional[str] = None, patch: Optional[str] = None) -> Union[UpsertFileResponse, Error]:
+        """
+        Update or create a file in the sandbox.
+     
+        Args:
+            path: Path where the file should be created or updated
+            content: Content of the file (exclusive with patch)
+            patch: Diff patch to apply to the file (exclusive with content)
+            
+        Returns:
+            UpsertFileResponse on success, Error on failure
+        """
+        if content is None and patch is None:
+            return Error(message="Either content or patch must be provided")
+     
+        file = self.get_file(path)
+        if isinstance(file, Error):
+            return file
+     
+        return file.upsert(content=content, patch=patch)
+    
+    def delete_file(self, path: str) -> Union[DeleteFileResponse, Error]:
+        """
+        Delete a file from the sandbox.
+
+        Args:
+            path: Path of the file to be deleted
+
+        Returns:
+            DeleteFileResponse on success, Error on failure
+        """
+        file = self.get_file(path)
+        if isinstance(file, Error):
+            return file
+
+        return file.delete()
+
+    def read_file(self, path: str) -> Union[ReadFileResponse, Error]:
+        """
+        Read a file from the sandbox.
+
+        Args:
+            path: Path of the file to be read
+
+        Returns:
+            ReadFileResponse on success, Error on failure
+        """
+        file = self.get_file(path)
+        if isinstance(file, Error):
+            return file
+
+        return file.read()
+    
+
+    def get_directory(self, path: str) -> Union[Directory, Error]:
+        """
+        Get a Directory object for managing a directory in the sandbox.
+        
+        Args:
+            path: Path of the directory in the sandbox
+            
+        Returns:
+            Directory object on success, Error on failure
+        """        
+        if self.state != "running":
+            return Error(
+                message=f"Sandbox is not running, current state is: {self.state}"
+            )
+
+        return Directory(path=path, agent=self.agent)
+    
+    def upsert_directory(self, path: str, content: Optional[str] = None, patch: Optional[str] = None) -> Union[UpsertDirectoryResponse, Error]:
+        """
+        Update or create a directory in the sandbox.
+     
+        Args:
+            path: Path where the directory should be created or updated
+            content: Content of the directory (exclusive with patch)
+            patch: Diff patch to apply to the directory (exclusive with content)
+            
+        Returns:
+            UpsertDirectoryResponse on success, Error on failure
+        """
+        if content is None and patch is None:
+            return Error(message="Either content or patch must be provided")
+     
+        directory = self.get_directory(path)
+        if isinstance(directory, Error):
+            return directory
+     
+        return directory.upsert(content=content, patch=patch)
+    
+    def delete_directory(self, path: str) -> Union[DeleteDirectoryResponse, Error]:
+        """
+        Delete a directory from the sandbox.
+
+        Args:
+            path: Path of the directory to be deleted
+
+        Returns:
+            DeleteDirectoryResponse on success, Error on failure
+        """
+        directory = self.get_directory(path)
+        if isinstance(directory, Error):
+            return directory
+
+        return directory.delete()
+
+    def read_directory(self, path: str) -> Union[ReadDirectoryResponse, Error]:
+        """
+        Read a directory from the sandbox.
+
+        Args:
+            path: Path of the directory to be read
+
+        Returns:
+            ReadDirectoryResponse on success, Error on failure
+        """
+        directory = self.get_directory(path)
+        if isinstance(directory, Error):
+            return directory
+
+        return directory.read() 
+    
