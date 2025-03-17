@@ -1,4 +1,4 @@
-//go:build podman
+//go:build podman && !darwin
 
 package store
 
