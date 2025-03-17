@@ -1,0 +1,1324 @@
+openapi: 3.0.2
+info:
+  title: API Title
+  version: 0.0.1
+  license:
+    name: MIT
+    url: https://github.com/deepakdinesh1123/valkyrie/blob/main/LICENSE
+servers:
+  - url: https://backend.evnix.cloud/api
+paths:
+  /health:
+    get:
+      summary: Health Check
+      description: Health Check
+      operationId: health
+      responses:
+        '200':
+          description: OK
+  /executions/execute:
+    post:
+      summary: Execute a script
+      description: Execute a script
+      operationId: execute
+      parameters:
+        - $ref: '#/components/parameters/AuthHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExecutionRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - jobId
+                  - events
+                properties:
+                  jobId:
+                    type: integer
+                    format: int64
+                  events:
+                    type: string
+                    format: url
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /jobs/execution:
+    get:
+      summary: Get all execution jobs
+      description: Get all execution jobs
+      operationId: getAllExecutionJobs
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - jobs
+                  - pagination
+                properties:
+                  jobs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Job'
+                  pagination:
+                    $ref: '#/components/schemas/PaginationResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /executions:
+    get:
+      summary: Get all executions
+      description: Get all executions
+      operationId: getAllExecutions
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - executions
+                  - pagination
+                properties:
+                  executions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ExecutionResult'
+                  pagination:
+                    $ref: '#/components/schemas/PaginationResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /jobs/{JobId}/executions:
+    get:
+      summary: Get executions of given job
+      description: Get executions of given job
+      operationId: getExecutionsForJob
+      parameters:
+        - name: JobId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - executions
+                  - pagination
+                properties:
+                  executions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ExecutionResult'
+                  pagination:
+                    $ref: '#/components/schemas/PaginationResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Execution job not found
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /executions/{execId}:
+    get:
+      summary: Get execution result by id
+      description: Get execution result by id
+      operationId: getExecutionResultById
+      parameters:
+        - name: execId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecutionResult'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Execution result not found
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /executions/jobs/{JobId}:
+    get:
+      summary: Get execution job
+      description: Get execution job
+      operationId: getExecutionJobById
+      parameters:
+        - name: JobId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Execution job not found
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      summary: Cancel Execution Job
+      description: Cancel Execution Job
+      operationId: cancelExecutionJob
+      parameters:
+        - name: JobId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Delete execution job
+      description: Delete execution job
+      operationId: deleteExecutionJob
+      parameters:
+        - name: JobId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Execution job not found
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /version:
+    get:
+      summary: Get version
+      description: Get version
+      operationId: getVersion
+      parameters:
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - version
+                properties:
+                  version:
+                    type: string
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /execution/config:
+    get:
+      summary: Get execution config
+      description: Get execution config
+      operationId: getExecutionConfig
+      parameters:
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecutionConfig'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /fetch/system:
+    get:
+      summary: Fetch inital list of available system packages
+      description: Initialize the search results content with a default set of system packages
+      operationId: FetchSystemPackages
+      parameters:
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - packages
+                properties:
+                  packages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Package'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /search/system:
+    get:
+      summary: Search for system packages
+      description: Search for system packages
+      operationId: SearchSystemPackages
+      parameters:
+        - $ref: '#/components/parameters/AuthHeader'
+        - $ref: '#/components/parameters/SearchString'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - packages
+                properties:
+                  packages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Package'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /fetch/language:
+    get:
+      summary: Fetch inital list of available language packages
+      description: Initialize the search results content with a default set of language specific packages
+      operationId: FetchLanguagePackages
+      parameters:
+        - $ref: '#/components/parameters/AuthHeader'
+        - $ref: '#/components/parameters/Language'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - packages
+                properties:
+                  packages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Package'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /search/language:
+    get:
+      summary: Search for language specific packages
+      description: Search for language specific packages
+      operationId: SearchLanguagePackages
+      parameters:
+        - $ref: '#/components/parameters/AuthHeader'
+        - $ref: '#/components/parameters/Language'
+        - $ref: '#/components/parameters/SearchString'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - packages
+                properties:
+                  packages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Package'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /packages/exist:
+    post:
+      summary: Verify package list is available.
+      description: Verify the package list is available for the language version while switching between language versions.
+      operationId: PackagesExist
+      parameters:
+        - $ref: '#/components/parameters/AuthHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PackageExistRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - exists
+                properties:
+                  exists:
+                    type: boolean
+                    description: Indicate all packages' existance for given language
+                    example: false
+                  nonExistingPackages:
+                    type: array
+                    description: List of packages that do not exist for the language
+                    items:
+                      type: string
+                    example:
+                      - nonexistent-package
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /languages/{id}/versions:
+    get:
+      summary: Get all language versions
+      description: Retrieve a list of all language versions from the database.
+      operationId: getAllVersions
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the language to retrieve versions.
+          schema:
+            type: integer
+            format: int64
+            example: 1
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - languageVersions
+                properties:
+                  languageVersions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LanguageVersionResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /languages:
+    get:
+      summary: Get all languages
+      description: Retrieve a list of all languages from the database.
+      operationId: getAllLanguages
+      parameters:
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - languages
+                properties:
+                  languages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LanguageResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/Error'
+  /languages/{id}:
+    get:
+      summary: Get language by ID
+      description: Retrieve a language entry from the database using its ID.
+      operationId: getLanguageById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the language to retrieve.
+          schema:
+            type: integer
+            format: int64
+            example: 1
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - language
+                properties:
+                  language:
+                    type: object
+                    $ref: '#/components/schemas/LanguageResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Language not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /language-versions:
+    get:
+      summary: Get all language versions
+      description: Retrieve a list of all language versions from the database.
+      operationId: getAllLanguageVersions
+      parameters:
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - languageVersions
+                properties:
+                  languageVersions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LanguageVersionResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /language-versions/{id}:
+    get:
+      summary: Get language version by ID
+      description: Retrieve a language version entry from the database using its ID.
+      operationId: getLanguageVersionById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the language version to retrieve.
+          schema:
+            type: integer
+            format: int64
+            example: 1
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - language
+                properties:
+                  language:
+                    type: object
+                    $ref: '#/components/schemas/LanguageVersionResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Language version not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /sandbox:
+    post:
+      summary: Create a sandbox
+      description: Create a sandbox
+      operationId: createSandbox
+      parameters:
+        - $ref: '#/components/parameters/AuthHeader'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSandbox'
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - result
+                  - sandboxId
+                properties:
+                  result:
+                    type: string
+                  sandboxId:
+                    type: integer
+                    format: int64
+                  sandboxStatusSSE:
+                    type: string
+                  sandboxStatusWS:
+                    type: string
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /sandbox/{sandboxId}:
+    get:
+      summary: Get Sandbox
+      description: Retrieve Sandbox details
+      operationId: getSandbox
+      parameters:
+        - name: sandboxId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - $ref: '#/components/parameters/AuthHeader'
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Sandbox'
+                  - $ref: '#/components/schemas/SandboxState'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /flake/{jobId}:
+    get:
+      summary: Fetch Flake
+      description: Fetches flake of a given job
+      operationId: fetchFlake
+      parameters:
+        - in: path
+          name: jobId
+          schema:
+            type: integer
+            format: int64
+          required: true
+          description: Job ID
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - flake
+                properties:
+                  flake:
+                    type: string
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/Error'
+components:
+  parameters:
+    AuthHeader:
+      name: X-Auth-Token
+      in: header
+      description: Authentication token
+      required: false
+      schema:
+        type: string
+    Cursor:
+      name: cursor
+      in: query
+      description: The current position of the cursor
+      required: false
+      schema:
+        type: integer
+        format: int64
+        default: 1
+    Limit:
+      name: limit
+      in: query
+      description: The limit for the records
+      required: false
+      schema:
+        type: integer
+        format: int64
+        default: 10
+    SearchString:
+      name: searchString
+      in: query
+      description: The string to be searched.
+      required: true
+      schema:
+        type: string
+    Language:
+      name: language
+      in: query
+      description: The language for which the package is searched.
+      required: true
+      schema:
+        type: string
+  schemas:
+    EnvironmentVariable:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+    ExecutionEnvironmentSpec:
+      type: object
+      properties:
+        environment_variables:
+          type: array
+          items:
+            $ref: '#/components/schemas/EnvironmentVariable'
+        languageDependencies:
+          type: array
+          items:
+            type: string
+        systemDependencies:
+          type: array
+          items:
+            type: string
+        setup:
+          type: string
+    ExecutionRequest:
+      type: object
+      properties:
+        environment:
+          $ref: '#/components/schemas/ExecutionEnvironmentSpec'
+        code:
+          type: string
+        language:
+          type: string
+          default: bash
+        version:
+          type: string
+        max_retries:
+          type: integer
+          format: int4
+          default: 5
+        timeout:
+          type: integer
+          format: int32
+          default: -1
+        cmdLineArgs:
+          type: string
+        compilerArgs:
+          type: string
+        command:
+          type: string
+        files:
+          type: string
+          format: byte
+        input:
+          type: string
+    Error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+    Job:
+      type: object
+      required:
+        - jobId
+        - script
+        - flake
+        - created_at
+      properties:
+        jobId:
+          type: integer
+          format: int64
+        script:
+          type: string
+        flake:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        started_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    PaginationResponse:
+      type: object
+      required:
+        - total
+        - limit
+        - cursor
+      properties:
+        total:
+          type: integer
+          format: int64
+          description: Represents the total number of items.
+        limit:
+          type: integer
+          format: int64
+          description: Represents the number of items per page.
+        cursor:
+          type: integer
+          format: int64
+          description: Represents the start of the cursor
+    ExecutionResult:
+      allOf:
+        - $ref: '#/components/schemas/Job'
+        - type: object
+          required:
+            - execId
+            - started_at
+            - finished_at
+            - exec_logs
+          properties:
+            execId:
+              type: integer
+              format: int64
+            flake:
+              type: string
+            started_at:
+              type: string
+              format: date-time
+            finished_at:
+              type: string
+              format: date-time
+            exec_logs:
+              type: string
+            nix_logs:
+              type: string
+    ExecutionConfig:
+      type: object
+      required:
+        - ODIN_WORKER_PROVIDER
+        - ODIN_WORKER_CONCURRENCY
+        - ODIN_WORKER_BUFFER_SIZE
+        - ODIN_WORKER_TASK_TIMEOUT
+        - ODIN_WORKER_POLL_FREQ
+        - ODIN_WORKER_RUNTIME
+        - ODIN_LOG_LEVEL
+      properties:
+        ODIN_WORKER_PROVIDER:
+          type: string
+          description: Represents the worker provider.
+        ODIN_WORKER_CONCURRENCY:
+          type: integer
+          format: int32
+          description: Represents the concurrency level for the worker.
+        ODIN_WORKER_BUFFER_SIZE:
+          type: integer
+          format: int32
+          description: Represents the buffer size for the worker.
+        ODIN_WORKER_TASK_TIMEOUT:
+          type: integer
+          description: Represents the task timeout.
+        ODIN_WORKER_POLL_FREQ:
+          type: integer
+          description: Represents the polling frequency for the worker in seconds.
+        ODIN_WORKER_RUNTIME:
+          type: string
+          description: Represents the runtime for the worker in seconds.
+        ODIN_LOG_LEVEL:
+          type: string
+          description: Represents the log level.
+        ODIN_SYSTEM_PROVIDER_BASE_DIR:
+          type: string
+          description: Represents the base directory for the system provider.
+        ODIN_SYSTEM_PROVIDER_CLEAN_UP:
+          type: boolean
+          description: Represents whether to clean up directories created by the system provider.
+    Package:
+      type: object
+      required:
+        - name
+        - version
+      properties:
+        name:
+          type: string
+          description: Name of the package
+        version:
+          type: string
+          description: Version of the package
+    PackageExistRequest:
+      type: object
+      required:
+        - language
+        - packages
+      properties:
+        language:
+          type: string
+          description: The language to check the packages against
+          example: python311Packages
+        packages:
+          type: array
+          description: List of packages to verify.
+          items:
+            type: string
+          example:
+            - requests
+            - numpy
+            - nonexistent-pkg
+    LanguageVersion:
+      type: object
+      required:
+        - language_id
+        - version
+        - nix_package_name
+        - template
+        - search_query
+        - default_version
+      properties:
+        language_id:
+          type: integer
+          format: int64
+          description: Reference to the parent language
+          example: 1
+        version:
+          type: string
+          description: Version identifier of the language
+          example: 3.1.0
+        nix_package_name:
+          type: string
+          description: Name of the Nix package
+          example: python310
+        template:
+          type: string
+        search_query:
+          type: string
+          description: Search query string
+          example: python310Packages
+        default_version:
+          type: boolean
+          description: Whether this is the default version of the language
+          example: true
+    LanguageVersionResponse:
+      allOf:
+        - $ref: '#/components/schemas/LanguageVersion'
+        - type: object
+          required:
+            - id
+          properties:
+            id:
+              type: integer
+              format: int64
+              description: Unique identifier for the language version
+              example: 1
+    Language:
+      type: object
+      required:
+        - name
+        - extension
+        - monaco_language
+        - default_code
+        - template
+      properties:
+        name:
+          type: string
+          description: Name of the language.
+          example: python-3.10
+        extension:
+          type: string
+          description: File extension for the language.
+          example: py
+        monaco_language:
+          type: string
+          description: Monaco editor language identifier.
+          example: python
+        default_code:
+          type: string
+          description: Default code for the language.
+          example: print('Hello, World!')
+        template:
+          type: string
+          description: The default template for the language
+          example: |
+            {{ define "execute" }} go run main.go {{ if .Args }}{{ .Args }}{{ end }} {{ end }}
+    LanguageResponse:
+      allOf:
+        - $ref: '#/components/schemas/Language'
+        - type: object
+          required:
+            - id
+            - name
+            - extension
+            - monaco_language
+            - default_code
+          properties:
+            id:
+              type: integer
+              format: int64
+              description: Unique identifier for the language version
+              example: 1
+            name:
+              type: string
+              example: python-3.10
+            extension:
+              type: string
+              example: py
+            monaco_language:
+              type: string
+              example: python
+            default_code:
+              type: string
+              example: print('Hello, World!')
+    CreateSandbox:
+      type: object
+      description: Configuration for a sandbox environment request
+      properties:
+        nix_flake:
+          type: string
+          description: Nix flake configuration for the sandbox environment
+          example: |
+            {
+              inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+              outputs = { self, nixpkgs }: {
+                # flake configuration
+              };
+            }
+        languages:
+          type: array
+          description: List of programming languages required in the sandbox
+          items:
+            type: string
+          example:
+            - python
+            - javascript
+            - go
+        system_dependencies:
+          type: array
+          description: List of system-level dependencies needed in the sandbox
+          items:
+            type: string
+          example:
+            - gcc
+            - make
+            - git
+        services:
+          type: array
+          description: List of services to be added to the sandbox
+          items:
+            type: string
+    Sandbox:
+      type: object
+      required:
+        - sandboxId
+        - state
+        - URL
+        - agentURL
+        - created_at
+      properties:
+        sandboxId:
+          type: integer
+          format: int64
+        state:
+          type: string
+        URL:
+          type: string
+        agentURL:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+    SandboxState:
+      type: object
+      required:
+        - sandboxId
+        - state
+      properties:
+        sandboxId:
+          type: integer
+          format: int64
+        state:
+          type: string

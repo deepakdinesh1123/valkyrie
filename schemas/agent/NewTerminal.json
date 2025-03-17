@@ -1,0 +1,70 @@
+{
+    "description": "Create a new terminal session",
+    "properties": {
+        "msgType": {
+            "default": "NewTerminal",
+            "title": "Msgtype",
+            "type": "string"
+        },
+        "nixShell": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "description": "Nix shell configuration",
+            "title": "Nixshell"
+        },
+        "nixFlake": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "description": "Nix flake configuration",
+            "title": "Nixflake"
+        },
+        "packages": {
+            "anyOf": [
+                {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "description": "Packages to install",
+            "title": "Packages"
+        },
+        "env": {
+            "anyOf": [
+                {
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "type": "object"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "description": "Environment variables to be added",
+            "title": "Env"
+        }
+    },
+    "title": "NewTerminal",
+    "type": "object"
+}

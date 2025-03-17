@@ -1,0 +1,29 @@
+type: object
+required:
+  - name
+  - extension
+  - monaco_language
+  - default_code
+  - template
+properties:
+  name:
+    type: string
+    description: Name of the language.
+    example: python-3.10
+  extension:
+    type: string
+    description: File extension for the language.
+    example: py
+  monaco_language:
+    type: string
+    description: Monaco editor language identifier.
+    example: python
+  default_code:
+    type: string
+    description: Default code for the language.
+    example: print('Hello, World!')
+  template:
+    type: string
+    description: The default template for the language
+    example: |
+      {{ define "execute" }} go run main.go {{ if .Args }}{{ .Args }}{{ end }} {{ end }}

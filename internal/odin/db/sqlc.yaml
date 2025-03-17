@@ -1,18 +1,21 @@
 version: "2"
 cloud:
   project: '01J1BQY2CAXNR8DBY51C3KJG0K'
+servers:
+- engine: postgresql
+  uri: ${PG_URL}
 sql:
-  - engine: "postgresql"
+  - schema:
+      - "migrations"
     queries:
       - "queries"
-    schema:
-      - "migrations"
+    engine: "postgresql"
+    database:
+      managed: true
     analyzer:
-      database: false
+      database: true
     rules:
       - sqlc/db-prepare
-    database:
-      uri: "postgresql://thors:thorkell@localhost:5432/valkyrie?sslmode=disable"
     gen:
       go:
         package: "db"
@@ -29,3 +32,19 @@ sql:
               import: "github.com/google/uuid"
               type: "UUID"
             nullable: true
+          - column: "jobs.arguments"
+            go_type: 
+              import: "github.com/deepakdinesh1123/valkyrie/internal/odin/db/jsonschema"
+              package: "jsonschema"
+              type: "JobArguments"
+          - column: "sandboxes.config"
+            go_type:
+              import: "github.com/deepakdinesh1123/valkyrie/internal/odin/db/jsonschema"
+              package: "jsonschema"
+              type: "SandboxConfig"
+          - column: "sandboxes.details"
+            go_type:
+              import: "github.com/deepakdinesh1123/valkyrie/internal/odin/db/jsonschema"
+              package: "jsonschema"
+              type: "SandboxDetails"
+          

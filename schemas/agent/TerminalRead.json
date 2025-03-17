@@ -1,0 +1,21 @@
+{
+    "description": "Read from terminal",
+    "properties": {
+        "terminalId": {
+            "description": "Unique identifier for the terminal session",
+            "format": "uuid",
+            "title": "Terminalid",
+            "type": "string"
+        },
+        "msgType": {
+            "default": "TerminalRead",
+            "title": "Msgtype",
+            "type": "string"
+        }
+    },
+    "required": [
+        "terminalId"
+    ],
+    "title": "TerminalRead",
+    "type": "object"
+}

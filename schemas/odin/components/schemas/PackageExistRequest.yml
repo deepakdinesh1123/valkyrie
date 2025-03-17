@@ -1,0 +1,18 @@
+type: object
+required:
+  - language
+  - packages
+properties:
+  language:
+    type: string
+    description: The language to check the packages against
+    example: python311Packages
+  packages:
+    type: array
+    description: List of packages to verify.
+    items:
+      type: string
+    example:
+      - requests
+      - numpy
+      - nonexistent-pkg

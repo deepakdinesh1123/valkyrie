@@ -1,0 +1,54 @@
+openapi: 3.0.2
+info:
+  title: API Title
+  version: 0.0.1
+  license:
+    name: MIT
+    url: https://github.com/deepakdinesh1123/valkyrie/blob/main/LICENSE
+servers:
+  - url: https://backend.evnix.cloud/api
+paths:
+  /health:
+    $ref: paths/health.yml
+  /executions/execute:
+    $ref: paths/executions_execute.yml
+  /jobs/execution:
+    $ref: paths/jobs_execution.yml
+  /executions:
+    $ref: paths/executions.yml
+  /jobs/{JobId}/executions:
+    $ref: paths/jobs_{JobId}_executions.yml
+  /executions/{execId}:
+    $ref: paths/executions_{execId}.yml
+  /executions/jobs/{JobId}:
+    $ref: paths/executions_jobs_{JobId}.yml
+  /version:
+    $ref: paths/version.yml
+  /execution/config:
+    $ref: paths/execution_config.yml
+  /fetch/system:
+    $ref: paths/fetch_system.yml
+  /search/system:
+    $ref: paths/search_system.yml
+  /fetch/language:
+    $ref: paths/fetch_language.yml
+  /search/language:
+    $ref: paths/search_language.yml
+  /packages/exist:
+    $ref: paths/packages_exist.yml
+  /languages/{id}/versions:
+    $ref: paths/languages_{id}_versions.yml
+  /languages:
+    $ref: paths/languages.yml
+  /languages/{id}:
+    $ref: paths/languages_{id}.yml
+  /language-versions:
+    $ref: paths/language-versions.yml
+  /language-versions/{id}:
+    $ref: paths/language-versions_{id}.yml
+  /sandbox:
+    $ref: paths/sandbox.yml
+  /sandbox/{sandboxId}:
+    $ref: paths/sandbox_{sandboxId}.yml
+  /flake/{jobId}:
+    $ref: paths/flake_{jobId}.yml

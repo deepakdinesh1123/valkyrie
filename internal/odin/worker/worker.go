@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"sync"
 	"time"
@@ -11,35 +12,40 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/concurrency"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
-	"github.com/deepakdinesh1123/valkyrie/internal/odin/models"
-	"github.com/deepakdinesh1123/valkyrie/internal/odin/provider"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/executor"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/sandbox"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/store"
 	"github.com/deepakdinesh1123/valkyrie/internal/telemetry"
 	"github.com/deepakdinesh1123/valkyrie/pkg/namesgenerator"
 	"github.com/gofrs/flock"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
 type Worker struct {
-	ID           int
-	Name         string
-	queries      db.Store
-	envConfig    *config.EnvConfig
-	provider     provider.Provider
-	logger       *zerolog.Logger
-	tp           trace.TracerProvider
-	mp           metric.MeterProvider
-	otelShutdown func(context.Context) error
+	ID             int
+	Name           string
+	queries        db.Store
+	envConfig      *config.EnvConfig
+	exectr         executor.Executor
+	sandboxHandler sandbox.SandboxHandler
+	logger         *zerolog.Logger
+	tp             trace.TracerProvider
+	mp             metric.MeterProvider
+	otelShutdown   func(context.Context) error
 
 	WorkerStats struct {
-		CPUUsage  float64
-		MemAvail  uint64
-		MemTotal  uint64
-		MemUsed   uint64
-		Timestamp time.Time
+		CPUUsage float64
+		MemUsage float64
 	}
+}
+
+type WorkerInfo struct {
+	ID   int
+	Name string
 }
 
 func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, newWorker bool, standalone bool, logger *zerolog.Logger) (*Worker, error) {
@@ -47,13 +53,20 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 		deleteWorkerInfo(envConfig.ODIN_WORKER_INFO_FILE)
 	}
 
-	otelShutdown, tp, mp, err := telemetry.SetupOTelSDK(ctx, "Odin Worker", envConfig)
+	otelShutdown, tp, mp, _, err := telemetry.SetupOTelSDK(ctx, "Odin Worker", envConfig)
 	if err != nil {
 		logger.Err(err).Msg("Failed to setup OpenTelemetry")
 		return nil, err
 	}
 
-	queries, err := db.GetDBConnection(ctx, standalone, envConfig, false, true, logger)
+	dbConnectionOpts := db.DBConnectionOpts(
+		db.ApplyMigrations(false),
+		db.IsStandalone(standalone),
+		db.IsWorker(true),
+		db.WithTracerProvider(tp),
+	)
+
+	queries, err := db.GetDBConnection(ctx, envConfig, logger, dbConnectionOpts)
 	if err != nil {
 		logger.Err(err).Msg("Failed to get database connection")
 		return nil, err
@@ -63,20 +76,19 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 		queries:      queries,
 		envConfig:    envConfig,
 		logger:       logger,
-		tp:           tp,
-		mp:           mp,
+		tp:           tp, // trace provider
+		mp:           mp, // metric provider
 		otelShutdown: otelShutdown,
 	}
 	workerInfo, err := readWorkerInfo(envConfig.ODIN_WORKER_INFO_FILE, logger)
 	if err != nil {
-		logger.Err(err).Msg("Failed to read worker info")
 		switch err.(type) {
 		case *WorkerInfoNotFoundError:
-			logger.Info().Msgf("Creating new worker")
 			if name == "" {
 				name = namesgenerator.GetRandomName(0)
 			}
-			wrkr.ID, err = wrkr.upsertWorker(ctx, name)
+			wrkr.Name = name
+			wrkr.ID, err = wrkr.upsertWorker(ctx, name, -1)
 			if err != nil {
 				logger.Err(err).Msg("Failed to create worker")
 			}
@@ -85,18 +97,41 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 		}
 	}
 	if wrkr.ID == 0 && workerInfo != nil {
-		logger.Info().Msgf("Found worker info")
-		wrkr.ID, err = wrkr.upsertWorker(ctx, workerInfo.Name)
+		logger.Info().Str("workerName", workerInfo.Name).Int("workerID", workerInfo.ID).Msgf("Found worker info")
+		wrkr.Name = workerInfo.Name
+		wrkr.ID, err = wrkr.upsertWorker(ctx, workerInfo.Name, workerInfo.ID)
 		if err != nil {
 			logger.Err(err).Msg("Failed to get worker")
 		}
 	}
-	prvdr, err := provider.GetProvider(ctx, queries, int32(wrkr.ID), tp, mp, envConfig, logger)
-	if err != nil {
-		logger.Err(err).Msg("Failed to get provider")
+
+	if !envConfig.ODIN_COMPOSE_ENV {
+		err = store.StartOdinStore(ctx, envConfig.ODIN_STORE_IMAGE, envConfig.ODIN_STORE_CONTAINER, envConfig.ODIN_CONTAINER_RUNTIME, envConfig.ODIN_RUNTIME)
+		if err != nil {
+			return nil, fmt.Errorf("could not start odin store: %v", err)
+		}
 	}
-	wrkr.provider = prvdr
-	logger.Info().Msgf("Starting worker %d", wrkr.ID)
+
+	if envConfig.ODIN_ENABLE_EXECUTION {
+		exectr, err := executor.GetExecutor(ctx, queries, int32(wrkr.ID), tp, mp, envConfig, logger)
+		if err != nil {
+			return nil, err
+		}
+		wrkr.exectr = exectr
+	}
+
+	if envConfig.ODIN_ENABLE_SANDBOX {
+		sandboxHandler, err := sandbox.GetSandboxHandler(ctx, queries, int32(wrkr.ID), tp, mp, envConfig, logger)
+		if err != nil {
+			return nil, fmt.Errorf("could not get sandbox handler: %s", err)
+		}
+		err = sandboxHandler.StartContainerPool(ctx, envConfig)
+		if err != nil {
+			return nil, fmt.Errorf("error starting container pool: %v", err)
+		}
+		wrkr.sandboxHandler = sandboxHandler
+	}
+	logger.Info().Msgf("Starting worker %d with name %s", wrkr.ID, wrkr.Name)
 
 	err = writeWorkerInfo(envConfig.ODIN_WORKER_INFO_FILE, wrkr)
 	if err != nil {
@@ -105,14 +140,25 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 	return wrkr, nil
 }
 
-func (w *Worker) upsertWorker(ctx context.Context, name string) (int, error) {
+func (w *Worker) upsertWorker(ctx context.Context, name string, id int) (int, error) {
 	wrkr, err := w.queries.GetWorker(ctx, name)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			wrkr, err = w.queries.InsertWorker(ctx, name)
-			if err != nil {
-				w.logger.Err(err).Msg("Worker: failed to insert worker")
-				return 0, err
+			if id == -1 {
+				wrkr, err = w.queries.CreateWorker(ctx, name)
+				if err != nil {
+					w.logger.Err(err).Msg("Worker: failed to create worker")
+					return 0, err
+				}
+			} else {
+				wrkr, err = w.queries.InsertWorker(ctx, db.InsertWorkerParams{
+					ID:   int32(id),
+					Name: name,
+				})
+				if err != nil {
+					w.logger.Err(err).Msg("Worker: failed to insert worker")
+					return 0, err
+				}
 			}
 		} else {
 			w.logger.Err(err).Msg("Worker: failed to get worker")
@@ -123,6 +169,12 @@ func (w *Worker) upsertWorker(ctx context.Context, name string) (int, error) {
 }
 
 func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
+	w.queries.UpdateHeartbeat(ctx, int32(w.ID))
+	defer wg.Done()
+	if w.exectr != nil {
+		defer w.exectr.Cleanup()
+	}
+
 	defer func() {
 		var err error
 
@@ -133,64 +185,131 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 		}
 	}()
 
-	tracer := w.tp.Tracer("worker")
-	tracerCtx, span := tracer.Start(ctx, "Run")
-	defer span.End()
+	// tracer := w.tp.Tracer("worker")
+	// tracerCtx, span := tracer.Start(ctx, "Run")
+	// defer span.End()
 
-	span.AddEvent("Acquiring lock on worker info")
+	// span.AddEvent("Acquiring lock on worker info")
 	infLock := flock.New(w.envConfig.ODIN_WORKER_INFO_FILE)
+	locked, err := infLock.TryLock()
+	if err != nil {
+		w.logger.Err(err).Msg("Failed to acquire lock on worker info")
+		return err
+	}
+	if !locked {
+		w.logger.Info().Msg("Worker: failed to acquire lock on worker info, another worker is running")
+		return &WorkerError{Type: "Lock", Message: "Failed to acquire lock on worker info"}
+	}
 	defer infLock.Unlock()
-	defer wg.Done()
 	var swg concurrency.SafeWaitGroup
-	ticker := time.NewTicker(time.Duration(w.envConfig.ODIN_WORKER_POLL_FREQ) * time.Second)
+	fetchJobTicker := time.NewTicker(time.Duration(w.envConfig.ODIN_WORKER_POLL_FREQ) * time.Millisecond)
+	heartBeatTicker := time.NewTicker(time.Duration(5) * time.Second)
 	for {
 		select {
 		case <-ctx.Done():
-			w.logger.Info().Int32("Tasks in progress", swg.Count()).Msg("Worker: context done")
+			// w.logger.Info().Int32("Tasks in progress", swg.Count()).Msg("Worker: context done")
 			swg.Wait()
 			err := ctx.Err()
-			ticker.Stop()
+			fetchJobTicker.Stop()
+			if w.sandboxHandler != nil {
+				err = w.sandboxHandler.Cleanup(context.TODO())
+				if err != nil {
+					return fmt.Errorf("error cleaning up containers: %s", err)
+				}
+			}
+			w.queries.RequeueWorkerJobs(context.TODO(), pgtype.Int4{Valid: true, Int32: int32(w.ID)})
 			switch err {
 			case context.Canceled:
 				w.logger.Info().Msg("Worker: context canceled")
 				return nil
 			default:
 				w.logger.Err(err).Msg("Worker: context error")
-				return &WorkerError{Type: "Context", Message: err.Error()}
+				return fmt.Errorf("context error: %s", err)
 			}
-		case <-ticker.C:
+		case <-fetchJobTicker.C:
 			w.updateStats()
-			if w.WorkerStats.CPUUsage > 75 || w.WorkerStats.MemUsed > 75 {
-				w.logger.Info().Float64("CPU Usage", w.WorkerStats.CPUUsage).Uint64("Memory Used", w.WorkerStats.MemUsed).Msg("Worker: high usage")
+			if w.WorkerStats.CPUUsage > w.envConfig.ODIN_CPU_LIMIT {
+				w.logger.Info().Float64("high CPU Usage", w.WorkerStats.CPUUsage).Msg("Worker: ")
 				continue
 			}
-			if swg.Count() >= w.envConfig.ODIN_WORKER_CONCURRENCY {
-				w.logger.Info().Int("Tasks in progress", int(swg.Count())).Int32("Concurrency limit", w.envConfig.ODIN_WORKER_CONCURRENCY).Msg("Worker: concurrency limit reached")
+			if w.WorkerStats.MemUsage > w.envConfig.ODIN_MEMORY_LIMIT {
+				w.logger.Info().Float64("high memory usage", w.WorkerStats.MemUsage).Msg("Worker: ")
 				continue
 			}
-			res, err := w.queries.FetchJobTx(ctx, db.FetchJobTxParams{WorkerID: int32(w.ID)})
-			if err != nil {
-				switch err {
-				case pgx.ErrNoRows:
+			if w.envConfig.ODIN_ENABLE_EXECUTION {
+				if swg.Count() >= w.envConfig.ODIN_WORKER_CONCURRENCY {
+					w.logger.Info().Int("Tasks in progress", int(swg.Count())).Int32("Concurrency limit", w.envConfig.ODIN_WORKER_CONCURRENCY).Msg("Worker: concurrency limit reached")
 					continue
-				case context.Canceled:
-					w.logger.Info().Msg("Worker: context canceled")
-					return nil
-				default:
-					w.logger.Err(err).Msgf("Worker: failed to fetch job")
-					return &WorkerError{Type: "FetchJob", Message: err.Error()}
+				}
+				res, err := w.queries.FetchJob(ctx, db.FetchJobParams{
+					Workerid: int32(w.ID),
+					Jobtype:  "execution",
+				})
+				if err != nil {
+					switch err {
+					case pgx.ErrNoRows:
+					case context.Canceled:
+						w.logger.Info().Msg("Worker: context canceled")
+						swg.Wait()
+						w.cleanup()
+						return nil
+					default:
+						w.logger.Err(err).Msgf("Worker: failed to fetch job")
+						w.cleanup()
+						return fmt.Errorf("failed to fetch job: %s", err)
+					}
+				}
+				// span.AddEvent("Executing job")
+				if err == nil {
+					w.logger.Info().Msgf("Worker: fetched job %d", res.JobID)
+					swg.Add(1)
+					go w.exectr.Execute(ctx, &swg, &res, w.logger.With().Int64("JOB_ID", res.JobID).Logger())
 				}
 			}
-			w.logger.Info().Msgf("Worker: fetched job %d", res.Job.ID)
-			swg.Add(1)
-			span.AddEvent("Executing job")
-			go w.provider.Execute(tracerCtx, &swg, res.Job)
+
+			if w.envConfig.ODIN_ENABLE_SANDBOX {
+				res, err := w.queries.FetchSandboxJobTx(ctx, db.FetchSandboxJobTxParams{WorkerID: int32(w.ID)})
+				if err != nil {
+					switch err {
+					case pgx.ErrNoRows:
+					case context.Canceled:
+						w.logger.Info().Msg("Worker: context canceled")
+						w.cleanup()
+						w.logger.Info().Msg("cleanup complete")
+						return nil
+					default:
+						w.logger.Err(err).Msgf("Worker: failed to fetch sandbox job")
+						w.cleanup()
+						return &WorkerError{Type: "FetchSandboxJob", Message: err.Error()}
+					}
+				}
+				if err == nil {
+					w.logger.Info().Msgf("Worker: fetched sandbox job %d", res.Sandbox.SandboxID)
+					swg.Add(1)
+					go w.sandboxHandler.Create(ctx, &swg, res)
+				}
+			}
+		case <-heartBeatTicker.C:
+			w.queries.UpdateHeartbeat(ctx, int32(w.ID))
 		}
 	}
 }
 
+func (w *Worker) cleanup() error {
+	if w.envConfig.ODIN_ENABLE_SANDBOX {
+		if w.sandboxHandler != nil {
+			w.sandboxHandler.Cleanup(context.TODO())
+			err := w.queries.ClearSandboxes(context.TODO())
+			if err != nil {
+				return fmt.Errorf("error clearing sandboxes %v", err)
+			}
+		}
+	}
+	return nil
+}
+
 func writeWorkerInfo(infoFile string, worker *Worker) error {
-	wrkrInfo := models.WorkerInfo{
+	wrkrInfo := WorkerInfo{
 		ID:   worker.ID,
 		Name: worker.Name,
 	}
@@ -218,7 +337,7 @@ func deleteWorkerInfo(infoFile string) error {
 	return nil
 }
 
-func readWorkerInfo(infoFile string, logger *zerolog.Logger) (*models.WorkerInfo, error) {
+func readWorkerInfo(infoFile string, logger *zerolog.Logger) (*WorkerInfo, error) {
 	if _, err := os.Stat(infoFile); err != nil {
 		if os.IsNotExist(err) {
 			return nil, &WorkerInfoNotFoundError{}
@@ -232,7 +351,7 @@ func readWorkerInfo(infoFile string, logger *zerolog.Logger) (*models.WorkerInfo
 	if err != nil {
 		return nil, err
 	}
-	var wrkrInfo models.WorkerInfo
+	var wrkrInfo WorkerInfo
 	err = json.Unmarshal(workerInfoBytes, &wrkrInfo)
 	if err != nil {
 		return nil, err

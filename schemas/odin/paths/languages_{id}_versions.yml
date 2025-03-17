@@ -1,0 +1,40 @@
+get:
+  summary: Get all language versions
+  description: Retrieve a list of all language versions from the database.
+  operationId: getAllVersions
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: The ID of the language to retrieve versions.
+      schema:
+        type: integer
+        format: int64
+        example: 1
+    - $ref: ../components/parameters/AuthHeader.yml
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - languageVersions
+            properties:
+              languageVersions:
+                type: array
+                items:
+                  $ref: ../components/schemas/LanguageVersionResponse.yml
+    '403':
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml
+    '500':
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml

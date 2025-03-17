@@ -5,11 +5,15 @@ package api
 // setDefaults set default value of fields.
 func (s *ExecutionRequest) setDefaults() {
 	{
-		val := int(0)
+		val := string("bash")
+		s.Language.SetTo(val)
+	}
+	{
+		val := int(5)
 		s.MaxRetries.SetTo(val)
 	}
 	{
-		val := int64(0)
+		val := int32(-1)
 		s.Timeout.SetTo(val)
 	}
 }

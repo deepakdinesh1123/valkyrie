@@ -1,0 +1,19 @@
+{
+    "properties": {
+        "commandId": {
+            "description": "Command ID",
+            "title": "Commandid",
+            "type": "string"
+        },
+        "msgType": {
+            "default": "CommandReadOutput",
+            "title": "Msgtype",
+            "type": "string"
+        }
+    },
+    "required": [
+        "commandId"
+    ],
+    "title": "CommandReadOutput",
+    "type": "object"
+}

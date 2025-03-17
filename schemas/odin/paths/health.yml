@@ -1,0 +1,7 @@
+get:
+  summary: Health Check
+  description: Health Check
+  operationId: health
+  responses:
+    '200':
+      description: OK

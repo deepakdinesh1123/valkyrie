@@ -1,0 +1,37 @@
+{
+    "description": "Represents a response to a file read request in a sandbox.",
+    "properties": {
+        "success": {
+            "title": "Success",
+            "type": "boolean"
+        },
+        "msg": {
+            "title": "Msg",
+            "type": "string"
+        },
+        "msgType": {
+            "default": "ReadFileResponse",
+            "description": "Type of the message",
+            "title": "Msgtype",
+            "type": "string"
+        },
+        "path": {
+            "description": "Path of the file that was read",
+            "title": "Path",
+            "type": "string"
+        },
+        "content": {
+            "description": "Content of the file that was read",
+            "title": "Content",
+            "type": "string"
+        }
+    },
+    "required": [
+        "success",
+        "msg",
+        "path",
+        "content"
+    ],
+    "title": "ReadFileResponse",
+    "type": "object"
+}

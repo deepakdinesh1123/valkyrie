@@ -1,0 +1,27 @@
+get:
+  summary: Get Sandbox
+  description: Retrieve Sandbox details
+  operationId: getSandbox
+  parameters:
+    - name: sandboxId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    - $ref: ../components/parameters/AuthHeader.yml
+  responses:
+    '200':
+      description: ok
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: ../components/schemas/Sandbox.yml
+              - $ref: ../components/schemas/SandboxState.yml
+    '500':
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml

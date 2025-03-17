@@ -8,60 +8,151 @@ import (
 
 // Handler handles operations described by OpenAPI v3 specification.
 type Handler interface {
-	// CancelJob implements cancelJob operation.
+	// CancelExecutionJob implements cancelExecutionJob operation.
 	//
-	// Cancel Job.
+	// Cancel Execution Job.
 	//
-	// PUT /executions/{JobId}/
-	CancelJob(ctx context.Context, params CancelJobParams) (CancelJobRes, error)
-	// DeleteJob implements deleteJob operation.
+	// PUT /executions/jobs/{JobId}
+	CancelExecutionJob(ctx context.Context, params CancelExecutionJobParams) (CancelExecutionJobRes, error)
+	// CreateSandbox implements createSandbox operation.
 	//
-	// Delete job.
+	// Create a sandbox.
 	//
-	// DELETE /executions/{JobId}/
-	DeleteJob(ctx context.Context, params DeleteJobParams) (DeleteJobRes, error)
+	// POST /sandbox
+	CreateSandbox(ctx context.Context, req OptCreateSandbox, params CreateSandboxParams) (CreateSandboxRes, error)
+	// DeleteExecutionJob implements deleteExecutionJob operation.
+	//
+	// Delete execution job.
+	//
+	// DELETE /executions/jobs/{JobId}
+	DeleteExecutionJob(ctx context.Context, params DeleteExecutionJobParams) (DeleteExecutionJobRes, error)
 	// Execute implements execute operation.
 	//
 	// Execute a script.
 	//
-	// POST /executions/execute/
-	Execute(ctx context.Context, req *ExecutionRequest) (ExecuteRes, error)
-	// GetAllExecutionResults implements getAllExecutionResults operation.
+	// POST /executions/execute
+	Execute(ctx context.Context, req *ExecutionRequest, params ExecuteParams) (ExecuteRes, error)
+	// FetchFlake implements fetchFlake operation.
 	//
-	// Get all execution results.
+	// Fetches flake of a given job.
 	//
-	// GET /executions/results/
-	GetAllExecutionResults(ctx context.Context, params GetAllExecutionResultsParams) (GetAllExecutionResultsRes, error)
+	// GET /flake/{jobId}
+	FetchFlake(ctx context.Context, params FetchFlakeParams) (FetchFlakeRes, error)
+	// FetchLanguagePackages implements FetchLanguagePackages operation.
+	//
+	// Initialize the search results content with a default set of language specific packages.
+	//
+	// GET /fetch/language
+	FetchLanguagePackages(ctx context.Context, params FetchLanguagePackagesParams) (FetchLanguagePackagesRes, error)
+	// FetchSystemPackages implements FetchSystemPackages operation.
+	//
+	// Initialize the search results content with a default set of system packages.
+	//
+	// GET /fetch/system
+	FetchSystemPackages(ctx context.Context, params FetchSystemPackagesParams) (FetchSystemPackagesRes, error)
+	// GetAllExecutionJobs implements getAllExecutionJobs operation.
+	//
+	// Get all execution jobs.
+	//
+	// GET /jobs/execution
+	GetAllExecutionJobs(ctx context.Context, params GetAllExecutionJobsParams) (GetAllExecutionJobsRes, error)
 	// GetAllExecutions implements getAllExecutions operation.
 	//
 	// Get all executions.
 	//
-	// GET /executions/
+	// GET /executions
 	GetAllExecutions(ctx context.Context, params GetAllExecutionsParams) (GetAllExecutionsRes, error)
+	// GetAllLanguageVersions implements getAllLanguageVersions operation.
+	//
+	// Retrieve a list of all language versions from the database.
+	//
+	// GET /language-versions
+	GetAllLanguageVersions(ctx context.Context, params GetAllLanguageVersionsParams) (GetAllLanguageVersionsRes, error)
+	// GetAllLanguages implements getAllLanguages operation.
+	//
+	// Retrieve a list of all languages from the database.
+	//
+	// GET /languages
+	GetAllLanguages(ctx context.Context, params GetAllLanguagesParams) (GetAllLanguagesRes, error)
+	// GetAllVersions implements getAllVersions operation.
+	//
+	// Retrieve a list of all language versions from the database.
+	//
+	// GET /languages/{id}/versions
+	GetAllVersions(ctx context.Context, params GetAllVersionsParams) (GetAllVersionsRes, error)
 	// GetExecutionConfig implements getExecutionConfig operation.
 	//
 	// Get execution config.
 	//
-	// GET /execution/config/
-	GetExecutionConfig(ctx context.Context) (GetExecutionConfigRes, error)
-	// GetExecutionResultsById implements getExecutionResultsById operation.
+	// GET /execution/config
+	GetExecutionConfig(ctx context.Context, params GetExecutionConfigParams) (GetExecutionConfigRes, error)
+	// GetExecutionJobById implements getExecutionJobById operation.
 	//
-	// Get execution result.
+	// Get execution job.
 	//
-	// GET /executions/{JobId}/
-	GetExecutionResultsById(ctx context.Context, params GetExecutionResultsByIdParams) (GetExecutionResultsByIdRes, error)
-	// GetExecutionWorkers implements getExecutionWorkers operation.
+	// GET /executions/jobs/{JobId}
+	GetExecutionJobById(ctx context.Context, params GetExecutionJobByIdParams) (GetExecutionJobByIdRes, error)
+	// GetExecutionResultById implements getExecutionResultById operation.
 	//
-	// Get all execution workers.
+	// Get execution result by id.
 	//
-	// GET /executions/workers
-	GetExecutionWorkers(ctx context.Context, params GetExecutionWorkersParams) (GetExecutionWorkersRes, error)
+	// GET /executions/{execId}
+	GetExecutionResultById(ctx context.Context, params GetExecutionResultByIdParams) (GetExecutionResultByIdRes, error)
+	// GetExecutionsForJob implements getExecutionsForJob operation.
+	//
+	// Get executions of given job.
+	//
+	// GET /jobs/{JobId}/executions
+	GetExecutionsForJob(ctx context.Context, params GetExecutionsForJobParams) (GetExecutionsForJobRes, error)
+	// GetLanguageById implements getLanguageById operation.
+	//
+	// Retrieve a language entry from the database using its ID.
+	//
+	// GET /languages/{id}
+	GetLanguageById(ctx context.Context, params GetLanguageByIdParams) (GetLanguageByIdRes, error)
+	// GetLanguageVersionById implements getLanguageVersionById operation.
+	//
+	// Retrieve a language version entry from the database using its ID.
+	//
+	// GET /language-versions/{id}
+	GetLanguageVersionById(ctx context.Context, params GetLanguageVersionByIdParams) (GetLanguageVersionByIdRes, error)
+	// GetSandbox implements getSandbox operation.
+	//
+	// Retrieve Sandbox details.
+	//
+	// GET /sandbox/{sandboxId}
+	GetSandbox(ctx context.Context, params GetSandboxParams) (GetSandboxRes, error)
 	// GetVersion implements getVersion operation.
 	//
 	// Get version.
 	//
-	// GET /version/
-	GetVersion(ctx context.Context) (GetVersionRes, error)
+	// GET /version
+	GetVersion(ctx context.Context, params GetVersionParams) (GetVersionRes, error)
+	// Health implements health operation.
+	//
+	// Health Check.
+	//
+	// GET /health
+	Health(ctx context.Context) error
+	// PackagesExist implements PackagesExist operation.
+	//
+	// Verify the package list is available for the language version while switching between language
+	// versions.
+	//
+	// POST /packages/exist
+	PackagesExist(ctx context.Context, req *PackageExistRequest, params PackagesExistParams) (PackagesExistRes, error)
+	// SearchLanguagePackages implements SearchLanguagePackages operation.
+	//
+	// Search for language specific packages.
+	//
+	// GET /search/language
+	SearchLanguagePackages(ctx context.Context, params SearchLanguagePackagesParams) (SearchLanguagePackagesRes, error)
+	// SearchSystemPackages implements SearchSystemPackages operation.
+	//
+	// Search for system packages.
+	//
+	// GET /search/system
+	SearchSystemPackages(ctx context.Context, params SearchSystemPackagesParams) (SearchSystemPackagesRes, error)
 }
 
 // Server implements http server based on OpenAPI v3 specification and

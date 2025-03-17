@@ -1,0 +1,34 @@
+{
+    "properties": {
+        "success": {
+            "title": "Success",
+            "type": "boolean"
+        },
+        "msg": {
+            "title": "Msg",
+            "type": "string"
+        },
+        "commandId": {
+            "description": "Command ID",
+            "title": "Commandid",
+            "type": "string"
+        },
+        "msgType": {
+            "default": "CommandReadOutputResponse",
+            "title": "Msgtype",
+            "type": "string"
+        },
+        "stdout": {
+            "title": "Stdout",
+            "type": "string"
+        }
+    },
+    "required": [
+        "success",
+        "msg",
+        "commandId",
+        "stdout"
+    ],
+    "title": "CommandReadOutputResponse",
+    "type": "object"
+}

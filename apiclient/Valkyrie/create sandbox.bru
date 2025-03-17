@@ -1,0 +1,20 @@
+meta {
+  name: create sandbox
+  type: http
+  seq: 18
+}
+
+post {
+  url: {{BASE_URL}}/api/sandbox
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+      "system_dependencies": [
+      "hello"
+    ],
+    "services": ["postgres.pg1.enable = true;"]
+  }
+}

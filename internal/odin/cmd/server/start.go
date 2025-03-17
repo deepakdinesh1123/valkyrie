@@ -3,6 +3,7 @@ package server
 import (
 	"sync"
 
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/logs"
@@ -18,25 +19,30 @@ var ServerStartCmd = &cobra.Command{
 	RunE:  serverExec,
 }
 
+var (
+	migrateDB    bool
+	initialiseDB bool
+)
+
 func serverExec(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
-	logLevel := cmd.Flag("log-level").Value.String()
-	logger := logs.GetLogger(logLevel)
-	logger.Info().Msg("Starting Odin in standalone mode")
 
 	envConfig, err := config.GetEnvConfig()
 	if err != nil {
-		logger.Err(err).Msg("Failed to get environment config")
+		log.Err(err).Msg("Failed to get env config")
 		return err
 	}
 
-	applyMigrations, err := cmd.Flags().GetBool("migrate")
-	if err != nil {
-		logger.Err(err).Msg("Failed to get migrate flag")
-		return err
-	}
+	logLevel := cmd.Flag("log-level").Value.String()
+	config := logs.NewLogConfig(
+		logs.WithLevel(logLevel),
+		logs.WithExport(envConfig.ODIN_EXPORT_LOGS),
+		logs.WithSource("server"),
+	)
+	logger := logs.GetLogger(config)
+	logger.Info().Msg("Starting Odin server")
 
-	srv, err := server.NewServer(ctx, envConfig, false, applyMigrations, logger)
+	srv, err := server.NewServer(ctx, envConfig, false, migrateDB, initialiseDB, logger)
 	if err != nil {
 		logger.Err(err).Msg("Failed to create server")
 		return err
@@ -50,5 +56,6 @@ func serverExec(cmd *cobra.Command, args []string) error {
 }
 
 func init() {
-	ServerStartCmd.Flags().Bool("migrate", true, "Migrate database")
+	ServerStartCmd.Flags().BoolVarP(&migrateDB, "migrate", "m", true, "Migrate database")
+	ServerStartCmd.Flags().BoolVarP(&initialiseDB, "initdb", "i", true, "Initialise database")
 }

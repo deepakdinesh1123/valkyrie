@@ -1,0 +1,45 @@
+get:
+  summary: Get language by ID
+  description: Retrieve a language entry from the database using its ID.
+  operationId: getLanguageById
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: The ID of the language to retrieve.
+      schema:
+        type: integer
+        format: int64
+        example: 1
+    - $ref: ../components/parameters/AuthHeader.yml
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - language
+            properties:
+              language:
+                type: object
+                $ref: ../components/schemas/LanguageResponse.yml
+    '403':
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml
+    '404':
+      description: Language not found
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml
+    '500':
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml

@@ -1,0 +1,38 @@
+get:
+  summary: Fetch inital list of available system packages
+  description: Initialize the search results content with a default set of system packages
+  operationId: FetchSystemPackages
+  parameters:
+    - $ref: ../components/parameters/AuthHeader.yml
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - packages
+            properties:
+              packages:
+                type: array
+                items:
+                  $ref: ../components/schemas/Package.yml
+    '400':
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml
+    '403':
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml
+    '500':
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml

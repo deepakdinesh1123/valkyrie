@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/cmd/server"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/cmd/store"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/cmd/worker"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
 )
@@ -36,12 +37,14 @@ func init() {
 	RootCmd.AddCommand(server.ServerCmd)
 	RootCmd.AddCommand(worker.WorkerCmd)
 	RootCmd.AddCommand(StandaloneCmd)
+	RootCmd.AddCommand(store.StoreCmd)
+	RootCmd.AddCommand(CompletionCmd)
 
 	createDirs(envConfig)
 }
 
 func createDirs(envConfig *config.EnvConfig) error {
-	dirs := []string{envConfig.ODIN_INFO_DIR, envConfig.ODIN_WORKER_DIR}
+	dirs := []string{envConfig.ODIN_INFO_DIR}
 	for _, dir := range dirs {
 		if _, err := os.Stat(dir); os.IsNotExist(err) {
 			if err := os.MkdirAll(dir, 0755); err != nil {

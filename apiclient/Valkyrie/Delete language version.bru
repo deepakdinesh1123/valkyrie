@@ -1,0 +1,22 @@
+meta {
+  name: Delete language version
+  type: http
+  seq: 19
+}
+
+delete {
+  url: {{BASE_URL}}/api/language-versions/4
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "language_id":1,
+    "version":"3.10",
+    "nix_package_name":"python310",
+    "template":"python.tmpl",
+    "search_query":"python311Packages",
+    "default_version":true
+  }
+}

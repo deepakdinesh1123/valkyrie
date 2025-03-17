@@ -1,0 +1,23 @@
+type: object
+required:
+  - jobId
+  - script
+  - flake
+  - created_at
+properties:
+  jobId:
+    type: integer
+    format: int64
+  script:
+    type: string
+  flake:
+    type: string
+  created_at:
+    type: string
+    format: date-time
+  started_at:
+    type: string
+    format: date-time
+  updated_at:
+    type: string
+    format: date-time

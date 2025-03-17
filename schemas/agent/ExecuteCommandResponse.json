@@ -1,0 +1,46 @@
+{
+    "properties": {
+        "success": {
+            "title": "Success",
+            "type": "boolean"
+        },
+        "msg": {
+            "title": "Msg",
+            "type": "string"
+        },
+        "commandId": {
+            "description": "Command ID",
+            "title": "Commandid",
+            "type": "string"
+        },
+        "msgType": {
+            "default": "ExecuteCommandResponse",
+            "title": "Msgtype",
+            "type": "string"
+        },
+        "state": {
+            "default": "starting",
+            "enum": [
+                "running",
+                "exited",
+                "stopped",
+                "starting"
+            ],
+            "title": "State",
+            "type": "string"
+        },
+        "stdout": {
+            "description": "stdout",
+            "title": "Stdout",
+            "type": "string"
+        }
+    },
+    "required": [
+        "success",
+        "msg",
+        "commandId",
+        "stdout"
+    ],
+    "title": "ExecuteCommandResponse",
+    "type": "object"
+}

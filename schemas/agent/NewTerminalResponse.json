@@ -1,0 +1,30 @@
+{
+    "properties": {
+        "success": {
+            "title": "Success",
+            "type": "boolean"
+        },
+        "msg": {
+            "title": "Msg",
+            "type": "string"
+        },
+        "msgType": {
+            "default": "NewTerminalResponse",
+            "title": "Msgtype",
+            "type": "string"
+        },
+        "terminalID": {
+            "description": "Terminal ID",
+            "format": "uuid",
+            "title": "Terminalid",
+            "type": "string"
+        }
+    },
+    "required": [
+        "success",
+        "msg",
+        "terminalID"
+    ],
+    "title": "NewTerminalResponse",
+    "type": "object"
+}

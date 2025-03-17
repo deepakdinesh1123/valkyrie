@@ -1,0 +1,31 @@
+{
+    "description": "Represents a response to a directory upsert request in a sandbox.",
+    "properties": {
+        "success": {
+            "title": "Success",
+            "type": "boolean"
+        },
+        "msg": {
+            "title": "Msg",
+            "type": "string"
+        },
+        "msgType": {
+            "default": "UpsertDirectoryResponse",
+            "description": "Type of the message",
+            "title": "Msgtype",
+            "type": "string"
+        },
+        "path": {
+            "description": "Path where the directory was upserted",
+            "title": "Path",
+            "type": "string"
+        }
+    },
+    "required": [
+        "success",
+        "msg",
+        "path"
+    ],
+    "title": "UpsertDirectoryResponse",
+    "type": "object"
+}

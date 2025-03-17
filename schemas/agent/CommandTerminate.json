@@ -1,0 +1,19 @@
+{
+    "properties": {
+        "commandId": {
+            "description": "Command ID",
+            "title": "Commandid",
+            "type": "string"
+        },
+        "msgType": {
+            "default": "CommandTerminate",
+            "title": "Msgtype",
+            "type": "string"
+        }
+    },
+    "required": [
+        "commandId"
+    ],
+    "title": "CommandTerminate",
+    "type": "object"
+}

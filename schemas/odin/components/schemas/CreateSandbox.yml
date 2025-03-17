@@ -1,0 +1,30 @@
+type: object
+description: Configuration for a sandbox environment request
+properties:
+  nix_flake:
+    type: string
+    description: Nix flake configuration for the sandbox environment
+    example: |
+      {
+        inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+        outputs = { self, nixpkgs }: {
+          # flake configuration
+        };
+      }
+  languages:
+    type: array
+    description: List of programming languages required in the sandbox
+    items:
+      type: string
+    example: ["python", "javascript", "go"]
+  system_dependencies:
+    type: array
+    description: List of system-level dependencies needed in the sandbox
+    items:
+      type: string
+    example: ["gcc", "make", "git"]
+  services:
+    type: array
+    description: List of services to be added to the sandbox
+    items:
+      type: string

@@ -1,0 +1,24 @@
+{
+    "properties": {
+        "commandId": {
+            "description": "Command ID",
+            "title": "Commandid",
+            "type": "string"
+        },
+        "msgType": {
+            "default": "CommandWriteInput",
+            "title": "Msgtype",
+            "type": "string"
+        },
+        "input": {
+            "default": "input",
+            "title": "Input",
+            "type": "string"
+        }
+    },
+    "required": [
+        "commandId"
+    ],
+    "title": "CommandWriteInput",
+    "type": "object"
+}

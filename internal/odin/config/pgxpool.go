@@ -7,9 +7,10 @@ import (
 	"github.com/exaring/otelpgx"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel/trace"
 )
 
-func PgxConfig(dbUrl string, trace bool, logger *zerolog.Logger) *pgxpool.Config {
+func PgxConfig(dbUrl string, tp trace.TracerProvider, logger *zerolog.Logger) *pgxpool.Config {
 	const defaultMaxConns = int32(4)
 	const defaultMinConns = int32(0)
 	const defaultMaxConnLifetime = time.Hour
@@ -28,9 +29,9 @@ func PgxConfig(dbUrl string, trace bool, logger *zerolog.Logger) *pgxpool.Config
 	dbConfig.MaxConnIdleTime = defaultMaxConnIdleTime
 	dbConfig.HealthCheckPeriod = defaultHealthCheckPeriod
 	dbConfig.ConnConfig.ConnectTimeout = defaultConnectTimeout
-	if trace {
-		dbConfig.ConnConfig.Tracer = otelpgx.NewTracer()
-	}
+	dbConfig.ConnConfig.Tracer = otelpgx.NewTracer(
+		otelpgx.WithTracerProvider(tp),
+	)
 
 	return dbConfig
 }

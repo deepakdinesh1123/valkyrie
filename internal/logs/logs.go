@@ -1,35 +1,90 @@
 package logs
 
 import (
+	"fmt"
+	"io"
 	"os"
 	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-func GetLogger(level string) *zerolog.Logger {
-	switch level {
+type LogOptsFunc func(*LogConfig)
+
+type LogConfig struct {
+	level  string
+	export string
+	source string
+}
+
+func NewLogConfig(opts ...LogOptsFunc) *LogConfig {
+	logConfig := &LogConfig{
+		level:  "info",
+		export: "console",
+	}
+
+	for _, opt := range opts {
+		opt(logConfig)
+	}
+	return logConfig
+}
+
+func WithLevel(level string) LogOptsFunc {
+	return func(config *LogConfig) {
+		config.level = level
+	}
+}
+
+func WithExport(export string) LogOptsFunc {
+	return func(config *LogConfig) {
+		config.export = export
+	}
+}
+
+func WithSource(source string) LogOptsFunc {
+	return func(config *LogConfig) {
+		config.source = source
+	}
+}
+
+func GetLogger(config *LogConfig) *zerolog.Logger {
+	var logLevel zerolog.Level
+	switch config.level {
 	case "debug":
-		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+		logLevel = zerolog.DebugLevel
 	case "info":
-		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+		logLevel = zerolog.InfoLevel
 	case "warn":
-		zerolog.SetGlobalLevel(zerolog.WarnLevel)
+		logLevel = zerolog.WarnLevel
 	case "error":
-		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+		logLevel = zerolog.ErrorLevel
 	case "fatal":
-		zerolog.SetGlobalLevel(zerolog.FatalLevel)
+		logLevel = zerolog.FatalLevel
 	case "panic":
-		zerolog.SetGlobalLevel(zerolog.PanicLevel)
+		logLevel = zerolog.PanicLevel
 	default:
-		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+		logLevel = zerolog.InfoLevel
 	}
 
 	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
 
-	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339}).
-		Level(zerolog.TraceLevel).
+	var logOut io.Writer
+	switch config.export {
+	case "console":
+		logOut = zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339}
+	case "file":
+		logOut = &lumberjack.Logger{
+			Filename:   fmt.Sprintf("valkyrie_%s.log", config.source),
+			MaxSize:    500, // megabytes
+			MaxBackups: 3,
+			MaxAge:     28,   //days
+			Compress:   true, // disabled by default
+		}
+	}
+	logger := zerolog.New(logOut).
+		Level(logLevel).
 		With().
 		Timestamp().
 		Caller().

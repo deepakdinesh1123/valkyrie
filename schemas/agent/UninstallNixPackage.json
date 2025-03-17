@@ -1,0 +1,19 @@
+{
+    "properties": {
+        "msgType": {
+            "default": "UninstallNixPackage",
+            "title": "Msgtype",
+            "type": "string"
+        },
+        "pkgName": {
+            "description": "Nix package to uninstall",
+            "title": "Pkgname",
+            "type": "string"
+        }
+    },
+    "required": [
+        "pkgName"
+    ],
+    "title": "UninstallNixPackage",
+    "type": "object"
+}

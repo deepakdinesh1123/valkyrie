@@ -50,7 +50,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		switch elem[0] {
 		case '/': // Prefix: "/"
-			origElem := elem
+
 			if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
 				elem = elem[l:]
 			} else {
@@ -62,7 +62,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 			switch elem[0] {
 			case 'e': // Prefix: "execution"
-				origElem := elem
+
 				if l := len("execution"); len(elem) >= l && elem[0:l] == "execution" {
 					elem = elem[l:]
 				} else {
@@ -73,9 +73,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					break
 				}
 				switch elem[0] {
-				case '/': // Prefix: "/config/"
-					origElem := elem
-					if l := len("/config/"); len(elem) >= l && elem[0:l] == "/config/" {
+				case '/': // Prefix: "/config"
+
+					if l := len("/config"); len(elem) >= l && elem[0:l] == "/config" {
 						elem = elem[l:]
 					} else {
 						break
@@ -93,10 +93,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 						return
 					}
 
-					elem = origElem
-				case 's': // Prefix: "s/"
-					origElem := elem
-					if l := len("s/"); len(elem) >= l && elem[0:l] == "s/" {
+				case 's': // Prefix: "s"
+
+					if l := len("s"); len(elem) >= l && elem[0:l] == "s" {
 						elem = elem[l:]
 					} else {
 						break
@@ -113,85 +112,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 						return
 					}
 					switch elem[0] {
-					case 'e': // Prefix: "execute/"
-						origElem := elem
-						if l := len("execute/"); len(elem) >= l && elem[0:l] == "execute/" {
-							elem = elem[l:]
-						} else {
-							break
-						}
-
-						if len(elem) == 0 {
-							// Leaf node.
-							switch r.Method {
-							case "POST":
-								s.handleExecuteRequest([0]string{}, elemIsEscaped, w, r)
-							default:
-								s.notAllowed(w, r, "POST")
-							}
-
-							return
-						}
-
-						elem = origElem
-					case 'r': // Prefix: "results/"
-						origElem := elem
-						if l := len("results/"); len(elem) >= l && elem[0:l] == "results/" {
-							elem = elem[l:]
-						} else {
-							break
-						}
-
-						if len(elem) == 0 {
-							// Leaf node.
-							switch r.Method {
-							case "GET":
-								s.handleGetAllExecutionResultsRequest([0]string{}, elemIsEscaped, w, r)
-							default:
-								s.notAllowed(w, r, "GET")
-							}
-
-							return
-						}
-
-						elem = origElem
-					case 'w': // Prefix: "workers"
-						origElem := elem
-						if l := len("workers"); len(elem) >= l && elem[0:l] == "workers" {
-							elem = elem[l:]
-						} else {
-							break
-						}
-
-						if len(elem) == 0 {
-							// Leaf node.
-							switch r.Method {
-							case "GET":
-								s.handleGetExecutionWorkersRequest([0]string{}, elemIsEscaped, w, r)
-							default:
-								s.notAllowed(w, r, "GET")
-							}
-
-							return
-						}
-
-						elem = origElem
-					}
-					// Param: "JobId"
-					// Match until "/"
-					idx := strings.IndexByte(elem, '/')
-					if idx < 0 {
-						idx = len(elem)
-					}
-					args[0] = elem[:idx]
-					elem = elem[idx:]
-
-					if len(elem) == 0 {
-						break
-					}
-					switch elem[0] {
 					case '/': // Prefix: "/"
-						origElem := elem
+
 						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
 							elem = elem[l:]
 						} else {
@@ -199,37 +121,572 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 						}
 
 						if len(elem) == 0 {
+							break
+						}
+						switch elem[0] {
+						case 'e': // Prefix: "execute"
+							origElem := elem
+							if l := len("execute"); len(elem) >= l && elem[0:l] == "execute" {
+								elem = elem[l:]
+							} else {
+								break
+							}
+
+							if len(elem) == 0 {
+								// Leaf node.
+								switch r.Method {
+								case "POST":
+									s.handleExecuteRequest([0]string{}, elemIsEscaped, w, r)
+								default:
+									s.notAllowed(w, r, "POST")
+								}
+
+								return
+							}
+
+							elem = origElem
+						case 'j': // Prefix: "jobs/"
+							origElem := elem
+							if l := len("jobs/"); len(elem) >= l && elem[0:l] == "jobs/" {
+								elem = elem[l:]
+							} else {
+								break
+							}
+
+							// Param: "JobId"
+							// Leaf parameter, slashes are prohibited
+							idx := strings.IndexByte(elem, '/')
+							if idx >= 0 {
+								break
+							}
+							args[0] = elem
+							elem = ""
+
+							if len(elem) == 0 {
+								// Leaf node.
+								switch r.Method {
+								case "DELETE":
+									s.handleDeleteExecutionJobRequest([1]string{
+										args[0],
+									}, elemIsEscaped, w, r)
+								case "GET":
+									s.handleGetExecutionJobByIdRequest([1]string{
+										args[0],
+									}, elemIsEscaped, w, r)
+								case "PUT":
+									s.handleCancelExecutionJobRequest([1]string{
+										args[0],
+									}, elemIsEscaped, w, r)
+								default:
+									s.notAllowed(w, r, "DELETE,GET,PUT")
+								}
+
+								return
+							}
+
+							elem = origElem
+						}
+						// Param: "execId"
+						// Leaf parameter, slashes are prohibited
+						idx := strings.IndexByte(elem, '/')
+						if idx >= 0 {
+							break
+						}
+						args[0] = elem
+						elem = ""
+
+						if len(elem) == 0 {
 							// Leaf node.
 							switch r.Method {
-							case "DELETE":
-								s.handleDeleteJobRequest([1]string{
-									args[0],
-								}, elemIsEscaped, w, r)
 							case "GET":
-								s.handleGetExecutionResultsByIdRequest([1]string{
-									args[0],
-								}, elemIsEscaped, w, r)
-							case "PUT":
-								s.handleCancelJobRequest([1]string{
+								s.handleGetExecutionResultByIdRequest([1]string{
 									args[0],
 								}, elemIsEscaped, w, r)
 							default:
-								s.notAllowed(w, r, "DELETE,GET,PUT")
+								s.notAllowed(w, r, "GET")
 							}
 
 							return
 						}
 
-						elem = origElem
+					}
+
+				}
+
+			case 'f': // Prefix: "f"
+
+				if l := len("f"); len(elem) >= l && elem[0:l] == "f" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					break
+				}
+				switch elem[0] {
+				case 'e': // Prefix: "etch/"
+
+					if l := len("etch/"); len(elem) >= l && elem[0:l] == "etch/" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						break
+					}
+					switch elem[0] {
+					case 'l': // Prefix: "language"
+
+						if l := len("language"); len(elem) >= l && elem[0:l] == "language" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch r.Method {
+							case "GET":
+								s.handleFetchLanguagePackagesRequest([0]string{}, elemIsEscaped, w, r)
+							default:
+								s.notAllowed(w, r, "GET")
+							}
+
+							return
+						}
+
+					case 's': // Prefix: "system"
+
+						if l := len("system"); len(elem) >= l && elem[0:l] == "system" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch r.Method {
+							case "GET":
+								s.handleFetchSystemPackagesRequest([0]string{}, elemIsEscaped, w, r)
+							default:
+								s.notAllowed(w, r, "GET")
+							}
+
+							return
+						}
+
+					}
+
+				case 'l': // Prefix: "lake/"
+
+					if l := len("lake/"); len(elem) >= l && elem[0:l] == "lake/" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					// Param: "jobId"
+					// Leaf parameter, slashes are prohibited
+					idx := strings.IndexByte(elem, '/')
+					if idx >= 0 {
+						break
+					}
+					args[0] = elem
+					elem = ""
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch r.Method {
+						case "GET":
+							s.handleFetchFlakeRequest([1]string{
+								args[0],
+							}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, "GET")
+						}
+
+						return
+					}
+
+				}
+
+			case 'h': // Prefix: "health"
+
+				if l := len("health"); len(elem) >= l && elem[0:l] == "health" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					// Leaf node.
+					switch r.Method {
+					case "GET":
+						s.handleHealthRequest([0]string{}, elemIsEscaped, w, r)
+					default:
+						s.notAllowed(w, r, "GET")
+					}
+
+					return
+				}
+
+			case 'j': // Prefix: "jobs/"
+
+				if l := len("jobs/"); len(elem) >= l && elem[0:l] == "jobs/" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					break
+				}
+				switch elem[0] {
+				case 'e': // Prefix: "execution"
+					origElem := elem
+					if l := len("execution"); len(elem) >= l && elem[0:l] == "execution" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch r.Method {
+						case "GET":
+							s.handleGetAllExecutionJobsRequest([0]string{}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, "GET")
+						}
+
+						return
 					}
 
 					elem = origElem
 				}
+				// Param: "JobId"
+				// Match until "/"
+				idx := strings.IndexByte(elem, '/')
+				if idx < 0 {
+					idx = len(elem)
+				}
+				args[0] = elem[:idx]
+				elem = elem[idx:]
 
-				elem = origElem
-			case 'v': // Prefix: "version/"
-				origElem := elem
-				if l := len("version/"); len(elem) >= l && elem[0:l] == "version/" {
+				if len(elem) == 0 {
+					break
+				}
+				switch elem[0] {
+				case '/': // Prefix: "/executions"
+
+					if l := len("/executions"); len(elem) >= l && elem[0:l] == "/executions" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch r.Method {
+						case "GET":
+							s.handleGetExecutionsForJobRequest([1]string{
+								args[0],
+							}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, "GET")
+						}
+
+						return
+					}
+
+				}
+
+			case 'l': // Prefix: "language"
+
+				if l := len("language"); len(elem) >= l && elem[0:l] == "language" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					break
+				}
+				switch elem[0] {
+				case '-': // Prefix: "-versions"
+
+					if l := len("-versions"); len(elem) >= l && elem[0:l] == "-versions" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						switch r.Method {
+						case "GET":
+							s.handleGetAllLanguageVersionsRequest([0]string{}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, "GET")
+						}
+
+						return
+					}
+					switch elem[0] {
+					case '/': // Prefix: "/"
+
+						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						// Param: "id"
+						// Leaf parameter, slashes are prohibited
+						idx := strings.IndexByte(elem, '/')
+						if idx >= 0 {
+							break
+						}
+						args[0] = elem
+						elem = ""
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch r.Method {
+							case "GET":
+								s.handleGetLanguageVersionByIdRequest([1]string{
+									args[0],
+								}, elemIsEscaped, w, r)
+							default:
+								s.notAllowed(w, r, "GET")
+							}
+
+							return
+						}
+
+					}
+
+				case 's': // Prefix: "s"
+
+					if l := len("s"); len(elem) >= l && elem[0:l] == "s" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						switch r.Method {
+						case "GET":
+							s.handleGetAllLanguagesRequest([0]string{}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, "GET")
+						}
+
+						return
+					}
+					switch elem[0] {
+					case '/': // Prefix: "/"
+
+						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						// Param: "id"
+						// Match until "/"
+						idx := strings.IndexByte(elem, '/')
+						if idx < 0 {
+							idx = len(elem)
+						}
+						args[0] = elem[:idx]
+						elem = elem[idx:]
+
+						if len(elem) == 0 {
+							switch r.Method {
+							case "GET":
+								s.handleGetLanguageByIdRequest([1]string{
+									args[0],
+								}, elemIsEscaped, w, r)
+							default:
+								s.notAllowed(w, r, "GET")
+							}
+
+							return
+						}
+						switch elem[0] {
+						case '/': // Prefix: "/versions"
+
+							if l := len("/versions"); len(elem) >= l && elem[0:l] == "/versions" {
+								elem = elem[l:]
+							} else {
+								break
+							}
+
+							if len(elem) == 0 {
+								// Leaf node.
+								switch r.Method {
+								case "GET":
+									s.handleGetAllVersionsRequest([1]string{
+										args[0],
+									}, elemIsEscaped, w, r)
+								default:
+									s.notAllowed(w, r, "GET")
+								}
+
+								return
+							}
+
+						}
+
+					}
+
+				}
+
+			case 'p': // Prefix: "packages/exist"
+
+				if l := len("packages/exist"); len(elem) >= l && elem[0:l] == "packages/exist" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					// Leaf node.
+					switch r.Method {
+					case "POST":
+						s.handlePackagesExistRequest([0]string{}, elemIsEscaped, w, r)
+					default:
+						s.notAllowed(w, r, "POST")
+					}
+
+					return
+				}
+
+			case 's': // Prefix: "s"
+
+				if l := len("s"); len(elem) >= l && elem[0:l] == "s" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					break
+				}
+				switch elem[0] {
+				case 'a': // Prefix: "andbox"
+
+					if l := len("andbox"); len(elem) >= l && elem[0:l] == "andbox" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						switch r.Method {
+						case "POST":
+							s.handleCreateSandboxRequest([0]string{}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, "POST")
+						}
+
+						return
+					}
+					switch elem[0] {
+					case '/': // Prefix: "/"
+
+						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						// Param: "sandboxId"
+						// Leaf parameter, slashes are prohibited
+						idx := strings.IndexByte(elem, '/')
+						if idx >= 0 {
+							break
+						}
+						args[0] = elem
+						elem = ""
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch r.Method {
+							case "GET":
+								s.handleGetSandboxRequest([1]string{
+									args[0],
+								}, elemIsEscaped, w, r)
+							default:
+								s.notAllowed(w, r, "GET")
+							}
+
+							return
+						}
+
+					}
+
+				case 'e': // Prefix: "earch/"
+
+					if l := len("earch/"); len(elem) >= l && elem[0:l] == "earch/" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						break
+					}
+					switch elem[0] {
+					case 'l': // Prefix: "language"
+
+						if l := len("language"); len(elem) >= l && elem[0:l] == "language" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch r.Method {
+							case "GET":
+								s.handleSearchLanguagePackagesRequest([0]string{}, elemIsEscaped, w, r)
+							default:
+								s.notAllowed(w, r, "GET")
+							}
+
+							return
+						}
+
+					case 's': // Prefix: "system"
+
+						if l := len("system"); len(elem) >= l && elem[0:l] == "system" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch r.Method {
+							case "GET":
+								s.handleSearchSystemPackagesRequest([0]string{}, elemIsEscaped, w, r)
+							default:
+								s.notAllowed(w, r, "GET")
+							}
+
+							return
+						}
+
+					}
+
+				}
+
+			case 'v': // Prefix: "version"
+
+				if l := len("version"); len(elem) >= l && elem[0:l] == "version" {
 					elem = elem[l:]
 				} else {
 					break
@@ -247,10 +704,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 
-				elem = origElem
 			}
 
-			elem = origElem
 		}
 	}
 	s.notFound(w, r)
@@ -332,7 +787,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 		}
 		switch elem[0] {
 		case '/': // Prefix: "/"
-			origElem := elem
+
 			if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
 				elem = elem[l:]
 			} else {
@@ -344,7 +799,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 			}
 			switch elem[0] {
 			case 'e': // Prefix: "execution"
-				origElem := elem
+
 				if l := len("execution"); len(elem) >= l && elem[0:l] == "execution" {
 					elem = elem[l:]
 				} else {
@@ -355,9 +810,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					break
 				}
 				switch elem[0] {
-				case '/': // Prefix: "/config/"
-					origElem := elem
-					if l := len("/config/"); len(elem) >= l && elem[0:l] == "/config/" {
+				case '/': // Prefix: "/config"
+
+					if l := len("/config"); len(elem) >= l && elem[0:l] == "/config" {
 						elem = elem[l:]
 					} else {
 						break
@@ -367,10 +822,10 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						// Leaf node.
 						switch method {
 						case "GET":
-							r.name = "GetExecutionConfig"
+							r.name = GetExecutionConfigOperation
 							r.summary = "Get execution config"
 							r.operationID = "getExecutionConfig"
-							r.pathPattern = "/execution/config/"
+							r.pathPattern = "/execution/config"
 							r.args = args
 							r.count = 0
 							return r, true
@@ -379,10 +834,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						}
 					}
 
-					elem = origElem
-				case 's': // Prefix: "s/"
-					origElem := elem
-					if l := len("s/"); len(elem) >= l && elem[0:l] == "s/" {
+				case 's': // Prefix: "s"
+
+					if l := len("s"); len(elem) >= l && elem[0:l] == "s" {
 						elem = elem[l:]
 					} else {
 						break
@@ -391,10 +845,10 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					if len(elem) == 0 {
 						switch method {
 						case "GET":
-							r.name = "GetAllExecutions"
+							r.name = GetAllExecutionsOperation
 							r.summary = "Get all executions"
 							r.operationID = "getAllExecutions"
-							r.pathPattern = "/executions/"
+							r.pathPattern = "/executions"
 							r.args = args
 							r.count = 0
 							return r, true
@@ -403,97 +857,8 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						}
 					}
 					switch elem[0] {
-					case 'e': // Prefix: "execute/"
-						origElem := elem
-						if l := len("execute/"); len(elem) >= l && elem[0:l] == "execute/" {
-							elem = elem[l:]
-						} else {
-							break
-						}
-
-						if len(elem) == 0 {
-							// Leaf node.
-							switch method {
-							case "POST":
-								r.name = "Execute"
-								r.summary = "Execute a script"
-								r.operationID = "execute"
-								r.pathPattern = "/executions/execute/"
-								r.args = args
-								r.count = 0
-								return r, true
-							default:
-								return
-							}
-						}
-
-						elem = origElem
-					case 'r': // Prefix: "results/"
-						origElem := elem
-						if l := len("results/"); len(elem) >= l && elem[0:l] == "results/" {
-							elem = elem[l:]
-						} else {
-							break
-						}
-
-						if len(elem) == 0 {
-							// Leaf node.
-							switch method {
-							case "GET":
-								r.name = "GetAllExecutionResults"
-								r.summary = "Get all execution results"
-								r.operationID = "getAllExecutionResults"
-								r.pathPattern = "/executions/results/"
-								r.args = args
-								r.count = 0
-								return r, true
-							default:
-								return
-							}
-						}
-
-						elem = origElem
-					case 'w': // Prefix: "workers"
-						origElem := elem
-						if l := len("workers"); len(elem) >= l && elem[0:l] == "workers" {
-							elem = elem[l:]
-						} else {
-							break
-						}
-
-						if len(elem) == 0 {
-							// Leaf node.
-							switch method {
-							case "GET":
-								r.name = "GetExecutionWorkers"
-								r.summary = "Get all execution workers"
-								r.operationID = "getExecutionWorkers"
-								r.pathPattern = "/executions/workers"
-								r.args = args
-								r.count = 0
-								return r, true
-							default:
-								return
-							}
-						}
-
-						elem = origElem
-					}
-					// Param: "JobId"
-					// Match until "/"
-					idx := strings.IndexByte(elem, '/')
-					if idx < 0 {
-						idx = len(elem)
-					}
-					args[0] = elem[:idx]
-					elem = elem[idx:]
-
-					if len(elem) == 0 {
-						break
-					}
-					switch elem[0] {
 					case '/': // Prefix: "/"
-						origElem := elem
+
 						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
 							elem = elem[l:]
 						} else {
@@ -501,29 +866,102 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						}
 
 						if len(elem) == 0 {
+							break
+						}
+						switch elem[0] {
+						case 'e': // Prefix: "execute"
+							origElem := elem
+							if l := len("execute"); len(elem) >= l && elem[0:l] == "execute" {
+								elem = elem[l:]
+							} else {
+								break
+							}
+
+							if len(elem) == 0 {
+								// Leaf node.
+								switch method {
+								case "POST":
+									r.name = ExecuteOperation
+									r.summary = "Execute a script"
+									r.operationID = "execute"
+									r.pathPattern = "/executions/execute"
+									r.args = args
+									r.count = 0
+									return r, true
+								default:
+									return
+								}
+							}
+
+							elem = origElem
+						case 'j': // Prefix: "jobs/"
+							origElem := elem
+							if l := len("jobs/"); len(elem) >= l && elem[0:l] == "jobs/" {
+								elem = elem[l:]
+							} else {
+								break
+							}
+
+							// Param: "JobId"
+							// Leaf parameter, slashes are prohibited
+							idx := strings.IndexByte(elem, '/')
+							if idx >= 0 {
+								break
+							}
+							args[0] = elem
+							elem = ""
+
+							if len(elem) == 0 {
+								// Leaf node.
+								switch method {
+								case "DELETE":
+									r.name = DeleteExecutionJobOperation
+									r.summary = "Delete execution job"
+									r.operationID = "deleteExecutionJob"
+									r.pathPattern = "/executions/jobs/{JobId}"
+									r.args = args
+									r.count = 1
+									return r, true
+								case "GET":
+									r.name = GetExecutionJobByIdOperation
+									r.summary = "Get execution job"
+									r.operationID = "getExecutionJobById"
+									r.pathPattern = "/executions/jobs/{JobId}"
+									r.args = args
+									r.count = 1
+									return r, true
+								case "PUT":
+									r.name = CancelExecutionJobOperation
+									r.summary = "Cancel Execution Job"
+									r.operationID = "cancelExecutionJob"
+									r.pathPattern = "/executions/jobs/{JobId}"
+									r.args = args
+									r.count = 1
+									return r, true
+								default:
+									return
+								}
+							}
+
+							elem = origElem
+						}
+						// Param: "execId"
+						// Leaf parameter, slashes are prohibited
+						idx := strings.IndexByte(elem, '/')
+						if idx >= 0 {
+							break
+						}
+						args[0] = elem
+						elem = ""
+
+						if len(elem) == 0 {
 							// Leaf node.
 							switch method {
-							case "DELETE":
-								r.name = "DeleteJob"
-								r.summary = "Delete job"
-								r.operationID = "deleteJob"
-								r.pathPattern = "/executions/{JobId}/"
-								r.args = args
-								r.count = 1
-								return r, true
 							case "GET":
-								r.name = "GetExecutionResultsById"
-								r.summary = "Get execution result"
-								r.operationID = "getExecutionResultsById"
-								r.pathPattern = "/executions/{JobId}/"
-								r.args = args
-								r.count = 1
-								return r, true
-							case "PUT":
-								r.name = "CancelJob"
-								r.summary = "Cancel Job"
-								r.operationID = "cancelJob"
-								r.pathPattern = "/executions/{JobId}/"
+								r.name = GetExecutionResultByIdOperation
+								r.summary = "Get execution result by id"
+								r.operationID = "getExecutionResultById"
+								r.pathPattern = "/executions/{execId}"
 								r.args = args
 								r.count = 1
 								return r, true
@@ -532,16 +970,122 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							}
 						}
 
-						elem = origElem
 					}
 
-					elem = origElem
 				}
 
-				elem = origElem
-			case 'v': // Prefix: "version/"
-				origElem := elem
-				if l := len("version/"); len(elem) >= l && elem[0:l] == "version/" {
+			case 'f': // Prefix: "f"
+
+				if l := len("f"); len(elem) >= l && elem[0:l] == "f" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					break
+				}
+				switch elem[0] {
+				case 'e': // Prefix: "etch/"
+
+					if l := len("etch/"); len(elem) >= l && elem[0:l] == "etch/" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						break
+					}
+					switch elem[0] {
+					case 'l': // Prefix: "language"
+
+						if l := len("language"); len(elem) >= l && elem[0:l] == "language" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch method {
+							case "GET":
+								r.name = FetchLanguagePackagesOperation
+								r.summary = "Fetch inital list of available language packages"
+								r.operationID = "FetchLanguagePackages"
+								r.pathPattern = "/fetch/language"
+								r.args = args
+								r.count = 0
+								return r, true
+							default:
+								return
+							}
+						}
+
+					case 's': // Prefix: "system"
+
+						if l := len("system"); len(elem) >= l && elem[0:l] == "system" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch method {
+							case "GET":
+								r.name = FetchSystemPackagesOperation
+								r.summary = "Fetch inital list of available system packages"
+								r.operationID = "FetchSystemPackages"
+								r.pathPattern = "/fetch/system"
+								r.args = args
+								r.count = 0
+								return r, true
+							default:
+								return
+							}
+						}
+
+					}
+
+				case 'l': // Prefix: "lake/"
+
+					if l := len("lake/"); len(elem) >= l && elem[0:l] == "lake/" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					// Param: "jobId"
+					// Leaf parameter, slashes are prohibited
+					idx := strings.IndexByte(elem, '/')
+					if idx >= 0 {
+						break
+					}
+					args[0] = elem
+					elem = ""
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch method {
+						case "GET":
+							r.name = FetchFlakeOperation
+							r.summary = "Fetch Flake"
+							r.operationID = "fetchFlake"
+							r.pathPattern = "/flake/{jobId}"
+							r.args = args
+							r.count = 1
+							return r, true
+						default:
+							return
+						}
+					}
+
+				}
+
+			case 'h': // Prefix: "health"
+
+				if l := len("health"); len(elem) >= l && elem[0:l] == "health" {
 					elem = elem[l:]
 				} else {
 					break
@@ -551,10 +1095,10 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					// Leaf node.
 					switch method {
 					case "GET":
-						r.name = "GetVersion"
-						r.summary = "Get version"
-						r.operationID = "getVersion"
-						r.pathPattern = "/version/"
+						r.name = HealthOperation
+						r.summary = "Health Check"
+						r.operationID = "health"
+						r.pathPattern = "/health"
 						r.args = args
 						r.count = 0
 						return r, true
@@ -563,10 +1107,422 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					}
 				}
 
-				elem = origElem
+			case 'j': // Prefix: "jobs/"
+
+				if l := len("jobs/"); len(elem) >= l && elem[0:l] == "jobs/" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					break
+				}
+				switch elem[0] {
+				case 'e': // Prefix: "execution"
+					origElem := elem
+					if l := len("execution"); len(elem) >= l && elem[0:l] == "execution" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch method {
+						case "GET":
+							r.name = GetAllExecutionJobsOperation
+							r.summary = "Get all execution jobs"
+							r.operationID = "getAllExecutionJobs"
+							r.pathPattern = "/jobs/execution"
+							r.args = args
+							r.count = 0
+							return r, true
+						default:
+							return
+						}
+					}
+
+					elem = origElem
+				}
+				// Param: "JobId"
+				// Match until "/"
+				idx := strings.IndexByte(elem, '/')
+				if idx < 0 {
+					idx = len(elem)
+				}
+				args[0] = elem[:idx]
+				elem = elem[idx:]
+
+				if len(elem) == 0 {
+					break
+				}
+				switch elem[0] {
+				case '/': // Prefix: "/executions"
+
+					if l := len("/executions"); len(elem) >= l && elem[0:l] == "/executions" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch method {
+						case "GET":
+							r.name = GetExecutionsForJobOperation
+							r.summary = "Get executions of given job"
+							r.operationID = "getExecutionsForJob"
+							r.pathPattern = "/jobs/{JobId}/executions"
+							r.args = args
+							r.count = 1
+							return r, true
+						default:
+							return
+						}
+					}
+
+				}
+
+			case 'l': // Prefix: "language"
+
+				if l := len("language"); len(elem) >= l && elem[0:l] == "language" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					break
+				}
+				switch elem[0] {
+				case '-': // Prefix: "-versions"
+
+					if l := len("-versions"); len(elem) >= l && elem[0:l] == "-versions" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						switch method {
+						case "GET":
+							r.name = GetAllLanguageVersionsOperation
+							r.summary = "Get all language versions"
+							r.operationID = "getAllLanguageVersions"
+							r.pathPattern = "/language-versions"
+							r.args = args
+							r.count = 0
+							return r, true
+						default:
+							return
+						}
+					}
+					switch elem[0] {
+					case '/': // Prefix: "/"
+
+						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						// Param: "id"
+						// Leaf parameter, slashes are prohibited
+						idx := strings.IndexByte(elem, '/')
+						if idx >= 0 {
+							break
+						}
+						args[0] = elem
+						elem = ""
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch method {
+							case "GET":
+								r.name = GetLanguageVersionByIdOperation
+								r.summary = "Get language version by ID"
+								r.operationID = "getLanguageVersionById"
+								r.pathPattern = "/language-versions/{id}"
+								r.args = args
+								r.count = 1
+								return r, true
+							default:
+								return
+							}
+						}
+
+					}
+
+				case 's': // Prefix: "s"
+
+					if l := len("s"); len(elem) >= l && elem[0:l] == "s" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						switch method {
+						case "GET":
+							r.name = GetAllLanguagesOperation
+							r.summary = "Get all languages"
+							r.operationID = "getAllLanguages"
+							r.pathPattern = "/languages"
+							r.args = args
+							r.count = 0
+							return r, true
+						default:
+							return
+						}
+					}
+					switch elem[0] {
+					case '/': // Prefix: "/"
+
+						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						// Param: "id"
+						// Match until "/"
+						idx := strings.IndexByte(elem, '/')
+						if idx < 0 {
+							idx = len(elem)
+						}
+						args[0] = elem[:idx]
+						elem = elem[idx:]
+
+						if len(elem) == 0 {
+							switch method {
+							case "GET":
+								r.name = GetLanguageByIdOperation
+								r.summary = "Get language by ID"
+								r.operationID = "getLanguageById"
+								r.pathPattern = "/languages/{id}"
+								r.args = args
+								r.count = 1
+								return r, true
+							default:
+								return
+							}
+						}
+						switch elem[0] {
+						case '/': // Prefix: "/versions"
+
+							if l := len("/versions"); len(elem) >= l && elem[0:l] == "/versions" {
+								elem = elem[l:]
+							} else {
+								break
+							}
+
+							if len(elem) == 0 {
+								// Leaf node.
+								switch method {
+								case "GET":
+									r.name = GetAllVersionsOperation
+									r.summary = "Get all language versions"
+									r.operationID = "getAllVersions"
+									r.pathPattern = "/languages/{id}/versions"
+									r.args = args
+									r.count = 1
+									return r, true
+								default:
+									return
+								}
+							}
+
+						}
+
+					}
+
+				}
+
+			case 'p': // Prefix: "packages/exist"
+
+				if l := len("packages/exist"); len(elem) >= l && elem[0:l] == "packages/exist" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					// Leaf node.
+					switch method {
+					case "POST":
+						r.name = PackagesExistOperation
+						r.summary = "Verify package list is available."
+						r.operationID = "PackagesExist"
+						r.pathPattern = "/packages/exist"
+						r.args = args
+						r.count = 0
+						return r, true
+					default:
+						return
+					}
+				}
+
+			case 's': // Prefix: "s"
+
+				if l := len("s"); len(elem) >= l && elem[0:l] == "s" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					break
+				}
+				switch elem[0] {
+				case 'a': // Prefix: "andbox"
+
+					if l := len("andbox"); len(elem) >= l && elem[0:l] == "andbox" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						switch method {
+						case "POST":
+							r.name = CreateSandboxOperation
+							r.summary = "Create a sandbox"
+							r.operationID = "createSandbox"
+							r.pathPattern = "/sandbox"
+							r.args = args
+							r.count = 0
+							return r, true
+						default:
+							return
+						}
+					}
+					switch elem[0] {
+					case '/': // Prefix: "/"
+
+						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						// Param: "sandboxId"
+						// Leaf parameter, slashes are prohibited
+						idx := strings.IndexByte(elem, '/')
+						if idx >= 0 {
+							break
+						}
+						args[0] = elem
+						elem = ""
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch method {
+							case "GET":
+								r.name = GetSandboxOperation
+								r.summary = "Get Sandbox"
+								r.operationID = "getSandbox"
+								r.pathPattern = "/sandbox/{sandboxId}"
+								r.args = args
+								r.count = 1
+								return r, true
+							default:
+								return
+							}
+						}
+
+					}
+
+				case 'e': // Prefix: "earch/"
+
+					if l := len("earch/"); len(elem) >= l && elem[0:l] == "earch/" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						break
+					}
+					switch elem[0] {
+					case 'l': // Prefix: "language"
+
+						if l := len("language"); len(elem) >= l && elem[0:l] == "language" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch method {
+							case "GET":
+								r.name = SearchLanguagePackagesOperation
+								r.summary = "Search for language specific packages"
+								r.operationID = "SearchLanguagePackages"
+								r.pathPattern = "/search/language"
+								r.args = args
+								r.count = 0
+								return r, true
+							default:
+								return
+							}
+						}
+
+					case 's': // Prefix: "system"
+
+						if l := len("system"); len(elem) >= l && elem[0:l] == "system" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch method {
+							case "GET":
+								r.name = SearchSystemPackagesOperation
+								r.summary = "Search for system packages"
+								r.operationID = "SearchSystemPackages"
+								r.pathPattern = "/search/system"
+								r.args = args
+								r.count = 0
+								return r, true
+							default:
+								return
+							}
+						}
+
+					}
+
+				}
+
+			case 'v': // Prefix: "version"
+
+				if l := len("version"); len(elem) >= l && elem[0:l] == "version" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					// Leaf node.
+					switch method {
+					case "GET":
+						r.name = GetVersionOperation
+						r.summary = "Get version"
+						r.operationID = "getVersion"
+						r.pathPattern = "/version"
+						r.args = args
+						r.count = 0
+						return r, true
+					default:
+						return
+					}
+				}
+
 			}
 
-			elem = origElem
 		}
 	}
 	return r, false

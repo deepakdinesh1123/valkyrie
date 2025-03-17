@@ -5,16 +5,27 @@ meta {
 }
 
 post {
-  url: http://localhost:8080/executions/execute/
+  url: {{BASE_URL}}/api/executions/execute
   body: json
-  auth: none
+  auth: bearer
+}
+
+headers {
+  X-Auth-Token: abcd
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhZG1pbiIsImV4cCI6MTcyNjk4OTc2NiwiaWF0IjoxNzI2OTAzMzY2LCJpc3MiOiJvZGluIn0.7s3fFHfftadIMQXOi12-2eQgAIFTq244pbpteDQe8zk
 }
 
 body:json {
   {
     
-    "code": "print('2nd minute')",
+    "code": "print('hello')",
     "language": "python",
-    "cron_expression": "*/2 * * * *"
+    "version": "3.12",
+    "environment": {
+      "setup": "echo world"
+    }
   }
 }

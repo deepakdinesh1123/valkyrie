@@ -1,21 +1,43 @@
 services:
+  ide:
+    build:
+      context: frontend
+    ports:
+      - "5173:5173"
+    profiles:
+      - execution
+
   odin:
     build:
       context: .
-      dockerfile: build/package/dockerfiles/odin.server.dockerfile
+      dockerfile: builds/images/packages/odin.dockerfile
     env_file:
       - .env
     depends_on:
       postgres:
         condition: service_healthy
+      odin-store:
+        condition: service_started
     command: ["server", "start"]
     ports:
       - "8080:8080"
+    environment:
+      - ODIN_COMPOSE_ENV=true
+      - POSTGRES_HOST=postgres
+    # runtime: "runsc"
+    network_mode: "bridge"
+    links:
+      - "postgres"
+    profiles:
+      - dev
+      - production
+      - staging
+      
 
   odin-worker:
     build:
       context: .
-      dockerfile: build/package/dockerfiles/odin.worker.dockerfile
+      dockerfile: builds/images/packages/odin.dockerfile
     env_file:
       - .env
     depends_on:
@@ -23,12 +45,91 @@ services:
         condition: service_healthy
       odin:
         condition: service_started
+      odin-store:
+        condition: service_started
     deploy:
-      replicas: 3
+      replicas: 1
     command: ["worker", "start"]
+    environment:
+      - DOCKER_HOST=tcp://docker-proxy:2375
+      - ODIN_COMPOSE_ENV=true
+      - POSTGRES_HOST=postgres
+    network_mode: "bridge"
+    links:
+      - "odin-store"
+      - "postgres"
+      - "docker-proxy"
+    # runtime: "runsc"
+    profiles:
+      - dev
+      - production
+      - staging
+  
+  docker-proxy:
+    image: tecnativa/docker-socket-proxy
+    restart: unless-stopped
+    environment:
+      - ALLOW_START=1
+      - ALLOW_STOP=1
+      - EXEC=1
+      - CONTAINERS=1
+      - POST=1
+    user: 'root'
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+        read_only: true
+    network_mode: "bridge"
+    profiles:
+      - dev
+      - production
+      - staging
+  
+  odin-store-builder:
+    build:
+      context: .
+      dockerfile: builds/images/store/build.dockerfile
+    volumes:
+      - type: bind
+        source: $HOME/.odin/store/nix
+        target: /nix
+      - type: bind
+        source: $HOME/.odin/store/setup
+        target: /tmp/setup
+    profiles:
+      - setup
+  
+  odin-store:
+    build:
+      context: .
+      dockerfile: builds/images/store/store.dockerfile
+    ports:
+      - 5000:5000
+    healthcheck:
+      test: ["CMD-SHELL", '[ "$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000)" = "404" ] && exit 0 || exit 1'] 
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    # runtime: "runsc"
+    network_mode: "bridge"
+    env_file:
+      - $HOME/.odin/store/setup/.env
+    volumes:
+      - type: bind
+        source: $HOME/.odin/store/nix
+        target: /nix
+      - type: bind
+        source: $HOME/.odin/store/setup
+        target: /tmp/setup
+    profiles:
+      - dev
+      - production
+      - staging
 
   postgres:
-    image: postgres
+    image: postgres:15.3
     env_file:
       - .env
     ports:
@@ -42,6 +143,11 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    network_mode: "bridge"
+    profiles:
+      - dev
+      - production
+      - staging
 
   valkyrie-otel-collector:
     image: otel/opentelemetry-collector-contrib
@@ -50,15 +156,26 @@ services:
       - ./configs/telemetry/collector.yml:/etc/otel-collector-config.yaml
     ports:
       - 4317:4317 # OTLP grpc receiver
+    profiles:
+      - production
+      - staging
+
   jaeger:
     image: jaegertracing/all-in-one:latest
     ports:
       - "6831:6831/udp" # UDP port for Jaeger agent
       - "16686:16686" # Web UI
       - "14268:14268" # HTTP port for spans
+    profiles:
+      - production
+      - staging
+
   prometheus:
     image: prom/prometheus:latest
     volumes:
       - ./configs/telemetry/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
+    profiles:
+      - production
+      - staging

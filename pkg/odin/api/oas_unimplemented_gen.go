@@ -13,21 +13,30 @@ type UnimplementedHandler struct{}
 
 var _ Handler = UnimplementedHandler{}
 
-// CancelJob implements cancelJob operation.
+// CancelExecutionJob implements cancelExecutionJob operation.
 //
-// Cancel Job.
+// Cancel Execution Job.
 //
-// PUT /executions/{JobId}/
-func (UnimplementedHandler) CancelJob(ctx context.Context, params CancelJobParams) (r CancelJobRes, _ error) {
+// PUT /executions/jobs/{JobId}
+func (UnimplementedHandler) CancelExecutionJob(ctx context.Context, params CancelExecutionJobParams) (r CancelExecutionJobRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
-// DeleteJob implements deleteJob operation.
+// CreateSandbox implements createSandbox operation.
 //
-// Delete job.
+// Create a sandbox.
 //
-// DELETE /executions/{JobId}/
-func (UnimplementedHandler) DeleteJob(ctx context.Context, params DeleteJobParams) (r DeleteJobRes, _ error) {
+// POST /sandbox
+func (UnimplementedHandler) CreateSandbox(ctx context.Context, req OptCreateSandbox, params CreateSandboxParams) (r CreateSandboxRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// DeleteExecutionJob implements deleteExecutionJob operation.
+//
+// Delete execution job.
+//
+// DELETE /executions/jobs/{JobId}
+func (UnimplementedHandler) DeleteExecutionJob(ctx context.Context, params DeleteExecutionJobParams) (r DeleteExecutionJobRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -35,17 +44,44 @@ func (UnimplementedHandler) DeleteJob(ctx context.Context, params DeleteJobParam
 //
 // Execute a script.
 //
-// POST /executions/execute/
-func (UnimplementedHandler) Execute(ctx context.Context, req *ExecutionRequest) (r ExecuteRes, _ error) {
+// POST /executions/execute
+func (UnimplementedHandler) Execute(ctx context.Context, req *ExecutionRequest, params ExecuteParams) (r ExecuteRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
-// GetAllExecutionResults implements getAllExecutionResults operation.
+// FetchFlake implements fetchFlake operation.
 //
-// Get all execution results.
+// Fetches flake of a given job.
 //
-// GET /executions/results/
-func (UnimplementedHandler) GetAllExecutionResults(ctx context.Context, params GetAllExecutionResultsParams) (r GetAllExecutionResultsRes, _ error) {
+// GET /flake/{jobId}
+func (UnimplementedHandler) FetchFlake(ctx context.Context, params FetchFlakeParams) (r FetchFlakeRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// FetchLanguagePackages implements FetchLanguagePackages operation.
+//
+// Initialize the search results content with a default set of language specific packages.
+//
+// GET /fetch/language
+func (UnimplementedHandler) FetchLanguagePackages(ctx context.Context, params FetchLanguagePackagesParams) (r FetchLanguagePackagesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// FetchSystemPackages implements FetchSystemPackages operation.
+//
+// Initialize the search results content with a default set of system packages.
+//
+// GET /fetch/system
+func (UnimplementedHandler) FetchSystemPackages(ctx context.Context, params FetchSystemPackagesParams) (r FetchSystemPackagesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetAllExecutionJobs implements getAllExecutionJobs operation.
+//
+// Get all execution jobs.
+//
+// GET /jobs/execution
+func (UnimplementedHandler) GetAllExecutionJobs(ctx context.Context, params GetAllExecutionJobsParams) (r GetAllExecutionJobsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -53,8 +89,35 @@ func (UnimplementedHandler) GetAllExecutionResults(ctx context.Context, params G
 //
 // Get all executions.
 //
-// GET /executions/
+// GET /executions
 func (UnimplementedHandler) GetAllExecutions(ctx context.Context, params GetAllExecutionsParams) (r GetAllExecutionsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetAllLanguageVersions implements getAllLanguageVersions operation.
+//
+// Retrieve a list of all language versions from the database.
+//
+// GET /language-versions
+func (UnimplementedHandler) GetAllLanguageVersions(ctx context.Context, params GetAllLanguageVersionsParams) (r GetAllLanguageVersionsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetAllLanguages implements getAllLanguages operation.
+//
+// Retrieve a list of all languages from the database.
+//
+// GET /languages
+func (UnimplementedHandler) GetAllLanguages(ctx context.Context, params GetAllLanguagesParams) (r GetAllLanguagesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetAllVersions implements getAllVersions operation.
+//
+// Retrieve a list of all language versions from the database.
+//
+// GET /languages/{id}/versions
+func (UnimplementedHandler) GetAllVersions(ctx context.Context, params GetAllVersionsParams) (r GetAllVersionsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -62,26 +125,62 @@ func (UnimplementedHandler) GetAllExecutions(ctx context.Context, params GetAllE
 //
 // Get execution config.
 //
-// GET /execution/config/
-func (UnimplementedHandler) GetExecutionConfig(ctx context.Context) (r GetExecutionConfigRes, _ error) {
+// GET /execution/config
+func (UnimplementedHandler) GetExecutionConfig(ctx context.Context, params GetExecutionConfigParams) (r GetExecutionConfigRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
-// GetExecutionResultsById implements getExecutionResultsById operation.
+// GetExecutionJobById implements getExecutionJobById operation.
 //
-// Get execution result.
+// Get execution job.
 //
-// GET /executions/{JobId}/
-func (UnimplementedHandler) GetExecutionResultsById(ctx context.Context, params GetExecutionResultsByIdParams) (r GetExecutionResultsByIdRes, _ error) {
+// GET /executions/jobs/{JobId}
+func (UnimplementedHandler) GetExecutionJobById(ctx context.Context, params GetExecutionJobByIdParams) (r GetExecutionJobByIdRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
-// GetExecutionWorkers implements getExecutionWorkers operation.
+// GetExecutionResultById implements getExecutionResultById operation.
 //
-// Get all execution workers.
+// Get execution result by id.
 //
-// GET /executions/workers
-func (UnimplementedHandler) GetExecutionWorkers(ctx context.Context, params GetExecutionWorkersParams) (r GetExecutionWorkersRes, _ error) {
+// GET /executions/{execId}
+func (UnimplementedHandler) GetExecutionResultById(ctx context.Context, params GetExecutionResultByIdParams) (r GetExecutionResultByIdRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetExecutionsForJob implements getExecutionsForJob operation.
+//
+// Get executions of given job.
+//
+// GET /jobs/{JobId}/executions
+func (UnimplementedHandler) GetExecutionsForJob(ctx context.Context, params GetExecutionsForJobParams) (r GetExecutionsForJobRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetLanguageById implements getLanguageById operation.
+//
+// Retrieve a language entry from the database using its ID.
+//
+// GET /languages/{id}
+func (UnimplementedHandler) GetLanguageById(ctx context.Context, params GetLanguageByIdParams) (r GetLanguageByIdRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetLanguageVersionById implements getLanguageVersionById operation.
+//
+// Retrieve a language version entry from the database using its ID.
+//
+// GET /language-versions/{id}
+func (UnimplementedHandler) GetLanguageVersionById(ctx context.Context, params GetLanguageVersionByIdParams) (r GetLanguageVersionByIdRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetSandbox implements getSandbox operation.
+//
+// Retrieve Sandbox details.
+//
+// GET /sandbox/{sandboxId}
+func (UnimplementedHandler) GetSandbox(ctx context.Context, params GetSandboxParams) (r GetSandboxRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -89,7 +188,44 @@ func (UnimplementedHandler) GetExecutionWorkers(ctx context.Context, params GetE
 //
 // Get version.
 //
-// GET /version/
-func (UnimplementedHandler) GetVersion(ctx context.Context) (r GetVersionRes, _ error) {
+// GET /version
+func (UnimplementedHandler) GetVersion(ctx context.Context, params GetVersionParams) (r GetVersionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// Health implements health operation.
+//
+// Health Check.
+//
+// GET /health
+func (UnimplementedHandler) Health(ctx context.Context) error {
+	return ht.ErrNotImplemented
+}
+
+// PackagesExist implements PackagesExist operation.
+//
+// Verify the package list is available for the language version while switching between language
+// versions.
+//
+// POST /packages/exist
+func (UnimplementedHandler) PackagesExist(ctx context.Context, req *PackageExistRequest, params PackagesExistParams) (r PackagesExistRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SearchLanguagePackages implements SearchLanguagePackages operation.
+//
+// Search for language specific packages.
+//
+// GET /search/language
+func (UnimplementedHandler) SearchLanguagePackages(ctx context.Context, params SearchLanguagePackagesParams) (r SearchLanguagePackagesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SearchSystemPackages implements SearchSystemPackages operation.
+//
+// Search for system packages.
+//
+// GET /search/system
+func (UnimplementedHandler) SearchSystemPackages(ctx context.Context, params SearchSystemPackagesParams) (r SearchSystemPackagesRes, _ error) {
 	return r, ht.ErrNotImplemented
 }

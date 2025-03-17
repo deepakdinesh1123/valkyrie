@@ -1,0 +1,55 @@
+{
+    "description": "Execute a command in the sandbox environment",
+    "properties": {
+        "command": {
+            "description": "Command",
+            "title": "Command",
+            "type": "string"
+        },
+        "msgType": {
+            "default": "ExecuteCommand",
+            "title": "Msgtype",
+            "type": "string"
+        },
+        "stdin": {
+            "default": false,
+            "description": "Enable stdin",
+            "title": "Stdin",
+            "type": "boolean"
+        },
+        "stderr": {
+            "default": true,
+            "description": "Enable stderr",
+            "title": "Stderr",
+            "type": "boolean"
+        },
+        "stdout": {
+            "default": true,
+            "description": "Enable stdout",
+            "title": "Stdout",
+            "type": "boolean"
+        },
+        "workDir": {
+            "default": "",
+            "description": "Working directory for command execution",
+            "title": "Workdir",
+            "type": "string"
+        },
+        "env": {
+            "description": "Environment variables",
+            "items": {
+                "additionalProperties": {
+                    "type": "string"
+                },
+                "type": "object"
+            },
+            "title": "Env",
+            "type": "array"
+        }
+    },
+    "required": [
+        "command"
+    ],
+    "title": "ExecuteCommand",
+    "type": "object"
+}

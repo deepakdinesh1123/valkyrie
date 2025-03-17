@@ -15,12 +15,14 @@ import (
 	"github.com/ogen-go/ogen/validate"
 )
 
-// CancelJobParams is parameters of cancelJob operation.
-type CancelJobParams struct {
+// CancelExecutionJobParams is parameters of cancelExecutionJob operation.
+type CancelExecutionJobParams struct {
 	JobId int64
+	// Authentication token.
+	XAuthToken OptString
 }
 
-func unpackCancelJobParams(packed middleware.Parameters) (params CancelJobParams) {
+func unpackCancelExecutionJobParams(packed middleware.Parameters) (params CancelExecutionJobParams) {
 	{
 		key := middleware.ParameterKey{
 			Name: "JobId",
@@ -28,10 +30,20 @@ func unpackCancelJobParams(packed middleware.Parameters) (params CancelJobParams
 		}
 		params.JobId = packed[key].(int64)
 	}
+	{
+		key := middleware.ParameterKey{
+			Name: "X-Auth-Token",
+			In:   "header",
+		}
+		if v, ok := packed[key]; ok {
+			params.XAuthToken = v.(OptString)
+		}
+	}
 	return params
 }
 
-func decodeCancelJobParams(args [1]string, argsEscaped bool, r *http.Request) (params CancelJobParams, _ error) {
+func decodeCancelExecutionJobParams(args [1]string, argsEscaped bool, r *http.Request) (params CancelExecutionJobParams, _ error) {
+	h := uri.NewHeaderDecoder(r.Header)
 	// Decode path: JobId.
 	if err := func() error {
 		param := args[0]
@@ -77,15 +89,119 @@ func decodeCancelJobParams(args [1]string, argsEscaped bool, r *http.Request) (p
 			Err:  err,
 		}
 	}
+	// Decode header: X-Auth-Token.
+	if err := func() error {
+		cfg := uri.HeaderParameterDecodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.HasParam(cfg); err == nil {
+			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotXAuthTokenVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotXAuthTokenVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.XAuthToken.SetTo(paramsDotXAuthTokenVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "X-Auth-Token",
+			In:   "header",
+			Err:  err,
+		}
+	}
 	return params, nil
 }
 
-// DeleteJobParams is parameters of deleteJob operation.
-type DeleteJobParams struct {
-	JobId int64
+// CreateSandboxParams is parameters of createSandbox operation.
+type CreateSandboxParams struct {
+	// Authentication token.
+	XAuthToken OptString
 }
 
-func unpackDeleteJobParams(packed middleware.Parameters) (params DeleteJobParams) {
+func unpackCreateSandboxParams(packed middleware.Parameters) (params CreateSandboxParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "X-Auth-Token",
+			In:   "header",
+		}
+		if v, ok := packed[key]; ok {
+			params.XAuthToken = v.(OptString)
+		}
+	}
+	return params
+}
+
+func decodeCreateSandboxParams(args [0]string, argsEscaped bool, r *http.Request) (params CreateSandboxParams, _ error) {
+	h := uri.NewHeaderDecoder(r.Header)
+	// Decode header: X-Auth-Token.
+	if err := func() error {
+		cfg := uri.HeaderParameterDecodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.HasParam(cfg); err == nil {
+			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotXAuthTokenVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotXAuthTokenVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.XAuthToken.SetTo(paramsDotXAuthTokenVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "X-Auth-Token",
+			In:   "header",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// DeleteExecutionJobParams is parameters of deleteExecutionJob operation.
+type DeleteExecutionJobParams struct {
+	JobId int64
+	// Authentication token.
+	XAuthToken OptString
+}
+
+func unpackDeleteExecutionJobParams(packed middleware.Parameters) (params DeleteExecutionJobParams) {
 	{
 		key := middleware.ParameterKey{
 			Name: "JobId",
@@ -93,10 +209,20 @@ func unpackDeleteJobParams(packed middleware.Parameters) (params DeleteJobParams
 		}
 		params.JobId = packed[key].(int64)
 	}
+	{
+		key := middleware.ParameterKey{
+			Name: "X-Auth-Token",
+			In:   "header",
+		}
+		if v, ok := packed[key]; ok {
+			params.XAuthToken = v.(OptString)
+		}
+	}
 	return params
 }
 
-func decodeDeleteJobParams(args [1]string, argsEscaped bool, r *http.Request) (params DeleteJobParams, _ error) {
+func decodeDeleteExecutionJobParams(args [1]string, argsEscaped bool, r *http.Request) (params DeleteExecutionJobParams, _ error) {
+	h := uri.NewHeaderDecoder(r.Header)
 	// Decode path: JobId.
 	if err := func() error {
 		param := args[0]
@@ -142,74 +268,234 @@ func decodeDeleteJobParams(args [1]string, argsEscaped bool, r *http.Request) (p
 			Err:  err,
 		}
 	}
+	// Decode header: X-Auth-Token.
+	if err := func() error {
+		cfg := uri.HeaderParameterDecodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.HasParam(cfg); err == nil {
+			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotXAuthTokenVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotXAuthTokenVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.XAuthToken.SetTo(paramsDotXAuthTokenVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "X-Auth-Token",
+			In:   "header",
+			Err:  err,
+		}
+	}
 	return params, nil
 }
 
-// GetAllExecutionResultsParams is parameters of getAllExecutionResults operation.
-type GetAllExecutionResultsParams struct {
-	// The page number to retrieve.
-	Page OptInt32
-	// The number of items per page.
-	PageSize OptInt32
+// ExecuteParams is parameters of execute operation.
+type ExecuteParams struct {
+	// Authentication token.
+	XAuthToken OptString
 }
 
-func unpackGetAllExecutionResultsParams(packed middleware.Parameters) (params GetAllExecutionResultsParams) {
+func unpackExecuteParams(packed middleware.Parameters) (params ExecuteParams) {
 	{
 		key := middleware.ParameterKey{
-			Name: "page",
-			In:   "query",
+			Name: "X-Auth-Token",
+			In:   "header",
 		}
 		if v, ok := packed[key]; ok {
-			params.Page = v.(OptInt32)
-		}
-	}
-	{
-		key := middleware.ParameterKey{
-			Name: "pageSize",
-			In:   "query",
-		}
-		if v, ok := packed[key]; ok {
-			params.PageSize = v.(OptInt32)
+			params.XAuthToken = v.(OptString)
 		}
 	}
 	return params
 }
 
-func decodeGetAllExecutionResultsParams(args [0]string, argsEscaped bool, r *http.Request) (params GetAllExecutionResultsParams, _ error) {
+func decodeExecuteParams(args [0]string, argsEscaped bool, r *http.Request) (params ExecuteParams, _ error) {
+	h := uri.NewHeaderDecoder(r.Header)
+	// Decode header: X-Auth-Token.
+	if err := func() error {
+		cfg := uri.HeaderParameterDecodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.HasParam(cfg); err == nil {
+			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotXAuthTokenVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotXAuthTokenVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.XAuthToken.SetTo(paramsDotXAuthTokenVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "X-Auth-Token",
+			In:   "header",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// FetchFlakeParams is parameters of fetchFlake operation.
+type FetchFlakeParams struct {
+	// Job ID.
+	JobId int64
+}
+
+func unpackFetchFlakeParams(packed middleware.Parameters) (params FetchFlakeParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "jobId",
+			In:   "path",
+		}
+		params.JobId = packed[key].(int64)
+	}
+	return params
+}
+
+func decodeFetchFlakeParams(args [1]string, argsEscaped bool, r *http.Request) (params FetchFlakeParams, _ error) {
+	// Decode path: jobId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "jobId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToInt64(val)
+				if err != nil {
+					return err
+				}
+
+				params.JobId = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "jobId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// FetchLanguagePackagesParams is parameters of FetchLanguagePackages operation.
+type FetchLanguagePackagesParams struct {
+	// Authentication token.
+	XAuthToken OptString
+	// The language for which the package is searched.
+	Language string
+}
+
+func unpackFetchLanguagePackagesParams(packed middleware.Parameters) (params FetchLanguagePackagesParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "X-Auth-Token",
+			In:   "header",
+		}
+		if v, ok := packed[key]; ok {
+			params.XAuthToken = v.(OptString)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "language",
+			In:   "query",
+		}
+		params.Language = packed[key].(string)
+	}
+	return params
+}
+
+func decodeFetchLanguagePackagesParams(args [0]string, argsEscaped bool, r *http.Request) (params FetchLanguagePackagesParams, _ error) {
 	q := uri.NewQueryDecoder(r.URL.Query())
-	// Set default value for query: page.
-	{
-		val := int32(0)
-		params.Page.SetTo(val)
-	}
-	// Decode query: page.
+	h := uri.NewHeaderDecoder(r.Header)
+	// Decode header: X-Auth-Token.
 	if err := func() error {
-		cfg := uri.QueryParameterDecodingConfig{
-			Name:    "page",
-			Style:   uri.QueryStyleForm,
-			Explode: true,
+		cfg := uri.HeaderParameterDecodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
 		}
-
-		if err := q.HasParam(cfg); err == nil {
-			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotPageVal int32
+		if err := h.HasParam(cfg); err == nil {
+			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotXAuthTokenVal string
 				if err := func() error {
 					val, err := d.DecodeValue()
 					if err != nil {
 						return err
 					}
 
-					c, err := conv.ToInt32(val)
+					c, err := conv.ToString(val)
 					if err != nil {
 						return err
 					}
 
-					paramsDotPageVal = c
+					paramsDotXAuthTokenVal = c
 					return nil
 				}(); err != nil {
 					return err
 				}
-				params.Page.SetTo(paramsDotPageVal)
+				params.XAuthToken.SetTo(paramsDotXAuthTokenVal)
 				return nil
 			}); err != nil {
 				return err
@@ -218,44 +504,97 @@ func decodeGetAllExecutionResultsParams(args [0]string, argsEscaped bool, r *htt
 		return nil
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
-			Name: "page",
+			Name: "X-Auth-Token",
+			In:   "header",
+			Err:  err,
+		}
+	}
+	// Decode query: language.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "language",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToString(val)
+				if err != nil {
+					return err
+				}
+
+				params.Language = c
+				return nil
+			}); err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "language",
 			In:   "query",
 			Err:  err,
 		}
 	}
-	// Set default value for query: pageSize.
-	{
-		val := int32(20)
-		params.PageSize.SetTo(val)
-	}
-	// Decode query: pageSize.
-	if err := func() error {
-		cfg := uri.QueryParameterDecodingConfig{
-			Name:    "pageSize",
-			Style:   uri.QueryStyleForm,
-			Explode: true,
-		}
+	return params, nil
+}
 
-		if err := q.HasParam(cfg); err == nil {
-			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotPageSizeVal int32
+// FetchSystemPackagesParams is parameters of FetchSystemPackages operation.
+type FetchSystemPackagesParams struct {
+	// Authentication token.
+	XAuthToken OptString
+}
+
+func unpackFetchSystemPackagesParams(packed middleware.Parameters) (params FetchSystemPackagesParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "X-Auth-Token",
+			In:   "header",
+		}
+		if v, ok := packed[key]; ok {
+			params.XAuthToken = v.(OptString)
+		}
+	}
+	return params
+}
+
+func decodeFetchSystemPackagesParams(args [0]string, argsEscaped bool, r *http.Request) (params FetchSystemPackagesParams, _ error) {
+	h := uri.NewHeaderDecoder(r.Header)
+	// Decode header: X-Auth-Token.
+	if err := func() error {
+		cfg := uri.HeaderParameterDecodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.HasParam(cfg); err == nil {
+			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotXAuthTokenVal string
 				if err := func() error {
 					val, err := d.DecodeValue()
 					if err != nil {
 						return err
 					}
 
-					c, err := conv.ToInt32(val)
+					c, err := conv.ToString(val)
 					if err != nil {
 						return err
 					}
 
-					paramsDotPageSizeVal = c
+					paramsDotXAuthTokenVal = c
 					return nil
 				}(); err != nil {
 					return err
 				}
-				params.PageSize.SetTo(paramsDotPageSizeVal)
+				params.XAuthToken.SetTo(paramsDotXAuthTokenVal)
 				return nil
 			}); err != nil {
 				return err
@@ -264,8 +603,186 @@ func decodeGetAllExecutionResultsParams(args [0]string, argsEscaped bool, r *htt
 		return nil
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
-			Name: "pageSize",
+			Name: "X-Auth-Token",
+			In:   "header",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// GetAllExecutionJobsParams is parameters of getAllExecutionJobs operation.
+type GetAllExecutionJobsParams struct {
+	// The current position of the cursor.
+	Cursor OptInt64
+	// The limit for the records.
+	Limit OptInt64
+	// Authentication token.
+	XAuthToken OptString
+}
+
+func unpackGetAllExecutionJobsParams(packed middleware.Parameters) (params GetAllExecutionJobsParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "cursor",
 			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Cursor = v.(OptInt64)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "limit",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Limit = v.(OptInt64)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "X-Auth-Token",
+			In:   "header",
+		}
+		if v, ok := packed[key]; ok {
+			params.XAuthToken = v.(OptString)
+		}
+	}
+	return params
+}
+
+func decodeGetAllExecutionJobsParams(args [0]string, argsEscaped bool, r *http.Request) (params GetAllExecutionJobsParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
+	h := uri.NewHeaderDecoder(r.Header)
+	// Set default value for query: cursor.
+	{
+		val := int64(1)
+		params.Cursor.SetTo(val)
+	}
+	// Decode query: cursor.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "cursor",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotCursorVal int64
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToInt64(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotCursorVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Cursor.SetTo(paramsDotCursorVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "cursor",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Set default value for query: limit.
+	{
+		val := int64(10)
+		params.Limit.SetTo(val)
+	}
+	// Decode query: limit.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "limit",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotLimitVal int64
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToInt64(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotLimitVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Limit.SetTo(paramsDotLimitVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "limit",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode header: X-Auth-Token.
+	if err := func() error {
+		cfg := uri.HeaderParameterDecodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.HasParam(cfg); err == nil {
+			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotXAuthTokenVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotXAuthTokenVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.XAuthToken.SetTo(paramsDotXAuthTokenVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "X-Auth-Token",
+			In:   "header",
 			Err:  err,
 		}
 	}
@@ -274,29 +791,40 @@ func decodeGetAllExecutionResultsParams(args [0]string, argsEscaped bool, r *htt
 
 // GetAllExecutionsParams is parameters of getAllExecutions operation.
 type GetAllExecutionsParams struct {
-	// The page number to retrieve.
-	Page OptInt32
-	// The number of items per page.
-	PageSize OptInt32
+	// The current position of the cursor.
+	Cursor OptInt64
+	// The limit for the records.
+	Limit OptInt64
+	// Authentication token.
+	XAuthToken OptString
 }
 
 func unpackGetAllExecutionsParams(packed middleware.Parameters) (params GetAllExecutionsParams) {
 	{
 		key := middleware.ParameterKey{
-			Name: "page",
+			Name: "cursor",
 			In:   "query",
 		}
 		if v, ok := packed[key]; ok {
-			params.Page = v.(OptInt32)
+			params.Cursor = v.(OptInt64)
 		}
 	}
 	{
 		key := middleware.ParameterKey{
-			Name: "pageSize",
+			Name: "limit",
 			In:   "query",
 		}
 		if v, ok := packed[key]; ok {
-			params.PageSize = v.(OptInt32)
+			params.Limit = v.(OptInt64)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "X-Auth-Token",
+			In:   "header",
+		}
+		if v, ok := packed[key]; ok {
+			params.XAuthToken = v.(OptString)
 		}
 	}
 	return params
@@ -304,39 +832,40 @@ func unpackGetAllExecutionsParams(packed middleware.Parameters) (params GetAllEx
 
 func decodeGetAllExecutionsParams(args [0]string, argsEscaped bool, r *http.Request) (params GetAllExecutionsParams, _ error) {
 	q := uri.NewQueryDecoder(r.URL.Query())
-	// Set default value for query: page.
+	h := uri.NewHeaderDecoder(r.Header)
+	// Set default value for query: cursor.
 	{
-		val := int32(0)
-		params.Page.SetTo(val)
+		val := int64(1)
+		params.Cursor.SetTo(val)
 	}
-	// Decode query: page.
+	// Decode query: cursor.
 	if err := func() error {
 		cfg := uri.QueryParameterDecodingConfig{
-			Name:    "page",
+			Name:    "cursor",
 			Style:   uri.QueryStyleForm,
 			Explode: true,
 		}
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotPageVal int32
+				var paramsDotCursorVal int64
 				if err := func() error {
 					val, err := d.DecodeValue()
 					if err != nil {
 						return err
 					}
 
-					c, err := conv.ToInt32(val)
+					c, err := conv.ToInt64(val)
 					if err != nil {
 						return err
 					}
 
-					paramsDotPageVal = c
+					paramsDotCursorVal = c
 					return nil
 				}(); err != nil {
 					return err
 				}
-				params.Page.SetTo(paramsDotPageVal)
+				params.Cursor.SetTo(paramsDotCursorVal)
 				return nil
 			}); err != nil {
 				return err
@@ -345,44 +874,44 @@ func decodeGetAllExecutionsParams(args [0]string, argsEscaped bool, r *http.Requ
 		return nil
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
-			Name: "page",
+			Name: "cursor",
 			In:   "query",
 			Err:  err,
 		}
 	}
-	// Set default value for query: pageSize.
+	// Set default value for query: limit.
 	{
-		val := int32(20)
-		params.PageSize.SetTo(val)
+		val := int64(10)
+		params.Limit.SetTo(val)
 	}
-	// Decode query: pageSize.
+	// Decode query: limit.
 	if err := func() error {
 		cfg := uri.QueryParameterDecodingConfig{
-			Name:    "pageSize",
+			Name:    "limit",
 			Style:   uri.QueryStyleForm,
 			Explode: true,
 		}
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotPageSizeVal int32
+				var paramsDotLimitVal int64
 				if err := func() error {
 					val, err := d.DecodeValue()
 					if err != nil {
 						return err
 					}
 
-					c, err := conv.ToInt32(val)
+					c, err := conv.ToInt64(val)
 					if err != nil {
 						return err
 					}
 
-					paramsDotPageSizeVal = c
+					paramsDotLimitVal = c
 					return nil
 				}(); err != nil {
 					return err
 				}
-				params.PageSize.SetTo(paramsDotPageSizeVal)
+				params.Limit.SetTo(paramsDotLimitVal)
 				return nil
 			}); err != nil {
 				return err
@@ -391,24 +920,367 @@ func decodeGetAllExecutionsParams(args [0]string, argsEscaped bool, r *http.Requ
 		return nil
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
-			Name: "pageSize",
+			Name: "limit",
 			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode header: X-Auth-Token.
+	if err := func() error {
+		cfg := uri.HeaderParameterDecodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.HasParam(cfg); err == nil {
+			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotXAuthTokenVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotXAuthTokenVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.XAuthToken.SetTo(paramsDotXAuthTokenVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "X-Auth-Token",
+			In:   "header",
 			Err:  err,
 		}
 	}
 	return params, nil
 }
 
-// GetExecutionResultsByIdParams is parameters of getExecutionResultsById operation.
-type GetExecutionResultsByIdParams struct {
-	JobId int64
-	// The page number to retrieve.
-	Page OptInt32
-	// The number of items per page.
-	PageSize OptInt32
+// GetAllLanguageVersionsParams is parameters of getAllLanguageVersions operation.
+type GetAllLanguageVersionsParams struct {
+	// Authentication token.
+	XAuthToken OptString
 }
 
-func unpackGetExecutionResultsByIdParams(packed middleware.Parameters) (params GetExecutionResultsByIdParams) {
+func unpackGetAllLanguageVersionsParams(packed middleware.Parameters) (params GetAllLanguageVersionsParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "X-Auth-Token",
+			In:   "header",
+		}
+		if v, ok := packed[key]; ok {
+			params.XAuthToken = v.(OptString)
+		}
+	}
+	return params
+}
+
+func decodeGetAllLanguageVersionsParams(args [0]string, argsEscaped bool, r *http.Request) (params GetAllLanguageVersionsParams, _ error) {
+	h := uri.NewHeaderDecoder(r.Header)
+	// Decode header: X-Auth-Token.
+	if err := func() error {
+		cfg := uri.HeaderParameterDecodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.HasParam(cfg); err == nil {
+			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotXAuthTokenVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotXAuthTokenVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.XAuthToken.SetTo(paramsDotXAuthTokenVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "X-Auth-Token",
+			In:   "header",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// GetAllLanguagesParams is parameters of getAllLanguages operation.
+type GetAllLanguagesParams struct {
+	// Authentication token.
+	XAuthToken OptString
+}
+
+func unpackGetAllLanguagesParams(packed middleware.Parameters) (params GetAllLanguagesParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "X-Auth-Token",
+			In:   "header",
+		}
+		if v, ok := packed[key]; ok {
+			params.XAuthToken = v.(OptString)
+		}
+	}
+	return params
+}
+
+func decodeGetAllLanguagesParams(args [0]string, argsEscaped bool, r *http.Request) (params GetAllLanguagesParams, _ error) {
+	h := uri.NewHeaderDecoder(r.Header)
+	// Decode header: X-Auth-Token.
+	if err := func() error {
+		cfg := uri.HeaderParameterDecodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.HasParam(cfg); err == nil {
+			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotXAuthTokenVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotXAuthTokenVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.XAuthToken.SetTo(paramsDotXAuthTokenVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "X-Auth-Token",
+			In:   "header",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// GetAllVersionsParams is parameters of getAllVersions operation.
+type GetAllVersionsParams struct {
+	// The ID of the language to retrieve versions.
+	ID int64
+	// Authentication token.
+	XAuthToken OptString
+}
+
+func unpackGetAllVersionsParams(packed middleware.Parameters) (params GetAllVersionsParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "id",
+			In:   "path",
+		}
+		params.ID = packed[key].(int64)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "X-Auth-Token",
+			In:   "header",
+		}
+		if v, ok := packed[key]; ok {
+			params.XAuthToken = v.(OptString)
+		}
+	}
+	return params
+}
+
+func decodeGetAllVersionsParams(args [1]string, argsEscaped bool, r *http.Request) (params GetAllVersionsParams, _ error) {
+	h := uri.NewHeaderDecoder(r.Header)
+	// Decode path: id.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "id",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToInt64(val)
+				if err != nil {
+					return err
+				}
+
+				params.ID = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "id",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	// Decode header: X-Auth-Token.
+	if err := func() error {
+		cfg := uri.HeaderParameterDecodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.HasParam(cfg); err == nil {
+			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotXAuthTokenVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotXAuthTokenVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.XAuthToken.SetTo(paramsDotXAuthTokenVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "X-Auth-Token",
+			In:   "header",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// GetExecutionConfigParams is parameters of getExecutionConfig operation.
+type GetExecutionConfigParams struct {
+	// Authentication token.
+	XAuthToken OptString
+}
+
+func unpackGetExecutionConfigParams(packed middleware.Parameters) (params GetExecutionConfigParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "X-Auth-Token",
+			In:   "header",
+		}
+		if v, ok := packed[key]; ok {
+			params.XAuthToken = v.(OptString)
+		}
+	}
+	return params
+}
+
+func decodeGetExecutionConfigParams(args [0]string, argsEscaped bool, r *http.Request) (params GetExecutionConfigParams, _ error) {
+	h := uri.NewHeaderDecoder(r.Header)
+	// Decode header: X-Auth-Token.
+	if err := func() error {
+		cfg := uri.HeaderParameterDecodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.HasParam(cfg); err == nil {
+			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotXAuthTokenVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotXAuthTokenVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.XAuthToken.SetTo(paramsDotXAuthTokenVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "X-Auth-Token",
+			In:   "header",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// GetExecutionJobByIdParams is parameters of getExecutionJobById operation.
+type GetExecutionJobByIdParams struct {
+	JobId int64
+	// Authentication token.
+	XAuthToken OptString
+}
+
+func unpackGetExecutionJobByIdParams(packed middleware.Parameters) (params GetExecutionJobByIdParams) {
 	{
 		key := middleware.ParameterKey{
 			Name: "JobId",
@@ -418,27 +1290,18 @@ func unpackGetExecutionResultsByIdParams(packed middleware.Parameters) (params G
 	}
 	{
 		key := middleware.ParameterKey{
-			Name: "page",
-			In:   "query",
+			Name: "X-Auth-Token",
+			In:   "header",
 		}
 		if v, ok := packed[key]; ok {
-			params.Page = v.(OptInt32)
-		}
-	}
-	{
-		key := middleware.ParameterKey{
-			Name: "pageSize",
-			In:   "query",
-		}
-		if v, ok := packed[key]; ok {
-			params.PageSize = v.(OptInt32)
+			params.XAuthToken = v.(OptString)
 		}
 	}
 	return params
 }
 
-func decodeGetExecutionResultsByIdParams(args [1]string, argsEscaped bool, r *http.Request) (params GetExecutionResultsByIdParams, _ error) {
-	q := uri.NewQueryDecoder(r.URL.Query())
+func decodeGetExecutionJobByIdParams(args [1]string, argsEscaped bool, r *http.Request) (params GetExecutionJobByIdParams, _ error) {
+	h := uri.NewHeaderDecoder(r.Header)
 	// Decode path: JobId.
 	if err := func() error {
 		param := args[0]
@@ -484,39 +1347,32 @@ func decodeGetExecutionResultsByIdParams(args [1]string, argsEscaped bool, r *ht
 			Err:  err,
 		}
 	}
-	// Set default value for query: page.
-	{
-		val := int32(0)
-		params.Page.SetTo(val)
-	}
-	// Decode query: page.
+	// Decode header: X-Auth-Token.
 	if err := func() error {
-		cfg := uri.QueryParameterDecodingConfig{
-			Name:    "page",
-			Style:   uri.QueryStyleForm,
-			Explode: true,
+		cfg := uri.HeaderParameterDecodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
 		}
-
-		if err := q.HasParam(cfg); err == nil {
-			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotPageVal int32
+		if err := h.HasParam(cfg); err == nil {
+			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotXAuthTokenVal string
 				if err := func() error {
 					val, err := d.DecodeValue()
 					if err != nil {
 						return err
 					}
 
-					c, err := conv.ToInt32(val)
+					c, err := conv.ToString(val)
 					if err != nil {
 						return err
 					}
 
-					paramsDotPageVal = c
+					paramsDotXAuthTokenVal = c
 					return nil
 				}(); err != nil {
 					return err
 				}
-				params.Page.SetTo(paramsDotPageVal)
+				params.XAuthToken.SetTo(paramsDotXAuthTokenVal)
 				return nil
 			}); err != nil {
 				return err
@@ -525,44 +1381,306 @@ func decodeGetExecutionResultsByIdParams(args [1]string, argsEscaped bool, r *ht
 		return nil
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
-			Name: "page",
+			Name: "X-Auth-Token",
+			In:   "header",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// GetExecutionResultByIdParams is parameters of getExecutionResultById operation.
+type GetExecutionResultByIdParams struct {
+	ExecId int64
+	// Authentication token.
+	XAuthToken OptString
+}
+
+func unpackGetExecutionResultByIdParams(packed middleware.Parameters) (params GetExecutionResultByIdParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "execId",
+			In:   "path",
+		}
+		params.ExecId = packed[key].(int64)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "X-Auth-Token",
+			In:   "header",
+		}
+		if v, ok := packed[key]; ok {
+			params.XAuthToken = v.(OptString)
+		}
+	}
+	return params
+}
+
+func decodeGetExecutionResultByIdParams(args [1]string, argsEscaped bool, r *http.Request) (params GetExecutionResultByIdParams, _ error) {
+	h := uri.NewHeaderDecoder(r.Header)
+	// Decode path: execId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "execId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToInt64(val)
+				if err != nil {
+					return err
+				}
+
+				params.ExecId = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "execId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	// Decode header: X-Auth-Token.
+	if err := func() error {
+		cfg := uri.HeaderParameterDecodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.HasParam(cfg); err == nil {
+			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotXAuthTokenVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotXAuthTokenVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.XAuthToken.SetTo(paramsDotXAuthTokenVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "X-Auth-Token",
+			In:   "header",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// GetExecutionsForJobParams is parameters of getExecutionsForJob operation.
+type GetExecutionsForJobParams struct {
+	JobId int64
+	// The current position of the cursor.
+	Cursor OptInt64
+	// The limit for the records.
+	Limit OptInt64
+	// Authentication token.
+	XAuthToken OptString
+}
+
+func unpackGetExecutionsForJobParams(packed middleware.Parameters) (params GetExecutionsForJobParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "JobId",
+			In:   "path",
+		}
+		params.JobId = packed[key].(int64)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "cursor",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Cursor = v.(OptInt64)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "limit",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Limit = v.(OptInt64)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "X-Auth-Token",
+			In:   "header",
+		}
+		if v, ok := packed[key]; ok {
+			params.XAuthToken = v.(OptString)
+		}
+	}
+	return params
+}
+
+func decodeGetExecutionsForJobParams(args [1]string, argsEscaped bool, r *http.Request) (params GetExecutionsForJobParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
+	h := uri.NewHeaderDecoder(r.Header)
+	// Decode path: JobId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "JobId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToInt64(val)
+				if err != nil {
+					return err
+				}
+
+				params.JobId = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "JobId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	// Set default value for query: cursor.
+	{
+		val := int64(1)
+		params.Cursor.SetTo(val)
+	}
+	// Decode query: cursor.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "cursor",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotCursorVal int64
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToInt64(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotCursorVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Cursor.SetTo(paramsDotCursorVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "cursor",
 			In:   "query",
 			Err:  err,
 		}
 	}
-	// Set default value for query: pageSize.
+	// Set default value for query: limit.
 	{
-		val := int32(20)
-		params.PageSize.SetTo(val)
+		val := int64(10)
+		params.Limit.SetTo(val)
 	}
-	// Decode query: pageSize.
+	// Decode query: limit.
 	if err := func() error {
 		cfg := uri.QueryParameterDecodingConfig{
-			Name:    "pageSize",
+			Name:    "limit",
 			Style:   uri.QueryStyleForm,
 			Explode: true,
 		}
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotPageSizeVal int32
+				var paramsDotLimitVal int64
 				if err := func() error {
 					val, err := d.DecodeValue()
 					if err != nil {
 						return err
 					}
 
-					c, err := conv.ToInt32(val)
+					c, err := conv.ToInt64(val)
 					if err != nil {
 						return err
 					}
 
-					paramsDotPageSizeVal = c
+					paramsDotLimitVal = c
 					return nil
 				}(); err != nil {
 					return err
 				}
-				params.PageSize.SetTo(paramsDotPageSizeVal)
+				params.Limit.SetTo(paramsDotLimitVal)
 				return nil
 			}); err != nil {
 				return err
@@ -571,7 +1689,676 @@ func decodeGetExecutionResultsByIdParams(args [1]string, argsEscaped bool, r *ht
 		return nil
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
-			Name: "pageSize",
+			Name: "limit",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode header: X-Auth-Token.
+	if err := func() error {
+		cfg := uri.HeaderParameterDecodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.HasParam(cfg); err == nil {
+			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotXAuthTokenVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotXAuthTokenVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.XAuthToken.SetTo(paramsDotXAuthTokenVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "X-Auth-Token",
+			In:   "header",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// GetLanguageByIdParams is parameters of getLanguageById operation.
+type GetLanguageByIdParams struct {
+	// The ID of the language to retrieve.
+	ID int64
+	// Authentication token.
+	XAuthToken OptString
+}
+
+func unpackGetLanguageByIdParams(packed middleware.Parameters) (params GetLanguageByIdParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "id",
+			In:   "path",
+		}
+		params.ID = packed[key].(int64)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "X-Auth-Token",
+			In:   "header",
+		}
+		if v, ok := packed[key]; ok {
+			params.XAuthToken = v.(OptString)
+		}
+	}
+	return params
+}
+
+func decodeGetLanguageByIdParams(args [1]string, argsEscaped bool, r *http.Request) (params GetLanguageByIdParams, _ error) {
+	h := uri.NewHeaderDecoder(r.Header)
+	// Decode path: id.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "id",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToInt64(val)
+				if err != nil {
+					return err
+				}
+
+				params.ID = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "id",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	// Decode header: X-Auth-Token.
+	if err := func() error {
+		cfg := uri.HeaderParameterDecodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.HasParam(cfg); err == nil {
+			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotXAuthTokenVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotXAuthTokenVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.XAuthToken.SetTo(paramsDotXAuthTokenVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "X-Auth-Token",
+			In:   "header",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// GetLanguageVersionByIdParams is parameters of getLanguageVersionById operation.
+type GetLanguageVersionByIdParams struct {
+	// The ID of the language version to retrieve.
+	ID int64
+	// Authentication token.
+	XAuthToken OptString
+}
+
+func unpackGetLanguageVersionByIdParams(packed middleware.Parameters) (params GetLanguageVersionByIdParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "id",
+			In:   "path",
+		}
+		params.ID = packed[key].(int64)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "X-Auth-Token",
+			In:   "header",
+		}
+		if v, ok := packed[key]; ok {
+			params.XAuthToken = v.(OptString)
+		}
+	}
+	return params
+}
+
+func decodeGetLanguageVersionByIdParams(args [1]string, argsEscaped bool, r *http.Request) (params GetLanguageVersionByIdParams, _ error) {
+	h := uri.NewHeaderDecoder(r.Header)
+	// Decode path: id.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "id",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToInt64(val)
+				if err != nil {
+					return err
+				}
+
+				params.ID = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "id",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	// Decode header: X-Auth-Token.
+	if err := func() error {
+		cfg := uri.HeaderParameterDecodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.HasParam(cfg); err == nil {
+			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotXAuthTokenVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotXAuthTokenVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.XAuthToken.SetTo(paramsDotXAuthTokenVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "X-Auth-Token",
+			In:   "header",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// GetSandboxParams is parameters of getSandbox operation.
+type GetSandboxParams struct {
+	SandboxId int64
+	// Authentication token.
+	XAuthToken OptString
+}
+
+func unpackGetSandboxParams(packed middleware.Parameters) (params GetSandboxParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "sandboxId",
+			In:   "path",
+		}
+		params.SandboxId = packed[key].(int64)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "X-Auth-Token",
+			In:   "header",
+		}
+		if v, ok := packed[key]; ok {
+			params.XAuthToken = v.(OptString)
+		}
+	}
+	return params
+}
+
+func decodeGetSandboxParams(args [1]string, argsEscaped bool, r *http.Request) (params GetSandboxParams, _ error) {
+	h := uri.NewHeaderDecoder(r.Header)
+	// Decode path: sandboxId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "sandboxId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToInt64(val)
+				if err != nil {
+					return err
+				}
+
+				params.SandboxId = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "sandboxId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	// Decode header: X-Auth-Token.
+	if err := func() error {
+		cfg := uri.HeaderParameterDecodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.HasParam(cfg); err == nil {
+			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotXAuthTokenVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotXAuthTokenVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.XAuthToken.SetTo(paramsDotXAuthTokenVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "X-Auth-Token",
+			In:   "header",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// GetVersionParams is parameters of getVersion operation.
+type GetVersionParams struct {
+	// Authentication token.
+	XAuthToken OptString
+}
+
+func unpackGetVersionParams(packed middleware.Parameters) (params GetVersionParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "X-Auth-Token",
+			In:   "header",
+		}
+		if v, ok := packed[key]; ok {
+			params.XAuthToken = v.(OptString)
+		}
+	}
+	return params
+}
+
+func decodeGetVersionParams(args [0]string, argsEscaped bool, r *http.Request) (params GetVersionParams, _ error) {
+	h := uri.NewHeaderDecoder(r.Header)
+	// Decode header: X-Auth-Token.
+	if err := func() error {
+		cfg := uri.HeaderParameterDecodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.HasParam(cfg); err == nil {
+			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotXAuthTokenVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotXAuthTokenVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.XAuthToken.SetTo(paramsDotXAuthTokenVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "X-Auth-Token",
+			In:   "header",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// PackagesExistParams is parameters of PackagesExist operation.
+type PackagesExistParams struct {
+	// Authentication token.
+	XAuthToken OptString
+}
+
+func unpackPackagesExistParams(packed middleware.Parameters) (params PackagesExistParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "X-Auth-Token",
+			In:   "header",
+		}
+		if v, ok := packed[key]; ok {
+			params.XAuthToken = v.(OptString)
+		}
+	}
+	return params
+}
+
+func decodePackagesExistParams(args [0]string, argsEscaped bool, r *http.Request) (params PackagesExistParams, _ error) {
+	h := uri.NewHeaderDecoder(r.Header)
+	// Decode header: X-Auth-Token.
+	if err := func() error {
+		cfg := uri.HeaderParameterDecodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.HasParam(cfg); err == nil {
+			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotXAuthTokenVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotXAuthTokenVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.XAuthToken.SetTo(paramsDotXAuthTokenVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "X-Auth-Token",
+			In:   "header",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// SearchLanguagePackagesParams is parameters of SearchLanguagePackages operation.
+type SearchLanguagePackagesParams struct {
+	// Authentication token.
+	XAuthToken OptString
+	// The language for which the package is searched.
+	Language string
+	// The string to be searched.
+	SearchString string
+}
+
+func unpackSearchLanguagePackagesParams(packed middleware.Parameters) (params SearchLanguagePackagesParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "X-Auth-Token",
+			In:   "header",
+		}
+		if v, ok := packed[key]; ok {
+			params.XAuthToken = v.(OptString)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "language",
+			In:   "query",
+		}
+		params.Language = packed[key].(string)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "searchString",
+			In:   "query",
+		}
+		params.SearchString = packed[key].(string)
+	}
+	return params
+}
+
+func decodeSearchLanguagePackagesParams(args [0]string, argsEscaped bool, r *http.Request) (params SearchLanguagePackagesParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
+	h := uri.NewHeaderDecoder(r.Header)
+	// Decode header: X-Auth-Token.
+	if err := func() error {
+		cfg := uri.HeaderParameterDecodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
+		}
+		if err := h.HasParam(cfg); err == nil {
+			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotXAuthTokenVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotXAuthTokenVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.XAuthToken.SetTo(paramsDotXAuthTokenVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "X-Auth-Token",
+			In:   "header",
+			Err:  err,
+		}
+	}
+	// Decode query: language.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "language",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToString(val)
+				if err != nil {
+					return err
+				}
+
+				params.Language = c
+				return nil
+			}); err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "language",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: searchString.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "searchString",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToString(val)
+				if err != nil {
+					return err
+				}
+
+				params.SearchString = c
+				return nil
+			}); err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "searchString",
 			In:   "query",
 			Err:  err,
 		}
@@ -579,71 +2366,63 @@ func decodeGetExecutionResultsByIdParams(args [1]string, argsEscaped bool, r *ht
 	return params, nil
 }
 
-// GetExecutionWorkersParams is parameters of getExecutionWorkers operation.
-type GetExecutionWorkersParams struct {
-	// The page number to retrieve.
-	Page OptInt32
-	// The number of items per page.
-	PageSize OptInt32
+// SearchSystemPackagesParams is parameters of SearchSystemPackages operation.
+type SearchSystemPackagesParams struct {
+	// Authentication token.
+	XAuthToken OptString
+	// The string to be searched.
+	SearchString string
 }
 
-func unpackGetExecutionWorkersParams(packed middleware.Parameters) (params GetExecutionWorkersParams) {
+func unpackSearchSystemPackagesParams(packed middleware.Parameters) (params SearchSystemPackagesParams) {
 	{
 		key := middleware.ParameterKey{
-			Name: "page",
-			In:   "query",
+			Name: "X-Auth-Token",
+			In:   "header",
 		}
 		if v, ok := packed[key]; ok {
-			params.Page = v.(OptInt32)
+			params.XAuthToken = v.(OptString)
 		}
 	}
 	{
 		key := middleware.ParameterKey{
-			Name: "pageSize",
+			Name: "searchString",
 			In:   "query",
 		}
-		if v, ok := packed[key]; ok {
-			params.PageSize = v.(OptInt32)
-		}
+		params.SearchString = packed[key].(string)
 	}
 	return params
 }
 
-func decodeGetExecutionWorkersParams(args [0]string, argsEscaped bool, r *http.Request) (params GetExecutionWorkersParams, _ error) {
+func decodeSearchSystemPackagesParams(args [0]string, argsEscaped bool, r *http.Request) (params SearchSystemPackagesParams, _ error) {
 	q := uri.NewQueryDecoder(r.URL.Query())
-	// Set default value for query: page.
-	{
-		val := int32(0)
-		params.Page.SetTo(val)
-	}
-	// Decode query: page.
+	h := uri.NewHeaderDecoder(r.Header)
+	// Decode header: X-Auth-Token.
 	if err := func() error {
-		cfg := uri.QueryParameterDecodingConfig{
-			Name:    "page",
-			Style:   uri.QueryStyleForm,
-			Explode: true,
+		cfg := uri.HeaderParameterDecodingConfig{
+			Name:    "X-Auth-Token",
+			Explode: false,
 		}
-
-		if err := q.HasParam(cfg); err == nil {
-			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotPageVal int32
+		if err := h.HasParam(cfg); err == nil {
+			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotXAuthTokenVal string
 				if err := func() error {
 					val, err := d.DecodeValue()
 					if err != nil {
 						return err
 					}
 
-					c, err := conv.ToInt32(val)
+					c, err := conv.ToString(val)
 					if err != nil {
 						return err
 					}
 
-					paramsDotPageVal = c
+					paramsDotXAuthTokenVal = c
 					return nil
 				}(); err != nil {
 					return err
 				}
-				params.Page.SetTo(paramsDotPageVal)
+				params.XAuthToken.SetTo(paramsDotXAuthTokenVal)
 				return nil
 			}); err != nil {
 				return err
@@ -652,53 +2431,43 @@ func decodeGetExecutionWorkersParams(args [0]string, argsEscaped bool, r *http.R
 		return nil
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
-			Name: "page",
-			In:   "query",
+			Name: "X-Auth-Token",
+			In:   "header",
 			Err:  err,
 		}
 	}
-	// Set default value for query: pageSize.
-	{
-		val := int32(20)
-		params.PageSize.SetTo(val)
-	}
-	// Decode query: pageSize.
+	// Decode query: searchString.
 	if err := func() error {
 		cfg := uri.QueryParameterDecodingConfig{
-			Name:    "pageSize",
+			Name:    "searchString",
 			Style:   uri.QueryStyleForm,
 			Explode: true,
 		}
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotPageSizeVal int32
-				if err := func() error {
-					val, err := d.DecodeValue()
-					if err != nil {
-						return err
-					}
-
-					c, err := conv.ToInt32(val)
-					if err != nil {
-						return err
-					}
-
-					paramsDotPageSizeVal = c
-					return nil
-				}(); err != nil {
+				val, err := d.DecodeValue()
+				if err != nil {
 					return err
 				}
-				params.PageSize.SetTo(paramsDotPageSizeVal)
+
+				c, err := conv.ToString(val)
+				if err != nil {
+					return err
+				}
+
+				params.SearchString = c
 				return nil
 			}); err != nil {
 				return err
 			}
+		} else {
+			return err
 		}
 		return nil
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
-			Name: "pageSize",
+			Name: "searchString",
 			In:   "query",
 			Err:  err,
 		}

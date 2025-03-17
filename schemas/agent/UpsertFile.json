@@ -1,0 +1,53 @@
+{
+    "description": "Represents a request to add or update a file in a sandbox.",
+    "properties": {
+        "msgType": {
+            "default": "UpsertFile",
+            "description": "Type of the message",
+            "title": "Msgtype",
+            "type": "string"
+        },
+        "fileName": {
+            "description": "Name of the file to be added or updated",
+            "title": "Filename",
+            "type": "string"
+        },
+        "path": {
+            "description": "Path where the file should be created or updated",
+            "title": "Path",
+            "type": "string"
+        },
+        "content": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "description": "Content of the file",
+            "title": "Content"
+        },
+        "patch": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "description": "Diff patch to apply to the file",
+            "title": "Patch"
+        }
+    },
+    "required": [
+        "fileName",
+        "path"
+    ],
+    "title": "UpsertFile",
+    "type": "object"
+}

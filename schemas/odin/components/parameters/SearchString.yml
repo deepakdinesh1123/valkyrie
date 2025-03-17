@@ -1,0 +1,6 @@
+name: searchString
+in: query
+description: The string to be searched.
+required: true
+schema:
+  type: string

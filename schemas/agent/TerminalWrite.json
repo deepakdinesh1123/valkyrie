@@ -1,0 +1,27 @@
+{
+    "description": "Write to terminal",
+    "properties": {
+        "terminalId": {
+            "description": "Unique identifier for the terminal session",
+            "format": "uuid",
+            "title": "Terminalid",
+            "type": "string"
+        },
+        "msgType": {
+            "default": "TerminalWrite",
+            "title": "Msgtype",
+            "type": "string"
+        },
+        "input": {
+            "description": "input to write to terminal",
+            "title": "Input",
+            "type": "string"
+        }
+    },
+    "required": [
+        "terminalId",
+        "input"
+    ],
+    "title": "TerminalWrite",
+    "type": "object"
+}

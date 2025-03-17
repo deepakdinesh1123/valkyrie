@@ -1,0 +1,30 @@
+type: object
+properties:
+  environment:
+    $ref: ./ExecutionEnvironmentSpec.yml
+  code:
+    type: string
+  language:
+    type: string
+    default: bash
+  version:
+    type: string
+  max_retries:
+    type: integer
+    format: int4
+    default: 5
+  timeout:
+    type: integer
+    format: int32
+    default: -1
+  cmdLineArgs:
+    type: string
+  compilerArgs:
+    type: string
+  command:
+    type: string
+  files:
+    type: string
+    format: byte
+  input:
+    type: string

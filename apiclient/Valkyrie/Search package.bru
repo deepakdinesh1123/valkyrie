@@ -1,0 +1,18 @@
+meta {
+  name: Search package
+  type: http
+  seq: 21
+}
+
+post {
+  url: {{BASE_URL}}/api/packages/exist
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "language":"python310Packages",
+    "packages":
+  }
+}

@@ -1,0 +1,84 @@
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.5.0
+  hooks:
+    - id: check-yaml
+    - id: check-case-conflict
+    - id: check-json
+    - id: check-merge-conflict
+    - id: check-symlinks
+    - id: check-toml
+    - id: end-of-file-fixer
+    - id: detect-private-key
+
+# Python-specific hooks
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.3.5
+  hooks:
+    # First Ruff pass - import sorting only
+    - id: ruff
+      name: ruff-imports
+      files: ^sdk/odinpy/
+      args: [
+        --fix,
+        --select=I,
+        --exit-non-zero-on-fix,
+      ]
+    # Second Ruff pass - all checks
+    - id: ruff
+      name: ruff-check
+      files: ^sdk/odinpy/
+      args: [
+        --fix,
+        --exit-non-zero-on-fix,
+      ]
+    - id: ruff-format
+      files: ^sdk/odinpy/
+
+# - repo: https://github.com/astral-sh/uv-pre-commit
+#   rev: 0.6.2
+#   hooks:
+#     - id: uv-lock
+#       files: ^sdk/odinpy/
+#     - id: uv-export
+#       files: ^sdk/odinpy/
+#     - id: pip-compile
+#       files: ^sdk/odinpy/
+#       args: [requirements.in, -o, requirements.txt]
+
+# Go-specific hooks
+# - repo: https://github.com/dnephin/pre-commit-golang
+#   rev: v0.5.1
+#   hooks:
+#     - id: go-fmt
+#     - id: go-vet
+#     - id: go-imports
+#     - id: golangci-lint
+#     - id: go-unit-tests
+
+# Node.js-specific hooks
+# - repo: https://github.com/pre-commit/mirrors-prettier
+#   rev: v3.1.0
+#   hooks:
+#     - id: prettier
+#       files: ^frontend/
+#       types_or: [javascript, jsx, ts, tsx, json, css, scss, yaml]
+
+# - repo: https://github.com/pre-commit/mirrors-eslint
+#   rev: v9.20.1
+#   hooks:
+#     - id: eslint
+#       files: ^frontend/
+#       types: [file]
+#       additional_dependencies:
+#         - eslint
+#         - eslint-config-prettier
+#         - '@typescript-eslint/parser'
+#         - '@typescript-eslint/eslint-plugin'
+
+# Security scanning
+- repo: https://github.com/Yelp/detect-secrets
+  rev: v1.5.0
+  hooks:
+    - id: detect-secrets
+      exclude: "\\.nix$"

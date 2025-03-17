@@ -1,0 +1,27 @@
+allOf:
+  - $ref: ./Language.yml
+  - type: object
+    required:
+      - id
+      - name
+      - extension
+      - monaco_language
+      - default_code
+    properties:
+      id:
+        type: integer
+        format: int64
+        description: Unique identifier for the language version
+        example: 1
+      name:
+        type: string
+        example: python-3.10
+      extension:
+        type: string
+        example: py
+      monaco_language:
+        type: string
+        example: python
+      default_code:
+        type: string
+        example: print('Hello, World!')
