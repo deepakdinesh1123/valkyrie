@@ -14,6 +14,7 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/executor"
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/sandbox"
+	"github.com/deepakdinesh1123/valkyrie/internal/odin/store"
 	"github.com/deepakdinesh1123/valkyrie/internal/telemetry"
 	"github.com/deepakdinesh1123/valkyrie/pkg/namesgenerator"
 	"github.com/gofrs/flock"
@@ -104,6 +105,13 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 		}
 	}
 
+	if !envConfig.ODIN_COMPOSE_ENV {
+		err = store.StartOdinStore(ctx, envConfig.ODIN_STORE_IMAGE, envConfig.ODIN_STORE_CONTAINER, envConfig.ODIN_CONTAINER_RUNTIME, envConfig.ODIN_RUNTIME)
+		if err != nil {
+			return nil, fmt.Errorf("could not start odin store: %v", err)
+		}
+	}
+
 	if envConfig.ODIN_ENABLE_EXECUTION {
 		exectr, err := executor.GetExecutor(ctx, queries, int32(wrkr.ID), tp, mp, envConfig, logger)
 		if err != nil {
@@ -116,12 +124,6 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 		sandboxHandler, err := sandbox.GetSandboxHandler(ctx, queries, int32(wrkr.ID), tp, mp, envConfig, logger)
 		if err != nil {
 			return nil, fmt.Errorf("could not get sandbox handler: %s", err)
-		}
-		if !envConfig.ODIN_COMPOSE_ENV {
-			err = sandboxHandler.StartOdinStore(ctx, envConfig.ODIN_STORE_IMAGE, envConfig.ODIN_STORE_CONTAINER, envConfig.ODIN_CONTAINER_RUNTIME)
-			if err != nil {
-				return nil, fmt.Errorf("could not start odin store: %v", err)
-			}
 		}
 		err = sandboxHandler.StartContainerPool(ctx, envConfig)
 		if err != nil {

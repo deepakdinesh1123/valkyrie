@@ -5,7 +5,6 @@ package container
 import (
 	"context"
 	"fmt"
-	"os"
 	"sync"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/concurrency"
@@ -15,7 +14,6 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/pool"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/puddle/v2"
@@ -282,66 +280,5 @@ func (d *DockerSH) Cleanup(ctx context.Context) error {
 		cont.Destroy()
 	}
 	d.containerPool.Close()
-	return nil
-}
-
-func (d *DockerSH) StartOdinStore(ctx context.Context, storeImage, storeContainerName, containerRuntime string) error {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return fmt.Errorf("could not get user homeDir: %v", err)
-	}
-
-	storeSetupEnvFile := fmt.Sprintf("%s/.odin/store/setup/.env", homeDir)
-
-	if _, err := os.Stat(storeSetupEnvFile); os.IsNotExist(err) {
-		fmt.Printf("File does not exist: %s\n", storeSetupEnvFile)
-	}
-
-	storeSetupEnv, err := config.LoadEnvFile(storeSetupEnvFile)
-	if err != nil {
-		return fmt.Errorf("error reading store setup env file")
-	}
-
-	d.logger.Info().Msgf("setup env variables are %s", storeSetupEnv)
-
-	contInfo, err := d.client.ContainerInspect(ctx, storeContainerName)
-	if err != nil {
-		if client.IsErrNotFound(err) { // Container doesn't exist, create it
-			_, err = d.client.ContainerCreate(ctx, &container.Config{Image: storeImage, Env: storeSetupEnv}, &container.HostConfig{
-				Runtime:     containerRuntime,
-				NetworkMode: "bridge",
-				Mounts: []mount.Mount{
-					{
-						Type:   mount.TypeBind,
-						Source: fmt.Sprintf("%s/.odin/store/nix", homeDir),
-						Target: "/nix",
-					},
-					{
-						Type:   mount.TypeBind,
-						Source: fmt.Sprintf("%s/.odin/store/setup", homeDir),
-						Target: "/tmp/setup",
-					},
-				},
-			}, nil, nil, storeContainerName)
-			if err != nil {
-				return fmt.Errorf("error creating odin store container: %w", err)
-			}
-			contInfo, err = d.client.ContainerInspect(ctx, storeContainerName)
-			if err != nil {
-				return fmt.Errorf("error inspecting odin store container: %w", err)
-			}
-		} else {
-			return fmt.Errorf("error inspecting odin store container: %w", err)
-		}
-	}
-
-	// Ensure contInfo.State is not nil before accessing it
-	if contInfo.State != nil && !contInfo.State.Running {
-		// Start the container
-		if err := d.client.ContainerStart(ctx, storeContainerName, container.StartOptions{}); err != nil {
-			return fmt.Errorf("error starting odin store container: %w", err)
-		}
-	}
-
 	return nil
 }

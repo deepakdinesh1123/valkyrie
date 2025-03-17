@@ -12,5 +12,4 @@ type SandboxHandler interface {
 	Create(ctx context.Context, wg *concurrency.SafeWaitGroup, sandBoxJob db.FetchSandboxJobTxResult)
 	Cleanup(ctx context.Context) error
 	StartContainerPool(ctx context.Context, envConfig *config.EnvConfig) error
-	StartOdinStore(ctx context.Context, storeImage string, storeContainerName string, containerRuntime string) error
 }
