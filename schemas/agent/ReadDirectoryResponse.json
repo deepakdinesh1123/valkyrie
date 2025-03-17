@@ -1,0 +1,37 @@
+{
+    "description": "Represents a response to a directory read request in a sandbox.",
+    "properties": {
+        "success": {
+            "title": "Success",
+            "type": "boolean"
+        },
+        "msg": {
+            "title": "Msg",
+            "type": "string"
+        },
+        "msgType": {
+            "default": "ReadDirectoryResponse",
+            "description": "Type of the message",
+            "title": "Msgtype",
+            "type": "string"
+        },
+        "path": {
+            "description": "Path of the directory that was read",
+            "title": "Path",
+            "type": "string"
+        },
+        "contents": {
+            "description": "Content of the directory that was read",
+            "title": "Contents",
+            "type": "string"
+        }
+    },
+    "required": [
+        "success",
+        "msg",
+        "path",
+        "contents"
+    ],
+    "title": "ReadDirectoryResponse",
+    "type": "object"
+}

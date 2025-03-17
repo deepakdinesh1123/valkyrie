@@ -1,0 +1,21 @@
+{
+    "description": "Represents a request to read a directory from a sandbox.",
+    "properties": {
+        "msgType": {
+            "default": "ReadDirectory",
+            "description": "Type of the message",
+            "title": "Msgtype",
+            "type": "string"
+        },
+        "path": {
+            "description": "Path of the directory to be read",
+            "title": "Path",
+            "type": "string"
+        }
+    },
+    "required": [
+        "path"
+    ],
+    "title": "ReadDirectory",
+    "type": "object"
+}

@@ -61,7 +61,7 @@ func (s *Server) handleUpsertFile(ctx context.Context, c *websocket.Conn, data [
 	}
 
 	// Handle file content based on whether a patch is provided
-	if uf.Patch != "" {
+	if uf.Patch != nil {
 		// Create temporary files for the patch
 		patchFile, err := os.CreateTemp("", "patch-*.diff")
 		if err != nil {
@@ -71,7 +71,7 @@ func (s *Server) handleUpsertFile(ctx context.Context, c *websocket.Conn, data [
 		defer os.Remove(patchFile.Name())
 
 		// Write the patch to the temporary file
-		if _, err := patchFile.Write([]byte(uf.Patch)); err != nil {
+		if _, err := patchFile.Write([]byte(*uf.Patch)); err != nil {
 			sendResponse(false, fmt.Sprintf("error writing to patch file: %v", err))
 			return
 		}
@@ -86,7 +86,7 @@ func (s *Server) handleUpsertFile(ctx context.Context, c *websocket.Conn, data [
 			sendResponse(false, fmt.Sprintf("error applying patch: %v, stderr: %s", err, stderr.String()))
 			return
 		}
-	} else if uf.Content != "" {
+	} else if uf.Content != nil {
 		// Replace the entire file content
 		file, err := os.Create(uf.Path) // Create/truncate file
 		if err != nil {
@@ -96,7 +96,7 @@ func (s *Server) handleUpsertFile(ctx context.Context, c *websocket.Conn, data [
 		defer file.Close()
 
 		// Write new content
-		if _, err := file.Write([]byte(uf.Content)); err != nil {
+		if _, err := file.Write([]byte(*uf.Content)); err != nil {
 			sendResponse(false, fmt.Sprintf("error writing content: %v", err))
 			return
 		}

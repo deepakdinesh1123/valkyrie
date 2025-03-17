@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from typing import Optional
 
 from .base import ResponseBase
 
@@ -11,8 +12,8 @@ class UpsertFile(BaseModel):
     )
     fileName: str = Field(description="Name of the file to be added or updated")
     path: str = Field(description="Path where the file should be created or updated")
-    content: str = Field(..., description="Content of the file")
-    patch: str = Field(..., description="Diff patch to apply to the file")
+    content: Optional[str] = Field(None, description="Content of the file")
+    patch: Optional[str] = Field(None, description="Diff patch to apply to the file")
 
 
 class DeleteFile(BaseModel):
