@@ -1,16 +1,27 @@
 services:
-  ide:
-    build:
-      context: frontend
+  traefik-proxy:
+    image: traefik:v3.3
     ports:
-      - "5173:5173"
-    profiles:
-      - execution
+      - "80:80"
+      - "8888:8080"
+    volumes:
+      - ./configs/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+    depends_on:
+      docker-proxy:
+        condition: service_healthy
+    environment:
+      - TRAEFIK_PROVIDERS_DOCKER=true
+      - TRAEFIK_PROVIDERS_DOCKER_ENDPOINT=tcp://docker-proxy:2375
+      - TRAEFIK_PROVIDERS_DOCKER_EXPOSEDBYDEFAULT=false
+      - TRAEFIK_API_DASHBOARD=true
+    networks:
+      - odin-network
 
   odin:
-    build:
-      context: .
-      dockerfile: builds/images/packages/odin.dockerfile
+    # build:
+    #   context: .
+    #   dockerfile: builds/images/packages/odin.dockerfile
+    image: odin:0.0.1
     env_file:
       - .env
     depends_on:
@@ -18,26 +29,29 @@ services:
         condition: service_healthy
       odin-store:
         condition: service_started
+      traefik-proxy:
+        condition: service_started
     command: ["server", "start"]
     ports:
-      - "8080:8080"
+      - 8080
+    labels:
+      traefik.http.routers.odin.rule: "Host(`odin.localhost`)"
+      traefik.enable: "true"
     environment:
-      - ODIN_COMPOSE_ENV=true
       - POSTGRES_HOST=postgres
     # runtime: "runsc"
-    network_mode: "bridge"
-    links:
-      - "postgres"
+    networks:
+      - odin-network
     profiles:
       - dev
       - production
       - staging
-      
 
   odin-worker:
-    build:
-      context: .
-      dockerfile: builds/images/packages/odin.dockerfile
+    # build:
+    #   context: .
+    #   dockerfile: builds/images/packages/odin.dockerfile
+    image: odin:0.0.1
     env_file:
       - .env
     depends_on:
@@ -47,18 +61,16 @@ services:
         condition: service_started
       odin-store:
         condition: service_started
+      traefik-proxy:
+        condition: service_started
     deploy:
       replicas: 1
     command: ["worker", "start"]
     environment:
       - DOCKER_HOST=tcp://docker-proxy:2375
-      - ODIN_COMPOSE_ENV=true
       - POSTGRES_HOST=postgres
-    network_mode: "bridge"
-    links:
-      - "odin-store"
-      - "postgres"
-      - "docker-proxy"
+    networks:
+      - odin-network
     # runtime: "runsc"
     profiles:
       - dev
@@ -80,7 +92,14 @@ services:
         source: /var/run/docker.sock
         target: /var/run/docker.sock
         read_only: true
-    network_mode: "bridge"
+    healthcheck:
+      test: wget --spider http://localhost:2375/version || exit 1
+      interval: "29s"
+      timeout: "5s"
+      retries: 3
+      start_period: "21s"
+    networks:
+      - odin-network
     profiles:
       - dev
       - production
@@ -105,7 +124,10 @@ services:
       context: .
       dockerfile: builds/images/store/store.dockerfile
     ports:
-      - 5000:5000
+      - 5000
+    labels:
+      traefik.http.routers.odin-store.rule: "Host(`odin-store.localhost`)"
+      traefik.enable: "true"
     healthcheck:
       test: ["CMD-SHELL", '[ "$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000)" = "404" ] && exit 0 || exit 1'] 
       interval: 30s
@@ -113,9 +135,13 @@ services:
       retries: 3
       start_period: 10s
     # runtime: "runsc"
-    network_mode: "bridge"
+    networks:
+      - odin-network
     env_file:
       - $HOME/.odin/store/setup/.env
+    depends_on:
+      traefik-proxy:
+        condition: service_started
     volumes:
       - type: bind
         source: $HOME/.odin/store/nix
@@ -133,7 +159,10 @@ services:
     env_file:
       - .env
     ports:
-      - "5432:5432"
+      - 5432
+    labels:
+      traefik.http.routers.postgres.rule: "Host(`postgres.localhost`)"
+      traefik.enable: "true"
     healthcheck:
       test:
         [
@@ -143,7 +172,11 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    network_mode: "bridge"
+    networks:
+      - odin-network
+    depends_on:
+      traefik-proxy:
+        condition: service_started
     profiles:
       - dev
       - production
@@ -179,3 +212,32 @@ services:
     profiles:
       - production
       - staging
+
+  # odin_sandbox:
+  #   container_name: "odin_sandbox_1"
+  #   image: odin_sandbox_cs:0.0.1-ubuntu
+  #   ports:
+  #     - 9090
+  #     - 1618
+  #   labels:
+  #     - "traefik.enable=true"
+  #     # CS Service
+  #     - "traefik.http.routers.odin_sandbox_1-cs.rule=Host(`odin_sandbox_1-cs.localhost`)"
+  #     - "traefik.http.routers.odin_sandbox_1-cs.entrypoints=web"
+  #     - "traefik.http.routers.odin_sandbox_1-cs.service=odin_sandbox_1-cs"
+  #     - "traefik.http.services.odin_sandbox_1-cs.loadbalancer.server.port=9090"
+  #     # AG Service
+  #     - "traefik.http.routers.odin_sandbox_1-ag.rule=Host(`odin_sandbox_1-ag.localhost`)"
+  #     - "traefik.http.routers.odin_sandbox_1-ag.entrypoints=web"
+  #     - "traefik.http.routers.odin_sandbox_1-ag.service=odin_sandbox_1-ag"
+  #     - "traefik.http.services.odin_sandbox_1-ag.loadbalancer.server.port=1618"
+  #   depends_on:
+  #     traefik-proxy:
+  #       condition: service_started
+  #   networks:
+  #     - odin-network
+
+networks:
+  odin-network:
+    driver: bridge
+    external: true

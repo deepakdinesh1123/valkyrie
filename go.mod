@@ -8,6 +8,7 @@ require (
 	github.com/coder/websocket v1.8.12
 	github.com/containers/podman/v5 v5.1.2
 	github.com/docker/docker v27.1.1+incompatible
+	github.com/docker/go-connections v0.5.0
 	github.com/exaring/otelpgx v0.6.2
 	github.com/fergusstrange/embedded-postgres v1.27.0
 	github.com/go-chi/chi/v5 v5.2.1
@@ -73,7 +74,6 @@ require (
 	github.com/dlclark/regexp2 v1.11.0 // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.8.2 // indirect
-	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/ebitengine/purego v0.8.1 // indirect
 	github.com/fatih/color v1.17.0 // indirect

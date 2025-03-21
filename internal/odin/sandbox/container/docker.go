@@ -113,55 +113,6 @@ func (d *DockerSH) Create(ctx context.Context, wg *concurrency.SafeWaitGroup, sa
 		}
 	}
 
-	// CodeServerConfig, err := sandbox.GetCodeServerConfig()
-	// if err != nil {
-	// 	d.logger.Err(err).Msg("could not get sandbox config")
-	// 	return
-	// }
-	// configYaml, err := yaml.Marshal(CodeServerConfig)
-	// if err != nil {
-	// 	d.logger.Err(err).Msg("could not convert sandbox config to yaml")
-	// }
-
-	// d.logger.Info().Str("Command", fmt.Sprintf("echo \"%s\" >> /home/valnix/.config/code-server/config.yaml", string(configYaml))).Msg("Adding config")
-	// configExec, err := d.client.ContainerExecCreate(
-	// 	ctx,
-	// 	cont.Value().ID,
-	// 	container.ExecOptions{
-	// 		AttachStderr: true,
-	// 		AttachStdout: true,
-	// 		Cmd: []string{
-	// 			"/bin/sh",
-	// 			"-c",
-	// 			fmt.Sprintf("echo \"%s\" >> /home/valnix/.config/code-server/config.yaml", string(configYaml)),
-	// 		},
-	// 	},
-	// )
-	// _, err = d.client.ContainerExecAttach(ctx, configExec.ID, container.ExecAttachOptions{})
-	// if err != nil {
-	// 	d.logger.Err(err).Msg("error adding code server config")
-	// 	return
-	// }
-
-	// codeServerExec, err := d.client.ContainerExecCreate(
-	// 	ctx,
-	// 	cont.Value().ID,
-	// 	container.ExecOptions{
-	// 		AttachStderr: true,
-	// 		AttachStdout: true,
-	// 		Cmd: []string{
-	// 			"/home/valnix/start.sh",
-	// 		},
-	// 	},
-	// )
-	// err = d.client.ContainerExecStart(ctx, codeServerExec.ID, container.ExecStartOptions{
-	// 	Detach: true,
-	// })
-	// if err != nil {
-	// 	d.logger.Err(err).Msg("error adding code server config")
-	// 	return
-	// }
-
 	if sandBox.Config.Flake != "" {
 		flakeExec, err := d.client.ContainerExecCreate(
 			ctx,
@@ -248,11 +199,8 @@ func (d *DockerSH) Create(ctx context.Context, wg *concurrency.SafeWaitGroup, sa
 		}
 	}
 
-	containerURL := fmt.Sprintf("http://%s", contInfo.NetworkSettings.Networks["bridge"].IPAddress)
-	sandboxAgentUrl := fmt.Sprintf("ws://%s:1618/sandbox", contInfo.NetworkSettings.Networks["bridge"].IPAddress)
-	if d.envConfig.ODIN_ENVIRONMENT == "prod" {
-		// Handle prod url configuration here
-	}
+	containerURL := fmt.Sprintf("http://%s-cs.localhost", contInfo.Name)
+	sandboxAgentUrl := fmt.Sprintf("ws://%s-ag.localhost/sandbox", contInfo.Name)
 
 	d.logger.Info().Msg(containerURL)
 	err = d.queries.MarkSandboxRunning(ctx, db.MarkSandboxRunningParams{
