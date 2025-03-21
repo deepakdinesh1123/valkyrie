@@ -58,7 +58,6 @@ type EnvConfig struct {
 	ODIN_OTEL_RESOURCE_NAME string `mapstructure:"ODIN_OTEL_RESOURCE_NAME"`
 	ODIN_EXPORT_LOGS        string `mapstructure:"ODIN_EXPORT_LOGS"`
 	ODIN_ENVIRONMENT        string `mapstructure:"ODIN_ENVIRONMENT"`
-	ODIN_COMPOSE_ENV        bool   `mapstructure:"ODIN_COMPOSE_ENV"`
 
 	ODIN_NIX_STORE                string `mapstructure:"ODIN_NIX_STORE"`
 	ODIN_NIX_USER_ENVIRONMENT     string `mapstructure:"ODIN_NIX_USER_ENVIRONMENT"`
@@ -207,7 +206,6 @@ func setDefaults() {
 	viper.SetDefault("ODIN_OTLP_ENDPOINT", "localhost:4317")
 	viper.SetDefault("ODIN_OTEL_RESOURCE_NAME", "Odin")
 	viper.SetDefault("ODIN_ENVIRONMENT", "dev")
-	viper.SetDefault("ODIN_COMPOSE_ENV", false)
 
 	viper.SetDefault("ODIN_EXPORT_LOGS", "console")
 	viper.SetDefault("ODIN_JOB_PRUNE_FREQ", 1)

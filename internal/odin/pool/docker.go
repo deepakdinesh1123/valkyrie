@@ -9,8 +9,11 @@ import (
 	"sync"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
+	"github.com/deepakdinesh1123/valkyrie/pkg/namesgenerator"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
+	"github.com/docker/go-connections/nat"
 )
 
 var getDockerClientOnce sync.Once
@@ -42,9 +45,6 @@ func DockerExecConstructor(ctx context.Context) (Container, error) {
 		AutoRemove:  true,
 		Runtime:     envConfig.ODIN_CONTAINER_RUNTIME,
 		NetworkMode: "bridge",
-	}
-	if !envConfig.ODIN_COMPOSE_ENV {
-		hostConfig.Links = []string{envConfig.ODIN_STORE_CONTAINER}
 	}
 	createResp, err := dClient.ContainerCreate(ctx, &container.Config{
 		Image:       envConfig.ODIN_EXECUTION_IMAGE,
@@ -89,18 +89,35 @@ func DockerSandboxConstructor(ctx context.Context) (Container, error) {
 		NetworkMode: "bridge",
 	}
 
-	if !envConfig.ODIN_COMPOSE_ENV {
-		hostConfig.Links = []string{envConfig.ODIN_STORE_CONTAINER}
-	}
+	containerName := namesgenerator.GetRandomName(10)
 
 	createResp, err := dClient.ContainerCreate(ctx, &container.Config{
 		Image:      envConfig.ODIN_SANDBOX_IMAGE,
 		StopSignal: "SIGKILL",
+		ExposedPorts: nat.PortSet{
+			nat.Port("9090/tcp"): {},
+			nat.Port("1618/tcp"): {},
+		},
+		Labels: map[string]string{
+			fmt.Sprintf("traefik.http.routers.%s-cs.rule", containerName):                      fmt.Sprintf("Host(`%s-cs.localhost`)", containerName),
+			fmt.Sprintf("traefik.http.routers.%s-cs.entrypoints", containerName):               "http",
+			fmt.Sprintf("traefik.http.routers.%s-cs.service", containerName):                   fmt.Sprintf("%s-cs", containerName),
+			fmt.Sprintf("traefik.http.services.%s-cs.loadbalancer.server.port", containerName): "9090",
+			fmt.Sprintf("traefik.http.routers.%s-ag.rule", containerName):                      fmt.Sprintf("Host(`%s-ag.localhost`)", containerName),
+			fmt.Sprintf("traefik.http.routers.%s-ag.entrypoints", containerName):               "http",
+			fmt.Sprintf("traefik.http.routers.%s-ag.service", containerName):                   fmt.Sprintf("%s-ag", containerName),
+			fmt.Sprintf("traefik.http.services.%s-ag.loadbalancer.server.port", containerName): "1618",
+			"traefik.enable": "true",
+		},
 	},
 		hostConfig,
+		&network.NetworkingConfig{
+			EndpointsConfig: map[string]*network.EndpointSettings{
+				"odin-network": {},
+			},
+		},
 		nil,
-		nil,
-		"",
+		containerName,
 	)
 	if err != nil {
 		fmt.Printf("error creating container %v\n", err)
