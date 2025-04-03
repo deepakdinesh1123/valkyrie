@@ -1,7 +1,7 @@
 ARG NIX_CHANNEL=24.11
 ARG ALPINE_IMAGE=alpine:3.20
 
-ARG AGENT_BUILDER=odin_agent:0.0.1
+ARG AGENT_BUILDER=valkyrie_agent:0.0.1
 
 FROM ${AGENT_BUILDER} AS builder
 

@@ -18,17 +18,17 @@ export POSTGRES_SSL_MODE := env_var_or_default("POSTGRES_SSL_MODE", "disable")
 # Run database migrations up
 migrate:
     @echo "Running database migrations..."
-    migrate -path internal/odin/db/migrations -database "${PG_URL}" up
+    migrate -path internal/db/migrations -database "${PG_URL}" up
 
 # Run database migrations down
 migrate-down:
     @echo "Running database migrations down..."
-    migrate -path internal/odin/db/migrations -database "${PG_URL}" down
+    migrate -path internal/db/migrations -database "${PG_URL}" down
 
 # Generate SQL code
 gq:
     @echo "Generating SQL code..."
-    cd internal/odin/db && sqlc generate
+    cd internal/db && sqlc generate
 
 # Start the PostgreSQL database
 start-db:
@@ -44,17 +44,17 @@ start-db:
 # Clear the state database
 clear-stdb:
     @echo "Clearing state database..."
-    rm -rf ~/.zango/data
+    rm -rf ~/.valkyrie/data
 
 # Start observability services
 start-observability: 
     @echo "Starting observability services..."
     docker-compose up -d valkyrie-otel-collector jaeger prometheus
 
-# Build the odin binary
-odin:
-    @echo "Building odin binary..."
-    go build -o odinb -tags docker cmd/odin/main.go
+# Build the valkyrie binary
+valkyrie:
+    @echo "Building valkyrie binary..."
+    go build -o valkyrieb -tags docker cmd/valkyrie/main.go
 
 # Start PostgreSQL with Docker and run migrations
 docker-db: 

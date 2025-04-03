@@ -27,7 +27,7 @@
           arch = if arch == "x86_64" then "amd64" else "arm64";
           sha256 = "sha256-H2ddt+ZxnnzrGBoTyAVMs/qkQuUHG+HelIgcqzVcjS4="; 
         };
-        odinDependencies = with pkgs; [
+        valkyrieDependencies = with pkgs; [
           sqlc
           go-migrate
           go_1_22
@@ -46,27 +46,27 @@
         ];
 
         packages = rec {
-          odin = pkgs.callPackage ./builds/nix/odin.nix { inherit pkgs; };
+          valkyrie = pkgs.callPackage ./builds/nix/valkyrie.nix { inherit pkgs; };
           agent = pkgs.callPackage ./builds/nix/agent.nix { inherit pkgs; };
-          odinDockerImage = nix2containerPkgs.nix2container.buildImage {
-            name = "odin";
+          valkyrieDockerImage = nix2containerPkgs.nix2container.buildImage {
+            name = "valkyrie";
             tag = "0.0.1";
             fromImage = ubuntu;
             config = {
-              Entrypoint = [ "${odin}/bin/odin" ];
+              Entrypoint = [ "${valkyrie}/bin/valkyrie" ];
             };
           };
         };
-        defaultPackage = packages.odin;
+        defaultPackage = packages.valkyrie;
 
         devShells = {
           default = pkgs.mkShell {
-            buildInputs = odinDependencies;
+            buildInputs = valkyrieDependencies;
           };
-          odin = pkgs.mkShell {
-            buildInputs = odinDependencies;
+          valkyrie = pkgs.mkShell {
+            buildInputs = valkyrieDependencies;
           };
-          python-sdk = import ./sdk/odinpy/shell.nix { inherit pkgs; };
+          python-sdk = import ./sdk/pyvalkyrie/shell.nix { inherit pkgs; };
           js-sdk = import ./sdk/ts/shell.nix { inherit pkgs; };
           docs = import ./docs/shell.nix { inherit pkgs; };
           schemas = import ./schemas/shell.nix { inherit pkgs; };

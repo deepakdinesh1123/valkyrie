@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
+	"github.com/deepakdinesh1123/valkyrie/internal/config"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -95,13 +95,13 @@ func NewPropagator() propagation.TextMapPropagator {
 }
 
 func NewTraceProvider(ctx context.Context, res *resource.Resource, envConfig *config.EnvConfig) (trace.TracerProvider, func(context.Context) error, error) {
-	if !envConfig.ODIN_ENABLE_TELEMETRY {
+	if !envConfig.ENABLE_TELEMETRY {
 		return tracenoop.NewTracerProvider(), nil, nil
 	}
 	traceExporter, err := otlptracegrpc.New(
 		ctx,
 		otlptracegrpc.WithInsecure(),
-		otlptracegrpc.WithEndpoint(envConfig.ODIN_OTLP_ENDPOINT),
+		otlptracegrpc.WithEndpoint(envConfig.OTLP_ENDPOINT),
 	)
 	if err != nil {
 		return nil, nil, err
@@ -116,11 +116,11 @@ func NewTraceProvider(ctx context.Context, res *resource.Resource, envConfig *co
 }
 
 func NewMeterProvider(ctx context.Context, res *resource.Resource, envConfig *config.EnvConfig) (metric.MeterProvider, func(context.Context) error, error) {
-	if envConfig.ODIN_ENABLE_TELEMETRY {
+	if envConfig.ENABLE_TELEMETRY {
 		metricExporter, err := otlpmetricgrpc.New(
 			ctx,
 			otlpmetricgrpc.WithInsecure(),
-			otlpmetricgrpc.WithEndpoint(envConfig.ODIN_OTLP_ENDPOINT),
+			otlpmetricgrpc.WithEndpoint(envConfig.OTLP_ENDPOINT),
 		)
 		if err != nil {
 			return nil, nil, err

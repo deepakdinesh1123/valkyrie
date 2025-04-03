@@ -18,7 +18,7 @@
       };
 
       packages.default = pkgs.buildEnv {
-        name = "Odin-Sandbox-Env";
+        name = "valkyrie-Sandbox-Env";
         paths = with pkgs; [
         ];
       };
@@ -27,7 +27,7 @@
         buildInputs = with pkgs; [
         ];
       };
-      process-compose."odin" = pc: {
+      process-compose."valkyrie" = pc: {
         imports = [
           inputs.services-flake.processComposeModules.default
         ];

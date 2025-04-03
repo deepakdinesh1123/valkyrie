@@ -18,7 +18,7 @@ repos:
     # First Ruff pass - import sorting only
     - id: ruff
       name: ruff-imports
-      files: ^sdk/odinpy/
+      files: ^sdk/pyvalkyrie/
       args: [
         --fix,
         --select=I,
@@ -27,13 +27,13 @@ repos:
     # Second Ruff pass - all checks
     - id: ruff
       name: ruff-check
-      files: ^sdk/odinpy/
+      files: ^sdk/pyvalkyrie/
       args: [
         --fix,
         --exit-non-zero-on-fix,
       ]
     - id: ruff-format
-      files: ^sdk/odinpy/
+      files: ^sdk/pyvalkyrie/
 
 # - repo: https://github.com/astral-sh/uv-pre-commit
 #   rev: 0.6.2
