@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=odin_sandbox:0.0.1-ubuntu
+ARG BASE_IMAGE=valkyrie_sandbox:0.0.1-ubuntu
 
 FROM ${BASE_IMAGE}
 

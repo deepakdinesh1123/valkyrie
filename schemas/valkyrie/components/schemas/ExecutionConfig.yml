@@ -1,0 +1,39 @@
+type: object
+required:
+  - WORKER_PROVIDER
+  - WORKER_CONCURRENCY
+  - WORKER_BUFFER_SIZE
+  - WORKER_TASK_TIMEOUT
+  - WORKER_POLL_FREQ
+  - WORKER_RUNTIME
+  - LOG_LEVEL
+properties:
+  WORKER_PROVIDER:
+    type: string
+    description: Represents the worker provider.
+  WORKER_CONCURRENCY:
+    type: integer
+    format: int32
+    description: Represents the concurrency level for the worker.
+  WORKER_BUFFER_SIZE:
+    type: integer
+    format: int32
+    description: Represents the buffer size for the worker.
+  WORKER_TASK_TIMEOUT:
+    type: integer
+    description: Represents the task timeout.
+  WORKER_POLL_FREQ:
+    type: integer
+    description: Represents the polling frequency for the worker in seconds.
+  WORKER_RUNTIME:
+    type: string
+    description: Represents the runtime for the worker in seconds.
+  LOG_LEVEL:
+    type: string
+    description: Represents the log level.
+  SYSTEM_PROVIDER_BASE_DIR:
+    type: string
+    description: Represents the base directory for the system provider.
+  SYSTEM_PROVIDER_CLEAN_UP:
+    type: boolean
+    description: Represents whether to clean up directories created by the system provider.

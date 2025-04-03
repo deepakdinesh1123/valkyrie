@@ -53,6 +53,7 @@ go.work.sum
 *.log
 
 odinb
+valkyrieb
 
 # Ignore OpenTofu (Terraform) state and cache
 *.tfstate

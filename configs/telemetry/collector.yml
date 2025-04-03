@@ -3,21 +3,41 @@ receivers:
     protocols:
       grpc:
         endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: 'tetragon'
+          scrape_interval: 3s
+          static_configs:
+            - targets: ['tetragon:9091']
+
 processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
 extensions:
   health_check: {}
+
 exporters:
   otlp:
     endpoint: jaeger:4317
     tls:
       insecure: true
   prometheus:
-    endpoint: "0.0.0.0:9090"
+    endpoint: 0.0.0.0:9090
+    namespace: "otel"
+
 service:
+  extensions: [health_check]
   pipelines:
     traces:
       receivers: [otlp]
+      processors: [batch]
       exporters: [otlp]
     metrics:
-      receivers: [otlp]
+      receivers: [otlp, prometheus]
+      processors: [batch]
       exporters: [prometheus]

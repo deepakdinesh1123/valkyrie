@@ -36,7 +36,7 @@ ARG NIX_CACHE_PUBLIC_KEY
 RUN echo "trusted-public-keys = ${NIX_CACHE_PUBLIC_KEY} cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=" >> /etc/nix/nix.conf
 
 USER valnix
-RUN mkdir -p /home/valnix/odin
+RUN mkdir -p /home/valnix/valkyrie
 COPY --chown=valnix:valnix hack/execution/* /home/valnix/
 
 VOLUME [ "/home/valnix" ]

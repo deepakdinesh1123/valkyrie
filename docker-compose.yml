@@ -1,4 +1,20 @@
 services:
+
+  tetragon:
+    image: quay.io/cilium/tetragon:v1.4.0
+    container_name: tetragon
+    pid: "host"
+    privileged: true
+    volumes:
+      - /sys/kernel/btf/vmlinux:/var/lib/tetragon/btf
+    command:
+      - --metrics-server=0.0.0.0:9091
+    depends_on:
+      - valkyrie-otel-collector
+    profiles:
+      - staging
+      - production
+
   traefik-proxy:
     image: traefik:v3.3
     ports:
@@ -15,19 +31,23 @@ services:
       - TRAEFIK_PROVIDERS_DOCKER_EXPOSEDBYDEFAULT=false
       - TRAEFIK_API_DASHBOARD=true
     networks:
-      - odin-network
+      - valkyrie-network
+    profiles:
+      - dev
+      - production
+      - staging
 
-  odin:
-    # build:
-    #   context: .
-    #   dockerfile: builds/images/packages/odin.dockerfile
-    image: odin:0.0.1
+  valkyrie:
+    build:
+      context: .
+      dockerfile: builds/images/packages/valkyrie.dockerfile
+    # image: valkyrie:0.0.1
     env_file:
       - .env
     depends_on:
       postgres:
         condition: service_healthy
-      odin-store:
+      valkyrie-store:
         condition: service_started
       traefik-proxy:
         condition: service_started
@@ -35,31 +55,31 @@ services:
     ports:
       - 8080
     labels:
-      traefik.http.routers.odin.rule: "Host(`odin.localhost`)"
+      traefik.http.routers.valkyrie.rule: "Host(`valkyrie.localhost`)"
       traefik.enable: "true"
     environment:
       - POSTGRES_HOST=postgres
     # runtime: "runsc"
     networks:
-      - odin-network
+      - valkyrie-network
     profiles:
       - dev
       - production
       - staging
 
-  odin-worker:
-    # build:
-    #   context: .
-    #   dockerfile: builds/images/packages/odin.dockerfile
-    image: odin:0.0.1
+  valkyrie-worker:
+    build:
+      context: .
+      dockerfile: builds/images/packages/valkyrie.dockerfile
+    # image: valkyrie:0.0.1
     env_file:
       - .env
     depends_on:
       postgres:
         condition: service_healthy
-      odin:
+      valkyrie:
         condition: service_started
-      odin-store:
+      valkyrie-store:
         condition: service_started
       traefik-proxy:
         condition: service_started
@@ -70,7 +90,7 @@ services:
       - DOCKER_HOST=tcp://docker-proxy:2375
       - POSTGRES_HOST=postgres
     networks:
-      - odin-network
+      - valkyrie-network
     # runtime: "runsc"
     profiles:
       - dev
@@ -79,7 +99,6 @@ services:
   
   docker-proxy:
     image: tecnativa/docker-socket-proxy
-    restart: unless-stopped
     environment:
       - ALLOW_START=1
       - ALLOW_STOP=1
@@ -99,34 +118,34 @@ services:
       retries: 3
       start_period: "21s"
     networks:
-      - odin-network
+      - valkyrie-network
     profiles:
       - dev
       - production
       - staging
   
-  odin-store-builder:
+  valkyrie-store-builder:
     build:
       context: .
       dockerfile: builds/images/store/build.dockerfile
     volumes:
       - type: bind
-        source: $HOME/.odin/store/nix
+        source: $HOME/.valkyrie/store/nix
         target: /nix
       - type: bind
-        source: $HOME/.odin/store/setup
+        source: $HOME/.valkyrie/store/setup
         target: /tmp/setup
     profiles:
       - setup
   
-  odin-store:
+  valkyrie-store:
     build:
       context: .
       dockerfile: builds/images/store/store.dockerfile
     ports:
       - 5000
     labels:
-      traefik.http.routers.odin-store.rule: "Host(`odin-store.localhost`)"
+      traefik.http.routers.valkyrie-store.rule: "Host(`valkyrie-store.localhost`)"
       traefik.enable: "true"
     healthcheck:
       test: ["CMD-SHELL", '[ "$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000)" = "404" ] && exit 0 || exit 1'] 
@@ -136,18 +155,18 @@ services:
       start_period: 10s
     # runtime: "runsc"
     networks:
-      - odin-network
+      - valkyrie-network
     env_file:
-      - $HOME/.odin/store/setup/.env
+      - $HOME/.valkyrie/store/setup/.env
     depends_on:
       traefik-proxy:
         condition: service_started
     volumes:
       - type: bind
-        source: $HOME/.odin/store/nix
+        source: $HOME/.valkyrie/store/nix
         target: /nix
       - type: bind
-        source: $HOME/.odin/store/setup
+        source: $HOME/.valkyrie/store/setup
         target: /tmp/setup
     profiles:
       - dev
@@ -159,7 +178,7 @@ services:
     env_file:
       - .env
     ports:
-      - 5432
+      - 5432:5432
     labels:
       traefik.http.routers.postgres.rule: "Host(`postgres.localhost`)"
       traefik.enable: "true"
@@ -173,7 +192,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - odin-network
+      - valkyrie-network
     depends_on:
       traefik-proxy:
         condition: service_started
@@ -188,7 +207,8 @@ services:
     volumes:
       - ./configs/telemetry/collector.yml:/etc/otel-collector-config.yaml
     ports:
-      - 4317:4317 # OTLP grpc receiver
+      - 4317
+      - 9090
     profiles:
       - production
       - staging
@@ -213,31 +233,31 @@ services:
       - production
       - staging
 
-  # odin_sandbox:
-  #   container_name: "odin_sandbox_1"
-  #   image: odin_sandbox_cs:0.0.1-ubuntu
+  # valkyrie_sandbox:
+  #   container_name: "valkyrie_sandbox_1"
+  #   image: valkyrie_sandbox_cs:0.0.1-ubuntu
   #   ports:
   #     - 9090
   #     - 1618
   #   labels:
   #     - "traefik.enable=true"
   #     # CS Service
-  #     - "traefik.http.routers.odin_sandbox_1-cs.rule=Host(`odin_sandbox_1-cs.localhost`)"
-  #     - "traefik.http.routers.odin_sandbox_1-cs.entrypoints=web"
-  #     - "traefik.http.routers.odin_sandbox_1-cs.service=odin_sandbox_1-cs"
-  #     - "traefik.http.services.odin_sandbox_1-cs.loadbalancer.server.port=9090"
+  #     - "traefik.http.routers.valkyrie_sandbox_1-cs.rule=Host(`valkyrie_sandbox_1-cs.localhost`)"
+  #     - "traefik.http.routers.valkyrie_sandbox_1-cs.entrypoints=web"
+  #     - "traefik.http.routers.valkyrie_sandbox_1-cs.service=valkyrie_sandbox_1-cs"
+  #     - "traefik.http.services.valkyrie_sandbox_1-cs.loadbalancer.server.port=9090"
   #     # AG Service
-  #     - "traefik.http.routers.odin_sandbox_1-ag.rule=Host(`odin_sandbox_1-ag.localhost`)"
-  #     - "traefik.http.routers.odin_sandbox_1-ag.entrypoints=web"
-  #     - "traefik.http.routers.odin_sandbox_1-ag.service=odin_sandbox_1-ag"
-  #     - "traefik.http.services.odin_sandbox_1-ag.loadbalancer.server.port=1618"
+  #     - "traefik.http.routers.valkyrie_sandbox_1-ag.rule=Host(`valkyrie_sandbox_1-ag.localhost`)"
+  #     - "traefik.http.routers.valkyrie_sandbox_1-ag.entrypoints=web"
+  #     - "traefik.http.routers.valkyrie_sandbox_1-ag.service=valkyrie_sandbox_1-ag"
+  #     - "traefik.http.services.valkyrie_sandbox_1-ag.loadbalancer.server.port=1618"
   #   depends_on:
   #     traefik-proxy:
   #       condition: service_started
   #   networks:
-  #     - odin-network
+  #     - valkyrie-network
 
 networks:
-  odin-network:
+  valkyrie-network:
     driver: bridge
     external: true

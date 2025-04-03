@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/deepakdinesh1123/valkyrie/internal/odin/config"
+	"github.com/deepakdinesh1123/valkyrie/internal/config"
 )
 
 var eventsPathPattern = regexp.MustCompile(`^/executions/[^/]+/events$`)
@@ -21,7 +21,7 @@ func TokenAuth() Middleware {
 			ctx := r.Context()
 			envConfig, _ := config.GetEnvConfig()
 
-			if envConfig.ODIN_USER_TOKEN == "" && envConfig.ODIN_ADMIN_TOKEN == "" {
+			if envConfig.USER_TOKEN == "" && envConfig.ADMIN_TOKEN == "" {
 				r = r.WithContext(context.WithValue(ctx, config.AuthKey, "noauth"))
 				h.ServeHTTP(w, r)
 				return
@@ -30,9 +30,9 @@ func TokenAuth() Middleware {
 			r = r.WithContext(context.WithValue(ctx, config.AuthKey, "auth"))
 			headerValue := r.Header.Get("X-Auth-Token")
 			switch headerValue {
-			case envConfig.ODIN_USER_TOKEN:
+			case envConfig.USER_TOKEN:
 				r = r.WithContext(context.WithValue(ctx, config.UserKey, "user"))
-			case envConfig.ODIN_ADMIN_TOKEN:
+			case envConfig.ADMIN_TOKEN:
 				r = r.WithContext(context.WithValue(ctx, config.UserKey, "admin"))
 			default:
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)

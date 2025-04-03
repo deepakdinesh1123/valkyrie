@@ -2,23 +2,23 @@ sdk-schema-generation-script := "hack/schema/generate_agent_schemas.sh"
 sdk-schema-folder := "schemas/agent"
 
 bundle-schemas:
-	redocly bundle schemas/odin/openapi.yml -o schemas/odin-schema.yml
+	redocly bundle schemas/valkyrie/openapi.yml -o schemas/valkyrie-schema.yml
 
 lint-schemas:
-	redocly lint --config schemas/redocly.yml schemas/odin-schema.yml
+	redocly lint --config schemas/redocly.yml schemas/valkyrie-schema.yml
 
 split-schemas:
-	rm -rf schemas/odin
-	redocly split schemas/odin-schema.yml --outDir schemas/odin
+	rm -rf schemas/valkyrie
+	redocly split schemas/valkyrie-schema.yml --outDir schemas/valkyrie
 
 generate-api:
 	go generate
 
 api-docs:
-	redocly preview-docs -p 8048 schemas/odin-schema.yml
+	redocly preview-docs -p 8048 schemas/valkyrie-schema.yml
 	
 generate-json-schema:
-	uv run --no-project sdk/odinpy/src/generate.py
+	uv run --no-project sdk/valkyriepy/src/generate.py
 
 generate-ts-sdk-schema:
 	#!/usr/bin/env sh

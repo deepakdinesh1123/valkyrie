@@ -1,0 +1,21 @@
+type: object
+required:
+  - sandboxId
+  - state
+  - URL
+  - agentURL
+  - created_at
+properties:
+  sandboxId:
+    type: integer
+    format: int64
+  state:
+    type: string
+  URL:
+    type: string
+  agentURL:
+    type: string
+  created_at:
+    type: string
+    format: date-time
+  

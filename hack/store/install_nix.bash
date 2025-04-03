@@ -135,7 +135,7 @@ nix-channel --add "https://github.com/$NIXPKGS_OWNER/$NIXPKGS_REPO/archive/$NIX_
 nix-channel --update
 
 nix-env -iA nixpkgs.nix-serve-ng
-nix-store --generate-binary-cache-key odin-store /tmp/setup/cache-priv-key.pem /tmp/setup/cache-pub-key.pem && \
+nix-store --generate-binary-cache-key valkyrie-store /tmp/setup/cache-priv-key.pem /tmp/setup/cache-pub-key.pem && \
     chown valnix /tmp/setup/cache-priv-key.pem && \
     chmod 600 /tmp/setup/cache-priv-key.pem
 

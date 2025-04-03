@@ -2,6 +2,6 @@
 
 set -e
 . ~/.profile
-chmod +x ~/odin/exec.sh
-cd ~/odin
+chmod +x ~/valkyrie/exec.sh
+cd ~/valkyrie
 exec ./exec.sh

@@ -1,8 +1,0 @@
-name: limit
-in: query
-description: The limit for the records
-required: false
-schema:
-  type: integer
-  format: int64
-  default: 10
