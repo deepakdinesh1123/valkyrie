@@ -36,6 +36,7 @@ services:
       - dev
       - production
       - staging
+      - test-traefik
 
   valkyrie:
     build:
@@ -127,6 +128,7 @@ services:
       - dev
       - production
       - staging
+      - test-traefik
   
   valkyrie-store-builder:
     build:
@@ -252,29 +254,32 @@ services:
       - production
       - staging
 
-  # valkyrie_sandbox:
-  #   container_name: "valkyrie_sandbox_1"
-  #   image: valkyrie_sandbox_cs:0.0.1-ubuntu
-  #   ports:
-  #     - 9090
-  #     - 1618
-  #   labels:
-  #     - "traefik.enable=true"
-  #     # CS Service
-  #     - "traefik.http.routers.valkyrie_sandbox_1-cs.rule=Host(`valkyrie_sandbox_1-cs.localhost`)"
-  #     - "traefik.http.routers.valkyrie_sandbox_1-cs.entrypoints=web"
-  #     - "traefik.http.routers.valkyrie_sandbox_1-cs.service=valkyrie_sandbox_1-cs"
-  #     - "traefik.http.services.valkyrie_sandbox_1-cs.loadbalancer.server.port=9090"
-  #     # AG Service
-  #     - "traefik.http.routers.valkyrie_sandbox_1-ag.rule=Host(`valkyrie_sandbox_1-ag.localhost`)"
-  #     - "traefik.http.routers.valkyrie_sandbox_1-ag.entrypoints=web"
-  #     - "traefik.http.routers.valkyrie_sandbox_1-ag.service=valkyrie_sandbox_1-ag"
-  #     - "traefik.http.services.valkyrie_sandbox_1-ag.loadbalancer.server.port=1618"
-  #   depends_on:
-  #     traefik-proxy:
-  #       condition: service_started
-  #   networks:
-  #     - valkyrie-network
+  valkyrie_sandbox:
+    container_name: "valkyrie_sandbox_1"
+    image: valkyrie_sandbox:0.0.1-ubuntu
+    ports:
+      - 9090
+      - 1618
+    labels:
+      - "traefik.enable=true"
+      # Code Server
+      - "traefik.http.routers.valkyrie_sandbox_1-cs.rule=Host(`valkyrie_sandbox_1-cs.localhost`)"
+      - "traefik.http.routers.valkyrie_sandbox_1-cs.entrypoints=http"
+      - "traefik.http.routers.valkyrie_sandbox_1-cs.service=valkyrie_sandbox_1-cs"
+      - "traefik.http.services.valkyrie_sandbox_1-cs.loadbalancer.server.port=9090"
+      
+      # Agent
+      - "traefik.http.routers.valkyrie_sandbox_1-ag.rule=Host(`valkyrie_sandbox_1-ag.localhost`)"
+      - "traefik.http.routers.valkyrie_sandbox_1-ag.entrypoints=http"
+      - "traefik.http.routers.valkyrie_sandbox_1-ag.service=valkyrie_sandbox_1-ag"
+      - "traefik.http.services.valkyrie_sandbox_1-ag.loadbalancer.server.port=1618"
+    depends_on:
+      traefik-proxy:
+        condition: service_started
+    networks:
+      - valkyrie-network
+    profiles:
+      - test-traefik
 
 networks:
   valkyrie-network:

@@ -87,7 +87,7 @@ class Client:
         if not success:
             raise SandboxError(f"Failed to create sandbox: {result}")
 
-        return Sandbox(result)
+        return Sandbox(result, self.config, self.logger)
 
     def execute(self, execReq: ExecutionRequest):
         return Execution(execReq, self.logger, self.config)

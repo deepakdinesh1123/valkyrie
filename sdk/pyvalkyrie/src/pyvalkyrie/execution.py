@@ -63,7 +63,10 @@ class Execution:
                 data=self.execReq.model_dump_json(exclude_none=True),
                 headers=headers,
             )
-            resp.raise_for_status()
+            try:
+                resp.raise_for_status()
+            except requests.Request:
+                return "failure", resp.json()
 
             # Parse response
             execRes = ExecutionResponse(**resp.json())
