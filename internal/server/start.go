@@ -27,9 +27,9 @@ func (s *ValkyrieServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 	r := chi.NewRouter()
 
 	r.Get("/executions/{jobId}/events", s.ExecuteSSE)
+	r.Get("/executions/{jobId}/ws", s.ExecuteWebSocket)
 	r.Get("/sandboxes/{sandboxId}/status/sse", s.GetSandboxSSE)
 	r.Get("/sandboxes/{sandboxId}/status/ws", s.GetSandboxWS)
-	// mux.HandleFunc("/executions/execute/ws", s.ExecuteWS)
 	r.Mount("/", s.server)
 
 	route_finder := middleware.MakeRouteFinder(s.server)

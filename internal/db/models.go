@@ -22,6 +22,8 @@ type ExecRequest struct {
 	Input                pgtype.Text `db:"input" json:"input"`
 	Command              pgtype.Text `db:"command" json:"command"`
 	Setup                pgtype.Text `db:"setup" json:"setup"`
+	SystemSetup          pgtype.Text `db:"system_setup" json:"system_setup"`
+	PkgIndex             pgtype.Text `db:"pkg_index" json:"pkg_index"`
 	LanguageVersion      int64       `db:"language_version" json:"language_version"`
 }
 

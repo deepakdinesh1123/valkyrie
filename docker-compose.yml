@@ -57,6 +57,10 @@ services:
     labels:
       traefik.http.routers.valkyrie.rule: "Host(`valkyrie.localhost`)"
       traefik.enable: "true"
+    volumes:
+      - type: bind
+        source: $HOME/.valkyrie_info/
+        target: /home/valnix/.valkyrie_info
     environment:
       - POSTGRES_HOST=postgres
     # runtime: "runsc"
@@ -172,6 +176,21 @@ services:
       - dev
       - production
       - staging
+
+  valkyrie-devpi:
+    build:
+      context: .
+      dockerfile: builds/images/devpi.dockerfile
+    ports:
+      - 3141
+    volumes:
+      - type: bind
+        source: $HOME/.valkyrie/store/devpi
+        target: /devpi
+    networks:
+      - valkyrie-network
+    profiles:
+      - python
 
   postgres:
     image: postgres:15.3

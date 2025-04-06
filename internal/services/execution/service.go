@@ -6,6 +6,7 @@ import (
 	"embed"
 	"encoding/hex"
 	"fmt"
+	"strings"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/db"
@@ -53,8 +54,6 @@ func (s *ExecutionService) prepareExecutionRequest(ctx context.Context, req *api
 		return nil, err
 	}
 
-	s.logger.Debug().Str("Script", req.Environment.Value.Setup.Value).Msg("Setup")
-
 	execReq.LangNixPkg = langVersion.NixPackageName
 	execReq.Language = req.Language.Value
 	execReq.Code = req.Code.Value
@@ -67,6 +66,11 @@ func (s *ExecutionService) prepareExecutionRequest(ctx context.Context, req *api
 	execReq.Setup = req.Environment.Value.Setup.Value
 	execReq.ScriptName = fmt.Sprintf("main.%s", lang.Extension)
 	execReq.LangVersion = langVersion.ID
+
+	if execReq.Language == "python" {
+		execReq.SystemSetup = getPythonSystemSetup(langVersion.Version)
+		execReq.PkgIndex = s.envConfig.PY_INDEX
+	}
 
 	if langVersion.Template.String != "" {
 		execReq.Template = langVersion.Template.String
@@ -99,6 +103,8 @@ func (s *ExecutionService) AddJob(ctx context.Context, req *api.ExecutionRequest
 	jobParams.Command = execReq.Command
 	jobParams.LangVersion = execReq.LangVersion
 	jobParams.Setup = execReq.Setup
+	jobParams.SystemSetup = execReq.SystemSetup
+	jobParams.PkgIndex = execReq.PkgIndex
 
 	s.logger.Debug().Int64("Version", jobParams.LangVersion).Msg("Language")
 
@@ -129,6 +135,14 @@ func (s *ExecutionService) AddJob(ctx context.Context, req *api.ExecutionRequest
 		return 0, err
 	}
 	return int64(job.JobID), nil
+}
+
+func getPythonSystemSetup(version string) string {
+	ver := strings.Split(version, ".")
+	if len(ver) > 1 {
+		return fmt.Sprintf(`export UV_PYTHON=$(which python%s)`, fmt.Sprintf("%s.%s", ver[0], ver[1]))
+	}
+	return fmt.Sprintf(`export UV_PYTHON=$(which python%s)`, version)
 }
 
 func calculateHash(code string, flake string, files []byte, input string) string {

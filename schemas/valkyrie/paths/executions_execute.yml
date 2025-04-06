@@ -20,11 +20,15 @@ post:
             required:
               - jobId
               - events
+              - websocket
             properties:
               jobId:
                 type: integer
                 format: int64
               events:
+                type: string
+                format: url
+              websocket:
                 type: string
                 format: url
     '400':

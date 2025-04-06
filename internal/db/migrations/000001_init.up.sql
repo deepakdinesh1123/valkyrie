@@ -53,6 +53,8 @@ create table exec_request (
     input text,
     command text,
     setup text,
+    system_setup text,
+    pkg_index text,
     language_version BIGINT NOT NULL REFERENCES language_versions(id) ON DELETE SET NULL
 );
 

@@ -56,4 +56,3 @@ Workers are responsible for executing the jobs dispatched by the database. Each 
 ## Conclusion
 
 The Odin architecture effectively combines real-time communication with robust job management capabilities, ensuring that clients receive timely updates while efficiently utilizing resources through a worker-based system. This design promotes scalability and responsiveness, making it suitable for various applications requiring job processing.
-
