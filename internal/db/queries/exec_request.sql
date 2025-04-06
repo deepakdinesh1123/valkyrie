@@ -12,10 +12,12 @@ insert into exec_request
         input,
         command,
         setup,
-        language_version
+        language_version,
+        system_setup,
+        pkg_index
     )
 values
-    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 returning id;
 
 -- name: GetExecRequest :one

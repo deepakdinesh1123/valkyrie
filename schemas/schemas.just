@@ -11,9 +11,6 @@ split-schemas:
 	rm -rf schemas/valkyrie
 	redocly split schemas/valkyrie-schema.yml --outDir schemas/valkyrie
 
-generate-api:
-	go generate
-
 api-docs:
 	redocly preview-docs -p 8048 schemas/valkyrie-schema.yml
 	
@@ -27,6 +24,11 @@ generate-ts-sdk-schema:
 generate-agent-schema:
     #!/usr/bin/env sh
     {{sdk-schema-generation-script}} go {{sdk-schema-folder}} agent/schemas
+
+generate-api-code:
+	@just bundle-schemas
+	@just lint-schemas
+	@go generate
 
 generate-sdk-schemas: 
 	@just generate-json-schema

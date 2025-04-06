@@ -24,6 +24,8 @@ type AddJobTxParams struct {
 	MaxRetries           int
 	Timeout              int32
 	LangVersion          int64
+	SystemSetup          string
+	PkgIndex             string
 }
 
 type AddJobTxResult struct {
@@ -52,6 +54,8 @@ func (s *SQLStore) AddExecJobTx(ctx context.Context, arg AddJobTxParams) (AddJob
 					Setup:                pgtype.Text{String: arg.Setup, Valid: true},
 					Files:                arg.Files,
 					Input:                pgtype.Text{String: arg.Input, Valid: true},
+					SystemSetup:          pgtype.Text{String: arg.SystemSetup, Valid: true},
+					PkgIndex:             pgtype.Text{String: arg.PkgIndex, Valid: true},
 				})
 				if err != nil {
 					return err

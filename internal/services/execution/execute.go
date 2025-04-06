@@ -14,6 +14,8 @@ type ExecutionRequest struct {
 	Input                string
 	Command              string
 	Setup                string
+	SystemSetup          string
+	PkgIndex             string
 
 	// internal variables used for converting this to flake or script
 	IsFlake    bool

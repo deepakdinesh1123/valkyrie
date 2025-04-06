@@ -20,6 +20,10 @@
               {{ end }}
             ];
             shellHook = ''
+              {{- if .SystemSetup }}
+              {{ .SystemSetup }}
+              {{- end }}
+
               {{- if .Setup }}
               {{ .Setup }}
               {{- end }}

@@ -52,7 +52,11 @@ func DockerExecConstructor(ctx context.Context) (Container, error) {
 		StopSignal:  "SIGKILL",
 	},
 		hostConfig,
-		nil,
+		&network.NetworkingConfig{
+			EndpointsConfig: map[string]*network.EndpointSettings{
+				"valkyrie-network": {},
+			},
+		},
 		nil,
 		"",
 	)

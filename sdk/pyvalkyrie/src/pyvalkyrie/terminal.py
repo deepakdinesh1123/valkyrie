@@ -1,10 +1,9 @@
 import json
+import logging
 
 from uuid import UUID
 
-from websocket import WebSocket, WebSocketTimeoutException
-
-from .schemas import (
+from pyvalkyrie.schemas import (
     TerminalClose,
     TerminalCloseResponse,
     TerminalRead,
@@ -12,12 +11,14 @@ from .schemas import (
     TerminalWrite,
     TerminalWriteResponse,
 )
+from websocket import WebSocket, WebSocketTimeoutException
 
 
 class Terminal:
-    def __init__(self, terminalId: UUID, agent: WebSocket):
+    def __init__(self, terminalId: UUID, agent: WebSocket, logger: logging.Logger):
         self._terminalId = terminalId
         self._agent = agent
+        self.logger = logger
 
     @property
     def terminalId(self) -> UUID:

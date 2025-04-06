@@ -1,4 +1,5 @@
 import json
+import logging
 import time
 
 from time import sleep
@@ -6,14 +7,11 @@ from typing import Literal, Optional, Union
 
 import requests
 
-from websocket import WebSocket, WebSocketException, WebSocketTimeoutException
-
-from .config import config
-from .directory import Directory
-from .exception import SandboxError, SandboxTimeoutError
-from .file import File
-from .log import logger
-from .schemas import (
+from pyvalkyrie.config import Config
+from pyvalkyrie.directory import Directory
+from pyvalkyrie.exception import SandboxError, SandboxTimeoutError
+from pyvalkyrie.file import File
+from pyvalkyrie.schemas import (
     DeleteDirectoryResponse,
     DeleteFileResponse,
     Error,
@@ -24,18 +22,21 @@ from .schemas import (
     UpsertDirectoryResponse,
     UpsertFileResponse,
 )
-from .schemas import Sandbox as SandboxResponse
-from .terminal import Terminal
-from .websocket import websocket_connection
+from pyvalkyrie.schemas import Sandbox as SandboxResponse
+from pyvalkyrie.terminal import Terminal
+from pyvalkyrie.websocket import websocket_connection
+from websocket import WebSocket, WebSocketException, WebSocketTimeoutException
 
 
 class Sandbox:
-    def __init__(self, sandboxId: int):
+    def __init__(self, sandboxId: int, config: Config, logger: logging.Logger):
         self._sandboxId: int = sandboxId
         self._agent: Optional[WebSocket] = None
         self._state: Literal["creating", "pending", "failed", "running"] = "pending"
         self._sandboxURL: str = None
         self._sandboxAgentURL: str = None
+        self._config = config
+        self.logger = logger
 
         res = self._check_sandbox_creation_result()
         if isinstance(res, SandboxResponse):
@@ -49,6 +50,10 @@ class Sandbox:
     @property
     def sandboxId(self) -> int:
         return self._sandboxId
+
+    @property
+    def config(self) -> Config:
+        return self._config
 
     @property
     def sandboxURL(self):
@@ -90,7 +95,7 @@ class Sandbox:
         Returns:
             Union[SandboxResponse, Error]: The sandbox status if successful, otherwise an error.
         """
-        url = f"{config.URL}/{self.sandboxId}"
+        url = f"{self.config.URL}/{self.sandboxId}"
 
         try:
             resp = requests.get(url)
@@ -117,84 +122,84 @@ class Sandbox:
             SandboxTimeoutError: If sandbox creation exceeds timeout
             Error: For other sandbox errors
         """
-        sandbox_status_url = f"{'wss' if config.IS_SECURE else 'ws'}://{config.HOST}/sandboxes/{self.sandboxId}/status/ws"
+        sandbox_status_url = f"{'wss' if self.config.IS_SECURE else 'ws'}://{self.config.HOST}/sandboxes/{self.sandboxId}/status/ws"
         start_time = time.time()
 
         try:
             with websocket_connection(sandbox_status_url) as ws:
-                logger.debug("Connected to websocket")
+                self.logger.debug("Connected to websocket")
 
-                while time.time() - start_time < config.SANDBOX_CREATION_TIMEOUT:
+                while time.time() - start_time < self.config.SANDBOX_CREATION_TIMEOUT:
                     try:
                         resp = ws.recv()
                         if not resp:
-                            logger.debug("No response received")
+                            self.logger.debug("No response received")
                             sleep(2)
                             continue
 
                         message = json.loads(resp)
-                        logger.debug(f"Received websocket message: {message}")
+                        self.logger.debug(f"Received websocket message: {message}")
 
                         event = message.get("event")
                         if not event:
-                            logger.warning("No event specified in message")
+                            self.logger.warning("No event specified in message")
                             continue
 
                         data = message.get("data", {})
-                        logger.debug(f"Event: {event}, Data: {data}")
+                        self.logger.debug(f"Event: {event}, Data: {data}")
 
                         if event == "status":
                             state = data.get("state")
                             if not state:
-                                logger.warning("No state in status event")
+                                self.logger.warning("No state in status event")
                                 continue
 
                             self._state = state
 
                             if state in ["creating", "pending"]:
-                                logger.debug(f"Sandbox Status: {state}")
+                                self.logger.debug(f"Sandbox Status: {state}")
                             elif state == "failed":
-                                logger.error(f"Sandbox creation failed: {data}")
+                                self.logger.error(f"Sandbox creation failed: {data}")
                                 return Error(message=f"Sandbox creation failed: {data}")
                             elif state == "running":
                                 return SandboxResponse(**data)
 
                         elif event == "error":
                             error_msg = f"Received error event: {data}"
-                            logger.error(error_msg)
+                            self.logger.error(error_msg)
                             return Error(message=error_msg)
 
                         elif event == "close":
                             error_msg = f"Connection closed unexpectedly: {data}"
-                            logger.error(error_msg)
+                            self.logger.error(error_msg)
                             return Error(message=error_msg)
 
                     except json.JSONDecodeError as e:
-                        logger.error(f"Failed to decode response: {e}")
+                        self.logger.error(f"Failed to decode response: {e}")
                         continue
 
                     except WebSocketException as e:
-                        logger.error(f"WebSocket error: {e}")
+                        self.logger.error(f"WebSocket error: {e}")
                         return Error(message=f"WebSocket error: {e}")
 
                     except Exception as e:
-                        logger.error(f"Unexpected error: {e}", exc_info=True)
+                        self.logger.error(f"Unexpected error: {e}", exc_info=True)
                         return Error(message=f"Unexpected error: {e}")
 
                 raise SandboxTimeoutError(
-                    f"Sandbox creation timed out after {config.SANDBOX_CREATION_TIMEOUT} seconds"
+                    f"Sandbox creation timed out after {self.config.SANDBOX_CREATION_TIMEOUT} seconds"
                 )
 
         except WebSocketException as e:
             error_msg = f"Failed to connect to WebSocket: {e}"
-            logger.error(error_msg)
+            self.logger.error(error_msg)
             return Error(message=error_msg)
 
     def _connect_agent(self) -> WebSocket:
         ws = WebSocket()
-        logger.debug(f"Websocket URL is {self.sandboxAgentURL}")
+        self.logger.debug(f"Websocket URL is {self.sandboxAgentURL}")
         ws.connect(self.sandboxAgentURL, subprotocols=["sandbox"], timeout=20)
-        ws.settimeout(config.SANDBOX_AGENT_TIMEOUT)
+        # ws.settimeout(self.config.SANDBOX_AGENT_TIMEOUT)
         return ws
 
     def new_terminal(self) -> Union[Terminal, Error]:
@@ -209,14 +214,16 @@ class Sandbox:
             resp = self.agent.recv()
             message = NewTerminalResponse.model_validate_json(resp)
 
-            term = Terminal(terminalId=message.terminalID, agent=self.agent)
+            term = Terminal(
+                terminalId=message.terminalID, agent=self.agent, logger=self.logger
+            )
             return term
         except WebSocketTimeoutException:
             return Error(
                 message="WebSocket connection timed out while creating a new terminal."
             )
         except json.JSONDecodeError:
-            logger.debug(f"Response from agent is {resp}")
+            self.logger.debug(f"Response from agent is {resp}")
             return Error(message="Failed to decode JSON response from the agent.")
         except Exception as e:
             return Error(message=f"An unexpected error occurred: {str(e)}")
@@ -236,7 +243,7 @@ class Sandbox:
                 message=f"Sandbox is not running, current state is: {self.state}"
             )
 
-        return File(path=path, agent=self.agent)
+        return File(path=path, agent=self.agent, logger=self.logger)
 
     def upsert_file(
         self, path: str, content: Optional[str] = None, patch: Optional[str] = None
@@ -308,7 +315,7 @@ class Sandbox:
                 message=f"Sandbox is not running, current state is: {self.state}"
             )
 
-        return Directory(path=path, agent=self.agent)
+        return Directory(path=path, agent=self.agent, logger=self.logger)
 
     def upsert_directory(
         self, path: str, content: Optional[str] = None, patch: Optional[str] = None

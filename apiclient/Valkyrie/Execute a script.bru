@@ -12,11 +12,10 @@ post {
 
 body:json {
   {
-    
-    "code": "ls",
-    "language": "bash",
-    "environment": {
-      "setup": "echo world"
-    }
-  }
+      "code": "import rich\nprint(rich.__version__)",
+      "language": "python",
+      "environment": {
+              "languageDependencies": ["rich"]
+          }
+      }
 }

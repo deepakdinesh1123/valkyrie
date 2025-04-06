@@ -33,6 +33,3 @@ The `odin standalone` command supports the following flags:
 
 1. Use for development or testing
 2. Consider other modes for production deployments
-
-
-

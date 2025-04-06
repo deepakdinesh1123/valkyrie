@@ -78,7 +78,7 @@ func (q *Queries) FetchJob(ctx context.Context, arg FetchJobParams) (Job, error)
 }
 
 const getAllExecutionJobs = `-- name: GetAllExecutionJobs :many
-SELECT job_id, created_at, updated_at, time_out, started_at, arguments, current_state, retries, max_retries, worker_id, job_type, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, language_version 
+SELECT job_id, created_at, updated_at, time_out, started_at, arguments, current_state, retries, max_retries, worker_id, job_type, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, language_version 
 FROM jobs
 INNER JOIN exec_request 
 ON CAST(arguments->'ExecConfig'->>'ExecReqId' AS INT) = exec_request.id
@@ -116,6 +116,8 @@ type GetAllExecutionJobsRow struct {
 	Input                pgtype.Text             `db:"input" json:"input"`
 	Command              pgtype.Text             `db:"command" json:"command"`
 	Setup                pgtype.Text             `db:"setup" json:"setup"`
+	SystemSetup          pgtype.Text             `db:"system_setup" json:"system_setup"`
+	PkgIndex             pgtype.Text             `db:"pkg_index" json:"pkg_index"`
 	LanguageVersion      int64                   `db:"language_version" json:"language_version"`
 }
 
@@ -152,6 +154,8 @@ func (q *Queries) GetAllExecutionJobs(ctx context.Context, arg GetAllExecutionJo
 			&i.Input,
 			&i.Command,
 			&i.Setup,
+			&i.SystemSetup,
+			&i.PkgIndex,
 			&i.LanguageVersion,
 		); err != nil {
 			return nil, err
@@ -165,7 +169,7 @@ func (q *Queries) GetAllExecutionJobs(ctx context.Context, arg GetAllExecutionJo
 }
 
 const getAllExecutions = `-- name: GetAllExecutions :many
-select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, success, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, language_version from executions
+select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, success, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, language_version from executions
 inner join exec_request on executions.exec_request_id = exec_request.id
 where exec_id >= $1
 order by started_at desc
@@ -200,6 +204,8 @@ type GetAllExecutionsRow struct {
 	Input                pgtype.Text        `db:"input" json:"input"`
 	Command              pgtype.Text        `db:"command" json:"command"`
 	Setup                pgtype.Text        `db:"setup" json:"setup"`
+	SystemSetup          pgtype.Text        `db:"system_setup" json:"system_setup"`
+	PkgIndex             pgtype.Text        `db:"pkg_index" json:"pkg_index"`
 	LanguageVersion      int64              `db:"language_version" json:"language_version"`
 }
 
@@ -235,6 +241,8 @@ func (q *Queries) GetAllExecutions(ctx context.Context, arg GetAllExecutionsPara
 			&i.Input,
 			&i.Command,
 			&i.Setup,
+			&i.SystemSetup,
+			&i.PkgIndex,
 			&i.LanguageVersion,
 		); err != nil {
 			return nil, err
@@ -248,7 +256,7 @@ func (q *Queries) GetAllExecutions(ctx context.Context, arg GetAllExecutionsPara
 }
 
 const getExecution = `-- name: GetExecution :one
-select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, success, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, language_version from executions
+select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, success, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, language_version from executions
 inner join exec_request on executions.exec_request_id = exec_request.id
 where executions.exec_id = $1
 `
@@ -276,6 +284,8 @@ type GetExecutionRow struct {
 	Input                pgtype.Text        `db:"input" json:"input"`
 	Command              pgtype.Text        `db:"command" json:"command"`
 	Setup                pgtype.Text        `db:"setup" json:"setup"`
+	SystemSetup          pgtype.Text        `db:"system_setup" json:"system_setup"`
+	PkgIndex             pgtype.Text        `db:"pkg_index" json:"pkg_index"`
 	LanguageVersion      int64              `db:"language_version" json:"language_version"`
 }
 
@@ -305,13 +315,15 @@ func (q *Queries) GetExecution(ctx context.Context, execID int64) (GetExecutionR
 		&i.Input,
 		&i.Command,
 		&i.Setup,
+		&i.SystemSetup,
+		&i.PkgIndex,
 		&i.LanguageVersion,
 	)
 	return i, err
 }
 
 const getExecutionJob = `-- name: GetExecutionJob :one
-select job_id, created_at, updated_at, time_out, started_at, arguments, current_state, retries, max_retries, worker_id, job_type, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, language_version from jobs inner join exec_request on CAST(arguments->'ExecConfig'->>'ExecReqId' AS INT) = exec_request.id where jobs.job_id = $1
+select job_id, created_at, updated_at, time_out, started_at, arguments, current_state, retries, max_retries, worker_id, job_type, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, language_version from jobs inner join exec_request on CAST(arguments->'ExecConfig'->>'ExecReqId' AS INT) = exec_request.id where jobs.job_id = $1
 `
 
 type GetExecutionJobRow struct {
@@ -338,6 +350,8 @@ type GetExecutionJobRow struct {
 	Input                pgtype.Text             `db:"input" json:"input"`
 	Command              pgtype.Text             `db:"command" json:"command"`
 	Setup                pgtype.Text             `db:"setup" json:"setup"`
+	SystemSetup          pgtype.Text             `db:"system_setup" json:"system_setup"`
+	PkgIndex             pgtype.Text             `db:"pkg_index" json:"pkg_index"`
 	LanguageVersion      int64                   `db:"language_version" json:"language_version"`
 }
 
@@ -368,13 +382,15 @@ func (q *Queries) GetExecutionJob(ctx context.Context, jobID int64) (GetExecutio
 		&i.Input,
 		&i.Command,
 		&i.Setup,
+		&i.SystemSetup,
+		&i.PkgIndex,
 		&i.LanguageVersion,
 	)
 	return i, err
 }
 
 const getExecutionsForJob = `-- name: GetExecutionsForJob :many
-select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, success, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, language_version from executions
+select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, success, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, language_version from executions
 inner join exec_request on executions.exec_request_id = exec_request.id
 where executions.job_id = $1 and exec_id >= $2
 order by finished_at desc
@@ -410,6 +426,8 @@ type GetExecutionsForJobRow struct {
 	Input                pgtype.Text        `db:"input" json:"input"`
 	Command              pgtype.Text        `db:"command" json:"command"`
 	Setup                pgtype.Text        `db:"setup" json:"setup"`
+	SystemSetup          pgtype.Text        `db:"system_setup" json:"system_setup"`
+	PkgIndex             pgtype.Text        `db:"pkg_index" json:"pkg_index"`
 	LanguageVersion      int64              `db:"language_version" json:"language_version"`
 }
 
@@ -445,6 +463,8 @@ func (q *Queries) GetExecutionsForJob(ctx context.Context, arg GetExecutionsForJ
 			&i.Input,
 			&i.Command,
 			&i.Setup,
+			&i.SystemSetup,
+			&i.PkgIndex,
 			&i.LanguageVersion,
 		); err != nil {
 			return nil, err
@@ -486,7 +506,7 @@ func (q *Queries) GetJobState(ctx context.Context, jobID int64) (string, error) 
 }
 
 const getLatestExecution = `-- name: GetLatestExecution :one
-select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, success, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, language_version from executions
+select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, success, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, language_version from executions
 inner join exec_request on executions.exec_request_id = exec_request.id
 where executions.job_id = $1
 order by finished_at desc
@@ -516,6 +536,8 @@ type GetLatestExecutionRow struct {
 	Input                pgtype.Text        `db:"input" json:"input"`
 	Command              pgtype.Text        `db:"command" json:"command"`
 	Setup                pgtype.Text        `db:"setup" json:"setup"`
+	SystemSetup          pgtype.Text        `db:"system_setup" json:"system_setup"`
+	PkgIndex             pgtype.Text        `db:"pkg_index" json:"pkg_index"`
 	LanguageVersion      int64              `db:"language_version" json:"language_version"`
 }
 
@@ -545,6 +567,8 @@ func (q *Queries) GetLatestExecution(ctx context.Context, jobID pgtype.Int8) (Ge
 		&i.Input,
 		&i.Command,
 		&i.Setup,
+		&i.SystemSetup,
+		&i.PkgIndex,
 		&i.LanguageVersion,
 	)
 	return i, err

@@ -1,11 +1,9 @@
 import json
+import logging
 
 from typing import Optional, Union
 
-from websocket import WebSocketTimeoutException
-
-from .log import logger
-from .schemas import (
+from pyvalkyrie.schemas import (
     DeleteFile,
     DeleteFileResponse,
     Error,
@@ -14,10 +12,11 @@ from .schemas import (
     UpsertFile,
     UpsertFileResponse,
 )
+from websocket import WebSocketTimeoutException
 
 
 class File:
-    def __init__(self, path: str, agent):
+    def __init__(self, path: str, agent, logger: logging.Logger):
         """
         Initialize a File object for managing a file in the sandbox.
 
@@ -27,6 +26,7 @@ class File:
         """
         self._path = path
         self._agent = agent
+        self.logger = logger
 
     @property
     def path(self) -> str:
@@ -68,13 +68,13 @@ class File:
             try:
                 return UpsertFileResponse(**message)
             except Exception as e:
-                logger.debug(f"Response from agent is {resp}")
+                self.logger.debug(f"Response from agent is {resp}")
                 return Error(message=f"Failed to parse UpsertFileResponse: {str(e)}")
 
         except WebSocketTimeoutException:
             return Error(message="WebSocket connection timed out while upserting file.")
         except json.JSONDecodeError:
-            logger.debug(f"Response from agent is {resp}")
+            self.logger.debug(f"Response from agent is {resp}")
             return Error(message="Failed to decode JSON response from the agent.")
         except Exception as e:
             return Error(message=f"An unexpected error occurred: {str(e)}")
@@ -97,13 +97,13 @@ class File:
             try:
                 return DeleteFileResponse(**message)
             except Exception as e:
-                logger.debug(f"Response from agent is {resp}")
+                self.logger.debug(f"Response from agent is {resp}")
                 return Error(message=f"Failed to parse DeleteFileResponse: {str(e)}")
 
         except WebSocketTimeoutException:
             return Error(message="WebSocket connection timed out while deleting file.")
         except json.JSONDecodeError:
-            logger.debug(f"Response from agent is {resp}")
+            self.logger.debug(f"Response from agent is {resp}")
             return Error(message="Failed to decode JSON response from the agent.")
         except Exception as e:
             return Error(message=f"An unexpected error occurred: {str(e)}")
@@ -126,13 +126,13 @@ class File:
             try:
                 return ReadFileResponse(**message)
             except Exception as e:
-                logger.debug(f"Response from agent is {resp}")
+                self.logger.debug(f"Response from agent is {resp}")
                 return Error(message=f"Failed to parse ReadFileResponse: {str(e)}")
 
         except WebSocketTimeoutException:
             return Error(message="WebSocket connection timed out while reading file.")
         except json.JSONDecodeError:
-            logger.debug(f"Response from agent is {resp}")
+            self.logger.debug(f"Response from agent is {resp}")
             return Error(message="Failed to decode JSON response from the agent.")
         except Exception as e:
             return Error(message=f"An unexpected error occurred: {str(e)}")

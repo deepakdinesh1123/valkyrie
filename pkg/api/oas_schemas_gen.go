@@ -223,8 +223,9 @@ type ExecuteInternalServerError Error
 func (*ExecuteInternalServerError) executeRes() {}
 
 type ExecuteOK struct {
-	JobId  int64  `json:"jobId"`
-	Events string `json:"events"`
+	JobId     int64  `json:"jobId"`
+	Events    string `json:"events"`
+	Websocket string `json:"websocket"`
 }
 
 // GetJobId returns the value of JobId.
@@ -237,6 +238,11 @@ func (s *ExecuteOK) GetEvents() string {
 	return s.Events
 }
 
+// GetWebsocket returns the value of Websocket.
+func (s *ExecuteOK) GetWebsocket() string {
+	return s.Websocket
+}
+
 // SetJobId sets the value of JobId.
 func (s *ExecuteOK) SetJobId(val int64) {
 	s.JobId = val
@@ -245,6 +251,11 @@ func (s *ExecuteOK) SetJobId(val int64) {
 // SetEvents sets the value of Events.
 func (s *ExecuteOK) SetEvents(val string) {
 	s.Events = val
+}
+
+// SetWebsocket sets the value of Websocket.
+func (s *ExecuteOK) SetWebsocket(val string) {
+	s.Websocket = val
 }
 
 func (*ExecuteOK) executeRes() {}

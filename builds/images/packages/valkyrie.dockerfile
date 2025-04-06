@@ -12,7 +12,7 @@ RUN nix-channel --add https://nixos.org/channels/nixos-${NIX_CHANNEL} nixpkgs &&
 WORKDIR /valkyrie
 COPY flake.nix /valkyrie
 COPY flake.lock /valkyrie
-RUN nix develop .#agent --command 'ls'
+RUN nix develop --command 'ls'
 
 COPY cmd /valkyrie/cmd
 COPY builds/nix/valkyrie.nix /valkyrie/builds/nix/valkyrie.nix

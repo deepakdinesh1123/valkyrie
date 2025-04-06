@@ -199,8 +199,8 @@ func (d *DockerSH) Create(ctx context.Context, wg *concurrency.SafeWaitGroup, sa
 		}
 	}
 
-	containerURL := fmt.Sprintf("http://%s-cs.localhost", contInfo.Name)
-	sandboxAgentUrl := fmt.Sprintf("ws://%s-ag.localhost/sandbox", contInfo.Name)
+	containerURL := fmt.Sprintf("http:/%s-cs.localhost", contInfo.Name)
+	sandboxAgentUrl := fmt.Sprintf("ws:/%s-ag.localhost/sandbox", contInfo.Name)
 
 	d.logger.Info().Msg(containerURL)
 	err = d.queries.MarkSandboxRunning(ctx, db.MarkSandboxRunningParams{

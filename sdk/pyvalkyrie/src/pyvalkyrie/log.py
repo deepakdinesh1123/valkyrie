@@ -1,8 +1,10 @@
 import logging
 import sys
 
+from pyvalkyrie.config import Config
 
-def setup_logging() -> logging.Logger:
+
+def setup_logging(config: Config) -> logging.Logger:
     """
     Sets up the logging configuration and returns a custom logger.
 
@@ -12,7 +14,6 @@ def setup_logging() -> logging.Logger:
     Returns:
     logging.Logger: Configured logger instance.
     """
-    from .config import config
 
     numeric_level = getattr(logging, config.LOG_LEVEL.upper(), None)
     if not isinstance(numeric_level, int):
@@ -35,6 +36,3 @@ def setup_logging() -> logging.Logger:
     logger.addHandler(stream_handler)
 
     return logger
-
-
-logger = setup_logging()

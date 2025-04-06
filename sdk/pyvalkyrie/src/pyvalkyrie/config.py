@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings
 
 
 class Config(BaseSettings):
-    URL: HttpUrl = Field(default="http://localhost:8080/api")
+    URL: HttpUrl = Field(default="http://valkyrie.localhost/api")
     SANDBOX_CREATION_TIMEOUT: int = Field(default=300)
     SANDBOX_AGENT_TIMEOUT: int = Field(default=300)
     VERSION: str = Field(default="0.0.1")
@@ -21,6 +21,3 @@ class Config(BaseSettings):
     @property
     def IS_SECURE(self) -> bool:
         return urlparse(str(self.URL)).scheme == "https"
-
-
-config = Config()
