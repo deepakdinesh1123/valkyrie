@@ -1,22 +1,25 @@
 from pyvalkyrie import Client
+from pyvalkyrie.schemas.execute import ExecutionRequest
 
 
-# er = ExecutionRequest(
-#     **{
-#         "code": "import rich\nprint(rich.__name__)",
-#         "language": "python",
-#         "version": "3.12.7",
-#         "environment": {"languageDependencies": ["rich"]},
-#     }
-# )
+er = ExecutionRequest(
+    **{
+        "code": "import rich\nprint(rich.__name__)",
+        "language": "python",
+        "version": "3.12.7",
+        "environment": {"languageDependencies": ["rich"]},
+    }
+)
 
 c = Client()
-s = c.new_sandbox()
-t = s.new_terminal()
-t.write_terminal("ls\n")
-res = t.read_terminal()
-print(res.output)
-# e = c.execute(er)
+# s = c.new_sandbox()
+# t = s.new_terminal()
+# t.write_terminal("ls\n")
+# res = t.read_terminal()
+# print(res.output)
+e = c.execute(er)
+print(e.output, e.status)
+
 
 # s.upsert_directory("./dir")
 
