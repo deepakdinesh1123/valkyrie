@@ -1,11 +1,9 @@
 import json
+import logging
 
 from typing import Optional, Union
 
-from websocket import WebSocketTimeoutException
-
-from .log import logger
-from .schemas import (
+from pyvalkyrie.schemas import (
     DeleteDirectory,
     DeleteDirectoryResponse,
     Error,
@@ -14,10 +12,11 @@ from .schemas import (
     UpsertDirectory,
     UpsertDirectoryResponse,
 )
+from websocket import WebSocketTimeoutException
 
 
 class Directory:
-    def __init__(self, path: str, agent):
+    def __init__(self, path: str, agent, logger: logging.Logger):
         """
         Initialize a Directory object for managing a directory in the sandbox.
 
@@ -27,6 +26,7 @@ class Directory:
         """
         self._path = path
         self._agent = agent
+        self.logger = logger
 
     @property
     def path(self) -> str:
@@ -67,7 +67,7 @@ class Directory:
             try:
                 return UpsertDirectoryResponse(**message)
             except Exception as e:
-                logger.debug(f"Response from agent is {resp}")
+                self.logger.debug(f"Response from agent is {resp}")
                 return Error(
                     message=f"Failed to parse UpsertDirectoryResponse: {str(e)}"
                 )
@@ -77,7 +77,7 @@ class Directory:
                 message="WebSocket connection timed out while upserting directory."
             )
         except json.JSONDecodeError:
-            logger.debug(f"Response from agent is {resp}")
+            self.logger.debug(f"Response from agent is {resp}")
             return Error(message="Failed to decode JSON response from the agent.")
         except Exception as e:
             return Error(message=f"An unexpected error occurred: {str(e)}")
@@ -100,7 +100,7 @@ class Directory:
             try:
                 return DeleteDirectoryResponse(**message)
             except Exception as e:
-                logger.debug(f"Response from agent is {resp}")
+                self.logger.debug(f"Response from agent is {resp}")
                 return Error(
                     message=f"Failed to parse DeleteDirectoryResponse: {str(e)}"
                 )
@@ -110,7 +110,7 @@ class Directory:
                 message="WebSocket connection timed out while deleting directory."
             )
         except json.JSONDecodeError:
-            logger.debug(f"Response from agent is {resp}")
+            self.logger.debug(f"Response from agent is {resp}")
             return Error(message="Failed to decode JSON response from the agent.")
         except Exception as e:
             return Error(message=f"An unexpected error occurred: {str(e)}")
@@ -133,7 +133,7 @@ class Directory:
             try:
                 return ReadDirectoryResponse(**message)
             except Exception as e:
-                logger.debug(f"Response from agent is {resp}")
+                self.logger.debug(f"Response from agent is {resp}")
                 return Error(message=f"Failed to parse ReadDirectoryResponse: {str(e)}")
 
         except WebSocketTimeoutException:
@@ -141,7 +141,7 @@ class Directory:
                 message="WebSocket connection timed out while reading directory."
             )
         except json.JSONDecodeError:
-            logger.debug(f"Response from agent is {resp}")
+            self.logger.debug(f"Response from agent is {resp}")
             return Error(message="Failed to decode JSON response from the agent.")
         except Exception as e:
             return Error(message=f"An unexpected error occurred: {str(e)}")

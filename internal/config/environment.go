@@ -72,6 +72,8 @@ type EnvConfig struct {
 
 	SANDBOX_IMAGE string `mapstructure:"SANDBOX_IMAGE"`
 	BASE_DIR      string `mapstructure:"BASE_DIR"`
+
+	PY_INDEX string `mapstructure:"PY_INDEX"`
 }
 
 var (
@@ -213,6 +215,7 @@ func setDefaults() {
 	viper.SetDefault("RIPPKGS_BASE_URL", "https://valnix-stage-bucket.s3.us-east-1.amazonaws.com")
 
 	viper.SetDefault("SANDBOX_IMAGE", "valkyrie_sandbox:0.0.1-ubuntu")
+	viper.SetDefault("PY_INDEX", "http://valkyrie-devpi:3141")
 
 	// containerRuntime := ""
 	// switch runtime.GOOS {

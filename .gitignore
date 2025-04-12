@@ -236,3 +236,4 @@ cython_debug/
 .cache
 
 letsencrypt
+.cursor

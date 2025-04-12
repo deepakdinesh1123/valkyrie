@@ -13,105 +13,14 @@ languages:
     template: |
       {{ define "LangSetup" }}
       {{- if .IsFlake -}}
-                ({{.LangNixPkg}}.withPackages (python-pkgs: [
-                  {{ range .LanguageDependencies -}}
-                    python-pkgs.{{.}}
-                  {{ end -}}
-                ]))
+        uv
+        {{- .LangNixPkg -}}
       {{- else -}}
-      '{{.LangNixPkg}}.withPackages( p: [ {{ range .LanguageDependencies }} p.{{.}} {{ end }} ] )'
+        uv {{ .LangNixPkg }}
       {{- end -}}
       {{ end }}
 
-      {{  define "execute" }} python main.py {{ end }}
-    deps:
-      - requests
-      - numpy
-      - openai
-      - opencv4
-      - openllm
-      - openapi3
-      - openaiauth
-      - openapi-core
-      - openllm-client
-      - sshtunnel
-      - sslib
-      - mathlibtools
-      - random2
-      - stringly
-      - stringcase
-      - stringparser
-      - stringbrewer
-      - datauri
-      - datatable
-      - dataproperty
-      - html5lib
-      - html5tagger
-      - html-tag-names
-      - html-text
-      - beautifulsoup4
-      - selenium
-      - selenium-wire
-      - pandas
-      - scipy
-      - scikit-learn
-      - matplotlib
-      - tensorflow
-      - pytorch-lightning
-      - statsmodels
-      - nltk
-      - gensim
-      - openpyxl
-      - lxml
-      - sqlalchemy
-      - pyyaml
-      - pytest
-      - pydantic
-      # - asyncio
-      - regex
-      - tqdm
-      - jinja2
-      - attrs
-      - jsonschema
-      - cryptography
-      - cx-oracle
-      - pymongo
-      - h5py
-      - pytest-bdd
-      - fastparquet
-      - nltk
-      - langsmith
-      - anthropic
-      - huggingface-hub
-      - litellm
-      - llama-index-embeddings-huggingface
-      - fastai
-      - jax
-      - spacy
-      - lightgbm
-      - mxnet
-      - minichain
-      - langchain-core
-      - zulip
-      - prophet
-      - google-cloud-automl
-      - torchio
-      - orange3
-      - optuna
-      - onnx
-      - onnxruntime
-      - botorch
-      - accupy
-      - kornia
-      - ignite
-      - gym
-      - tensorly
-      - tensordict
-      - keras
-      - tensorflow
-      - gitpython
-      - gitdb
-
+      {{  define "execute" }} uv run {{- range .LanguageDependencies }} --with "{{.}}" {{ end }} --index {{ .PkgIndex }} main.py {{ end }}
     defaultCode: |
       print("Hello World")
 

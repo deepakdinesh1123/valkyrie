@@ -2,12 +2,14 @@ from typing import Optional, Tuple, Union
 
 import requests
 
+from pyvalkyrie.config import Config
+from pyvalkyrie.exception import SandboxError
+from pyvalkyrie.execution import Execution
+from pyvalkyrie.log import setup_logging
+from pyvalkyrie.sandbox import Sandbox
+from pyvalkyrie.schemas import SandboxConfig
+from pyvalkyrie.schemas.execute import ExecutionRequest
 from requests.exceptions import RequestException
-
-from .config import config
-from .exception import SandboxError
-from .sandbox import Sandbox
-from .schemas import SandboxConfig
 
 
 class Client:
@@ -17,13 +19,15 @@ class Client:
     This class provides methods to create and manage sandbox environments
     """
 
-    def __init__(self) -> None:
+    def __init__(self, config: Config = Config()) -> None:
         """
         Initialize the sandbox client.
 
         Args:
             config (Optional[Config]): Configuration object. If None, creates a new Config instance.
         """
+        self._config = config
+        self.logger = setup_logging(config)
         self._session = requests.Session()
         self._session.headers.update(
             {
@@ -31,6 +35,10 @@ class Client:
                 "User-Agent": f"SandboxClient/{config.VERSION}",
             }
         )
+
+    @property
+    def config(self) -> Config:
+        return self._config
 
     def _create_sandbox(
         self, sandbox_config: SandboxConfig
@@ -45,7 +53,7 @@ class Client:
             SandboxCreationResult: Object containing creation attempt results
         """
         try:
-            url = f"{config.URL}/sandbox"
+            url = f"{self.config.URL}/sandbox"
             response = self._session.post(url, json=sandbox_config.model_dump())
             response.raise_for_status()
             response_data = response.json()
@@ -79,7 +87,10 @@ class Client:
         if not success:
             raise SandboxError(f"Failed to create sandbox: {result}")
 
-        return Sandbox(result)
+        return Sandbox(result, self.config, self.logger)
+
+    def execute(self, execReq: ExecutionRequest):
+        return Execution(execReq, self.logger, self.config)
 
     def __enter__(self) -> "Client":
         """Context manager entry."""

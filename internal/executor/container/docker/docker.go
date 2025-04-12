@@ -137,7 +137,8 @@ func (d *DockerProvider) Execute(ctx context.Context, containerID string, comman
 		for {
 			select {
 			case <-ctx.Done():
-				d.logger.Info().Msg("Timelimit exced")
+				d.logger.Info().Msg("Timelimit exceeded")
+				return
 			default:
 				execInfo, err := d.client.ContainerExecInspect(ctx, dexec.ID)
 				if err != nil {

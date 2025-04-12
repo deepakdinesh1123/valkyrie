@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/coder/websocket"
 	"github.com/deepakdinesh1123/valkyrie/internal/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/db"
 	"github.com/deepakdinesh1123/valkyrie/pkg/api"
@@ -16,11 +18,11 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type SSEMessage struct {
+type ExecutionMessage struct {
 	Status   string      `json:"status"`
-	JobID    int64       `json:"execId"`
+	JobID    int64       `json:"jobId"`
 	Logs     interface{} `json:"logs,omitempty"`
-	ErrorMsg string      `json:"error,omitempty"`
+	ErrorMsg string      `json:"errorMsg,omitempty"`
 }
 
 func (s *ValkyrieServer) Execute(ctx context.Context, req *api.ExecutionRequest, params api.ExecuteParams) (api.ExecuteRes, error) {
@@ -29,9 +31,9 @@ func (s *ValkyrieServer) Execute(ctx context.Context, req *api.ExecutionRequest,
 			Message: "Execution is not enabled, please ask the admin to enable it",
 		}, nil
 	}
-	if err := s.executionService.CheckExecRequest(ctx, req); err != nil {
+	if supported, err := s.executionService.CheckExecRequest(ctx, req); err != nil {
 		return &api.ExecuteBadRequest{
-			Message: fmt.Sprintf("error in exec request: %s", err),
+			Message: fmt.Sprintf("%s\nsupported: %v", err, supported),
 		}, nil
 	}
 	jobId, err := s.executionService.AddJob(ctx, req)
@@ -40,7 +42,7 @@ func (s *ValkyrieServer) Execute(ctx context.Context, req *api.ExecutionRequest,
 			Message: fmt.Sprintf("Error adding execution job: %s", err),
 		}, nil
 	}
-	return &api.ExecuteOK{JobId: jobId, Events: fmt.Sprintf("/executions/%d/events", jobId)}, nil
+	return &api.ExecuteOK{JobId: jobId, Events: fmt.Sprintf("/executions/%d/events", jobId), Websocket: fmt.Sprintf("/executions/%d/ws", jobId)}, nil
 }
 
 func (s *ValkyrieServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
@@ -86,7 +88,7 @@ func (s *ValkyrieServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 			job, err := s.queries.GetExecutionJob(ctx, jobID)
 			if err != nil {
 				s.logger.Error().Stack().Err(err).Msg("Failed to get job")
-				sendSSEMessage(w, flusher, SSEMessage{
+				sendExecutionMessage(w, flusher, ExecutionMessage{
 					Status:   "error",
 					JobID:    jobID,
 					ErrorMsg: fmt.Sprintf("Failed to get job: %s", err),
@@ -98,14 +100,14 @@ func (s *ValkyrieServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 				res, err := s.queries.GetLatestExecution(ctx, pgtype.Int8{Int64: jobID, Valid: true})
 				if err != nil {
 					s.logger.Error().Stack().Err(err).Msg("Failed to get execution logs")
-					sendSSEMessage(w, flusher, SSEMessage{
+					sendExecutionMessage(w, flusher, ExecutionMessage{
 						Status:   "error",
 						JobID:    jobID,
 						ErrorMsg: fmt.Sprintf("failed to get execution logs: %s", err),
 					})
 					return
 				}
-				sendSSEMessage(w, flusher, SSEMessage{
+				sendExecutionMessage(w, flusher, ExecutionMessage{
 					Status: "completed",
 					JobID:  jobID,
 					Logs:   res.ExecLogs,
@@ -113,24 +115,24 @@ func (s *ValkyrieServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 				return
 
 			case "failed":
-				sendSSEMessage(w, flusher, SSEMessage{
+				sendExecutionMessage(w, flusher, ExecutionMessage{
 					Status: "failed",
 					JobID:  jobID,
 				})
 				return
 
 			case "pending":
-				sendSSEMessage(w, flusher, SSEMessage{
+				sendExecutionMessage(w, flusher, ExecutionMessage{
 					Status: "pending",
 					JobID:  jobID,
 				})
 			case "scheduled":
-				sendSSEMessage(w, flusher, SSEMessage{
+				sendExecutionMessage(w, flusher, ExecutionMessage{
 					Status: "scheduled",
 					JobID:  jobID,
 				})
 			case "cancelled":
-				sendSSEMessage(w, flusher, SSEMessage{
+				sendExecutionMessage(w, flusher, ExecutionMessage{
 					Status: "canceled",
 					JobID:  jobID,
 				})
@@ -143,72 +145,145 @@ func (s *ValkyrieServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-// func (s *ValkyrieServer) ExecuteWS(w http.ResponseWriter, r *http.Request) {
-// 	ctx := r.Context()
-// 	c, err := websocket.Accept(w, r, nil)
-// 	if err != nil {
-// 		s.logger.Error().Stack().Err(err).Msg("Failed to accept websocket")
-// 		http.Error(w, "Failed to accept websocket", http.StatusInternalServerError)
-// 		return
-// 	}
-// 	defer c.Close(websocket.StatusNormalClosure, "Closing connection")
-// 	var execReq api.ExecutionRequest
-// 	err = wsjson.Read(ctx, c, &execReq)
-// 	if err != nil {
-// 		s.logger.Error().Stack().Err(err).Msg("Failed to read request")
-// 		http.Error(w, "Failed to read request", http.StatusInternalServerError)
-// 		return
-// 	}
-// 	execId, err := s.executionService.AddJob(ctx, &execReq)
-// 	if err != nil {
-// 		s.logger.Error().Stack().Err(err).Msg("Failed to execute")
-// 		http.Error(w, "Failed to execute", http.StatusInternalServerError)
-// 		return
-// 	}
+func (s *ValkyrieServer) ExecuteWebSocket(w http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
+	jobIDStr := chi.URLParam(req, "jobId")
 
-// 	for {
-// 		select {
-// 		case <-ctx.Done():
-// 			s.logger.Info().Int64("executionId", execId).Msg("Client disconnected")
-// 			return
-// 		default:
-// 			job, err := s.queries.GetJob(ctx, execId)
-// 			if err != nil {
-// 				s.logger.Error().Stack().Err(err).Msg("Failed to get job")
-// 				return
-// 			}
+	jobID, err := strconv.ParseInt(jobIDStr, 10, 64)
+	if err != nil {
+		s.logger.Error().Stack().Err(err).Msg("Failed to get executionId")
+		http.Error(w, "Failed to get executionId", http.StatusBadRequest)
+		return
+	}
 
-// 			s.logger.Debug().Str("status", job.CurrentState).Msg("CurrentState fetched")
+	// Upgrade the HTTP connection to WebSocket
+	conn, err := websocket.Accept(w, req, &websocket.AcceptOptions{
+		InsecureSkipVerify: true,
+	})
+	if err != nil {
+		s.logger.Error().Stack().Err(err).Msg("Failed to accept websocket connection")
+		return
+	}
+	defer conn.Close(websocket.StatusInternalError, "Connection closed")
 
-// 			switch job.CurrentState {
-// 			case "completed":
-// 				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("completed: %d\n\n", execId)))
-// 				res, err := s.queries.GetExecutionsForJob(ctx, db.GetExecutionsForJobParams{
-// 					JobID:  pgtype.Int8{Int64: execId, Valid: true},
-// 					Limit:  1,
-// 					Offset: 0,
-// 				})
-// 				if err != nil {
-// 					s.logger.Error().Stack().Err(err).Msg("Failed to get execution executions")
-// 					c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("failed: %s\n\n", err)))
-// 					return
-// 				}
-// 				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("data: %s\n\n", res[0].ExecLogs)))
-// 				return
-// 			case "failed":
-// 				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("failed: %d\n\n", execId)))
-// 				return
-// 			case "pending":
-// 				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("pending: %d\n\n", execId)))
-// 			case "scheduled":
-// 				c.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("scheduled: %d\n\n", execId)))
-// 			default:
-// 				s.logger.Warn().Str("status", job.CurrentState).Msg("Unknown status")
-// 			}
-// 			time.Sleep(3 * time.Second)
-// 		}
-// 	}
-// }
+	// Create a context with timeout for the WebSocket connection
+	wsCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	// Handle client disconnection
+	go func() {
+		<-wsCtx.Done()
+		job, err := s.queries.GetExecutionJob(context.TODO(), jobID)
+		if err != nil {
+			s.logger.Error().Stack().Err(err).Msg("Failed to get job status")
+			return
+		}
+		if job.CurrentState == "pending" {
+			if _, err := s.queries.DeleteJob(context.TODO(), jobID); err != nil {
+				s.logger.Error().Stack().Err(err).Msg("Failed to delete pending job on disconnect")
+			} else {
+				s.logger.Info().Int64("executionId", jobID).Msg("Deleted pending job due to client disconnection")
+			}
+		}
+	}()
+
+	for {
+		select {
+		case <-ctx.Done():
+			conn.Close(websocket.StatusNormalClosure, "Client disconnected")
+			return
+		default:
+			job, err := s.queries.GetExecutionJob(ctx, jobID)
+			if err != nil {
+				s.logger.Error().Stack().Err(err).Msg("Failed to get job")
+				msg := ExecutionMessage{
+					Status:   "error",
+					JobID:    jobID,
+					ErrorMsg: fmt.Sprintf("Failed to get job: %s", err),
+				}
+				sendWebSocketMessage(ctx, conn, msg)
+				conn.Close(websocket.StatusInternalError, "Failed to get job")
+				return
+			}
+
+			switch job.CurrentState {
+			case "completed":
+				res, err := s.queries.GetLatestExecution(ctx, pgtype.Int8{Int64: jobID, Valid: true})
+				if err != nil {
+					s.logger.Error().Stack().Err(err).Msg("Failed to get execution logs")
+					msg := ExecutionMessage{
+						Status:   "error",
+						JobID:    jobID,
+						ErrorMsg: fmt.Sprintf("failed to get execution logs: %s", err),
+					}
+					sendWebSocketMessage(ctx, conn, msg)
+					conn.Close(websocket.StatusInternalError, "Failed to get execution logs")
+					return
+				}
+				msg := ExecutionMessage{
+					Status: "completed",
+					JobID:  jobID,
+					Logs:   res.ExecLogs,
+				}
+				sendWebSocketMessage(ctx, conn, msg)
+				conn.Close(websocket.StatusNormalClosure, "Job completed")
+				return
+
+			case "failed":
+				msg := ExecutionMessage{
+					Status: "failed",
+					JobID:  jobID,
+				}
+				sendWebSocketMessage(ctx, conn, msg)
+				conn.Close(websocket.StatusNormalClosure, "Job failed")
+				return
+
+			case "pending":
+				msg := ExecutionMessage{
+					Status: "pending",
+					JobID:  jobID,
+				}
+				sendWebSocketMessage(ctx, conn, msg)
+			case "scheduled":
+				msg := ExecutionMessage{
+					Status: "scheduled",
+					JobID:  jobID,
+				}
+				sendWebSocketMessage(ctx, conn, msg)
+			case "cancelled":
+				msg := ExecutionMessage{
+					Status: "canceled",
+					JobID:  jobID,
+				}
+				sendWebSocketMessage(ctx, conn, msg)
+				conn.Close(websocket.StatusNormalClosure, "Job canceled")
+				return
+			default:
+				s.logger.Warn().Str("status", job.CurrentState).Msg("Unknown status")
+			}
+
+			time.Sleep(3 * time.Second)
+		}
+	}
+}
+
+// sendWebSocketMessage sends a message over the WebSocket connection
+func sendWebSocketMessage(ctx context.Context, conn *websocket.Conn, message ExecutionMessage) {
+	fmt.Println("Sending websocket message", message)
+
+	data, err := json.Marshal(message)
+	if err != nil {
+		// Just log the error, don't try to send an error over the WebSocket as that might fail too
+		log.Printf("Failed to marshal message: %v", err)
+		return
+	}
+
+	err = conn.Write(ctx, websocket.MessageText, data)
+	if err != nil {
+		log.Printf("Failed to write WebSocket message: %v", err)
+		return
+	}
+}
 
 func (s *ValkyrieServer) GetAllExecutions(ctx context.Context, params api.GetAllExecutionsParams) (api.GetAllExecutionsRes, error) {
 	auth := ctx.Value(config.AuthKey).(string)
@@ -464,7 +539,7 @@ func (s *ValkyrieServer) GetExecutionConfig(ctx context.Context, params api.GetE
 	}, nil
 }
 
-func sendSSEMessage(w http.ResponseWriter, flusher http.Flusher, message SSEMessage) {
+func sendExecutionMessage(w http.ResponseWriter, flusher http.Flusher, message ExecutionMessage) {
 	data, err := json.Marshal(message)
 	if err != nil {
 		fmt.Fprintf(w, "data: {\"status\":\"error\",\"error\":\"Failed to marshal JSON\"}\n\n")

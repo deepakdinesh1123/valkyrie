@@ -14,7 +14,7 @@ module "rds" {
   db_compute_instance        = "db.t3.micro"
   skip_create_final_snapshot = true
   db_name                    = "test"
-  db_password                = "DafaqsGoinon123"
+  db_password                = "DafaqsGoinon123" // pragma: allowlist secret
   db_username                = "iamadmin"
   subnet_ids                 = [ data.aws_subnet.db_subnet01.id, data.aws_subnet.db_subnet02.id ]
   security_group_ids         = [ module.security_group.sg_id ]

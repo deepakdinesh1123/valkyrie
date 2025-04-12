@@ -42,4 +42,8 @@ COPY --chown=valnix:valnix hack/execution/* /home/valnix/
 VOLUME [ "/home/valnix" ]
 WORKDIR /home/valnix/
 
+USER root
+RUN apt update && apt install -y ca-certificates
+USER valnix
+
 ENTRYPOINT [ "/bin/sh", "-c", "sleep infinity"]

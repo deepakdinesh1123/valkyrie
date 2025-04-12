@@ -20,6 +20,8 @@ func ConvertExecSpecToNixScript(ctx context.Context, execReq *db.ExecRequest, qu
 	execSpec.Input = execReq.Input.String
 	execSpec.Command = execReq.Command.String
 	execSpec.Setup = execReq.Setup.String
+	execSpec.SystemSetup = execReq.SystemSetup.String
+	execSpec.PkgIndex = execReq.PkgIndex.String
 
 	fmt.Println(execReq.LanguageDependencies, execReq.SystemDependencies, execReq.Setup.String, execReq.Command.String)
 
@@ -100,11 +102,19 @@ func (s *ExecutionService) convertExecSpecToFlake(execSpec ExecutionRequest) (st
 	return res.String(), nil
 }
 
-func (s *ExecutionService) CheckExecRequest(ctx context.Context, req *api.ExecutionRequest) error {
+func (s *ExecutionService) CheckExecRequest(ctx context.Context, req *api.ExecutionRequest) ([]string, error) {
 	language, err := s.queries.GetLanguageByName(ctx, req.Language.Value)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return fmt.Errorf("specified language is not supported")
+			langs, err := s.queries.GetAllLanguages(ctx)
+			if err != nil {
+				return []string{}, fmt.Errorf("error fetching all the supported languages %v", err)
+			}
+			langNames := []string{}
+			for _, lang := range langs {
+				langNames = append(langNames, lang.Name)
+			}
+			return langNames, fmt.Errorf("specified language is not supported")
 		}
 	}
 
@@ -114,7 +124,16 @@ func (s *ExecutionService) CheckExecRequest(ctx context.Context, req *api.Execut
 			Version:    req.Version.Value,
 		})
 		if err != nil {
-			return fmt.Errorf("specified version is not supported")
+			versions, err := s.queries.GetVersionsByLanguageID(ctx, language.ID)
+			if err != nil {
+				return []string{}, fmt.Errorf("error fetching all the supported versions %v", err)
+			}
+			vers := []string{}
+			for _, ver := range versions {
+				vers = append(vers, ver.Version)
+			}
+
+			return vers, fmt.Errorf("specified version is not supported")
 		}
 	}
 
@@ -140,5 +159,5 @@ func (s *ExecutionService) CheckExecRequest(ctx context.Context, req *api.Execut
 	// 		}
 	// 	}
 	// }
-	return nil
+	return []string{}, nil
 }
