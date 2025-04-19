@@ -3,30 +3,30 @@ build_tool := "docker"
 version := "0.0.1"
 
 # Image names
-valkyrie_exec_image := "valkyrie_execution"
-sandbox_image := "valkyrie_sandbox"
-store_image := "valkyrie_store"
-agent_image := "valkyrie_agent"
-sandbox_cs_image := "valkyrie_sandbox_cs"
+valkyrie_exec_image := "valkyrie-execution"
+sandbox_image := "valkyrie-sandbox"
+store_image := "valkyrie-store"
+agent_image := "valkyrie-agent"
+sandbox_cs_image := "valkyrie-sandbox-cs"
 
 # Build execution images with specified base
-build-execution base_os="ubuntu":
+build-execution:
     {{build_tool}} build \
         --build-arg NIX_CACHE_PUBLIC_KEY=$(cat "$HOME/.valkyrie/store/setup/cache-pub-key.pem") \
-        -t {{valkyrie_exec_image}}:{{version}}-{{base_os}} \
-        -f builds/images/execution/{{base_os}}.dockerfile .
+        -t {{valkyrie_exec_image}}:{{version}} \
+        -f builds/images/execution/ubuntu.dockerfile .
 
 # Build sandbox image
 build-sandbox:
     {{build_tool}} build \
         --build-arg NIX_CACHE_PUBLIC_KEY=$(cat "$HOME/.valkyrie/store/setup/cache-pub-key.pem") \
-        -t {{sandbox_image}}:{{version}}-ubuntu \
+        -t {{sandbox_image}}:{{version}} \
         -f builds/images/sandbox/ubuntu.dockerfile .
 
 # Build code-server image
 build-code-server:
     {{build_tool}} build \
-        -t {{sandbox_cs_image}}:{{version}}-ubuntu \
+        -t {{sandbox_cs_image}}:{{version}} \
         -f builds/images/sandbox/code_server.dockerfile .
 
 # Build agent image
@@ -36,18 +36,18 @@ build-agent:
         -f builds/images/packages/agent.dockerfile .
 
 # Docker-specific aliases
-docker-valkyrie-worker: (build-execution "alpine")
-docker-valkyrie-worker-ubuntu: (build-execution "ubuntu")
+docker-valkyrie-worker: build-execution
+docker-valkyrie-worker-ubuntu: build-execution
 docker-valkyrie-sandbox: build-sandbox
 docker-valkyrie-store: build-store
 docker-code-server: build-code-server
 docker-valkyrie-agent: build-agent
 
 # Podman-specific aliases
-podman-valkyrie-worker: (build-execution "alpine")
-    just --set build_tool "podman" build-execution "alpine"
-podman-valkyrie-worker-ubuntu: (build-execution "ubuntu")
-    just --set build_tool "podman" build-execution "ubuntu"
+podman-valkyrie-worker: build-execution
+    just --set build_tool "podman" build-execution
+podman-valkyrie-worker-ubuntu: build-execution
+    just --set build_tool "podman" build-execution
 podman-valkyrie-sandbox: build-sandbox
     just --set build_tool "podman" build-sandbox
 podman-valkyrie-store: build-store

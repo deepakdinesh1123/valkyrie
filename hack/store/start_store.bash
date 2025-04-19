@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if [ -f "/tmp/setup/.env" ]; then
+    source "/tmp/setup/.env"
+fi
+
 if [ ! -d "/home/valnix/.nix-profile" ]; then
     mkdir -p ~/.local/state/nix/profiles
     ln -s $NIX_CHANNELS_ENVIRONMENT ~/.local/state/nix/profiles/channels

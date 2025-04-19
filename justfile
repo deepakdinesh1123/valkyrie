@@ -73,3 +73,9 @@ help:
 # Default recipe lists all available recipes
 default:
     @just --list
+
+generate-store-keys:
+    nix-store --generate-binary-cache-key valkyrie-store ./configs/secrets/cache-priv-key.pem ./configs/secrets/cache-pub-key.pem
+
+skaffold-build:
+    VERSION=0.0.1 skaffold build

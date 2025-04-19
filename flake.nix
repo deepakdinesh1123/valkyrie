@@ -34,6 +34,8 @@
           caddy
           pkg-config 
           just
+          skaffold
+          kubernetes-helm
         ] ++ lib.optionals stdenv.isLinux [
           nsjail
           gpgme

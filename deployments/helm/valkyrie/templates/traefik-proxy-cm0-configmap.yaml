@@ -1,0 +1,26 @@
+apiVersion: v1
+data:
+  traefik.yml: |
+    global:
+      sendAnonymousUsage: false
+
+    api:
+      dashboard: true
+
+    entryPoints:
+      http:
+        address: ":80"
+      https:
+        address: ":443"
+      dashboard:
+        address: ":8080"
+
+
+    providers:
+      kubernetesIngress: {}
+
+kind: ConfigMap
+metadata:
+  name: traefik-proxy-cm0
+  labels:
+    app: valkyrie

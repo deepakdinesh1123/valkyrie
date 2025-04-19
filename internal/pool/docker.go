@@ -24,7 +24,7 @@ func GetDockerClient() *client.Client {
 		func() {
 			c, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 			if err != nil {
-				log.Println("Error getting docker client")
+				log.Fatalf("Error getting docker client: %+v", err)
 				return
 			}
 			dockerclient = c

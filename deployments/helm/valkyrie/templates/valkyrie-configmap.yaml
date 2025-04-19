@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: valkyrie-env
+data:
+  # Enable Features
+  ENABLE_EXECUTION: {{ .Values.features.enableExecution | default true | toString | quote }}
+  ENABLE_SANDBOX: {{ .Values.features.enableSandbox | default true | toString | quote }}
+
+  # Database Configuration
+  POSTGRES_HOST: {{ .Values.postgres.host | default "localhost" | quote }}
+  POSTGRES_PORT: {{ .Values.postgres.port | default 5432 | toString | quote }}
+  POSTGRES_USER: {{ .Values.postgres.user | default "thors" | quote }}
+  POSTGRES_PASSWORD: {{ .Values.postgres.password | default "thorkell" | quote }}
+  POSTGRES_DB: {{ .Values.postgres.db | default "valkyrie" | quote }}
+  POSTGRES_SSL_MODE: {{ .Values.postgres.sslMode | default "disable" | quote }}
+
+  # Server Configuration
+  SERVER_HOST: {{ .Values.server.host | default "0.0.0.0" | quote }}
+  SERVER_PORT: {{ .Values.server.port | default "8080" | quote }}
+
+  # Store Configuration
+  STORE_URL: {{ .Values.store.url | default "http://valkyrie-store:5000" | quote }}
+  STORE_IMAGE: {{ .Values.store.image | default "valkyrie-store:0.0.1" | quote }}
+
+  # Sandbox/Execution/Worker Configuration
+  SANDBOX_NIXPKGS_REV: {{ .Values.sandbox.nixpkgsRev | default "b27ba4eb322d9d2bf2dc9ada9fd59442f50c8d7c" | quote }} # pragma: allowlist secret
+  WORKER_CONCURRENCY: {{ .Values.worker.concurrency | default 10 | toString | quote }}
+  HOT_CONTAINER: {{ .Values.worker.hotContainer | default 1 | toString | quote }}
+  WORKER_TASK_TIMEOUT: {{ .Values.worker.taskTimeout | default 120 | toString | quote }}
+  WORKER_POLL_FREQ: {{ .Values.worker.pollFreq | default 30 | toString | quote }}
+  EXECUTION_IMAGE: {{ .Values.execution.image | default "valkyrie-execution:0.0.1" | quote }}
+  MAX_RETRIES: {{ .Values.execution.maxRetries | default 5 | toString | quote }}
+  SANDBOX_IMAGE: {{ .Values.sandbox.image | default "valkyrie-sandbox:0.0.1" | quote }}
+  PY_INDEX: {{ .Values.pyIndex | default "http://valkyrie-devpi:3141" | quote }}
+
+  # Resource Limits Configuration
+  WORKER_CONTAINER_MEMORY_LIMIT: {{ .Values.worker.containerMemoryLimit | default 500 | toString | quote }} # Unit (MB?) not specified, but default is 500
+  MEMORY_LIMIT: {{ .Values.resources.memoryLimit | default 75.0 | toString | quote }} # Assuming these are percentages, default is 75.0
+  CPU_LIMIT: {{ .Values.resources.cpuLimit | default 75.0 | toString | quote }} # Assuming these are percentages, default is 75.0
+
+  # Logging and Telemetry
+  LOG_LEVEL: {{ .Values.log.level | default "info" | quote }}
+  # INFO_DIR and WORKER_INFO_FILE keys are ignored (no mapstructure tags)
+  ENABLE_TELEMETRY: {{ .Values.telemetry.enable | default false | toString | quote }}
+  OTLP_ENDPOINT: {{ .Values.telemetry.otlpEndpoint | default "localhost:4317" | quote }}
+  OTEL_RESOURCE_NAME: {{ .Values.telemetry.otelResourceName | default "valkyrie" | quote }}
+  EXPORT_LOGS: {{ .Values.log.exportLogs | default "console" | quote }}
+  ENVIRONMENT: {{ .Values.environment | default "dev" | quote }}
+
+  # Job Pruning
+  JOB_PRUNE_FREQ: {{ .Values.job.pruneFreq | default 1 | toString | quote }}
+
+  USER_TOKEN: {{ .Values.auth.userToken | default "" | quote }}
+  ADMIN_TOKEN: {{ .Values.auth.adminToken | default "" | quote }}
+
+  # Rippkgs
+  RIPPKGS_BASE_URL: {{ .Values.rippkgs.baseUrl | default "https://valnix-stage-bucket.s3.us-east-1.amazonaws.com" | quote }}
+
+  # Kubernetes
+  K8S_NAMESPACE: {{ .Values.kubernetes.namespace | default "default" | quote }}

@@ -19,7 +19,7 @@ RUN apt update && \
 USER valnix
 WORKDIR /home/valnix/
 
-COPY --chown=valnix:valnix hack/sandbox/install_nix.bash /tmp/install_nix.bash
+COPY --chown=valnix:valnix hack/install_nix.bash /tmp/install_nix.bash
 
 # Install Nix
 RUN chmod +x /tmp/install_nix.bash && \

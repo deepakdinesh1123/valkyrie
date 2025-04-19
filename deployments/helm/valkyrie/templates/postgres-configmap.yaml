@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-env
+data:
+  POSTGRES_DB: {{ .Values.database.postgres.db | default "mydatabase" | quote }}
+  POSTGRES_HOST: {{ .Values.database.postgres.host | default "postgres-service" | quote }}
+  postgres-password: {{ .Values.database.postgres.password | default "changeme" | quote }}
+  POSTGRES_PORT: {{ .Values.database.postgres.port | default 5432 | toString | quote }}
+  POSTGRES_SSL_MODE: {{ .Values.database.postgres.sslMode | default "prefer" | quote }}
+  postgres-user: {{ .Values.database.postgres.user | default "myuser" | quote }}

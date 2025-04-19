@@ -1,0 +1,202 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: valkyrie-worker
+  labels:
+    app: valkyrie
+    component: worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: valkyrie
+      component: worker
+  template:
+    metadata:
+      labels:
+        app: valkyrie
+        component: worker
+    spec:
+      containers:
+        - args:
+            - worker
+            - start
+          env:
+            - name: ENABLE_EXECUTION
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: ENABLE_EXECUTION
+            - name: ENABLE_SANDBOX
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: ENABLE_SANDBOX
+            - name: POSTGRES_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: POSTGRES_HOST
+            - name: POSTGRES_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: POSTGRES_PORT
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: POSTGRES_DB
+            - name: POSTGRES_SSL_MODE
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: POSTGRES_SSL_MODE
+            - name: SERVER_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: SERVER_HOST
+            - name: SERVER_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: SERVER_PORT
+            - name: STORE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: STORE_URL
+            - name: STORE_IMAGE
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: STORE_IMAGE
+            - name: SANDBOX_NIXPKGS_REV
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: SANDBOX_NIXPKGS_REV
+            - name: WORKER_CONCURRENCY
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: WORKER_CONCURRENCY
+            - name: HOT_CONTAINER
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: HOT_CONTAINER
+            - name: WORKER_TASK_TIMEOUT
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: WORKER_TASK_TIMEOUT
+            - name: WORKER_POLL_FREQ
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: WORKER_POLL_FREQ
+            - name: EXECUTION_IMAGE
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: EXECUTION_IMAGE
+            - name: MAX_RETRIES
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: MAX_RETRIES
+            - name: WORKER_CONTAINER_MEMORY_LIMIT
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: WORKER_CONTAINER_MEMORY_LIMIT
+            - name: MEMORY_LIMIT
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: MEMORY_LIMIT
+            - name: CPU_LIMIT
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: CPU_LIMIT
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: LOG_LEVEL
+            - name: ENABLE_TELEMETRY
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: ENABLE_TELEMETRY
+            - name: OTLP_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: OTLP_ENDPOINT
+            - name: OTEL_RESOURCE_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: OTEL_RESOURCE_NAME
+            - name: EXPORT_LOGS
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: EXPORT_LOGS
+            - name: ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: ENVIRONMENT
+            - name: JOB_PRUNE_FREQ
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: JOB_PRUNE_FREQ
+            - name: USER_TOKEN
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: USER_TOKEN
+            - name: ADMIN_TOKEN
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: ADMIN_TOKEN
+            - name: RIPPKGS_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: RIPPKGS_BASE_URL
+            - name: SANDBOX_IMAGE
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: SANDBOX_IMAGE
+            - name: PY_INDEX
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: PY_INDEX
+            - name: K8S_NAMESPACE
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: K8S_NAMESPACE
+          image: {{ .Values.store.image | default "valkyrie-store" }}
+          name: valkyrie-worker
+      restartPolicy: Always
