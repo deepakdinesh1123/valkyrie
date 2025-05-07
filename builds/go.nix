@@ -1,0 +1,90 @@
+{ 
+  pkgs,
+  ...
+}:
+
+let
+  goBuildDeps = with pkgs; [
+      git
+      go_1_23
+      perl
+      cacert
+      btrfs-progs
+      cyrus_sasl
+      db
+      dns-root-data
+      e2fsprogs
+      elfutils
+      glib
+      iconv
+      gmp
+      gnupg
+      gnutls
+      gpgme
+      json_c
+      libassuan
+      libcap
+      libevent
+      libffi
+      libgcrypt
+      libgpg-error
+      libksba
+      libselinux
+      libsodium
+      libtasn1
+      libtool
+      lzo
+      nettle
+      npth
+      openldap
+      p11-kit
+      pcsclite
+      pkg-config
+      pkg-configUpstream
+      pth
+      systemdLibs
+      python312Packages.packaging
+      tpm2-tss
+      unbound
+      zlib
+    ] ++ (with pkgs.perl540Packages; [
+      AuthenSASL
+      CGI
+      CGIFast
+      Clone
+      DigestHMAC
+      EncodeLocale
+      FCGI
+      FCGIProcManager
+      FileListing
+      HTMLParser
+      HTMLTagCloud
+      HTMLTagset
+      HTTPCookieJar
+      HTTPCookies
+      HTTPDaemon
+      HTTPDate
+      HTTPMessage
+      HTTPNegotiate
+      IOHTML
+      IOSocketSSL
+      LWPMediaTypes
+      MozillaCA
+      NetHTTP
+      NetSMTPSSL
+      NetSSLeay
+      TermReadKey
+      TestFatal
+      TestNeeds
+      TestRequiresInternet
+      TimeDate
+      TryTiny
+      URI
+      WWWRobotRules
+      libnet
+      libwwwperl
+    ]);
+in
+pkgs.mkShell {
+  buildInputs = goBuildDeps;
+}

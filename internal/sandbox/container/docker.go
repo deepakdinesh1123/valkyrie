@@ -52,7 +52,7 @@ func NewDockerSandboxHandler(ctx context.Context, queries db.Store, workerId int
 	}, nil
 }
 
-func (d *DockerSH) StartContainerPool(ctx context.Context, envConfig *config.EnvConfig) error {
+func (d *DockerSH) StartSandboxPool(ctx context.Context, envConfig *config.EnvConfig) error {
 	containerPool, err := pool.NewSandboxPool(ctx, int32(envConfig.HOT_CONTAINER), int32(envConfig.WORKER_CONCURRENCY), envConfig.RUNTIME)
 	if err != nil {
 		return fmt.Errorf("error creating sandbox pool: %s", err)
@@ -199,8 +199,8 @@ func (d *DockerSH) Create(ctx context.Context, wg *concurrency.SafeWaitGroup, sa
 		}
 	}
 
-	containerURL := fmt.Sprintf("http:/%s-cs.localhost", contInfo.Name)
-	sandboxAgentUrl := fmt.Sprintf("ws:/%s-ag.localhost/sandbox", contInfo.Name)
+	containerURL := fmt.Sprintf("http:/%s-cs.%s", contInfo.Name, d.envConfig.SANDBOX_HOSTNAME)
+	sandboxAgentUrl := fmt.Sprintf("ws:/%s-ag.%s/sandbox", contInfo.Name, d.envConfig.SANDBOX_HOSTNAME)
 
 	d.logger.Info().Msg(containerURL)
 	err = d.queries.MarkSandboxRunning(ctx, db.MarkSandboxRunningParams{

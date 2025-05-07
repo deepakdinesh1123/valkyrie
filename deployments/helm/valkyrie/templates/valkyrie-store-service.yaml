@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: valkyrie-store
+  labels:
+    app: valkyrie
+spec:
+  selector:
+    component: store
+    app: valkyrie
+  ports:
+    - name: web
+      port: 80
+      targetPort: web

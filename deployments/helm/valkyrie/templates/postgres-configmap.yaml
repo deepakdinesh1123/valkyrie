@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-env
+data:
+  POSTGRES_DB: {{ .Values.postgres.db | default "valkyrie" | quote }}
+  POSTGRES_HOST: {{ .Values.postgres.host | default "valkyrie-postgres" | quote }}
+  postgres-password: {{ .Values.postgres.password | default "thorkell" | quote }}
+  POSTGRES_PORT: {{ .Values.postgres.port | default 5432 | toString | quote }}
+  POSTGRES_SSL_MODE: {{ .Values.postgres.sslMode | default "disable" | quote }}
+  postgres-user: {{ .Values.postgres.user | default "thors" | quote }}

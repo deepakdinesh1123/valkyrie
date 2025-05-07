@@ -12,7 +12,8 @@ RUN nix-channel --add https://nixos.org/channels/nixos-${NIX_CHANNEL} nixpkgs &&
 WORKDIR /valkyrie
 COPY flake.nix /valkyrie
 COPY flake.lock /valkyrie
-RUN nix develop --command 'ls'
+COPY builds/go.nix /valkyrie/builds/go.nix
+RUN nix develop .#goBuildEnv --command 'ls'
 
 COPY cmd /valkyrie/cmd
 COPY builds/nix/valkyrie.nix /valkyrie/builds/nix/valkyrie.nix
@@ -35,6 +36,9 @@ RUN apt update && \
 
 COPY --from=builder /tmp/nix-store-closure /nix/store
 COPY --from=builder /valkyrie/result /home/valnix
+
+COPY --chown=valnix:valnix rippkgs-24.11.sqlite /home/valnix/.valkyrie_info/
+RUN chown -R valnix:valnix /home/valnix/.valkyrie_info/
 
 USER valnix
 WORKDIR /home/valnix

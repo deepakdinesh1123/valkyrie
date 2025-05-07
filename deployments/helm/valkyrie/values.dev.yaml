@@ -1,0 +1,68 @@
+namespace: default
+
+postgres:
+  db: "valkyrie"
+  host: "valkyrie-postgres"
+  password: "thorkell" # pragma: allowlist secret
+  port: 5432
+  sslMode: "disable"
+  user: "thors"
+  image: "postgres:15.3"
+
+valkyrie:
+  image: valkyrie:0.0.1
+
+features:
+  enableExecution: "true"
+  enableSandbox: "true"
+
+server:
+  host: "0.0.0.0"
+  port: "8080"
+  domain: valkyrie.localhost
+  sandboxHostName: localhost
+
+store:
+  url: "http://valkyrie-store"
+  image: "valkyrie-store:0.0.1"
+  port: 5000
+
+sandbox:
+  nixpkgsRev: "b27ba4eb322d9d2bf2dc9ada9fd59442f50c8d7c" # pragma: allowlist secret
+  image: "valkyrie-sandbox:0.0.1"
+
+worker:
+  concurrency: 10
+  hotContainer: 2
+  taskTimeout: 120
+  pollFreq: 30
+  containerMemoryLimit: 500 # in MB
+
+devpi:
+  image: "valkyrie-devpi:0.0.1"
+  replicas: 1
+
+execution:
+  image: "valkyrie-execution:0.0.1"
+  maxRetries: 5
+
+pyIndex: "http://valkyrie-devpi"
+
+log:
+  level: "debug"
+  exportLogs: "console"
+
+telemetry:
+  enable: false
+
+environment: "dev"
+
+job:
+  pruneFreq: 1
+
+auth:
+  userToken: "" # Should be set to a secure value in production
+  adminToken: "" # Should be set to a secure value in production
+
+rippkgs:
+  baseUrl: "https://valnix-stage-bucket.s3.us-east-1.amazonaws.com"

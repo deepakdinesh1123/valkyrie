@@ -3,6 +3,7 @@ set dotenv-load := true
 
 import 'schemas/schemas.just'
 import 'builds/builds.just'
+import 'deployments/deployments.just'
 
 # Common variables
 export PG_URL := "postgresql://" + env_var("POSTGRES_USER") + ":" + env_var("POSTGRES_PASSWORD") + "@" + env_var("POSTGRES_HOST") + ":" + env_var("POSTGRES_PORT") + "/" + env_var("POSTGRES_DB") + "?sslmode=" + env_var("POSTGRES_SSL_MODE")
@@ -73,3 +74,29 @@ help:
 # Default recipe lists all available recipes
 default:
     @just --list
+
+generate-store-keys:
+    nix-store --generate-binary-cache-key valkyrie-store ./configs/secrets/cache-priv-key.pem ./configs/secrets/cache-pub-key.pem
+
+skaffold-build:
+    VERSION=0.0.1 skaffold build --cache-artifacts
+
+skaffold-run:
+    VERSION=0.0.1 skaffold run
+
+skaffold-dev:
+    VERSION=0.0.1 skaffold dev --cache-artifacts
+
+download-rippkgs:
+	[ -f rippkgs-24.11.sqlite ] || curl -o rippkgs-24.11.sqlite https://valnix-stage-bucket.s3.us-east-1.amazonaws.com/rippkgs-24.11.sqlite
+
+install-cilium:
+    @helm repo add cilium https://helm.cilium.io/
+    @helm install cilium cilium/cilium --version 1.17.3 \
+        --namespace kube-system \
+        --set image.pullPolicy=IfNotPresent \
+        --set ipam.mode=kubernetes
+
+create-kind-cluster:
+    @kind create cluster --config kind.yaml
+    @just install-cilium
