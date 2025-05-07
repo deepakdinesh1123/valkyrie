@@ -100,10 +100,7 @@ func (d *DockerProvider) GetContainer(ctx context.Context) (*puddle.Resource[poo
 	if err != nil {
 		return nil, err
 	}
-	err = d.containerPool.CreateResource(ctx)
-	if err != nil {
-		d.logger.Debug().Msg("Container pool might be full")
-	}
+	go d.containerPool.CreateResource(ctx)
 	return cont, nil
 }
 

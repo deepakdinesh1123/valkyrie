@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/config"
 	"github.com/deepakdinesh1123/valkyrie/pkg/namesgenerator"
@@ -18,12 +19,13 @@ func K8sExecConstructor(ctx context.Context) (Pod, error) {
 
 	podSpec := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: envConfig.K8S_NAMESPACE,
+			Namespace:    envConfig.K8S_NAMESPACE,
+			GenerateName: "valkyrie-exec" + "-",
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
 				{
-					Name:  namesgenerator.GetRandomName(10),
+					Name:  strings.ReplaceAll(namesgenerator.GetRandomName(10), "_", ""),
 					Image: envConfig.EXECUTION_IMAGE,
 				},
 			},

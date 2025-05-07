@@ -6,7 +6,7 @@ metadata:
     app: valkyrie
     component: postgres
 spec:
-  replicas: {{ .Values.postgres.replicas | default 1 }}
+  replicas: 1
   selector:
     matchLabels:
       app: valkyrie
@@ -61,31 +61,31 @@ spec:
               command:
                 - pg_isready
                 - -U
-                - {{ .Values.postgres.user | default "thors" }}
+                - $(POSTGRES_USER)
                 - -d
-                - {{ .Values.postgres.db | default "valkyrie" }}
+                - $(POSTGRES_DB)
                 - -p
-                - "{{ .Values.postgres.port | default 5432 }}"
-            initialDelaySeconds: {{ .Values.postgres.livenessProbe.initialDelaySeconds | default 30 }} # Give Postgres time to start
-            periodSeconds: {{ .Values.postgres.livenessProbe.periodSeconds | default 10 }}
-            timeoutSeconds: {{ .Values.postgres.livenessProbe.timeoutSeconds | default 5 }}
+                - $(POSTGRES_PORT)
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
             successThreshold: 1
-            failureThreshold: {{ .Values.postgres.livenessProbe.failureThreshold | default 5 }}
+            failureThreshold: 5
           readinessProbe:
             exec:
               command:
                 - pg_isready
                 - -U
-                - {{ .Values.postgres.user | default "thors" }}
+                - $(POSTGRES_USER)
                 - -d
-                - {{ .Values.postgres.db | default "valkyrie" }}
+                - $(POSTGRES_DB)
                 - -p
-                - "{{ .Values.postgres.port | default 5432 }}"
-            initialDelaySeconds: {{ .Values.postgres.readinessProbe.initialDelaySeconds | default 10 }} # Readiness can be probed sooner
-            periodSeconds: {{ .Values.postgres.readinessProbe.periodSeconds | default 5 }}
-            timeoutSeconds: {{ .Values.postgres.readinessProbe.timeoutSeconds | default 3 }}
+                - $(POSTGRES_PORT)
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
             successThreshold: 1
-            failureThreshold: {{ .Values.postgres.readinessProbe.failureThreshold | default 3 }}
+            failureThreshold: 3
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data # Standard Postgres data directory

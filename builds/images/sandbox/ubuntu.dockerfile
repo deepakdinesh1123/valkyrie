@@ -2,6 +2,7 @@ ARG AGENT_BUILDER=valkyrie_agent:0.0.1
 ARG UBUNTU_IMAGE=ubuntu:24.04
 ARG NIXPKGS_REV=b27ba4eb322d9d2bf2dc9ada9fd59442f50c8d7c
 ARG NIX_CACHE_PUBLIC_KEY
+ARG NIX_CONFIG_PATH=configs/nix/nix.conf
 
 FROM ${AGENT_BUILDER} AS agent
 
@@ -54,7 +55,8 @@ COPY --from=agent /tmp/nix-store-closure /tmp/agent/closure
 COPY --from=agent /valkyrie/result /home/valnix
 
 USER root
-COPY configs/nix/nix.conf /etc/nix/nix.conf
+ARG NIX_CONFIG_PATH
+COPY ${NIX_CONFIG_PATH} /etc/nix/nix.conf
 ARG NIX_CACHE_PUBLIC_KEY
 RUN echo "trusted-public-keys = ${NIX_CACHE_PUBLIC_KEY} cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=" >> /etc/nix/nix.conf
 RUN chown -R valnix:valnix /tmp/agent/closure

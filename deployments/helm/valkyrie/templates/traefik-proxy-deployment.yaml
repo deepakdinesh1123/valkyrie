@@ -3,17 +3,19 @@ apiVersion: apps/v1
 metadata:
   name: traefik-deployment
   labels:
-    app: traefik
-
+    app: valkyrie
+    component: traefik
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: traefik
+      app: valkyrie
+      component: traefik
   template:
     metadata:
       labels:
-        app: traefik
+        app: valkyrie
+        component: traefik
     spec:
       serviceAccountName: traefik-account
       containers:
@@ -25,8 +27,10 @@ spec:
           ports:
             - name: web
               containerPort: 80
+              hostPort: 80
             - name: dashboard
               containerPort: 8080
+              hostPort: 8080
           volumeMounts:
             - name: traefik-config
               mountPath: /etc/traefik
@@ -35,3 +39,5 @@ spec:
         - name: traefik-config
           configMap:
             name: traefik-proxy-cm0 
+      nodeSelector:
+        ingress-ready: "true"

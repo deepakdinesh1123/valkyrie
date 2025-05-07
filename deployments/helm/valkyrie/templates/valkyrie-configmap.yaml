@@ -18,9 +18,10 @@ data:
   # Server Configuration
   SERVER_HOST: {{ .Values.server.host | default "0.0.0.0" | quote }}
   SERVER_PORT: {{ .Values.server.port | default "8080" | quote }}
+  SANDBOX_HOSTNAME: {{ .Values.server.sandboxHostName | default "localhost" | quote }}
 
   # Store Configuration
-  STORE_URL: {{ .Values.store.url | default "http://valkyrie-store:5000" | quote }}
+  STORE_URL: {{ .Values.store.url | default "http://valkyrie-store" | quote }}
   STORE_IMAGE: {{ .Values.store.image | default "valkyrie-store:0.0.1" | quote }}
 
   # Sandbox/Execution/Worker Configuration
@@ -32,12 +33,11 @@ data:
   EXECUTION_IMAGE: {{ .Values.execution.image | default "valkyrie-execution:0.0.1" | quote }}
   MAX_RETRIES: {{ .Values.execution.maxRetries | default 5 | toString | quote }}
   SANDBOX_IMAGE: {{ .Values.sandbox.image | default "valkyrie-sandbox:0.0.1" | quote }}
-  PY_INDEX: {{ .Values.pyIndex | default "http://valkyrie-devpi:3141" | quote }}
+  PY_INDEX: {{ .Values.pyIndex | default "http://valkyrie-devpi" | quote }}
+  RUNTIME: k8s
 
   # Resource Limits Configuration
-  WORKER_CONTAINER_MEMORY_LIMIT: {{ .Values.worker.containerMemoryLimit | default 500 | toString | quote }} # Unit (MB?) not specified, but default is 500
-  MEMORY_LIMIT: {{ .Values.resources.memoryLimit | default 75.0 | toString | quote }} # Assuming these are percentages, default is 75.0
-  CPU_LIMIT: {{ .Values.resources.cpuLimit | default 75.0 | toString | quote }} # Assuming these are percentages, default is 75.0
+  WORKER_CONTAINER_MEMORY_LIMIT: {{ .Values.worker.containerMemoryLimit | default 500 | toString | quote }}
 
   # Logging and Telemetry
   LOG_LEVEL: {{ .Values.log.level | default "info" | quote }}
@@ -58,4 +58,4 @@ data:
   RIPPKGS_BASE_URL: {{ .Values.rippkgs.baseUrl | default "https://valnix-stage-bucket.s3.us-east-1.amazonaws.com" | quote }}
 
   # Kubernetes
-  K8S_NAMESPACE: {{ .Values.kubernetes.namespace | default "default" | quote }}
+  K8S_NAMESPACE: {{ .Values.namespace | default "default" | quote }}

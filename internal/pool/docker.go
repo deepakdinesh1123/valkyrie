@@ -103,11 +103,11 @@ func DockerSandboxConstructor(ctx context.Context) (Container, error) {
 			nat.Port("1618/tcp"): {},
 		},
 		Labels: map[string]string{
-			fmt.Sprintf("traefik.http.routers.%s-cs.rule", containerName):                      fmt.Sprintf("Host(`%s-cs.localhost`)", containerName),
+			fmt.Sprintf("traefik.http.routers.%s-cs.rule", containerName):                      fmt.Sprintf("Host(`%s-cs.%s`)", containerName, envConfig.SANDBOX_HOSTNAME),
 			fmt.Sprintf("traefik.http.routers.%s-cs.entrypoints", containerName):               "http",
 			fmt.Sprintf("traefik.http.routers.%s-cs.service", containerName):                   fmt.Sprintf("%s-cs", containerName),
 			fmt.Sprintf("traefik.http.services.%s-cs.loadbalancer.server.port", containerName): "9090",
-			fmt.Sprintf("traefik.http.routers.%s-ag.rule", containerName):                      fmt.Sprintf("Host(`%s-ag.localhost`)", containerName),
+			fmt.Sprintf("traefik.http.routers.%s-ag.rule", containerName):                      fmt.Sprintf("Host(`%s-ag.%s`)", containerName, envConfig.SANDBOX_HOSTNAME),
 			fmt.Sprintf("traefik.http.routers.%s-ag.entrypoints", containerName):               "http",
 			fmt.Sprintf("traefik.http.routers.%s-ag.service", containerName):                   fmt.Sprintf("%s-ag", containerName),
 			fmt.Sprintf("traefik.http.services.%s-ag.loadbalancer.server.port", containerName): "1618",

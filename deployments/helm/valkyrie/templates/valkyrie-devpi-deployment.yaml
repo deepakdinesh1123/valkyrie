@@ -2,18 +2,24 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: valkyrie-devpi
+  labels:
+    app: valkyrie
+    component: devpi
 spec:
-  replicas: {{ .Values.replicaCount | default 1 }}
+  replicas: {{ .Values.devpi.replicas | default 1 }}
   selector:
     matchLabels:
-      app: valkyrie-devpi
+      app: valkyrie
+      component: devpi
   template:
     metadata:
       labels:
-        app: valkyrie-devpi
+        app: valkyrie
+        component: devpi
     spec:
       containers:
       - name: devpi
-        image: {{ .Values. }}
+        image: {{ .Values.devpi.image | default "valkyrie-devpi:0.0.1" }}
         ports:
-        - containerPort: {{ .Values.containerPort | default 3141 }}
+        - name: web
+          containerPort: {{ .Values.containerPort | default 3141 }}

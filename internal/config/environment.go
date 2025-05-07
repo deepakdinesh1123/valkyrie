@@ -26,8 +26,9 @@ type EnvConfig struct {
 	POSTGRES_SSL_MODE        string `mapstructure:"POSTGRES_SSL_MODE"`
 	POSTGRES_STANDALONE_PATH string `mapstructure:"POSTGRES_STANDALONE_PATH"`
 
-	SERVER_HOST string `mapstructure:"SERVER_HOST"`
-	SERVER_PORT string `mapstructure:"SERVER_PORT"`
+	SERVER_HOST      string `mapstructure:"SERVER_HOST"`
+	SERVER_PORT      string `mapstructure:"SERVER_PORT"`
+	SANDBOX_HOSTNAME string `mapstructure:"SANDBOX_HOSTNAME"`
 
 	STORE_URL            string `mapstructure:"STORE_URL"`
 	STORE_IMAGE          string `mapstructure:"STORE_IMAGE"`
@@ -183,6 +184,7 @@ func setDefaults() {
 
 	viper.SetDefault("SERVER_HOST", "0.0.0.0")
 	viper.SetDefault("SERVER_PORT", "8080")
+	viper.SetDefault("SANDBOX_HOSTNAME", "localhost")
 
 	viper.SetDefault("STORE_URL", "http://valkyrie-store:5000")
 	viper.SetDefault("STORE_IMAGE", "valkyrie-store:0.0.1")

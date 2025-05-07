@@ -8,10 +8,8 @@ data:
       dashboard: true
 
     entryPoints:
-      http:
+      web:
         address: ":80"
-      https:
-        address: ":443"
       dashboard:
         address: ":8080"
 

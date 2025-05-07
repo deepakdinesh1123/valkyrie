@@ -5,11 +5,10 @@ metadata:
   labels:
     app: valkyrie
 spec:
-  type: NodePort
-  ports:
-    - name: "postgres-port"
-      port: {{ .Values.postgres.port | default 5432 }}
-      targetPort: {{ .Values.postgres.port | default 5432 }}
-      protocol: TCP
   selector:
+    app: valkyrie
     component: postgres
+  ports:
+    - name: http
+      port: 5432
+      targetPort: {{ .Values.postgres.port | default 5432 }}

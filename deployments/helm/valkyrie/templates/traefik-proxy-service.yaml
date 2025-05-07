@@ -2,26 +2,24 @@ apiVersion: v1
 kind: Service
 metadata:
   name: traefik-dashboard-service
-
 spec:
   type: LoadBalancer
   ports:
     - port: 8080
       targetPort: dashboard
   selector:
-    app: traefik
+    app: valkyrie
+    component: traefik
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: traefik-web-service
-
+  name: traefik-http-service
 spec:
   type: LoadBalancer
   ports:
-    - targetPort: http
+    - targetPort: web
       port: 80
-    - targetPort: https
-      port: 443
   selector:
-    app: traefik
+    app: valkyrie
+    component: traefik

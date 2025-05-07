@@ -1,123 +1,68 @@
-# Default values for valkyrie.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+namespace: default
 
-# This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
-replicaCount: 1
+postgres:
+  db: "valkyrie"
+  host: "valkyrie-postgres"
+  password: "thorkell" # pragma: allowlist secret
+  port: 5432
+  sslMode: "disable"
+  user: "thors"
+  image: "postgres:15.3"
 
-# This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
-image:
-  repository: nginx
-  # This sets the pull policy for images.
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+valkyrie:
+  image: valkyrie:0.0.1
 
-# This is for the secretes for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-imagePullSecrets: []
-# This is to override the chart name.
-nameOverride: ""
-fullnameOverride: ""
+features:
+  enableExecution: "true"
+  enableSandbox: "true"
 
-#This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
-serviceAccount:
-  # Specifies whether a service account should be created
-  create: true
-  # Automatically mount a ServiceAccount's API credentials?
-  automount: true
-  # Annotations to add to the service account
-  annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: ""
+server:
+  host: "0.0.0.0"
+  port: "8080"
+  domain: valkyrie.localhost
+  sandboxHostName: localhost
 
-# This is for setting Kubernetes Annotations to a Pod.
-# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/ 
-podAnnotations: {}
-# This is for setting Kubernetes Labels to a Pod.
-# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
-podLabels: {}
+store:
+  url: "http://valkyrie-store"
+  image: "valkyrie-store:0.0.1"
+  port: 5000
 
-podSecurityContext: {}
-  # fsGroup: 2000
+sandbox:
+  nixpkgsRev: "b27ba4eb322d9d2bf2dc9ada9fd59442f50c8d7c" # pragma: allowlist secret
+  image: "valkyrie-sandbox:0.0.1"
 
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
+worker:
+  concurrency: 10
+  hotContainer: 2
+  taskTimeout: 120
+  pollFreq: 30
+  containerMemoryLimit: 500 # in MB
 
-# This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
-service:
-  # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
-  type: ClusterIP
-  # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
-  port: 80
+devpi:
+  image: "valkyrie-devpi:0.0.1"
+  replicas: 1
 
-# This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
-ingress:
-  enabled: false
-  className: ""
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-  hosts:
-    - host: chart-example.local
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
+execution:
+  image: "valkyrie-execution:0.0.1"
+  maxRetries: 5
 
-resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
+pyIndex: "http://valkyrie-devpi"
 
-# This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
-livenessProbe:
-  httpGet:
-    path: /
-    port: http
-readinessProbe:
-  httpGet:
-    path: /
-    port: http
+log:
+  level: "debug"
+  exportLogs: "console"
 
-#This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 100
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
+telemetry:
+  enable: false
 
-# Additional volumes on the output Deployment definition.
-volumes: []
-# - name: foo
-#   secret:
-#     secretName: mysecret
-#     optional: false
+environment: "dev"
 
-# Additional volumeMounts on the output Deployment definition.
-volumeMounts: []
-# - name: foo
-#   mountPath: "/etc/foo"
-#   readOnly: true
+job:
+  pruneFreq: 1
 
-nodeSelector: {}
+auth:
+  userToken: "" # Should be set to a secure value in production
+  adminToken: "" # Should be set to a secure value in production
 
-tolerations: []
-
-affinity: {}
+rippkgs:
+  baseUrl: "https://valnix-stage-bucket.s3.us-east-1.amazonaws.com"

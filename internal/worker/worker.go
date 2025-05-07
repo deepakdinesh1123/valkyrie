@@ -117,7 +117,7 @@ func GetWorker(ctx context.Context, name string, envConfig *config.EnvConfig, ne
 		if err != nil {
 			return nil, fmt.Errorf("could not get sandbox handler: %s", err)
 		}
-		err = sandboxHandler.StartContainerPool(ctx, envConfig)
+		err = sandboxHandler.StartSandboxPool(ctx, envConfig)
 		if err != nil {
 			return nil, fmt.Errorf("error starting container pool: %v", err)
 		}
