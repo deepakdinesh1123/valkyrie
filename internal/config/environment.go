@@ -26,8 +26,9 @@ type EnvConfig struct {
 	POSTGRES_SSL_MODE        string `mapstructure:"POSTGRES_SSL_MODE"`
 	POSTGRES_STANDALONE_PATH string `mapstructure:"POSTGRES_STANDALONE_PATH"`
 
-	SERVER_HOST string `mapstructure:"SERVER_HOST"`
-	SERVER_PORT string `mapstructure:"SERVER_PORT"`
+	SERVER_HOST      string `mapstructure:"SERVER_HOST"`
+	SERVER_PORT      string `mapstructure:"SERVER_PORT"`
+	SANDBOX_HOSTNAME string `mapstructure:"SANDBOX_HOSTNAME"`
 
 	STORE_URL            string `mapstructure:"STORE_URL"`
 	STORE_IMAGE          string `mapstructure:"STORE_IMAGE"`
@@ -59,10 +60,6 @@ type EnvConfig struct {
 	EXPORT_LOGS        string `mapstructure:"EXPORT_LOGS"`
 	ENVIRONMENT        string `mapstructure:"ENVIRONMENT"`
 
-	NIX_STORE                string `mapstructure:"NIX_STORE"`
-	NIX_USER_ENVIRONMENT     string `mapstructure:"NIX_USER_ENVIRONMENT"`
-	NIX_CHANNELS_ENVIRONMENT string `mapstructure:"NIX_CHANNELS_ENVIRONMENT"`
-
 	JOB_PRUNE_FREQ int `mapstructure:"JOB_PRUNE_FREQ"`
 
 	USER_TOKEN  string `mapstructure:"USER_TOKEN"`
@@ -74,6 +71,8 @@ type EnvConfig struct {
 	BASE_DIR      string `mapstructure:"BASE_DIR"`
 
 	PY_INDEX string `mapstructure:"PY_INDEX"`
+
+	K8S_NAMESPACE string `mapstructure:"K8S_NAMESPACE"`
 }
 
 var (
@@ -185,9 +184,10 @@ func setDefaults() {
 
 	viper.SetDefault("SERVER_HOST", "0.0.0.0")
 	viper.SetDefault("SERVER_PORT", "8080")
+	viper.SetDefault("SANDBOX_HOSTNAME", "localhost")
 
 	viper.SetDefault("STORE_URL", "http://valkyrie-store:5000")
-	viper.SetDefault("STORE_IMAGE", "valkyrie_store:0.0.1")
+	viper.SetDefault("STORE_IMAGE", "valkyrie-store:0.0.1")
 	viper.SetDefault("STORE_CONTAINER", "valkyrie-store")
 	viper.SetDefault("SANDBOX_NIXPKGS_REV", "b27ba4eb322d9d2bf2dc9ada9fd59442f50c8d7c") // pragma: allowlist secret
 
@@ -196,7 +196,7 @@ func setDefaults() {
 	viper.SetDefault("HOT_CONTAINER", 1)
 	viper.SetDefault("WORKER_TASK_TIMEOUT", 120)
 	viper.SetDefault("WORKER_POLL_FREQ", 30)
-	viper.SetDefault("EXECUTION_IMAGE", "valkyrie_execution:0.0.1-ubuntu")
+	viper.SetDefault("EXECUTION_IMAGE", "valkyrie-execution:0.0.1")
 	viper.SetDefault("MAX_RETRIES", 5)
 
 	viper.SetDefault("WORKER_CONTAINER_MEMORY_LIMIT", 500)
@@ -214,7 +214,7 @@ func setDefaults() {
 	viper.SetDefault("LOG_LEVEL", "info")
 	viper.SetDefault("RIPPKGS_BASE_URL", "https://valnix-stage-bucket.s3.us-east-1.amazonaws.com")
 
-	viper.SetDefault("SANDBOX_IMAGE", "valkyrie_sandbox:0.0.1-ubuntu")
+	viper.SetDefault("SANDBOX_IMAGE", "valkyrie-sandbox:0.0.1")
 	viper.SetDefault("PY_INDEX", "http://valkyrie-devpi:3141")
 
 	// containerRuntime := ""
@@ -235,4 +235,6 @@ func setDefaults() {
 	} else {
 		viper.SetDefault("BASE_DIR", homeDir)
 	}
+
+	viper.SetDefault("K8S_NAMESPACE", "default")
 }

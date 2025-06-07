@@ -1,0 +1,51 @@
+apiVersion: skaffold/v4beta11
+kind: Config
+metadata:
+  name: valkyrie
+deploy:
+  helm:
+    releases:
+      - name: valkyrie
+        chartPath: deployments/helm/valkyrie
+        valuesFiles:
+          - deployments/helm/valkyrie/values.dev.yaml
+        version: 0.1.0
+        setValueTemplates:
+          valkyrie.image: "{{.IMAGE_FULLY_QUALIFIED_valkyrie}}"
+          store.image: "{{.IMAGE_FULLY_QUALIFIED_valkyrie_store}}"
+          devpi.image: "{{.IMAGE_FULLY_QUALIFIED_valkyrie_devpi}}"
+          sandbox.image: "{{.IMAGE_FULLY_QUALIFIED_valkyrie_sandbox}}"
+          execution.image: "{{.IMAGE_FULLY_QUALIFIED_valkyrie_execution}}"
+build:
+  local:
+    useDockerCLI: false
+  tagPolicy:
+    envTemplate:
+      template: "{{.VERSION}}"
+  artifacts:
+    - image: valkyrie
+      context: .
+      docker:
+        dockerfile: builds/images/packages/valkyrie.dockerfile
+    - image: valkyrie-store
+      context: .
+      docker:
+        dockerfile: builds/images/store/store.k8s.dockerfile
+    - image: valkyrie-devpi
+      context: .
+      docker:
+        dockerfile: builds/images/devpi.dockerfile
+    - image: valkyrie-sandbox
+      context: .
+      docker:
+        dockerfile: builds/images/sandbox/ubuntu.dockerfile
+        buildArgs:
+          NIX_CACHE_PUBLIC_KEY: "valkyrie-store:16vPF/cjrSV3z11yd6dkSf+rlxxM1g80Mx38gIv6JqA="
+          NIX_CONFIG_PATH: "configs/nix/k8s.nix.conf"
+    - image: valkyrie-execution
+      context: .
+      docker:
+        dockerfile: builds/images/execution/ubuntu.dockerfile
+        buildArgs:
+          NIX_CACHE_PUBLIC_KEY: "valkyrie-store:16vPF/cjrSV3z11yd6dkSf+rlxxM1g80Mx38gIv6JqA="
+          NIX_CONFIG_PATH: "configs/nix/k8s.nix.conf"

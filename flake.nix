@@ -34,6 +34,8 @@
           caddy
           pkg-config 
           just
+          skaffold
+          kubernetes-helm
         ] ++ lib.optionals stdenv.isLinux [
           nsjail
           gpgme
@@ -70,6 +72,7 @@
           js-sdk = import ./sdk/ts/shell.nix { inherit pkgs; };
           docs = import ./docs/shell.nix { inherit pkgs; };
           schemas = import ./schemas/shell.nix { inherit pkgs; };
+          goBuildEnv = import ./builds/go.nix { inherit pkgs; };
           agent = pkgs.mkShell {
             buildInputs = [ pkgs.go_1_22 ];
           };

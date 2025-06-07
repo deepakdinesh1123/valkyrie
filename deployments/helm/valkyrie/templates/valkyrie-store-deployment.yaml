@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: valkyrie-store
+  labels:
+    app: valkyrie
+    component: store
+spec:
+  replicas: {{ .Values.store.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app: valkyrie
+      component: store
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: valkyrie
+        component: store
+    spec:
+      containers:
+        - name: valkyrie-store
+          image: {{ .Values.store.image | default "valkyrie-store:0.0.1" | quote }}
+          imagePullPolicy: {{ .Values.store.imagePullPolicy | default "IfNotPresent" }}
+          ports:
+            - name: web
+              containerPort: {{ .Values.store.port | default 5000 }}
+              
+          # livenessProbe:
+          #   exec:
+          #     command:
+          #       - '/bin/sh'
+          #       - '-c'
+          #       - '[ "$(curl -s -o /dev/null -w "%{http_code}" http://localhost:{{ .Values.store.port | default 5000 }})" = "404" ] && exit 0 || exit 1'
+          #   initialDelaySeconds: 10
+          #   periodSeconds: 30
+          #   timeoutSeconds: 10
+          #   successThreshold: 1
+          #   failureThreshold: 3
+          volumeMounts:
+            - name: nix-store
+              mountPath: /nix
+            - name: setup
+              mountPath: /tmp/setup
+      volumes:
+        - name: nix-store
+          persistentVolumeClaim:
+            claimName: valkyrie-store-nix-pvc
+        - name: setup
+          persistentVolumeClaim:
+            claimName: valkyrie-store-setup-pvc
+      restartPolicy: Always

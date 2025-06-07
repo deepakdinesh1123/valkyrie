@@ -174,7 +174,7 @@ services:
         target: /nix
       - type: bind
         source: $HOME/.valkyrie/store/setup
-        target: /tmp/setup
+        target: /home/valnix/.config/
     profiles:
       - dev
       - production
