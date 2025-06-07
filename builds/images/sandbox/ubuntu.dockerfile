@@ -52,7 +52,7 @@ RUN nix profile install nixpkgs#vim --extra-experimental-features 'nix-command f
 RUN nix profile install nixpkgs#gnupatch --extra-experimental-features 'nix-command flakes'
 
 COPY --from=agent /tmp/nix-store-closure /tmp/agent/closure
-COPY --from=agent /valkyrie/result /home/valnix
+COPY --from=agent /tmp/agent/ /home/valnix
 
 USER root
 ARG NIX_CONFIG_PATH

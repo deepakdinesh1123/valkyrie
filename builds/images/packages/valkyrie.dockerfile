@@ -2,18 +2,9 @@ ARG NIX_CHANNEL=24.11
 
 FROM nixos/nix:2.24.0 AS builder
 
-RUN mkdir -p /etc/nix && echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
-
-ARG NIX_CHANNEL
-
-RUN nix-channel --remove nixpkgs
-RUN nix-channel --add https://nixos.org/channels/nixos-${NIX_CHANNEL} nixpkgs && nix-channel --update
-
 WORKDIR /valkyrie
 COPY flake.nix /valkyrie
 COPY flake.lock /valkyrie
-COPY builds/go.nix /valkyrie/builds/go.nix
-RUN nix develop .#goBuildEnv --command 'ls'
 
 COPY cmd /valkyrie/cmd
 COPY builds/nix/valkyrie.nix /valkyrie/builds/nix/valkyrie.nix
@@ -22,10 +13,16 @@ COPY pkg /valkyrie/pkg
 COPY go.mod /valkyrie
 COPY go.sum /valkyrie
 
-RUN nix build
-
-RUN mkdir /tmp/nix-store-closure
-RUN cp -R $(nix-store -qR result/) /tmp/nix-store-closure
+RUN \
+    --mount=type=cache,target=/nix,from=nixos/nix:2.24.0,source=/nix \
+    mkdir -p /tmp/nix-store-closure  && \
+    nix \
+    --extra-experimental-features "nix-command flakes" \
+    --option filter-syscalls false \
+    --show-trace \
+    --log-format raw \
+    build --out-link /tmp/valkyrie/result && \
+    cp -R $(nix-store -qR /tmp/valkyrie/result) /tmp/nix-store-closure
 
 FROM ubuntu:24.04
 
@@ -35,11 +32,11 @@ RUN apt update && \
     adduser --uid 1024 --gid 1024 --disabled-password --gecos "" valnix
 
 COPY --from=builder /tmp/nix-store-closure /nix/store
-COPY --from=builder /valkyrie/result /home/valnix
+COPY --from=builder /tmp/valkyrie/ /home/valnix
 
 COPY --chown=valnix:valnix rippkgs-24.11.sqlite /home/valnix/.valkyrie_info/
 RUN chown -R valnix:valnix /home/valnix/.valkyrie_info/
 
 USER valnix
 WORKDIR /home/valnix
-ENTRYPOINT ["/home/valnix/bin/valkyrie"]
+ENTRYPOINT ["/home/valnix/result/bin/valkyrie"]
