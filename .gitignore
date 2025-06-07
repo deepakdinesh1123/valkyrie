@@ -239,3 +239,4 @@ letsencrypt
 .cursor
 .pem
 secrets/
+charts/
