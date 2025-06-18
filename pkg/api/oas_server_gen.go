@@ -38,18 +38,6 @@ type Handler interface {
 	//
 	// GET /flake/{jobId}
 	FetchFlake(ctx context.Context, params FetchFlakeParams) (FetchFlakeRes, error)
-	// FetchLanguagePackages implements FetchLanguagePackages operation.
-	//
-	// Initialize the search results content with a default set of language specific packages.
-	//
-	// GET /fetch/language
-	FetchLanguagePackages(ctx context.Context, params FetchLanguagePackagesParams) (FetchLanguagePackagesRes, error)
-	// FetchSystemPackages implements FetchSystemPackages operation.
-	//
-	// Initialize the search results content with a default set of system packages.
-	//
-	// GET /fetch/system
-	FetchSystemPackages(ctx context.Context, params FetchSystemPackagesParams) (FetchSystemPackagesRes, error)
 	// GetAllExecutionJobs implements getAllExecutionJobs operation.
 	//
 	// Get all execution jobs.
@@ -134,25 +122,6 @@ type Handler interface {
 	//
 	// GET /health
 	Health(ctx context.Context) error
-	// PackagesExist implements PackagesExist operation.
-	//
-	// Verify the package list is available for the language version while switching between language
-	// versions.
-	//
-	// POST /packages/exist
-	PackagesExist(ctx context.Context, req *PackageExistRequest, params PackagesExistParams) (PackagesExistRes, error)
-	// SearchLanguagePackages implements SearchLanguagePackages operation.
-	//
-	// Search for language specific packages.
-	//
-	// GET /search/language
-	SearchLanguagePackages(ctx context.Context, params SearchLanguagePackagesParams) (SearchLanguagePackagesRes, error)
-	// SearchSystemPackages implements SearchSystemPackages operation.
-	//
-	// Search for system packages.
-	//
-	// GET /search/system
-	SearchSystemPackages(ctx context.Context, params SearchSystemPackagesParams) (SearchSystemPackagesRes, error)
 }
 
 // Server implements http server based on OpenAPI v3 specification and

@@ -23,13 +23,10 @@ type Querier interface {
 	DeleteLanguageVersion(ctx context.Context, id int64) (int64, error)
 	DeleteWorker(ctx context.Context, id int32) error
 	FetchJob(ctx context.Context, arg FetchJobParams) (Job, error)
-	FetchLanguagePackages(ctx context.Context, language string) ([]FetchLanguagePackagesRow, error)
-	FetchSystemPackages(ctx context.Context) ([]FetchSystemPackagesRow, error)
 	GetAllExecutionJobs(ctx context.Context, arg GetAllExecutionJobsParams) ([]GetAllExecutionJobsRow, error)
 	GetAllExecutions(ctx context.Context, arg GetAllExecutionsParams) ([]GetAllExecutionsRow, error)
-	GetAllLanguageVersions(ctx context.Context) ([]LanguageVersion, error)
+	GetAllLanguageVersions(ctx context.Context) ([]GetAllLanguageVersionsRow, error)
 	GetAllLanguages(ctx context.Context) ([]Language, error)
-	GetAllPackages(ctx context.Context) ([]GetAllPackagesRow, error)
 	GetAllWorkers(ctx context.Context) ([]Worker, error)
 	GetDefaultVersion(ctx context.Context, languageID int64) (LanguageVersion, error)
 	GetExecRequest(ctx context.Context, id int32) (ExecRequest, error)
@@ -42,38 +39,32 @@ type Querier interface {
 	GetLanguageByID(ctx context.Context, id int64) (Language, error)
 	GetLanguageByName(ctx context.Context, name string) (Language, error)
 	GetLanguageVersion(ctx context.Context, arg GetLanguageVersionParams) (LanguageVersion, error)
-	GetLanguageVersionByID(ctx context.Context, id int64) (LanguageVersion, error)
+	GetLanguageVersionByID(ctx context.Context, id int64) (GetLanguageVersionByIDRow, error)
 	GetLatestExecution(ctx context.Context, jobID pgtype.Int8) (GetLatestExecutionRow, error)
-	GetPackageStorePaths(ctx context.Context, packages []string) ([]GetPackageStorePathsRow, error)
 	GetSandbox(ctx context.Context, sandboxID int64) (Sandbox, error)
 	GetStaleWorkers(ctx context.Context) ([]int32, error)
 	GetTotalExecutions(ctx context.Context) (int64, error)
 	GetTotalExecutionsForJob(ctx context.Context, jobID pgtype.Int8) (int64, error)
 	GetTotalJobs(ctx context.Context) (int64, error)
 	GetTotalWorkers(ctx context.Context) (int64, error)
-	GetVersionsByLanguageID(ctx context.Context, languageID int64) ([]LanguageVersion, error)
+	GetVersionsByLanguageID(ctx context.Context, languageID int64) ([]GetVersionsByLanguageIDRow, error)
 	GetWorker(ctx context.Context, name string) (Worker, error)
 	InsertExecRequest(ctx context.Context, arg InsertExecRequestParams) (int32, error)
 	InsertExecution(ctx context.Context, arg InsertExecutionParams) (Execution, error)
 	InsertJob(ctx context.Context, arg InsertJobParams) (Job, error)
 	InsertLanguageVersions(ctx context.Context, arg []InsertLanguageVersionsParams) (int64, error)
 	InsertLanguages(ctx context.Context, arg []InsertLanguagesParams) (int64, error)
-	InsertPackages(ctx context.Context, arg []InsertPackagesParams) (int64, error)
 	InsertSandbox(ctx context.Context, arg InsertSandboxParams) (Sandbox, error)
 	InsertWorker(ctx context.Context, arg InsertWorkerParams) (Worker, error)
 	ListExecRequests(ctx context.Context, arg ListExecRequestsParams) ([]ExecRequest, error)
 	MarkSandboxRunning(ctx context.Context, arg MarkSandboxRunningParams) error
-	PackagesExist(ctx context.Context, arg PackagesExistParams) (PackagesExistRow, error)
 	PruneCompletedJobs(ctx context.Context) error
 	RequeueLTJobs(ctx context.Context) error
 	RequeueWorkerJobs(ctx context.Context, workerID pgtype.Int4) error
 	RetryJob(ctx context.Context, jobID int64) error
-	SearchLanguagePackages(ctx context.Context, arg SearchLanguagePackagesParams) ([]SearchLanguagePackagesRow, error)
-	SearchSystemPackages(ctx context.Context, plaintoTsquery string) ([]SearchSystemPackagesRow, error)
 	StopJob(ctx context.Context, jobID int64) error
 	TruncateLanguageVersions(ctx context.Context) error
 	TruncateLanguages(ctx context.Context) error
-	TruncatePackages(ctx context.Context) error
 	UpdateHeartbeat(ctx context.Context, id int32) error
 	UpdateJobCompleted(ctx context.Context, jobID int64) error
 	UpdateLanguage(ctx context.Context, arg UpdateLanguageParams) (int64, error)
@@ -81,7 +72,6 @@ type Querier interface {
 	UpdateSandboxPassword(ctx context.Context, arg UpdateSandboxPasswordParams) error
 	UpdateSandboxStartTime(ctx context.Context, arg UpdateSandboxStartTimeParams) error
 	UpdateSandboxState(ctx context.Context, arg UpdateSandboxStateParams) error
-	UpdateTextSearchVector(ctx context.Context) error
 	WorkerTaskCount(ctx context.Context, workerID pgtype.Int4) (int64, error)
 	updateJobFailed(ctx context.Context, jobID int64) error
 }

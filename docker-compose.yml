@@ -42,7 +42,6 @@ services:
     build:
       context: .
       dockerfile: builds/images/packages/valkyrie.dockerfile
-    # image: valkyrie:0.0.1
     env_file:
       - .env
     depends_on:
@@ -67,6 +66,7 @@ services:
     # runtime: "runsc"
     networks:
       - valkyrie-network
+      - postgres-network
     profiles:
       - dev
       - production
@@ -76,7 +76,6 @@ services:
     build:
       context: .
       dockerfile: builds/images/packages/valkyrie.dockerfile
-    # image: valkyrie:0.0.1
     env_file:
       - .env
     depends_on:
@@ -96,6 +95,9 @@ services:
       - POSTGRES_HOST=postgres
     networks:
       - valkyrie-network
+      - postgres-network
+      - nixery-network
+      - proxy-network
     # runtime: "runsc"
     profiles:
       - dev
@@ -123,12 +125,23 @@ services:
       retries: 3
       start_period: "21s"
     networks:
-      - valkyrie-network
+      - proxy-network
     profiles:
       - dev
       - production
       - staging
       - test-traefik
+  
+  nixery:
+    build: 
+      context: .
+      dockerfile: builds/images/nixery.dockerfile
+    env_file:
+      - .env
+    ports:
+      - 80
+    networks:
+      - nixery-network
   
   valkyrie-store-builder:
     build:
@@ -142,7 +155,7 @@ services:
         source: $HOME/.valkyrie/store/setup
         target: /tmp/setup
     profiles:
-      - setup
+      - sandbox-setup
   
   valkyrie-store:
     build:
@@ -176,9 +189,7 @@ services:
         source: $HOME/.valkyrie/store/setup
         target: /home/valnix/.config/
     profiles:
-      - dev
-      - production
-      - staging
+      - sandbox
 
   valkyrie-devpi:
     build:
@@ -201,9 +212,6 @@ services:
       - .env
     ports:
       - 5432:5432
-    labels:
-      traefik.http.routers.postgres.rule: "Host(`postgres.localhost`)"
-      traefik.enable: "true"
     healthcheck:
       test:
         [
@@ -214,7 +222,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - valkyrie-network
+      - postgres-network
     depends_on:
       traefik-proxy:
         condition: service_started
@@ -286,3 +294,6 @@ networks:
   valkyrie-network:
     driver: bridge
     external: true
+  postgres-network:
+  nixery-network:
+  proxy-network:

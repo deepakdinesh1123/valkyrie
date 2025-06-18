@@ -21,14 +21,6 @@ type FetchFlakeRes interface {
 	fetchFlakeRes()
 }
 
-type FetchLanguagePackagesRes interface {
-	fetchLanguagePackagesRes()
-}
-
-type FetchSystemPackagesRes interface {
-	fetchSystemPackagesRes()
-}
-
 type GetAllExecutionJobsRes interface {
 	getAllExecutionJobsRes()
 }
@@ -79,16 +71,4 @@ type GetSandboxRes interface {
 
 type GetVersionRes interface {
 	getVersionRes()
-}
-
-type PackagesExistRes interface {
-	packagesExistRes()
-}
-
-type SearchLanguagePackagesRes interface {
-	searchLanguagePackagesRes()
-}
-
-type SearchSystemPackagesRes interface {
-	searchSystemPackagesRes()
 }

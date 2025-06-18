@@ -11,8 +11,6 @@ const (
 	DeleteExecutionJobOperation     OperationName = "DeleteExecutionJob"
 	ExecuteOperation                OperationName = "Execute"
 	FetchFlakeOperation             OperationName = "FetchFlake"
-	FetchLanguagePackagesOperation  OperationName = "FetchLanguagePackages"
-	FetchSystemPackagesOperation    OperationName = "FetchSystemPackages"
 	GetAllExecutionJobsOperation    OperationName = "GetAllExecutionJobs"
 	GetAllExecutionsOperation       OperationName = "GetAllExecutions"
 	GetAllLanguageVersionsOperation OperationName = "GetAllLanguageVersions"
@@ -27,7 +25,4 @@ const (
 	GetSandboxOperation             OperationName = "GetSandbox"
 	GetVersionOperation             OperationName = "GetVersion"
 	HealthOperation                 OperationName = "Health"
-	PackagesExistOperation          OperationName = "PackagesExist"
-	SearchLanguagePackagesOperation OperationName = "SearchLanguagePackages"
-	SearchSystemPackagesOperation   OperationName = "SearchSystemPackages"
 )

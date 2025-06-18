@@ -76,7 +76,7 @@ func (ke *K8sExecutor) Execute(ctx context.Context, wg *concurrency.SafeWaitGrou
 		return
 	}
 
-	script, spec, err := execution.ConvertExecSpecToNixScript(execCtx, &execReq, ke.queries)
+	script, spec, err := execution.ConvertExecSpecToScript(execCtx, &execReq, ke.queries)
 	if err != nil {
 		ke.handleFailure(job, fmt.Errorf("error converting exec spec to nix script: %w", err))
 		return

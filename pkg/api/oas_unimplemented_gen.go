@@ -58,24 +58,6 @@ func (UnimplementedHandler) FetchFlake(ctx context.Context, params FetchFlakePar
 	return r, ht.ErrNotImplemented
 }
 
-// FetchLanguagePackages implements FetchLanguagePackages operation.
-//
-// Initialize the search results content with a default set of language specific packages.
-//
-// GET /fetch/language
-func (UnimplementedHandler) FetchLanguagePackages(ctx context.Context, params FetchLanguagePackagesParams) (r FetchLanguagePackagesRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
-// FetchSystemPackages implements FetchSystemPackages operation.
-//
-// Initialize the search results content with a default set of system packages.
-//
-// GET /fetch/system
-func (UnimplementedHandler) FetchSystemPackages(ctx context.Context, params FetchSystemPackagesParams) (r FetchSystemPackagesRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
 // GetAllExecutionJobs implements getAllExecutionJobs operation.
 //
 // Get all execution jobs.
@@ -200,32 +182,4 @@ func (UnimplementedHandler) GetVersion(ctx context.Context, params GetVersionPar
 // GET /health
 func (UnimplementedHandler) Health(ctx context.Context) error {
 	return ht.ErrNotImplemented
-}
-
-// PackagesExist implements PackagesExist operation.
-//
-// Verify the package list is available for the language version while switching between language
-// versions.
-//
-// POST /packages/exist
-func (UnimplementedHandler) PackagesExist(ctx context.Context, req *PackageExistRequest, params PackagesExistParams) (r PackagesExistRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
-// SearchLanguagePackages implements SearchLanguagePackages operation.
-//
-// Search for language specific packages.
-//
-// GET /search/language
-func (UnimplementedHandler) SearchLanguagePackages(ctx context.Context, params SearchLanguagePackagesParams) (r SearchLanguagePackagesRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
-// SearchSystemPackages implements SearchSystemPackages operation.
-//
-// Search for system packages.
-//
-// GET /search/system
-func (UnimplementedHandler) SearchSystemPackages(ctx context.Context, params SearchSystemPackagesParams) (r SearchSystemPackagesRes, _ error) {
-	return r, ht.ErrNotImplemented
 }

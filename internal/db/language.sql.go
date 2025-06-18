@@ -38,18 +38,17 @@ func (q *Queries) CreateLanguage(ctx context.Context, arg CreateLanguageParams) 
 
 const createLanguageVersion = `-- name: CreateLanguageVersion :one
 INSERT INTO language_versions (
-    language_id, version, nix_package_name, template, search_query, default_version
+    language_id, version, nix_package_name, template,  default_version
 ) 
-VALUES ($1, $2, $3, $4, $5, $6) 
+VALUES ($1, $2, $3, $4, $5) 
 RETURNING id
 `
 
 type CreateLanguageVersionParams struct {
 	LanguageID     int64       `db:"language_id" json:"language_id"`
 	Version        string      `db:"version" json:"version"`
-	NixPackageName string      `db:"nix_package_name" json:"nix_package_name"`
+	NixPackageName pgtype.Text `db:"nix_package_name" json:"nix_package_name"`
 	Template       pgtype.Text `db:"template" json:"template"`
-	SearchQuery    string      `db:"search_query" json:"search_query"`
 	DefaultVersion bool        `db:"default_version" json:"default_version"`
 }
 
@@ -59,7 +58,6 @@ func (q *Queries) CreateLanguageVersion(ctx context.Context, arg CreateLanguageV
 		arg.Version,
 		arg.NixPackageName,
 		arg.Template,
-		arg.SearchQuery,
 		arg.DefaultVersion,
 	)
 	var id int64
@@ -106,26 +104,34 @@ func (q *Queries) DeleteLanguageVersion(ctx context.Context, id int64) (int64, e
 }
 
 const getAllLanguageVersions = `-- name: GetAllLanguageVersions :many
-SELECT id, language_id, version, nix_package_name, template, search_query, default_version
+SELECT id, language_id, version, nix_package_name, template,  default_version
 FROM language_versions
 `
 
-func (q *Queries) GetAllLanguageVersions(ctx context.Context) ([]LanguageVersion, error) {
+type GetAllLanguageVersionsRow struct {
+	ID             int64       `db:"id" json:"id"`
+	LanguageID     int64       `db:"language_id" json:"language_id"`
+	Version        string      `db:"version" json:"version"`
+	NixPackageName pgtype.Text `db:"nix_package_name" json:"nix_package_name"`
+	Template       pgtype.Text `db:"template" json:"template"`
+	DefaultVersion bool        `db:"default_version" json:"default_version"`
+}
+
+func (q *Queries) GetAllLanguageVersions(ctx context.Context) ([]GetAllLanguageVersionsRow, error) {
 	rows, err := q.db.Query(ctx, getAllLanguageVersions)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []LanguageVersion
+	var items []GetAllLanguageVersionsRow
 	for rows.Next() {
-		var i LanguageVersion
+		var i GetAllLanguageVersionsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.LanguageID,
 			&i.Version,
 			&i.NixPackageName,
 			&i.Template,
-			&i.SearchQuery,
 			&i.DefaultVersion,
 		); err != nil {
 			return nil, err
@@ -139,7 +145,7 @@ func (q *Queries) GetAllLanguageVersions(ctx context.Context) ([]LanguageVersion
 }
 
 const getAllLanguages = `-- name: GetAllLanguages :many
-SELECT id, name, extension, monaco_language, template, default_code
+SELECT id, name, extension, monaco_language, template, is_disabled, default_code
 FROM languages
 `
 
@@ -158,6 +164,7 @@ func (q *Queries) GetAllLanguages(ctx context.Context) ([]Language, error) {
 			&i.Extension,
 			&i.MonacoLanguage,
 			&i.Template,
+			&i.IsDisabled,
 			&i.DefaultCode,
 		); err != nil {
 			return nil, err
@@ -171,7 +178,7 @@ func (q *Queries) GetAllLanguages(ctx context.Context) ([]Language, error) {
 }
 
 const getDefaultVersion = `-- name: GetDefaultVersion :one
-SELECT id, language_id, version, nix_package_name, template, search_query, default_version FROM language_versions WHERE default_version = true AND language_id = $1
+SELECT id, language_id, version, nix_package_name, template, default_version, is_disabled FROM language_versions WHERE default_version = true AND language_id = $1
 `
 
 func (q *Queries) GetDefaultVersion(ctx context.Context, languageID int64) (LanguageVersion, error) {
@@ -183,14 +190,14 @@ func (q *Queries) GetDefaultVersion(ctx context.Context, languageID int64) (Lang
 		&i.Version,
 		&i.NixPackageName,
 		&i.Template,
-		&i.SearchQuery,
 		&i.DefaultVersion,
+		&i.IsDisabled,
 	)
 	return i, err
 }
 
 const getLanguageByID = `-- name: GetLanguageByID :one
-SELECT id, name, extension, monaco_language, template, default_code
+SELECT id, name, extension, monaco_language, template, is_disabled, default_code
 FROM languages 
 WHERE id = $1
 `
@@ -204,13 +211,14 @@ func (q *Queries) GetLanguageByID(ctx context.Context, id int64) (Language, erro
 		&i.Extension,
 		&i.MonacoLanguage,
 		&i.Template,
+		&i.IsDisabled,
 		&i.DefaultCode,
 	)
 	return i, err
 }
 
 const getLanguageByName = `-- name: GetLanguageByName :one
-SELECT id, name, extension, monaco_language, template, default_code from languages WHERE name = $1
+SELECT id, name, extension, monaco_language, template, is_disabled, default_code from languages WHERE name = $1
 `
 
 func (q *Queries) GetLanguageByName(ctx context.Context, name string) (Language, error) {
@@ -222,13 +230,14 @@ func (q *Queries) GetLanguageByName(ctx context.Context, name string) (Language,
 		&i.Extension,
 		&i.MonacoLanguage,
 		&i.Template,
+		&i.IsDisabled,
 		&i.DefaultCode,
 	)
 	return i, err
 }
 
 const getLanguageVersion = `-- name: GetLanguageVersion :one
-SELECT id, language_id, version, nix_package_name, template, search_query, default_version 
+SELECT id, language_id, version, nix_package_name, template, default_version, is_disabled
 FROM language_versions 
 WHERE language_id = $1 AND version = $2
 `
@@ -247,55 +256,71 @@ func (q *Queries) GetLanguageVersion(ctx context.Context, arg GetLanguageVersion
 		&i.Version,
 		&i.NixPackageName,
 		&i.Template,
-		&i.SearchQuery,
 		&i.DefaultVersion,
+		&i.IsDisabled,
 	)
 	return i, err
 }
 
 const getLanguageVersionByID = `-- name: GetLanguageVersionByID :one
-SELECT id, language_id, version, nix_package_name, template, search_query, default_version 
+SELECT id, language_id, version, nix_package_name, template,  default_version 
 FROM language_versions 
 WHERE id = $1
 `
 
-func (q *Queries) GetLanguageVersionByID(ctx context.Context, id int64) (LanguageVersion, error) {
+type GetLanguageVersionByIDRow struct {
+	ID             int64       `db:"id" json:"id"`
+	LanguageID     int64       `db:"language_id" json:"language_id"`
+	Version        string      `db:"version" json:"version"`
+	NixPackageName pgtype.Text `db:"nix_package_name" json:"nix_package_name"`
+	Template       pgtype.Text `db:"template" json:"template"`
+	DefaultVersion bool        `db:"default_version" json:"default_version"`
+}
+
+func (q *Queries) GetLanguageVersionByID(ctx context.Context, id int64) (GetLanguageVersionByIDRow, error) {
 	row := q.db.QueryRow(ctx, getLanguageVersionByID, id)
-	var i LanguageVersion
+	var i GetLanguageVersionByIDRow
 	err := row.Scan(
 		&i.ID,
 		&i.LanguageID,
 		&i.Version,
 		&i.NixPackageName,
 		&i.Template,
-		&i.SearchQuery,
 		&i.DefaultVersion,
 	)
 	return i, err
 }
 
 const getVersionsByLanguageID = `-- name: GetVersionsByLanguageID :many
-SELECT id, language_id, version, nix_package_name, template, search_query, default_version 
+SELECT id, language_id, version, nix_package_name, template,  default_version 
 FROM language_versions 
 WHERE language_id = $1
 `
 
-func (q *Queries) GetVersionsByLanguageID(ctx context.Context, languageID int64) ([]LanguageVersion, error) {
+type GetVersionsByLanguageIDRow struct {
+	ID             int64       `db:"id" json:"id"`
+	LanguageID     int64       `db:"language_id" json:"language_id"`
+	Version        string      `db:"version" json:"version"`
+	NixPackageName pgtype.Text `db:"nix_package_name" json:"nix_package_name"`
+	Template       pgtype.Text `db:"template" json:"template"`
+	DefaultVersion bool        `db:"default_version" json:"default_version"`
+}
+
+func (q *Queries) GetVersionsByLanguageID(ctx context.Context, languageID int64) ([]GetVersionsByLanguageIDRow, error) {
 	rows, err := q.db.Query(ctx, getVersionsByLanguageID, languageID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []LanguageVersion
+	var items []GetVersionsByLanguageIDRow
 	for rows.Next() {
-		var i LanguageVersion
+		var i GetVersionsByLanguageIDRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.LanguageID,
 			&i.Version,
 			&i.NixPackageName,
 			&i.Template,
-			&i.SearchQuery,
 			&i.DefaultVersion,
 		); err != nil {
 			return nil, err
@@ -311,9 +336,8 @@ func (q *Queries) GetVersionsByLanguageID(ctx context.Context, languageID int64)
 type InsertLanguageVersionsParams struct {
 	LanguageID     int64       `db:"language_id" json:"language_id"`
 	Version        string      `db:"version" json:"version"`
-	NixPackageName string      `db:"nix_package_name" json:"nix_package_name"`
+	NixPackageName pgtype.Text `db:"nix_package_name" json:"nix_package_name"`
 	Template       pgtype.Text `db:"template" json:"template"`
-	SearchQuery    string      `db:"search_query" json:"search_query"`
 	DefaultVersion bool        `db:"default_version" json:"default_version"`
 }
 
@@ -373,7 +397,7 @@ func (q *Queries) UpdateLanguage(ctx context.Context, arg UpdateLanguageParams) 
 
 const updateLanguageVersion = `-- name: UpdateLanguageVersion :one
 UPDATE language_versions 
-SET language_id = $2, nix_package_name = $3, template = $4, search_query = $5, version = $6, default_version = $7
+SET language_id = $2, nix_package_name = $3, template = $4, version = $5, default_version = $6
 WHERE id = $1 
 returning id
 `
@@ -381,9 +405,8 @@ returning id
 type UpdateLanguageVersionParams struct {
 	ID             int64       `db:"id" json:"id"`
 	LanguageID     int64       `db:"language_id" json:"language_id"`
-	NixPackageName string      `db:"nix_package_name" json:"nix_package_name"`
+	NixPackageName pgtype.Text `db:"nix_package_name" json:"nix_package_name"`
 	Template       pgtype.Text `db:"template" json:"template"`
-	SearchQuery    string      `db:"search_query" json:"search_query"`
 	Version        string      `db:"version" json:"version"`
 	DefaultVersion bool        `db:"default_version" json:"default_version"`
 }
@@ -394,7 +417,6 @@ func (q *Queries) UpdateLanguageVersion(ctx context.Context, arg UpdateLanguageV
 		arg.LanguageID,
 		arg.NixPackageName,
 		arg.Template,
-		arg.SearchQuery,
 		arg.Version,
 		arg.DefaultVersion,
 	)

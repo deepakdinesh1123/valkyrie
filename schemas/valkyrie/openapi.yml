@@ -1,6 +1,6 @@
-openapi: 3.0.2
+openapi: 3.1.1
 info:
-  title: API Title
+  title: Valkyrie
   version: 0.0.1
   license:
     name: MIT
@@ -26,16 +26,6 @@ paths:
     $ref: paths/version.yml
   /execution/config:
     $ref: paths/execution_config.yml
-  /fetch/system:
-    $ref: paths/fetch_system.yml
-  /search/system:
-    $ref: paths/search_system.yml
-  /fetch/language:
-    $ref: paths/fetch_language.yml
-  /search/language:
-    $ref: paths/search_language.yml
-  /packages/exist:
-    $ref: paths/packages_exist.yml
   /languages/{id}/versions:
     $ref: paths/languages_{id}_versions.yml
   /languages:

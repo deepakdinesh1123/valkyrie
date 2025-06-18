@@ -59,7 +59,7 @@ func (d *DockerProvider) WriteFiles(ctx context.Context, containerID string, pre
 	if err != nil {
 		return err
 	}
-	script, spec, err := execution.ConvertExecSpecToNixScript(ctx, &execReq, d.queries)
+	script, spec, err := execution.ConvertExecSpecToScript(ctx, &execReq, d.queries)
 	if err != nil {
 		return fmt.Errorf("error writing files: %s", err)
 	}

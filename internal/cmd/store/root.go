@@ -16,5 +16,4 @@ var StoreCmd = &cobra.Command{
 
 func init() {
 	StoreCmd.AddCommand(GenerateCmd)
-	StoreCmd.AddCommand(RealiseCmd)
 }

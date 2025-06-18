@@ -1,15 +1,24 @@
-nix_channel: 24.11
-
 languages:
+  - name: generic
+    extension: none
+    versions:
+      - default: true
+
   - name: python
     extension: py
     monacoLanguage: python
     versions:
-      - nixPackage: "python312"
-        searchQuery: "python312Packages"
+      - nixPackage: "python314"
         default: true
+        version: "3.14"
+      - nixPackage: "python313"
+        version: "3.13"
+      - nixPackage: "python312Full"
+        version: "3.12"
       - nixPackage: "python311"
-        searchQuery: "python311Packages"
+        version: "3.11"
+      - nixPackage: "python310"
+        version: "3.10"
     template: |
       {{ define "LangSetup" }}
       {{- if .IsFlake -}}
@@ -20,7 +29,7 @@ languages:
       {{- end -}}
       {{ end }}
 
-      {{  define "execute" }} uv run {{- range .LanguageDependencies }} --with "{{.}}" {{ end }} --index {{ .PkgIndex }} main.py {{ end }}
+      {{  define "execute" }} uv run {{- range .LanguageDependencies }} --with "{{.}}" {{ end }} {{- if not .IsFlake }} --index {{ .PkgIndex }} {{- end }} main.py {{ end }}
     defaultCode: |
       print("Hello World")
 
@@ -28,8 +37,11 @@ languages:
     extension: go
     monacoLanguage: go
     versions:
-      - nixPackage: "go_1_22"
-        searchQuery: "goPackages"
+      - nixPackage: "go"
+        default: true
+        version: "1.24.3"
+      - nixPackage: "go_1_23"
+        version: "1.23.9"
     template: |
       {{ define "compile" }} go build main.go {{ .CompilerArgs }}{{ end }}
       {{ define "execute" }} ./main {{ end }}
@@ -47,7 +59,7 @@ languages:
     versions:
       - nixPackage: "bash"
         default: true
-        searchQuery: "bashPackages"
+        version: "5.2"
     template: |
       {{ define "execute" }} bash main.bash {{ end }}
     defaultCode: |
@@ -59,7 +71,7 @@ languages:
     versions:
       - nixPackage: "bun"
         default: true
-        searchQuery: "bunPackages"
+        version: "1.2.14"
     template: |
       {{ define "execute" }} bun run main.js {{ end }}
     defaultCode: |
@@ -71,7 +83,7 @@ languages:
     versions:
       - nixPackage: "deno"
         default: true
-        searchQuery: "deno"
+        version: "2.3.5"
     template: |
       {{ define "execute" }} deno run main.ts {{ end }}
     defaultCode: |
@@ -81,21 +93,17 @@ languages:
     extension: js
     monacoLanguage: javascript
     versions:
+      - nixPackage: "nodejs_24"
+        version: "24.1.0"
       - nixPackage: "nodejs_22"
-        searchQuery: "nodePackages"
+        version: "22.14.0"
       - nixPackage: "nodejs_20"
-        searchQuery: "nodePackages"
-      - nixPackage: "nodejs_18"
-        searchQuery: "nodePackages"
-      - nixPackage: "nodejs_23"
         default: true
-        searchQuery: "nodePackages"
+        version: "20.19.2"
     template: |
       {{ define "execute" }} node main.js {{ end }}
     defaultCode: |
       console.log("Hello World!");
-    deps:
-      - lodash
     
   - name: rust
     extension: rs
@@ -103,7 +111,7 @@ languages:
     versions:
       - nixPackage: "rustc"
         default: true
-        searchQuery: "rust"
+        version: "1.86.0"
     template: |
       {{ define "compile" }} rustc main.rs {{ .CompilerArgs }} {{ end }} 
       {{ define "execute" }} ./main {{ end }}
@@ -118,7 +126,7 @@ languages:
     versions:
       - nixPackage: "sqlite"
         default: true
-        searchQuery: "sql"
+        version: "3.48.0"
     template: |
       {{ define "execute" }} sqlite3 sample.db < main.sql {{ end }}
     defaultCode: |
@@ -127,21 +135,3 @@ languages:
           name VARCHAR(100),
           salary DECIMAL(10, 2)
       );
-
-packages:
-  - jq
-  - ffmpeg
-  - git
-  - gnumake
-  - gnused
-  - gnutar
-  - gzip
-  - curl
-  - wget
-  - bzip2
-  - sqlite
-  - gcc14
-  - postgresql
-  - vim
-  - gnupatch
-  - perl

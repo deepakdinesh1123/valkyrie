@@ -64,7 +64,7 @@ func (ce *ContainerExecutor) Execute(ctx context.Context, wg *concurrency.SafeWa
 	}
 
 	var timeout int
-	if job.TimeOut.Int32 > 0 { // By default, timeout is set to -1
+	if job.TimeOut.Int32 > 0 {
 		timeout = int(job.TimeOut.Int32)
 	} else if job.TimeOut.Int32 == 0 {
 		timeout = 0

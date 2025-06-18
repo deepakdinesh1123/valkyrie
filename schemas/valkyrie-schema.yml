@@ -392,206 +392,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /fetch/system:
-    get:
-      summary: Fetch inital list of available system packages
-      description: Initialize the search results content with a default set of system packages
-      operationId: FetchSystemPackages
-      parameters:
-        - $ref: '#/components/parameters/AuthHeader'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - packages
-                properties:
-                  packages:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Package'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-  /search/system:
-    get:
-      summary: Search for system packages
-      description: Search for system packages
-      operationId: SearchSystemPackages
-      parameters:
-        - $ref: '#/components/parameters/AuthHeader'
-        - $ref: '#/components/parameters/SearchString'
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - packages
-                properties:
-                  packages:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Package'
-        '400':
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-  /fetch/language:
-    get:
-      summary: Fetch inital list of available language packages
-      description: Initialize the search results content with a default set of language specific packages
-      operationId: FetchLanguagePackages
-      parameters:
-        - $ref: '#/components/parameters/AuthHeader'
-        - $ref: '#/components/parameters/Language'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - packages
-                properties:
-                  packages:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Package'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-  /search/language:
-    get:
-      summary: Search for language specific packages
-      description: Search for language specific packages
-      operationId: SearchLanguagePackages
-      parameters:
-        - $ref: '#/components/parameters/AuthHeader'
-        - $ref: '#/components/parameters/Language'
-        - $ref: '#/components/parameters/SearchString'
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - packages
-                properties:
-                  packages:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Package'
-        '400':
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-  /packages/exist:
-    post:
-      summary: Verify package list is available.
-      description: Verify the package list is available for the language version while switching between language versions.
-      operationId: PackagesExist
-      parameters:
-        - $ref: '#/components/parameters/AuthHeader'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PackageExistRequest'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - exists
-                properties:
-                  exists:
-                    type: boolean
-                    description: Indicate all packages' existance for given language
-                    example: false
-                  nonExistingPackages:
-                    type: array
-                    description: List of packages that do not exist for the language
-                    items:
-                      type: string
-                    example:
-                      - nonexistent-package
-        '400':
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
   /languages/{id}/versions:
     get:
       summary: Get all language versions
@@ -938,20 +738,6 @@ components:
         type: integer
         format: int64
         default: 10
-    SearchString:
-      name: searchString
-      in: query
-      description: The string to be searched.
-      required: true
-      schema:
-        type: string
-    Language:
-      name: language
-      in: query
-      description: The language for which the package is searched.
-      required: true
-      schema:
-        type: string
   schemas:
     EnvironmentVariable:
       type: object
@@ -986,7 +772,7 @@ components:
           type: string
         language:
           type: string
-          default: bash
+          default: generic
         version:
           type: string
         max_retries:
@@ -996,7 +782,7 @@ components:
         timeout:
           type: integer
           format: int32
-          default: -1
+          default: 180
         cmdLineArgs:
           type: string
         compilerArgs:
@@ -1007,6 +793,8 @@ components:
           type: string
           format: byte
         input:
+          type: string
+        extension:
           type: string
     Error:
       type: object
@@ -1123,37 +911,6 @@ components:
         SYSTEM_PROVIDER_CLEAN_UP:
           type: boolean
           description: Represents whether to clean up directories created by the system provider.
-    Package:
-      type: object
-      required:
-        - name
-        - version
-      properties:
-        name:
-          type: string
-          description: Name of the package
-        version:
-          type: string
-          description: Version of the package
-    PackageExistRequest:
-      type: object
-      required:
-        - language
-        - packages
-      properties:
-        language:
-          type: string
-          description: The language to check the packages against
-          example: python311Packages
-        packages:
-          type: array
-          description: List of packages to verify.
-          items:
-            type: string
-          example:
-            - requests
-            - numpy
-            - nonexistent-pkg
     LanguageVersion:
       type: object
       required:

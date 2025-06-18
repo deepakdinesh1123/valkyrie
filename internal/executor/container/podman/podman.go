@@ -24,14 +24,13 @@ import (
 )
 
 type PodmanClient struct {
-	connection context.Context
-	queries    db.Store
-	envConfig  *config.EnvConfig
-	workerId   int32
-	logger     *zerolog.Logger
-	tp         trace.TracerProvider
-	mp         metric.MeterProvider
-	// user          string
+	connection    context.Context
+	queries       db.Store
+	envConfig     *config.EnvConfig
+	workerId      int32
+	logger        *zerolog.Logger
+	tp            trace.TracerProvider
+	mp            metric.MeterProvider
 	containerPool *puddle.Pool[pool.Container]
 }
 
@@ -57,7 +56,7 @@ func (p *PodmanClient) WriteFiles(ctx context.Context, containerID string, prepD
 	if err != nil {
 		return err
 	}
-	script, spec, err := execution.ConvertExecSpecToNixScript(ctx, &execReq, p.queries)
+	script, spec, err := execution.ConvertExecSpecToScript(ctx, &execReq, p.queries)
 	if err != nil {
 		return fmt.Errorf("error writing files: %s", err)
 	}

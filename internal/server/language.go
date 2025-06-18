@@ -62,9 +62,8 @@ func (s *ValkyrieServer) GetAllLanguageVersions(ctx context.Context, params api.
 			ID:             version.ID,
 			LanguageID:     version.LanguageID,
 			Version:        version.Version,
-			NixPackageName: version.NixPackageName,
+			NixPackageName: version.NixPackageName.String,
 			Template:       version.Template.String,
-			SearchQuery:    version.SearchQuery,
 			DefaultVersion: version.DefaultVersion,
 		})
 	}
@@ -125,9 +124,8 @@ func (s *ValkyrieServer) GetLanguageVersionById(ctx context.Context, params api.
 		ID:             version.ID,
 		LanguageID:     version.LanguageID,
 		Version:        version.Version,
-		NixPackageName: version.NixPackageName,
+		NixPackageName: version.NixPackageName.String,
 		Template:       version.Template.String,
-		SearchQuery:    version.SearchQuery,
 		DefaultVersion: version.DefaultVersion,
 	}
 
@@ -159,9 +157,8 @@ func (s *ValkyrieServer) GetAllVersions(ctx context.Context, params api.GetAllVe
 			ID:             version.ID,
 			LanguageID:     version.LanguageID,
 			Version:        version.Version,
-			NixPackageName: version.NixPackageName,
+			NixPackageName: version.NixPackageName.String,
 			Template:       version.Template.String,
-			SearchQuery:    version.SearchQuery,
 			DefaultVersion: version.DefaultVersion,
 		})
 	}

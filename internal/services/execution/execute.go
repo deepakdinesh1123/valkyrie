@@ -3,7 +3,6 @@ package execution
 type ExecutionRequest struct {
 	Flake                string
 	Code                 string
-	LangNixPkg           string
 	Language             string
 	LangVersion          int64
 	Template             string
@@ -16,8 +15,8 @@ type ExecutionRequest struct {
 	Setup                string
 	SystemSetup          string
 	PkgIndex             string
-
-	// internal variables used for converting this to flake or script
-	IsFlake    bool
-	ScriptName string
+	Extension            string
+	IsFlake              bool
+	ScriptName           string
+	NIXPKGS_REV          string
 }

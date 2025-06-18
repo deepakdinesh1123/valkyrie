@@ -1,15 +1,3 @@
-create sequence packages_id_seq as bigint;
-
-create table if not exists packages (
-    package_id bigint primary key default nextval('packages_id_seq'),
-    name text not null,
-    version text not null,
-    pkgType text not null,
-    language text,
-    store_path text,
-    tsv_search TSVECTOR
-);
-
 create sequence languages_id_seq as bigint;
 
 CREATE TABLE languages (
@@ -18,25 +6,42 @@ CREATE TABLE languages (
     extension TEXT NOT NULL,                    
     monaco_language TEXT NOT NULL,
     template TEXT NOT NULL,
+    is_disabled BOOLEAN NOT NULL DEFAULT false,
     default_code TEXT NOT NULL                    
 );
 
 create sequence language_versions_id_seq as bigint;
 
+INSERT INTO languages (name, extension, monaco_language, template, default_code) VALUES (
+    'generic',
+    'none',
+    'plaintext',
+    ' ',
+    ' '
+);
+
 CREATE TABLE language_versions (
     id bigint PRIMARY KEY DEFAULT nextval('language_versions_id_seq'),
     language_id BIGINT NOT NULL REFERENCES languages (id) ON DELETE CASCADE,
     version TEXT NOT NULL,
-    nix_package_name TEXT NOT NULL,             
-    template TEXT,                                                 
-    search_query TEXT NOT NULL, 
-    default_version BOOLEAN NOT NULL DEFAULT false,                          
+    nix_package_name TEXT,            
+    template TEXT,
+    default_version BOOLEAN NOT NULL DEFAULT false,
+    is_disabled BOOLEAN NOT NULL DEFAULT false,           
     UNIQUE (language_id, nix_package_name)               
 );
 
 CREATE UNIQUE INDEX unique_default_version_per_language 
 ON language_versions (language_id) 
 WHERE default_version = true;
+
+INSERT INTO language_versions (language_id, version, nix_package_name, template, default_version) VALUES (
+    (SELECT id FROM languages WHERE name = 'generic'),
+    '0.0.1',
+    NULL,
+    ' ',
+    TRUE
+);
 
 create sequence exec_request_id_seq as int;
 
@@ -55,6 +60,7 @@ create table exec_request (
     setup text,
     system_setup text,
     pkg_index text,
+    extension text,
     language_version BIGINT NOT NULL REFERENCES language_versions(id) ON DELETE SET NULL
 );
 

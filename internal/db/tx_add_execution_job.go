@@ -26,6 +26,7 @@ type AddJobTxParams struct {
 	LangVersion          int64
 	SystemSetup          string
 	PkgIndex             string
+	Extension            string
 }
 
 type AddJobTxResult struct {
@@ -56,6 +57,7 @@ func (s *SQLStore) AddExecJobTx(ctx context.Context, arg AddJobTxParams) (AddJob
 					Input:                pgtype.Text{String: arg.Input, Valid: true},
 					SystemSetup:          pgtype.Text{String: arg.SystemSetup, Valid: true},
 					PkgIndex:             pgtype.Text{String: arg.PkgIndex, Valid: true},
+					Extension:            pgtype.Text{String: arg.Extension, Valid: true},
 				})
 				if err != nil {
 					return err

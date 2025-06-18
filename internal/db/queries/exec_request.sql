@@ -14,10 +14,11 @@ insert into exec_request
         setup,
         language_version,
         system_setup,
-        pkg_index
+        pkg_index,
+        extension
     )
 values
-    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
 returning id;
 
 -- name: GetExecRequest :one

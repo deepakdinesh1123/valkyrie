@@ -435,6 +435,7 @@ type ExecutionRequest struct {
 	Command      OptString                   `json:"command"`
 	Files        []byte                      `json:"files"`
 	Input        OptString                   `json:"input"`
+	Extension    OptString                   `json:"extension"`
 }
 
 // GetEnvironment returns the value of Environment.
@@ -492,6 +493,11 @@ func (s *ExecutionRequest) GetInput() OptString {
 	return s.Input
 }
 
+// GetExtension returns the value of Extension.
+func (s *ExecutionRequest) GetExtension() OptString {
+	return s.Extension
+}
+
 // SetEnvironment sets the value of Environment.
 func (s *ExecutionRequest) SetEnvironment(val OptExecutionEnvironmentSpec) {
 	s.Environment = val
@@ -545,6 +551,11 @@ func (s *ExecutionRequest) SetFiles(val []byte) {
 // SetInput sets the value of Input.
 func (s *ExecutionRequest) SetInput(val OptString) {
 	s.Input = val
+}
+
+// SetExtension sets the value of Extension.
+func (s *ExecutionRequest) SetExtension(val OptString) {
+	s.Extension = val
 }
 
 // Merged schema.
@@ -689,62 +700,6 @@ func (s *FetchFlakeOK) SetFlake(val string) {
 }
 
 func (*FetchFlakeOK) fetchFlakeRes() {}
-
-type FetchLanguagePackagesBadRequest Error
-
-func (*FetchLanguagePackagesBadRequest) fetchLanguagePackagesRes() {}
-
-type FetchLanguagePackagesForbidden Error
-
-func (*FetchLanguagePackagesForbidden) fetchLanguagePackagesRes() {}
-
-type FetchLanguagePackagesInternalServerError Error
-
-func (*FetchLanguagePackagesInternalServerError) fetchLanguagePackagesRes() {}
-
-type FetchLanguagePackagesOK struct {
-	Packages []Package `json:"packages"`
-}
-
-// GetPackages returns the value of Packages.
-func (s *FetchLanguagePackagesOK) GetPackages() []Package {
-	return s.Packages
-}
-
-// SetPackages sets the value of Packages.
-func (s *FetchLanguagePackagesOK) SetPackages(val []Package) {
-	s.Packages = val
-}
-
-func (*FetchLanguagePackagesOK) fetchLanguagePackagesRes() {}
-
-type FetchSystemPackagesBadRequest Error
-
-func (*FetchSystemPackagesBadRequest) fetchSystemPackagesRes() {}
-
-type FetchSystemPackagesForbidden Error
-
-func (*FetchSystemPackagesForbidden) fetchSystemPackagesRes() {}
-
-type FetchSystemPackagesInternalServerError Error
-
-func (*FetchSystemPackagesInternalServerError) fetchSystemPackagesRes() {}
-
-type FetchSystemPackagesOK struct {
-	Packages []Package `json:"packages"`
-}
-
-// GetPackages returns the value of Packages.
-func (s *FetchSystemPackagesOK) GetPackages() []Package {
-	return s.Packages
-}
-
-// SetPackages sets the value of Packages.
-func (s *FetchSystemPackagesOK) SetPackages(val []Package) {
-	s.Packages = val
-}
-
-func (*FetchSystemPackagesOK) fetchSystemPackagesRes() {}
 
 type GetAllExecutionJobsBadRequest Error
 
@@ -1716,103 +1671,6 @@ func (o OptString) Or(d string) string {
 	return d
 }
 
-// Ref: #/components/schemas/Package
-type Package struct {
-	// Name of the package.
-	Name string `json:"name"`
-	// Version of the package.
-	Version string `json:"version"`
-}
-
-// GetName returns the value of Name.
-func (s *Package) GetName() string {
-	return s.Name
-}
-
-// GetVersion returns the value of Version.
-func (s *Package) GetVersion() string {
-	return s.Version
-}
-
-// SetName sets the value of Name.
-func (s *Package) SetName(val string) {
-	s.Name = val
-}
-
-// SetVersion sets the value of Version.
-func (s *Package) SetVersion(val string) {
-	s.Version = val
-}
-
-// Ref: #/components/schemas/PackageExistRequest
-type PackageExistRequest struct {
-	// The language to check the packages against.
-	Language string `json:"language"`
-	// List of packages to verify.
-	Packages []string `json:"packages"`
-}
-
-// GetLanguage returns the value of Language.
-func (s *PackageExistRequest) GetLanguage() string {
-	return s.Language
-}
-
-// GetPackages returns the value of Packages.
-func (s *PackageExistRequest) GetPackages() []string {
-	return s.Packages
-}
-
-// SetLanguage sets the value of Language.
-func (s *PackageExistRequest) SetLanguage(val string) {
-	s.Language = val
-}
-
-// SetPackages sets the value of Packages.
-func (s *PackageExistRequest) SetPackages(val []string) {
-	s.Packages = val
-}
-
-type PackagesExistBadRequest Error
-
-func (*PackagesExistBadRequest) packagesExistRes() {}
-
-type PackagesExistForbidden Error
-
-func (*PackagesExistForbidden) packagesExistRes() {}
-
-type PackagesExistInternalServerError Error
-
-func (*PackagesExistInternalServerError) packagesExistRes() {}
-
-type PackagesExistOK struct {
-	// Indicate all packages' existance for given language.
-	Exists bool `json:"exists"`
-	// List of packages that do not exist for the language.
-	NonExistingPackages []string `json:"nonExistingPackages"`
-}
-
-// GetExists returns the value of Exists.
-func (s *PackagesExistOK) GetExists() bool {
-	return s.Exists
-}
-
-// GetNonExistingPackages returns the value of NonExistingPackages.
-func (s *PackagesExistOK) GetNonExistingPackages() []string {
-	return s.NonExistingPackages
-}
-
-// SetExists sets the value of Exists.
-func (s *PackagesExistOK) SetExists(val bool) {
-	s.Exists = val
-}
-
-// SetNonExistingPackages sets the value of NonExistingPackages.
-func (s *PackagesExistOK) SetNonExistingPackages(val []string) {
-	s.NonExistingPackages = val
-}
-
-func (*PackagesExistOK) packagesExistRes() {}
-
 // Ref: #/components/schemas/PaginationResponse
 type PaginationResponse struct {
 	// Represents the total number of items.
@@ -1937,51 +1795,3 @@ func (s *SandboxState) SetSandboxId(val int64) {
 func (s *SandboxState) SetState(val string) {
 	s.State = val
 }
-
-type SearchLanguagePackagesBadRequest Error
-
-func (*SearchLanguagePackagesBadRequest) searchLanguagePackagesRes() {}
-
-type SearchLanguagePackagesForbidden Error
-
-func (*SearchLanguagePackagesForbidden) searchLanguagePackagesRes() {}
-
-type SearchLanguagePackagesOK struct {
-	Packages []Package `json:"packages"`
-}
-
-// GetPackages returns the value of Packages.
-func (s *SearchLanguagePackagesOK) GetPackages() []Package {
-	return s.Packages
-}
-
-// SetPackages sets the value of Packages.
-func (s *SearchLanguagePackagesOK) SetPackages(val []Package) {
-	s.Packages = val
-}
-
-func (*SearchLanguagePackagesOK) searchLanguagePackagesRes() {}
-
-type SearchSystemPackagesBadRequest Error
-
-func (*SearchSystemPackagesBadRequest) searchSystemPackagesRes() {}
-
-type SearchSystemPackagesForbidden Error
-
-func (*SearchSystemPackagesForbidden) searchSystemPackagesRes() {}
-
-type SearchSystemPackagesOK struct {
-	Packages []Package `json:"packages"`
-}
-
-// GetPackages returns the value of Packages.
-func (s *SearchSystemPackagesOK) GetPackages() []Package {
-	return s.Packages
-}
-
-// SetPackages sets the value of Packages.
-func (s *SearchSystemPackagesOK) SetPackages(val []Package) {
-	s.Packages = val
-}
-
-func (*SearchSystemPackagesOK) searchSystemPackagesRes() {}

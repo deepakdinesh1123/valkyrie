@@ -24,6 +24,7 @@ type ExecRequest struct {
 	Setup                pgtype.Text `db:"setup" json:"setup"`
 	SystemSetup          pgtype.Text `db:"system_setup" json:"system_setup"`
 	PkgIndex             pgtype.Text `db:"pkg_index" json:"pkg_index"`
+	Extension            pgtype.Text `db:"extension" json:"extension"`
 	LanguageVersion      int64       `db:"language_version" json:"language_version"`
 }
 
@@ -60,6 +61,7 @@ type Language struct {
 	Extension      string `db:"extension" json:"extension"`
 	MonacoLanguage string `db:"monaco_language" json:"monaco_language"`
 	Template       string `db:"template" json:"template"`
+	IsDisabled     bool   `db:"is_disabled" json:"is_disabled"`
 	DefaultCode    string `db:"default_code" json:"default_code"`
 }
 
@@ -67,20 +69,10 @@ type LanguageVersion struct {
 	ID             int64       `db:"id" json:"id"`
 	LanguageID     int64       `db:"language_id" json:"language_id"`
 	Version        string      `db:"version" json:"version"`
-	NixPackageName string      `db:"nix_package_name" json:"nix_package_name"`
+	NixPackageName pgtype.Text `db:"nix_package_name" json:"nix_package_name"`
 	Template       pgtype.Text `db:"template" json:"template"`
-	SearchQuery    string      `db:"search_query" json:"search_query"`
 	DefaultVersion bool        `db:"default_version" json:"default_version"`
-}
-
-type Package struct {
-	PackageID int64       `db:"package_id" json:"package_id"`
-	Name      string      `db:"name" json:"name"`
-	Version   string      `db:"version" json:"version"`
-	Pkgtype   string      `db:"pkgtype" json:"pkgtype"`
-	Language  pgtype.Text `db:"language" json:"language"`
-	StorePath pgtype.Text `db:"store_path" json:"store_path"`
-	TsvSearch interface{} `db:"tsv_search" json:"tsv_search"`
+	IsDisabled     bool        `db:"is_disabled" json:"is_disabled"`
 }
 
 type Sandbox struct {

@@ -6,7 +6,7 @@ properties:
     type: string
   language:
     type: string
-    default: bash
+    default: generic
   version:
     type: string
   max_retries:
@@ -16,7 +16,7 @@ properties:
   timeout:
     type: integer
     format: int32
-    default: -1
+    default: 180
   cmdLineArgs:
     type: string
   compilerArgs:
@@ -27,4 +27,6 @@ properties:
     type: string
     format: byte
   input:
+    type: string
+  extension:
     type: string
