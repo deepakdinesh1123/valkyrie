@@ -16,5 +16,6 @@ RUN mkdir -p /home/valnix/valkyrie
 
 COPY --from=builder --chown=valnix:valnix /nix /nix
 COPY --from=builder --chown=valnix:valnix /bin /bin
+COPY --from=builder --chown=valnix:valnix /share /share
 
 CMD ["/bin/sh", "-c", "sleep infinity"]
