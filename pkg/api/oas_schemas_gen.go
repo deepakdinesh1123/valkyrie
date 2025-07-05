@@ -269,7 +269,7 @@ type ExecutionConfig struct {
 	// Represents the buffer size for the worker.
 	WORKERBUFFERSIZE int32 `json:"WORKER_BUFFER_SIZE"`
 	// Represents the task timeout.
-	WORKERTASKTIMEOUT int `json:"WORKER_TASK_TIMEOUT"`
+	WORKERMAXTASKTIMEOUT int `json:"WORKER_MAX_TASK_TIMEOUT"`
 	// Represents the polling frequency for the worker in seconds.
 	WORKERPOLLFREQ int `json:"WORKER_POLL_FREQ"`
 	// Represents the runtime for the worker in seconds.
@@ -297,9 +297,9 @@ func (s *ExecutionConfig) GetWORKERBUFFERSIZE() int32 {
 	return s.WORKERBUFFERSIZE
 }
 
-// GetWORKERTASKTIMEOUT returns the value of WORKERTASKTIMEOUT.
-func (s *ExecutionConfig) GetWORKERTASKTIMEOUT() int {
-	return s.WORKERTASKTIMEOUT
+// GetWORKERMAXTASKTIMEOUT returns the value of WORKERMAXTASKTIMEOUT.
+func (s *ExecutionConfig) GetWORKERMAXTASKTIMEOUT() int {
+	return s.WORKERMAXTASKTIMEOUT
 }
 
 // GetWORKERPOLLFREQ returns the value of WORKERPOLLFREQ.
@@ -342,9 +342,9 @@ func (s *ExecutionConfig) SetWORKERBUFFERSIZE(val int32) {
 	s.WORKERBUFFERSIZE = val
 }
 
-// SetWORKERTASKTIMEOUT sets the value of WORKERTASKTIMEOUT.
-func (s *ExecutionConfig) SetWORKERTASKTIMEOUT(val int) {
-	s.WORKERTASKTIMEOUT = val
+// SetWORKERMAXTASKTIMEOUT sets the value of WORKERMAXTASKTIMEOUT.
+func (s *ExecutionConfig) SetWORKERMAXTASKTIMEOUT(val int) {
+	s.WORKERMAXTASKTIMEOUT = val
 }
 
 // SetWORKERPOLLFREQ sets the value of WORKERPOLLFREQ.
@@ -376,10 +376,11 @@ func (*ExecutionConfig) getExecutionConfigRes() {}
 
 // Ref: #/components/schemas/ExecutionEnvironmentSpec
 type ExecutionEnvironmentSpec struct {
-	EnvironmentVariables []EnvironmentVariable `json:"environment_variables"`
-	LanguageDependencies []string              `json:"languageDependencies"`
-	SystemDependencies   []string              `json:"systemDependencies"`
-	Setup                OptString             `json:"setup"`
+	EnvironmentVariables []EnvironmentVariable              `json:"environment_variables"`
+	LanguageDependencies []string                           `json:"languageDependencies"`
+	SystemDependencies   []string                           `json:"systemDependencies"`
+	Setup                OptString                          `json:"setup"`
+	Secrets              OptExecutionEnvironmentSpecSecrets `json:"secrets"`
 }
 
 // GetEnvironmentVariables returns the value of EnvironmentVariables.
@@ -402,6 +403,11 @@ func (s *ExecutionEnvironmentSpec) GetSetup() OptString {
 	return s.Setup
 }
 
+// GetSecrets returns the value of Secrets.
+func (s *ExecutionEnvironmentSpec) GetSecrets() OptExecutionEnvironmentSpecSecrets {
+	return s.Secrets
+}
+
 // SetEnvironmentVariables sets the value of EnvironmentVariables.
 func (s *ExecutionEnvironmentSpec) SetEnvironmentVariables(val []EnvironmentVariable) {
 	s.EnvironmentVariables = val
@@ -420,6 +426,22 @@ func (s *ExecutionEnvironmentSpec) SetSystemDependencies(val []string) {
 // SetSetup sets the value of Setup.
 func (s *ExecutionEnvironmentSpec) SetSetup(val OptString) {
 	s.Setup = val
+}
+
+// SetSecrets sets the value of Secrets.
+func (s *ExecutionEnvironmentSpec) SetSecrets(val OptExecutionEnvironmentSpecSecrets) {
+	s.Secrets = val
+}
+
+type ExecutionEnvironmentSpecSecrets map[string]string
+
+func (s *ExecutionEnvironmentSpecSecrets) init() ExecutionEnvironmentSpecSecrets {
+	m := *s
+	if m == nil {
+		m = map[string]string{}
+		*s = m
+	}
+	return m
 }
 
 // Ref: #/components/schemas/ExecutionRequest
@@ -1481,6 +1503,52 @@ func (o OptExecutionEnvironmentSpec) Get() (v ExecutionEnvironmentSpec, ok bool)
 
 // Or returns value if set, or given parameter if does not.
 func (o OptExecutionEnvironmentSpec) Or(d ExecutionEnvironmentSpec) ExecutionEnvironmentSpec {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptExecutionEnvironmentSpecSecrets returns new OptExecutionEnvironmentSpecSecrets with value set to v.
+func NewOptExecutionEnvironmentSpecSecrets(v ExecutionEnvironmentSpecSecrets) OptExecutionEnvironmentSpecSecrets {
+	return OptExecutionEnvironmentSpecSecrets{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptExecutionEnvironmentSpecSecrets is optional ExecutionEnvironmentSpecSecrets.
+type OptExecutionEnvironmentSpecSecrets struct {
+	Value ExecutionEnvironmentSpecSecrets
+	Set   bool
+}
+
+// IsSet returns true if OptExecutionEnvironmentSpecSecrets was set.
+func (o OptExecutionEnvironmentSpecSecrets) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptExecutionEnvironmentSpecSecrets) Reset() {
+	var v ExecutionEnvironmentSpecSecrets
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptExecutionEnvironmentSpecSecrets) SetTo(v ExecutionEnvironmentSpecSecrets) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptExecutionEnvironmentSpecSecrets) Get() (v ExecutionEnvironmentSpecSecrets, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptExecutionEnvironmentSpecSecrets) Or(d ExecutionEnvironmentSpecSecrets) ExecutionEnvironmentSpecSecrets {
 	if v, ok := o.Get(); ok {
 		return v
 	}

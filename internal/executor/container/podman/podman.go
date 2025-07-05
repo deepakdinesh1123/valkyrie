@@ -17,37 +17,34 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/pool"
 	"github.com/deepakdinesh1123/valkyrie/internal/services/execution"
 	"github.com/docker/docker/api/types/container"
-	"github.com/jackc/puddle/v2"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
 type PodmanClient struct {
-	connection    context.Context
-	queries       db.Store
-	envConfig     *config.EnvConfig
-	workerId      int32
-	logger        *zerolog.Logger
-	tp            trace.TracerProvider
-	mp            metric.MeterProvider
-	containerPool *puddle.Pool[pool.Container]
+	connection context.Context
+	queries    db.Store
+	envConfig  *config.EnvConfig
+	workerId   int32
+	logger     *zerolog.Logger
+	tp         trace.TracerProvider
+	mp         metric.MeterProvider
 }
 
-func GetPodmanClient(envConfig *config.EnvConfig, queries db.Store, workerId int32, tp trace.TracerProvider, mp metric.MeterProvider, logger *zerolog.Logger, containerPool *puddle.Pool[pool.Container]) (*PodmanClient, error) {
+func GetPodmanClient(envConfig *config.EnvConfig, queries db.Store, workerId int32, tp trace.TracerProvider, mp metric.MeterProvider, logger *zerolog.Logger) (*PodmanClient, error) {
 	connection := pool.GetPodmanConnection()
 	if connection == nil {
 		return nil, fmt.Errorf("could not get podman connection")
 	}
 	return &PodmanClient{
-		connection:    connection,
-		queries:       queries,
-		envConfig:     envConfig,
-		workerId:      workerId,
-		logger:        logger,
-		tp:            tp,
-		mp:            mp,
-		containerPool: containerPool,
+		connection: connection,
+		queries:    queries,
+		envConfig:  envConfig,
+		workerId:   workerId,
+		logger:     logger,
+		tp:         tp,
+		mp:         mp,
 	}, nil
 }
 
@@ -94,14 +91,24 @@ func (p *PodmanClient) WriteFiles(ctx context.Context, containerID string, prepD
 	return nil
 }
 
-func (p *PodmanClient) GetContainer(ctx context.Context) (*puddle.Resource[pool.Container], error) {
-	cont, err := p.containerPool.Acquire(ctx)
-	if err != nil {
-		p.logger.Err(err).Msg("Error when acquiring container")
-		return nil, err
-	}
-	go p.containerPool.CreateResource(ctx)
-	return cont, nil
+func (p *PodmanClient) GetContainer(ctx context.Context, execReq db.ExecRequest) (string, error) {
+	return "", nil
+}
+
+func (p *PodmanClient) CheckImageExists(ctx context.Context, imageName string) error {
+	return nil
+}
+
+func (p *PodmanClient) BuildImage(ctx context.Context, imageName string) (string, error) {
+	return "", nil
+}
+
+func (p *PodmanClient) DestroyContainer(ctx context.Context, containerId string) {
+
+}
+
+func (p *PodmanClient) Cleanup(ctx context.Context) {
+
 }
 
 func (p *PodmanClient) Execute(ctx context.Context, containerID string, command []string) (bool, string, error) {

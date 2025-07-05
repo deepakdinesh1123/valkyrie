@@ -48,7 +48,7 @@ func DockerExecConstructor(ctx context.Context) (Container, error) {
 	}
 	createResp, err := dClient.ContainerCreate(ctx, &container.Config{
 		Image:       envConfig.EXECUTION_IMAGE,
-		StopTimeout: &envConfig.WORKER_TASK_TIMEOUT,
+		StopTimeout: &envConfig.WORKER_MAX_TASK_TIMEOUT,
 		StopSignal:  "SIGKILL",
 	},
 		hostConfig,

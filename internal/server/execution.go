@@ -532,7 +532,6 @@ func (s *ValkyrieServer) GetExecutionConfig(ctx context.Context, params api.GetE
 	return &api.ExecutionConfig{
 		WORKERPROVIDER:    s.envConfig.RUNTIME,
 		WORKERCONCURRENCY: int32(s.envConfig.WORKER_CONCURRENCY),
-		WORKERTASKTIMEOUT: s.envConfig.WORKER_TASK_TIMEOUT,
 		WORKERPOLLFREQ:    s.envConfig.WORKER_POLL_FREQ,
 		WORKERRUNTIME:     s.envConfig.CONTAINER_RUNTIME,
 		LOGLEVEL:          s.envConfig.LOG_LEVEL,

@@ -7,7 +7,7 @@ RUN curl -L https://github.com/NixOS/nixpkgs/archive/${NIXPKGS_COMMIT}.tar.gz -o
     && mkdir /nixpkgs \
     && tar -xzf nixpkgs.tar.gz -C /nixpkgs --strip-components=1
 
-FROM deepakdinesh/nixery
+FROM deepakdinesh/nixery:ubuntu-25.05
 
 COPY --from=builder /nixpkgs /tmp/nixpkgs
 

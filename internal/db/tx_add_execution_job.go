@@ -27,6 +27,7 @@ type AddJobTxParams struct {
 	SystemSetup          string
 	PkgIndex             string
 	Extension            string
+	Secrets              []byte
 }
 
 type AddJobTxResult struct {

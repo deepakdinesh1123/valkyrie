@@ -31,19 +31,17 @@ type EnvConfig struct {
 	SANDBOX_HOSTNAME string `mapstructure:"SANDBOX_HOSTNAME"`
 
 	STORE_URL            string `mapstructure:"STORE_URL"`
-	STORE_IMAGE          string `mapstructure:"STORE_IMAGE"`
-	STORE_CONTAINER      string
 	SANDBOX_NIXPKGS_PATH string
 	SANDBOX_NIXPKGS_REV  string `mapstructure:"SANDBOX_NIXPKGS_REV"`
 
-	RUNTIME             string `mapstructure:"RUNTIME"`
-	CONTAINER_RUNTIME   string `mapstructure:"CONTAINER_RUNTIME"`
-	WORKER_CONCURRENCY  int32  `mapstructure:"WORKER_CONCURRENCY"`
-	HOT_CONTAINER       int    `mapstructure:"HOT_CONTAINER"`
-	WORKER_TASK_TIMEOUT int    `mapstructure:"WORKER_TASK_TIMEOUT"`
-	WORKER_POLL_FREQ    int    `mapstructure:"WORKER_POLL_FREQ"`
-	EXECUTION_IMAGE     string `mapstructure:"EXECUTION_IMAGE"`
-	MAX_RETRIES         int    `mapstructure:"MAX_RETRIES"`
+	RUNTIME                 string `mapstructure:"RUNTIME"`
+	CONTAINER_RUNTIME       string `mapstructure:"CONTAINER_RUNTIME"`
+	WORKER_CONCURRENCY      int32  `mapstructure:"WORKER_CONCURRENCY"`
+	HOT_CONTAINER           int    `mapstructure:"HOT_CONTAINER"`
+	WORKER_MAX_TASK_TIMEOUT int    `mapstructure:"WORKER_MAX_TASK_TIMEOUT"`
+	WORKER_POLL_FREQ        int    `mapstructure:"WORKER_POLL_FREQ"`
+	EXECUTION_IMAGE         string `mapstructure:"EXECUTION_IMAGE"`
+	MAX_RETRIES             int    `mapstructure:"MAX_RETRIES"`
 
 	WORKER_CONTAINER_MEMORY_LIMIT int64 `mapstructure:"WORKER_CONTAINER_MEMORY_LIMIT"`
 
@@ -62,8 +60,9 @@ type EnvConfig struct {
 
 	JOB_PRUNE_FREQ int `mapstructure:"JOB_PRUNE_FREQ"`
 
-	USER_TOKEN  string `mapstructure:"USER_TOKEN"`
-	ADMIN_TOKEN string `mapstructure:"ADMIN_TOKEN"`
+	USER_TOKEN     string `mapstructure:"USER_TOKEN"`
+	ADMIN_TOKEN    string `mapstructure:"ADMIN_TOKEN"`
+	ENCRYPTION_KEY string `mapstructure:"ENCRYPTION_KEY"`
 
 	SANDBOX_IMAGE string `mapstructure:"SANDBOX_IMAGE"`
 	BASE_DIR      string `mapstructure:"BASE_DIR"`
@@ -174,7 +173,7 @@ func GetEnvConfig() (*EnvConfig, error) {
 
 func setDefaults() {
 	viper.SetDefault("ENABLE_EXECUTION", true)
-	viper.SetDefault("ENABLE_SANDBOX", true)
+	viper.SetDefault("ENABLE_SANDBOX", false)
 
 	viper.SetDefault("POSTGRES_HOST", "localhost")
 	viper.SetDefault("POSTGRES_PORT", 5432)
@@ -195,9 +194,9 @@ func setDefaults() {
 	viper.SetDefault("RUNTIME", "docker")
 	viper.SetDefault("WORKER_CONCURRENCY", 10)
 	viper.SetDefault("HOT_CONTAINER", 1)
-	viper.SetDefault("WORKER_TASK_TIMEOUT", 120)
+	viper.SetDefault("WORKER_MAX_TASK_TIMEOUT", 180)
 	viper.SetDefault("WORKER_POLL_FREQ", 30)
-	viper.SetDefault("EXECUTION_IMAGE", "valkyrie-execution:0.0.1")
+	viper.SetDefault("EXECUTION_IMAGE", "alpine:3.22.0")
 	viper.SetDefault("MAX_RETRIES", 5)
 
 	viper.SetDefault("WORKER_CONTAINER_MEMORY_LIMIT", 500)
@@ -218,7 +217,7 @@ func setDefaults() {
 	viper.SetDefault("PY_INDEX", "http://valkyrie-devpi:3141")
 
 	viper.SetDefault("NIXERY_NIXPKGS_REV", "0ecd8222665efd7a9800ed278284849cf02363dd") // pragma: allowlist secret
-	viper.SetDefault("NIXERY_URL", "nixery")
+	viper.SetDefault("NIXERY_URL", "nixery.dev")
 
 	viper.SetDefault("CONTAINER_RUNTIME", "runc")
 

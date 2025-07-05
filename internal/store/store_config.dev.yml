@@ -20,15 +20,6 @@ languages:
       - nixPackage: "python310"
         version: "3.10"
     template: |
-      {{ define "LangSetup" }}
-      {{- if .IsFlake -}}
-        uv
-        {{- .LangNixPkg -}}
-      {{- else -}}
-        uv {{ .LangNixPkg }}
-      {{- end -}}
-      {{ end }}
-
       {{  define "execute" }} uv run {{- range .LanguageDependencies }} --with "{{.}}" {{ end }} {{- if not .IsFlake }} --index {{ .PkgIndex }} {{- end }} main.py {{ end }}
     defaultCode: |
       print("Hello World")
@@ -104,7 +95,7 @@ languages:
       {{ define "execute" }} node main.js {{ end }}
     defaultCode: |
       console.log("Hello World!");
-    
+
   - name: rust
     extension: rs
     monacoLanguage: rust
@@ -113,7 +104,7 @@ languages:
         default: true
         version: "1.86.0"
     template: |
-      {{ define "compile" }} rustc main.rs {{ .CompilerArgs }} {{ end }} 
+      {{ define "compile" }} rustc main.rs {{ .CompilerArgs }} {{ end }}
       {{ define "execute" }} ./main {{ end }}
     defaultCode: |
       fn main() {

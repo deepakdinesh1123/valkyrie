@@ -1156,8 +1156,8 @@ func (s *ExecutionConfig) encodeFields(e *jx.Encoder) {
 		e.Int32(s.WORKERBUFFERSIZE)
 	}
 	{
-		e.FieldStart("WORKER_TASK_TIMEOUT")
-		e.Int(s.WORKERTASKTIMEOUT)
+		e.FieldStart("WORKER_MAX_TASK_TIMEOUT")
+		e.Int(s.WORKERMAXTASKTIMEOUT)
 	}
 	{
 		e.FieldStart("WORKER_POLL_FREQ")
@@ -1189,7 +1189,7 @@ var jsonFieldsNameOfExecutionConfig = [9]string{
 	0: "WORKER_PROVIDER",
 	1: "WORKER_CONCURRENCY",
 	2: "WORKER_BUFFER_SIZE",
-	3: "WORKER_TASK_TIMEOUT",
+	3: "WORKER_MAX_TASK_TIMEOUT",
 	4: "WORKER_POLL_FREQ",
 	5: "WORKER_RUNTIME",
 	6: "LOG_LEVEL",
@@ -1242,17 +1242,17 @@ func (s *ExecutionConfig) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"WORKER_BUFFER_SIZE\"")
 			}
-		case "WORKER_TASK_TIMEOUT":
+		case "WORKER_MAX_TASK_TIMEOUT":
 			requiredBitSet[0] |= 1 << 3
 			if err := func() error {
 				v, err := d.Int()
-				s.WORKERTASKTIMEOUT = int(v)
+				s.WORKERMAXTASKTIMEOUT = int(v)
 				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"WORKER_TASK_TIMEOUT\"")
+				return errors.Wrap(err, "decode field \"WORKER_MAX_TASK_TIMEOUT\"")
 			}
 		case "WORKER_POLL_FREQ":
 			requiredBitSet[0] |= 1 << 4
@@ -1412,13 +1412,20 @@ func (s *ExecutionEnvironmentSpec) encodeFields(e *jx.Encoder) {
 			s.Setup.Encode(e)
 		}
 	}
+	{
+		if s.Secrets.Set {
+			e.FieldStart("secrets")
+			s.Secrets.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfExecutionEnvironmentSpec = [4]string{
+var jsonFieldsNameOfExecutionEnvironmentSpec = [5]string{
 	0: "environment_variables",
 	1: "languageDependencies",
 	2: "systemDependencies",
 	3: "setup",
+	4: "secrets",
 }
 
 // Decode decodes ExecutionEnvironmentSpec from json.
@@ -1494,6 +1501,16 @@ func (s *ExecutionEnvironmentSpec) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"setup\"")
 			}
+		case "secrets":
+			if err := func() error {
+				s.Secrets.Reset()
+				if err := s.Secrets.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"secrets\"")
+			}
 		default:
 			return d.Skip()
 		}
@@ -1514,6 +1531,62 @@ func (s *ExecutionEnvironmentSpec) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *ExecutionEnvironmentSpec) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s ExecutionEnvironmentSpecSecrets) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields implements json.Marshaler.
+func (s ExecutionEnvironmentSpecSecrets) encodeFields(e *jx.Encoder) {
+	for k, elem := range s {
+		e.FieldStart(k)
+
+		e.Str(elem)
+	}
+}
+
+// Decode decodes ExecutionEnvironmentSpecSecrets from json.
+func (s *ExecutionEnvironmentSpecSecrets) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode ExecutionEnvironmentSpecSecrets to nil")
+	}
+	m := s.init()
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		var elem string
+		if err := func() error {
+			v, err := d.Str()
+			elem = string(v)
+			if err != nil {
+				return err
+			}
+			return nil
+		}(); err != nil {
+			return errors.Wrapf(err, "decode field %q", k)
+		}
+		m[string(k)] = elem
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode ExecutionEnvironmentSpecSecrets")
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s ExecutionEnvironmentSpecSecrets) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *ExecutionEnvironmentSpecSecrets) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -4929,6 +5002,40 @@ func (s OptExecutionEnvironmentSpec) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *OptExecutionEnvironmentSpec) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes ExecutionEnvironmentSpecSecrets as json.
+func (o OptExecutionEnvironmentSpecSecrets) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	o.Value.Encode(e)
+}
+
+// Decode decodes ExecutionEnvironmentSpecSecrets from json.
+func (o *OptExecutionEnvironmentSpecSecrets) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptExecutionEnvironmentSpecSecrets to nil")
+	}
+	o.Set = true
+	o.Value = make(ExecutionEnvironmentSpecSecrets)
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptExecutionEnvironmentSpecSecrets) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptExecutionEnvironmentSpecSecrets) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }

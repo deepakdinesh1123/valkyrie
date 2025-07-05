@@ -34,9 +34,6 @@ RUN apt update && \
 COPY --from=builder /tmp/nix-store-closure /nix/store
 COPY --from=builder /tmp/valkyrie/ /home/valnix
 
-COPY --chown=valnix:valnix rippkgs-24.11.sqlite /home/valnix/.valkyrie_info/
-RUN chown -R valnix:valnix /home/valnix/.valkyrie_info/
-
 USER valnix
 WORKDIR /home/valnix
 ENTRYPOINT ["/home/valnix/result/bin/valkyrie"]

@@ -2,12 +2,12 @@ create sequence languages_id_seq as bigint;
 
 CREATE TABLE languages (
     id bigint PRIMARY KEY DEFAULT nextval('languages_id_seq'),
-    name TEXT NOT NULL UNIQUE,                  
-    extension TEXT NOT NULL,                    
+    name TEXT NOT NULL UNIQUE,
+    extension TEXT NOT NULL,
     monaco_language TEXT NOT NULL,
     template TEXT NOT NULL,
     is_disabled BOOLEAN NOT NULL DEFAULT false,
-    default_code TEXT NOT NULL                    
+    default_code TEXT NOT NULL
 );
 
 create sequence language_versions_id_seq as bigint;
@@ -24,15 +24,15 @@ CREATE TABLE language_versions (
     id bigint PRIMARY KEY DEFAULT nextval('language_versions_id_seq'),
     language_id BIGINT NOT NULL REFERENCES languages (id) ON DELETE CASCADE,
     version TEXT NOT NULL,
-    nix_package_name TEXT,            
+    nix_package_name TEXT,
     template TEXT,
     default_version BOOLEAN NOT NULL DEFAULT false,
-    is_disabled BOOLEAN NOT NULL DEFAULT false,           
-    UNIQUE (language_id, nix_package_name)               
+    is_disabled BOOLEAN NOT NULL DEFAULT false,
+    UNIQUE (language_id, nix_package_name)
 );
 
-CREATE UNIQUE INDEX unique_default_version_per_language 
-ON language_versions (language_id) 
+CREATE UNIQUE INDEX unique_default_version_per_language
+ON language_versions (language_id)
 WHERE default_version = true;
 
 INSERT INTO language_versions (language_id, version, nix_package_name, template, default_version) VALUES (
@@ -61,7 +61,8 @@ create table exec_request (
     system_setup text,
     pkg_index text,
     extension text,
-    language_version BIGINT NOT NULL REFERENCES language_versions(id) ON DELETE SET NULL
+    language_version BIGINT NOT NULL REFERENCES language_versions(id) ON DELETE SET NULL,
+    secrets bytea
 );
 
 create table workers (

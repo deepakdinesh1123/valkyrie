@@ -164,7 +164,7 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 	w.queries.UpdateHeartbeat(ctx, int32(w.ID))
 	defer wg.Done()
 	if w.exectr != nil {
-		defer w.exectr.Cleanup()
+		defer w.exectr.Cleanup(ctx)
 	}
 
 	defer func() {
@@ -296,6 +296,10 @@ func (w *Worker) cleanup() error {
 				return fmt.Errorf("error clearing sandboxes %v", err)
 			}
 		}
+	}
+
+	if w.envConfig.ENABLE_EXECUTION {
+		w.exectr.Cleanup(context.Background())
 	}
 	return nil
 }

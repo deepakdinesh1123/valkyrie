@@ -3,12 +3,17 @@
 package docker
 
 import (
+	"archive/tar"
+	"bufio"
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/db"
@@ -17,8 +22,9 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/services/execution"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
-	"github.com/jackc/puddle/v2"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
@@ -32,24 +38,21 @@ type DockerProvider struct {
 	logger    *zerolog.Logger
 	tp        trace.TracerProvider
 	mp        metric.MeterProvider
-	// user          string
-	containerPool *puddle.Pool[pool.Container]
 }
 
-func GetDockerProvider(envConfig *config.EnvConfig, queries db.Store, workerId int32, tp trace.TracerProvider, mp metric.MeterProvider, logger *zerolog.Logger, containerPool *puddle.Pool[pool.Container]) (*DockerProvider, error) {
+func GetDockerProvider(envConfig *config.EnvConfig, queries db.Store, workerId int32, tp trace.TracerProvider, mp metric.MeterProvider, logger *zerolog.Logger) (*DockerProvider, error) {
 	client := pool.GetDockerClient()
 	if client == nil {
 		return nil, fmt.Errorf("could not get docker client")
 	}
 	return &DockerProvider{
-		client:        client,
-		queries:       queries,
-		envConfig:     envConfig,
-		workerId:      workerId,
-		logger:        logger,
-		tp:            tp,
-		mp:            mp,
-		containerPool: containerPool,
+		client:    client,
+		queries:   queries,
+		envConfig: envConfig,
+		workerId:  workerId,
+		logger:    logger,
+		tp:        tp,
+		mp:        mp,
 	}, nil
 }
 
@@ -95,13 +98,233 @@ func (d *DockerProvider) WriteFiles(ctx context.Context, containerID string, pre
 	return nil
 }
 
-func (d *DockerProvider) GetContainer(ctx context.Context) (*puddle.Resource[pool.Container], error) {
-	cont, err := d.containerPool.Acquire(ctx)
+func (d *DockerProvider) GetContainer(ctx context.Context, execReq db.ExecRequest) (string, error) {
+	imageName := fmt.Sprintf("valkyrie/shell/%s", strings.Join(execReq.SystemDependencies, "/"))
+
+	err := d.CheckImageExists(ctx, imageName)
 	if err != nil {
-		return nil, err
+		if client.IsErrNotFound(err) {
+			err = d.BuildImage(ctx, imageName)
+			if err != nil {
+				return "", fmt.Errorf("error building image: %v", err)
+			}
+		} else {
+			return "", err
+		}
 	}
-	go d.containerPool.CreateResource(ctx)
-	return cont, nil
+
+	containerCreateResp, err := d.client.ContainerCreate(ctx, &container.Config{
+		Image:       imageName,
+		StopTimeout: &d.envConfig.WORKER_MAX_TASK_TIMEOUT,
+		StopSignal:  "SIGKILL",
+		Labels: map[string]string{
+			"valkyrie": "execution",
+		},
+	}, &container.HostConfig{
+		AutoRemove:  true,
+		Runtime:     d.envConfig.CONTAINER_RUNTIME,
+		NetworkMode: "bridge",
+	}, &network.NetworkingConfig{
+		EndpointsConfig: map[string]*network.EndpointSettings{
+			"devpi-network": {},
+		},
+	}, nil, "")
+	if err != nil {
+		return "", fmt.Errorf("error creating container: %v", err)
+	}
+
+	err = d.client.ContainerStart(ctx, containerCreateResp.ID, container.StartOptions{})
+	if err != nil {
+		return "", fmt.Errorf("error starting container: %v", err)
+	}
+
+	contInfo, err := d.client.ContainerInspect(ctx, containerCreateResp.ID)
+	if err != nil {
+		return "", fmt.Errorf("error inspecting container: %v", err)
+	}
+
+	return contInfo.ID, nil
+}
+
+func (d *DockerProvider) CheckImageExists(ctx context.Context, imageName string) error {
+	_, _, err := d.client.ImageInspectWithRaw(ctx, imageName)
+	return err
+}
+
+func (d *DockerProvider) BuildImage(ctx context.Context, imageName string) error {
+	// Read the Dockerfile template
+	dockerfileTmpl, err := execution.ExecTemplates.ReadFile("templates/containerImage.tmpl")
+	if err != nil {
+		return fmt.Errorf("error reading image template: %v", err)
+	}
+	d.logger.Info().Str("template", string(dockerfileTmpl)).Msg("docker template loaded")
+
+	nixRunSh, err := execution.ExecScripts.ReadFile("scripts/nix_run.sh")
+	if err != nil {
+		return fmt.Errorf("error reading nix run script: %v", err)
+	}
+
+	nixStopSh, err := execution.ExecScripts.ReadFile("scripts/nix_stop.sh")
+	if err != nil {
+		return fmt.Errorf("error reading nix stop script: %v", err)
+	}
+
+	// Template arguments structure
+	type ContainerImageTmplArgs struct {
+		NIXERY_IMAGE string
+		BASE_IMAGE   string
+	}
+
+	// Execute template to generate Dockerfile content
+	var dockerImg bytes.Buffer
+	dfTemplate, err := template.New("dockerfile").Parse(string(dockerfileTmpl))
+	if err != nil {
+		return fmt.Errorf("error parsing dockerfile template: %v", err)
+	}
+
+	err = dfTemplate.Execute(&dockerImg, ContainerImageTmplArgs{
+		NIXERY_IMAGE: strings.ReplaceAll(imageName, "valkyrie", d.envConfig.NIXERY_URL),
+		BASE_IMAGE:   d.envConfig.EXECUTION_IMAGE,
+	})
+	if err != nil {
+		return fmt.Errorf("error executing dockerfile template: %v", err)
+	}
+	d.logger.Info().Str("dockerfile", dockerImg.String()).Msg("generated dockerfile")
+
+	// Create temporary directory
+	tempDir, err := os.MkdirTemp("", "docker-build-*")
+	if err != nil {
+		return fmt.Errorf("error creating temp directory: %v", err)
+	}
+	defer os.RemoveAll(tempDir) // Clean up temp directory
+
+	// Write Dockerfile to temp directory
+	dockerfilePath := filepath.Join(tempDir, "Dockerfile")
+	if err := os.WriteFile(dockerfilePath, dockerImg.Bytes(), 0644); err != nil {
+		return fmt.Errorf("error writing dockerfile to temp dir: %v", err)
+	}
+
+	// Create scripts directory in temp dir
+	scriptsDir := filepath.Join(tempDir, "scripts")
+	if err := os.MkdirAll(scriptsDir, 0755); err != nil {
+		return fmt.Errorf("error creating scripts directory: %v", err)
+	}
+
+	// Write scripts to temp directory
+	nixRunPath := filepath.Join(scriptsDir, "nix_run.sh")
+	if err := os.WriteFile(nixRunPath, nixRunSh, 0755); err != nil {
+		return fmt.Errorf("error writing nix_run.sh to temp dir: %v", err)
+	}
+
+	nixStopPath := filepath.Join(scriptsDir, "nix_stop.sh")
+	if err := os.WriteFile(nixStopPath, nixStopSh, 0755); err != nil {
+		return fmt.Errorf("error writing nix_stop.sh to temp dir: %v", err)
+	}
+
+	// Create tar archive from temp directory
+	buf := new(bytes.Buffer)
+	tw := tar.NewWriter(buf)
+
+	// Walk through temp directory and add all files to tar
+	err = filepath.Walk(tempDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Skip the root directory itself
+		if path == tempDir {
+			return nil
+		}
+
+		// Get relative path from temp directory
+		relPath, err := filepath.Rel(tempDir, path)
+		if err != nil {
+			return err
+		}
+
+		// Create tar header
+		header, err := tar.FileInfoHeader(info, "")
+		if err != nil {
+			return err
+		}
+		header.Name = relPath
+
+		// Write header
+		if err := tw.WriteHeader(header); err != nil {
+			return err
+		}
+
+		// If it's a regular file, write its content
+		if info.Mode().IsRegular() {
+			fileContent, err := os.ReadFile(path)
+			if err != nil {
+				return err
+			}
+			if _, err := tw.Write(fileContent); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		tw.Close()
+		return fmt.Errorf("error creating tar archive: %v", err)
+	}
+
+	if err := tw.Close(); err != nil {
+		return fmt.Errorf("error closing tar writer: %v", err)
+	}
+
+	// Build Docker image
+	dockerfileTarReader := bytes.NewReader(buf.Bytes())
+	buildOptions := types.ImageBuildOptions{
+		Tags:           []string{imageName},
+		Dockerfile:     "Dockerfile",
+		Remove:         true,
+		ForceRemove:    true,
+		PullParent:     true,
+		NoCache:        false,
+		SuppressOutput: false,
+	}
+
+	d.logger.Info().Str("imageName", imageName).Msg("starting docker build")
+	resp, err := d.client.ImageBuild(ctx, dockerfileTarReader, buildOptions)
+	if err != nil {
+		return fmt.Errorf("error building docker image: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Process build output and check for errors
+	var buildError error
+	scanner := bufio.NewScanner(resp.Body)
+	for scanner.Scan() {
+		line := scanner.Text()
+		d.logger.Debug().Str("build_output", line).Msg("docker build")
+
+		// Parse JSON output to check for errors
+		var buildMsg map[string]any
+		if err := json.Unmarshal([]byte(line), &buildMsg); err == nil {
+			if errorDetail, exists := buildMsg["errorDetail"]; exists {
+				buildError = fmt.Errorf("docker build failed: %v", errorDetail)
+				break
+			}
+			if stream, exists := buildMsg["stream"]; exists {
+				d.logger.Info().Str("stream", fmt.Sprintf("%v", stream)).Msg("docker build progress")
+			}
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return fmt.Errorf("error reading build response: %v", err)
+	}
+
+	if buildError != nil {
+		return buildError
+	}
+
+	d.logger.Info().Str("imageName", imageName).Msg("docker image built successfully")
+	return nil
 }
 
 func (d *DockerProvider) Execute(ctx context.Context, containerID string, command []string) (bool, string, error) {
@@ -212,6 +435,31 @@ func (d *DockerProvider) ReadExecLogs(ctx context.Context, containerID string) (
 		}
 	}
 	return stripCtlAndExtFromUTF8(string(out)), nil
+}
+
+func (d *DockerProvider) DestroyContainer(ctx context.Context, containerId string) {
+	err := d.client.ContainerRemove(ctx, containerId, container.RemoveOptions{
+		RemoveVolumes: true,
+		Force:         true,
+	})
+	if err != nil {
+		fmt.Printf("error destroying container %v\n", err)
+	}
+}
+
+func (d *DockerProvider) Cleanup(ctx context.Context) {
+	filterArgs := filters.NewArgs()
+	filterArgs.Add("valkyrie", "execution")
+
+	containers, err := d.client.ContainerList(ctx, container.ListOptions{
+		Filters: filterArgs,
+	})
+	if err != nil {
+
+	}
+	for _, container := range containers {
+		d.DestroyContainer(ctx, container.ID)
+	}
 }
 
 func stripCtlAndExtFromUTF8(str string) string {

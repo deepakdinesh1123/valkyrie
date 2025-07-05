@@ -26,6 +26,7 @@ type ExecRequest struct {
 	PkgIndex             pgtype.Text `db:"pkg_index" json:"pkg_index"`
 	Extension            pgtype.Text `db:"extension" json:"extension"`
 	LanguageVersion      int64       `db:"language_version" json:"language_version"`
+	Secrets              []byte      `db:"secrets" json:"secrets"`
 }
 
 type Execution struct {

@@ -240,3 +240,5 @@ letsencrypt
 .pem
 secrets/
 charts/
+
+certs/

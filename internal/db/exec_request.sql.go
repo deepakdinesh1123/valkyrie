@@ -21,7 +21,7 @@ func (q *Queries) DeleteExecRequest(ctx context.Context, id int32) error {
 }
 
 const getExecRequest = `-- name: GetExecRequest :one
-select id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version from exec_request where id = $1
+select id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets from exec_request where id = $1
 `
 
 func (q *Queries) GetExecRequest(ctx context.Context, id int32) (ExecRequest, error) {
@@ -44,12 +44,13 @@ func (q *Queries) GetExecRequest(ctx context.Context, id int32) (ExecRequest, er
 		&i.PkgIndex,
 		&i.Extension,
 		&i.LanguageVersion,
+		&i.Secrets,
 	)
 	return i, err
 }
 
 const getExecRequestByHash = `-- name: GetExecRequestByHash :one
-select id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version from exec_request where hash = $1
+select id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets from exec_request where hash = $1
 `
 
 func (q *Queries) GetExecRequestByHash(ctx context.Context, hash string) (ExecRequest, error) {
@@ -72,6 +73,7 @@ func (q *Queries) GetExecRequestByHash(ctx context.Context, hash string) (ExecRe
 		&i.PkgIndex,
 		&i.Extension,
 		&i.LanguageVersion,
+		&i.Secrets,
 	)
 	return i, err
 }
@@ -79,12 +81,12 @@ func (q *Queries) GetExecRequestByHash(ctx context.Context, hash string) (ExecRe
 const insertExecRequest = `-- name: InsertExecRequest :one
 insert into exec_request
     (
-        hash, 
-        code, 
-        flake, 
-        language_dependencies, 
-        system_dependencies, 
-        cmd_line_args, 
+        hash,
+        code,
+        flake,
+        language_dependencies,
+        system_dependencies,
+        cmd_line_args,
         compile_args,
         files,
         input,
@@ -93,10 +95,11 @@ insert into exec_request
         language_version,
         system_setup,
         pkg_index,
-        extension
+        extension,
+        secrets
     )
 values
-    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
 returning id
 `
 
@@ -116,6 +119,7 @@ type InsertExecRequestParams struct {
 	SystemSetup          pgtype.Text `db:"system_setup" json:"system_setup"`
 	PkgIndex             pgtype.Text `db:"pkg_index" json:"pkg_index"`
 	Extension            pgtype.Text `db:"extension" json:"extension"`
+	Secrets              []byte      `db:"secrets" json:"secrets"`
 }
 
 func (q *Queries) InsertExecRequest(ctx context.Context, arg InsertExecRequestParams) (int32, error) {
@@ -135,6 +139,7 @@ func (q *Queries) InsertExecRequest(ctx context.Context, arg InsertExecRequestPa
 		arg.SystemSetup,
 		arg.PkgIndex,
 		arg.Extension,
+		arg.Secrets,
 	)
 	var id int32
 	err := row.Scan(&id)
@@ -142,7 +147,7 @@ func (q *Queries) InsertExecRequest(ctx context.Context, arg InsertExecRequestPa
 }
 
 const listExecRequests = `-- name: ListExecRequests :many
-select id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version from exec_request
+select id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets from exec_request
 where id >= $1
 limit $2
 `
@@ -178,6 +183,7 @@ func (q *Queries) ListExecRequests(ctx context.Context, arg ListExecRequestsPara
 			&i.PkgIndex,
 			&i.Extension,
 			&i.LanguageVersion,
+			&i.Secrets,
 		); err != nil {
 			return nil, err
 		}

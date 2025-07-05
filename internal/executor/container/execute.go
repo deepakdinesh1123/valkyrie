@@ -3,14 +3,11 @@ package container
 import (
 	"context"
 	"os"
-	"os/user"
 	"time"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/concurrency"
 	"github.com/deepakdinesh1123/valkyrie/internal/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/db"
-	"github.com/deepakdinesh1123/valkyrie/internal/pool"
-	"github.com/jackc/puddle/v2"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
@@ -24,18 +21,9 @@ type ContainerExecutor struct {
 	Tp        trace.TracerProvider
 	Mp        metric.MeterProvider
 	User      string
-	Pool      *puddle.Pool[pool.Container]
 }
 
 func NewContainerExecutor(ctx context.Context, env *config.EnvConfig, queries db.Store, workerId int32, tp trace.TracerProvider, mp metric.MeterProvider, logger *zerolog.Logger) (*ContainerExecutor, error) {
-	user, err := user.Current()
-	if err != nil {
-		return nil, err
-	}
-	pool, err := pool.NewContainerExecutionPool(ctx, int32(env.HOT_CONTAINER), env.WORKER_CONCURRENCY, env.RUNTIME)
-	if err != nil {
-		return nil, err
-	}
 	return &ContainerExecutor{
 		EnvConfig: env,
 		Logger:    logger,
@@ -43,8 +31,6 @@ func NewContainerExecutor(ctx context.Context, env *config.EnvConfig, queries db
 		WorkerId:  workerId,
 		Tp:        tp,
 		Mp:        mp,
-		User:      user.Username,
-		Pool:      pool,
 	}, nil
 }
 
@@ -69,7 +55,7 @@ func (ce *ContainerExecutor) Execute(ctx context.Context, wg *concurrency.SafeWa
 	} else if job.TimeOut.Int32 == 0 {
 		timeout = 0
 	} else {
-		timeout = ce.EnvConfig.WORKER_TASK_TIMEOUT
+		timeout = ce.EnvConfig.WORKER_MAX_TASK_TIMEOUT
 	}
 	var tctx context.Context
 	var cancel context.CancelFunc
@@ -89,30 +75,28 @@ func (ce *ContainerExecutor) Execute(ctx context.Context, wg *concurrency.SafeWa
 	}
 	logger.Debug().Msg("Got container client")
 	logger.Debug().Msg("Getting container")
-	cont, err := cc.GetContainer(tctx)
+	execReq, err := ce.Queries.GetExecRequest(ctx, job.Arguments.ExecConfig.ExecReqId)
+	contId, err := cc.GetContainer(tctx, execReq)
 	if err != nil {
 		logger.Err(err).Msg("could not get container")
 		ce.checkFailed(ce.Queries.UpdateJobResultTx(context.TODO(), jobRes))
 		return
 	}
-	logger.Debug().Msg("Got container")
-	defer cont.Destroy()
-	contInfo := cont.Value()
-	logger.Debug().Msg("Writing files")
-	err = cc.WriteFiles(tctx, contInfo.ID, os.TempDir(), job)
+	err = cc.WriteFiles(tctx, contId, os.TempDir(), job)
 	if err != nil {
 		logger.Err(err).Msg("could not write files")
 		ce.checkFailed(ce.Queries.UpdateJobResultTx(context.TODO(), jobRes))
 		return
 	}
-	logger.Debug().Msg("Files written")
-	success, output, err := cc.Execute(tctx, contInfo.ID, []string{"sh", "nix_run.sh"})
+
+	success, output, err := cc.Execute(tctx, contId, []string{"sh", "nix_run.sh"})
 	if err != nil {
 		logger.Err(err).Msg(err.Error())
 		ce.checkFailed(ce.Queries.UpdateJobResultTx(context.TODO(), jobRes))
 		return
 	}
-	logger.Debug().Msg("Destroying container")
+
+	go cc.DestroyContainer(ctx, contId)
 
 	jobRes.Success = success
 	if success {
@@ -129,7 +113,10 @@ func (ce *ContainerExecutor) checkFailed(_ db.UpdateJobTxResult, err error) {
 	}
 }
 
-func (ce *ContainerExecutor) Cleanup() {
-	ce.Logger.Debug().Msg("Cleaning up")
-	ce.Pool.Close()
+func (ce *ContainerExecutor) Cleanup(ctx context.Context) {
+	cc, err := GetContainerClient(ctx, ce)
+	if err != nil {
+
+	}
+	cc.Cleanup(ctx)
 }

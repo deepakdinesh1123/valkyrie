@@ -19,4 +19,5 @@ type ExecutionRequest struct {
 	IsFlake              bool
 	ScriptName           string
 	NIXPKGS_REV          string
+	Secrets              []byte
 }

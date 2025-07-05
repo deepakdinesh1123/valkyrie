@@ -14,3 +14,7 @@ properties:
       type: string
   setup:
     type: string
+  secrets:
+    type: object
+    additionalProperties:
+      type: string

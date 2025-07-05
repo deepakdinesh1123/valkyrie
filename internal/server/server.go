@@ -66,7 +66,7 @@ func NewServer(ctx context.Context, envConfig *config.EnvConfig, standalone bool
 					logger.Err(err).Msg("Generating store packages")
 					store.GeneratePackages(ctx, "", "", envConfig, logger)
 				}
-			} else if len(langs) == 0 {
+			} else if len(langs) == 1 {
 				logger.Info().Msg("Generating store packages")
 				store.GeneratePackages(ctx, "", "", envConfig, logger)
 			}

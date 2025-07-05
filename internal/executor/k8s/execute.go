@@ -266,6 +266,6 @@ func (ke *K8sExecutor) handleFailure(job *db.Job, err error) {
 	}
 }
 
-func (ke *K8sExecutor) Cleanup() {
+func (ke *K8sExecutor) Cleanup(ctx context.Context) {
 
 }

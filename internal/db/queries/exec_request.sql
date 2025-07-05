@@ -1,12 +1,12 @@
 -- name: InsertExecRequest :one
 insert into exec_request
     (
-        hash, 
-        code, 
-        flake, 
-        language_dependencies, 
-        system_dependencies, 
-        cmd_line_args, 
+        hash,
+        code,
+        flake,
+        language_dependencies,
+        system_dependencies,
+        cmd_line_args,
         compile_args,
         files,
         input,
@@ -15,10 +15,11 @@ insert into exec_request
         language_version,
         system_setup,
         pkg_index,
-        extension
+        extension,
+        secrets
     )
 values
-    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
 returning id;
 
 -- name: GetExecRequest :one

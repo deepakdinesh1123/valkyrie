@@ -1,0 +1,20 @@
+FROM {{ .NIXERY_IMAGE }} AS builder
+
+FROM {{ .BASE_IMAGE }}
+
+RUN addgroup -g 1024 -S valnix && \
+    adduser -u 1024 -G valnix -S -D valnix
+
+COPY --chown=valnix:valnix scripts/ /home/valnix/
+
+RUN chmod +x /home/valnix/nix_stop.sh /home/valnix/nix_run.sh
+
+USER valnix
+WORKDIR /home/valnix
+
+RUN mkdir -p /home/valnix/valkyrie
+
+COPY --from=builder --chown=valnix:valnix /nix /nix
+COPY --from=builder --chown=valnix:valnix /bin /bin
+
+CMD ["/bin/sh", "-c", "sleep infinity"]

@@ -6,16 +6,21 @@ import (
 	"embed"
 	"encoding/hex"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/db"
+	"github.com/deepakdinesh1123/valkyrie/internal/secret"
 	"github.com/deepakdinesh1123/valkyrie/pkg/api"
 	"github.com/rs/zerolog"
 )
 
 //go:embed templates
 var ExecTemplates embed.FS
+
+//go:embed scripts
+var ExecScripts embed.FS
 
 type ExecutionService struct {
 	queries   db.Store
@@ -42,6 +47,8 @@ func (s *ExecutionService) prepareExecutionRequest(ctx context.Context, req *api
 		return nil, fmt.Errorf("failed to get language version: %w", err)
 	}
 
+	sort.Strings(req.Environment.Value.SystemDependencies)
+
 	execReq := &ExecutionRequest{
 		Language:             req.Language.Value,
 		Code:                 req.Code.Value,
@@ -56,6 +63,14 @@ func (s *ExecutionService) prepareExecutionRequest(ctx context.Context, req *api
 		ScriptName:           s.buildScriptName(req, lang),
 		Template:             s.getTemplate(langVersion, lang),
 		NIXPKGS_REV:          s.envConfig.NIXERY_NIXPKGS_REV,
+	}
+
+	if req.Environment.Value.Secrets.Set {
+		encodedSecrets, err := secret.EncodeSecrets(req.Environment.Value.Secrets.Value, s.envConfig.ENCRYPTION_KEY)
+		if err != nil {
+			return nil, fmt.Errorf("failed to encode secrets: %v", err)
+		}
+		execReq.Secrets = encodedSecrets
 	}
 
 	s.applyLanguageSpecificConfig(execReq, langVersion)
@@ -111,6 +126,7 @@ func (s *ExecutionService) applyLanguageSpecificConfig(execReq *ExecutionRequest
 	case "python":
 		execReq.SystemSetup = buildPythonSystemSetup(langVersion.Version)
 		execReq.PkgIndex = s.envConfig.PY_INDEX
+		execReq.SystemDependencies = append(execReq.SystemDependencies, "uv")
 	}
 }
 
@@ -151,6 +167,7 @@ func (s *ExecutionService) buildJobParams(req *api.ExecutionRequest, execReq *Ex
 		SystemSetup:          execReq.SystemSetup,
 		PkgIndex:             execReq.PkgIndex,
 		Extension:            execReq.Extension,
+		Secrets:              execReq.Secrets,
 	}
 
 	// Set max retries
@@ -186,13 +203,13 @@ func (s *ExecutionService) setMaxRetries(req *api.ExecutionRequest, jobParams *d
 
 func (s *ExecutionService) setTimeout(req *api.ExecutionRequest, jobParams *db.AddJobTxParams) error {
 	if !req.Timeout.Set {
-		jobParams.Timeout = int32(s.envConfig.WORKER_TASK_TIMEOUT)
+		jobParams.Timeout = int32(s.envConfig.WORKER_MAX_TASK_TIMEOUT)
 		return nil
 	}
 
-	if req.Timeout.Value > int32(s.envConfig.WORKER_TASK_TIMEOUT) {
+	if req.Timeout.Value > int32(s.envConfig.WORKER_MAX_TASK_TIMEOUT) {
 		return fmt.Errorf("timeout (%d) exceeds the maximum allowed (%d)",
-			req.Timeout.Value, s.envConfig.WORKER_TASK_TIMEOUT)
+			req.Timeout.Value, s.envConfig.WORKER_MAX_TASK_TIMEOUT)
 	}
 
 	jobParams.Timeout = req.Timeout.Value

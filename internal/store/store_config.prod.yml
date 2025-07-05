@@ -1,28 +1,26 @@
-nix_channel: 24.11
-
 languages:
+  - name: generic
+    extension: none
+    versions:
+      - default: true
+
   - name: python
     extension: py
     monacoLanguage: python
     versions:
-      - nixPackage: "python312"
-        searchQuery: "python312Packages"
+      - nixPackage: "python314"
         default: true
+        version: "3.14"
+      - nixPackage: "python313"
+        version: "3.13"
+      - nixPackage: "python312Full"
+        version: "3.12"
       - nixPackage: "python311"
-        searchQuery: "python311Packages"
+        version: "3.11"
       - nixPackage: "python310"
-        searchQuery: "python310Packages"
+        version: "3.10"
     template: |
-      {{ define "LangSetup" }}
-      {{- if .IsFlake -}}
-        uv
-        {{- .LangNixPkg -}}
-      {{- else -}}
-        uv {{ .LangNixPkg }}
-      {{- end -}}
-      {{ end }}
-
-      {{  define "execute" }} uv run {{- range .LanguageDependencies }} --with "{{.}}" {{ end }} --index {{ .PkgIndex }} main.py {{ end }}
+      {{  define "execute" }} uv run {{- range .LanguageDependencies }} --with "{{.}}" {{ end }} {{- if not .IsFlake }} --index {{ .PkgIndex }} {{- end }} main.py {{ end }}
     defaultCode: |
       print("Hello World")
 
@@ -30,10 +28,11 @@ languages:
     extension: go
     monacoLanguage: go
     versions:
-      - nixPackage: "go_1_22"
-        searchQuery: "goPackages"
       - nixPackage: "go"
-        searchQuery: "goPackages"
+        default: true
+        version: "1.24.3"
+      - nixPackage: "go_1_23"
+        version: "1.23.9"
     template: |
       {{ define "compile" }} go build main.go {{ .CompilerArgs }}{{ end }}
       {{ define "execute" }} ./main {{ end }}
@@ -50,15 +49,11 @@ languages:
     monacoLanguage: ada
     versions:
       - nixPackage: "gnat"
-        searchQuery: "gnatPackages"
       - nixPackage: "gnat13"
-        searchQuery: "gnatPackages"
       - nixPackage: "gnat14"
-        searchQuery: "gnatPackages"
         default: true
     template: |
       {{ define "compile" }} gnatmake main.adb {{ .CompilerArgs }}{{ end }}
-
       {{ define "execute" }} ./main {{ end }}
     defaultCode: |
       with Ada.Text_IO; use Ada.Text_IO;
@@ -74,9 +69,8 @@ languages:
     versions:
       - nixPackage: "nasm"
         default: true
-        searchQuery: "assemblyPackages"
     template: |
-      {{ define "compile" }} nasm -f elf64 main.asm -o main.o {{ .CompilerArgs }} 
+      {{ define "compile" }} nasm -f elf64 main.asm -o main.o {{ .CompilerArgs }}
       ld -o main main.o {{ end }}
 
       {{ define "execute" }} ./main {{ end }}
@@ -103,7 +97,7 @@ languages:
     versions:
       - nixPackage: "bash"
         default: true
-        searchQuery: "bashPackages"
+        version: "5.2"
     template: |
       {{ define "execute" }} bash main.bash {{ end }}
     defaultCode: |
@@ -115,7 +109,7 @@ languages:
     versions:
       - nixPackage: "bun"
         default: true
-        searchQuery: "bunPackages"
+        version: "1.2.14"
     template: |
       {{ define "execute" }} bun run main.js {{ end }}
     defaultCode: |
@@ -127,7 +121,6 @@ languages:
     versions:
       - nixPackage: "crystal"
         default: true
-        searchQuery: "crystalPackages"
     template: |
       {{ define "execute" }} crystal run main.cr {{ end }}
     defaultCode: |
@@ -139,7 +132,6 @@ languages:
     versions:
       - nixPackage: "dart"
         default: true
-        searchQuery: "dartPackages"
     template: |
       {{ define "execute" }} dart run main.dart {{ end }}
     defaultCode: |
@@ -153,7 +145,7 @@ languages:
     versions:
       - nixPackage: "deno"
         default: true
-        searchQuery: "deno"
+        version: "2.3.5"
     template: |
       {{ define "execute" }} deno run main.ts {{ end }}
     defaultCode: |
@@ -165,13 +157,11 @@ languages:
     versions:
       - nixPackage: "gfortran"
         default: true
-        searchQuery: "fortran"
       - nixPackage: "gfortran12"
-        searchQuery: "fortran"
     template: |
-     {{ define "compile" }} gfortran main.f90 {{ .CompilerArgs }} {{ end }}
+      {{ define "compile" }} gfortran main.f90 {{ .CompilerArgs }} {{ end }}
 
-     {{ define "execute" }} ./a.out {{ end }}
+      {{ define "execute" }} ./a.out {{ end }}
     defaultCode: |
       program hello
         print *, "Hello, World!"
@@ -183,23 +173,20 @@ languages:
     versions:
       - nixPackage: "groovy"
         default: true
-        searchQuery: "groovy"
     template: |
       {{ define "execute" }} groovy main.groovy {{ end }}
     defaultCode: |
       println "Hello World!"
-    
+
   - name: julia
     extension: jl
     monacoLanguage: julia
     versions:
       - nixPackage: "julia"
         default: true
-        searchQuery: "julia"
       - nixPackage: "julia_19"
-        searchQuery: "julia"
     template: |
-     {{  define "execute" }} julia main.jl {{ end }}
+      {{  define "execute" }} julia main.jl {{ end }}
     defaultCode: |
       println("Hello, World!")
 
@@ -209,24 +196,9 @@ languages:
     versions:
       - nixPackage: "lua"
         default: true
-        searchQuery: "lua52Packages"
       - nixPackage: "lua5_4_compat"
-        searchQuery: "lua54Packages"
       - nixPackage: "lua5_3_compat"
-        searchQuery: "lua53Packages"
     template: |
-      {{ define "LangSetup" }}
-      {{- if .IsFlake -}}
-                ({{.LangNixPkg}}.withPackages (lua-pkgs: [
-                  {{ range .LanguageDependencies -}}
-                    lua-pkgs.{{.}}
-                  {{ end -}}
-                ]))
-      {{- else -}}
-      '{{.LangNixPkg}}.withPackages( p: [ {{ range .LanguageDependencies }} p.{{.}} {{ end }} ] )'
-      {{- end -}}
-      {{ end }}
-      
       {{  define "execute" }} lua main.lua {{ end }}
     defaultCode: |
       print("Hello, World!")
@@ -237,11 +209,10 @@ languages:
     versions:
       - nixPackage: "nim"
         default: true
-        searchQuery: "nim"
     template: |
-     {{ define "compile" }} nim c -d:nodebug main.nim {{ .CompilerArgs }} {{ end }}
+      {{ define "compile" }} nim c -d:nodebug main.nim {{ .CompilerArgs }} {{ end }}
 
-     {{ define "execute" }} ./main {{ end }}
+      {{ define "execute" }} ./main {{ end }}
     defaultCode: |
       echo "Hello, World!"
 
@@ -249,15 +220,13 @@ languages:
     extension: js
     monacoLanguage: javascript
     versions:
+      - nixPackage: "nodejs_24"
+        version: "24.1.0"
       - nixPackage: "nodejs_22"
-        searchQuery: "nodePackages"
+        version: "22.14.0"
       - nixPackage: "nodejs_20"
-        searchQuery: "nodePackages"
-      - nixPackage: "nodejs_18"
-        searchQuery: "nodePackages"
-      - nixPackage: "nodejs_23"
         default: true
-        searchQuery: "nodePackages"
+        version: "20.19.2"
     template: |
       {{ define "execute" }} node main.js {{ end }}
     defaultCode: |
@@ -271,9 +240,7 @@ languages:
     versions:
       - nixPackage: "perl540"
         default: true
-        searchQuery: "perl540Packages"
       - nixPackage: "perl538"
-        searchQuery: "perl538Packages"
     template: |
       {{ define "execute" }} perl main.pl {{ end }}
     defaultCode: |
@@ -288,25 +255,22 @@ languages:
     versions:
       - nixPackage: "php"
         default: true
-        searchQuery: "php82Packages"
       - nixPackage: "php83"
-        searchQuery: "php83Packages"
       - nixPackage: "php81"
-        searchQuery: "php81Packages"
     template: |
       {{ define "execute" }} php main.php {{ end }}
     defaultCode: |
       <?php echo "Hello, World!"; ?>
-    
+
   - name: rust
     extension: rs
     monacoLanguage: rust
     versions:
       - nixPackage: "rustc"
         default: true
-        searchQuery: "rust"
+        version: "1.86.0"
     template: |
-      {{ define "compile" }} rustc main.rs {{ .CompilerArgs }} {{ end }} 
+      {{ define "compile" }} rustc main.rs {{ .CompilerArgs }} {{ end }}
       {{ define "execute" }} ./main {{ end }}
     defaultCode: |
       fn main() {
@@ -318,40 +282,13 @@ languages:
     monacoLanguage: ruby
     versions:
       - nixPackage: "ruby"
-        searchQuery: "rubyPackages"
       - nixPackage: "ruby_3_4"
         default: true
-        searchQuery: "rubyPackages_3_4"
       - nixPackage: "ruby_3_2"
-        searchQuery: "rubyPackages_3_2"
     template: |
-      {{ define "LangSetup" }}
-      {{- if .IsFlake -}}
-                ({{.LangNixPkg}}.withPackages (ruby-pkgs: [
-                  {{ range .LanguageDependencies -}}
-                    ruby-pkgs.{{.}}
-                  {{ end -}}
-                ]))
-      {{- else -}}
-      '{{.LangNixPkg}}.withPackages( p: [ {{ range .LanguageDependencies }} p.{{.}} {{ end }} ] )'
-      {{- end -}}
-      {{ end }}
-
       {{  define "execute" }} ruby main.rb {{ end }}
     defaultCode: |
       puts "Hello, World!"
-    deps:
-      - sqlite3
-      - os
-      - uri
-      - nap
-      - re2
-      - git
-      - ffi
-      - json
-      - redis
-      - uuid4r
-
 
   - name: sql
     extension: sql
@@ -359,7 +296,7 @@ languages:
     versions:
       - nixPackage: "sqlite"
         default: true
-        searchQuery: "sql"
+        version: "3.48.0"
     template: |
       {{ define "execute" }} sqlite3 sample.db < main.sql {{ end }}
     defaultCode: |
@@ -375,9 +312,8 @@ languages:
     versions:
       - nixPackage: "zig"
         default: true
-        searchQuery: "zig"
     template: |
-      {{ define "compile" }} zig build-exe main.zig {{- .CompilerArgs -}} {{ end }} 
+      {{ define "compile" }} zig build-exe main.zig {{- .CompilerArgs -}} {{ end }}
       {{ define "execute" }} ./main {{ end }}
     defaultCode: |
       const std = @import("std");
@@ -393,7 +329,6 @@ languages:
     versions:
       - nixPackage: "odin"
         default: true
-        searchQuery: "odinPackages"
     template: |
       {{ define "execute" }} odin run main.odin -file  {{ end }}
     defaultCode: |
@@ -404,38 +339,3 @@ languages:
       main :: proc() {
       	fmt.println("Hellope!")
       }
-
-
-packages:
-  - jq
-  - ffmpeg
-  - git
-  - gnumake
-  - gnused
-  - gnutar
-  - gzip
-  - curl
-  - wget
-  - xz
-  - bzip2
-  - sqlite
-  - sqlite3
-  - rocksdb
-  - h2
-  - h2o
-  - hsqldb
-  - db62
-  - duckdb
-  - httpie
-  - newman
-  - hurl
-  - curlie
-  - grpcurl
-  - protobuf_26
-  - valgrind
-  - valgrind-light
-  - jmespath
-  - fx
-  - yq
-  - pkg-config
-  - gcc14

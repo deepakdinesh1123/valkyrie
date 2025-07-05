@@ -16,7 +16,7 @@ import (
 
 type Executor interface {
 	Execute(ctx context.Context, wg *concurrency.SafeWaitGroup, execReq *db.Job, logger zerolog.Logger)
-	Cleanup()
+	Cleanup(ctx context.Context)
 }
 
 func GetExecutor(ctx context.Context, queries db.Store, workerId int32, tp trace.TracerProvider, mp metric.MeterProvider, envConfig *config.EnvConfig, logger *zerolog.Logger) (Executor, error) {
