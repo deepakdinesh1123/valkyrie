@@ -19,6 +19,7 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/executor/container/common"
 	"github.com/deepakdinesh1123/valkyrie/internal/pool"
+	"github.com/deepakdinesh1123/valkyrie/internal/secret"
 	"github.com/deepakdinesh1123/valkyrie/internal/services/execution"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -113,22 +114,33 @@ func (d *DockerProvider) GetContainer(ctx context.Context, execReq db.ExecReques
 		}
 	}
 
-	containerCreateResp, err := d.client.ContainerCreate(ctx, &container.Config{
+	containerConfig := container.Config{
 		Image:       imageName,
 		StopTimeout: &d.envConfig.WORKER_MAX_TASK_TIMEOUT,
 		StopSignal:  "SIGKILL",
 		Labels: map[string]string{
 			"valkyrie": "execution",
 		},
-	}, &container.HostConfig{
-		AutoRemove:  true,
-		Runtime:     d.envConfig.CONTAINER_RUNTIME,
-		NetworkMode: "bridge",
-	}, &network.NetworkingConfig{
-		EndpointsConfig: map[string]*network.EndpointSettings{
-			"devpi-network": {},
-		},
-	}, nil, "")
+	}
+
+	if len(execReq.Secrets) > 0 {
+		secretsMap, err := secret.DecodeSecrets(execReq.Secrets, d.envConfig.ENCKEY)
+		if err != nil {
+			return "", err
+		}
+		containerConfig.Env = common.ConvertSecretsMapToSlice(secretsMap)
+	}
+
+	containerCreateResp, err := d.client.ContainerCreate(ctx, &containerConfig,
+		&container.HostConfig{
+			AutoRemove:  true,
+			Runtime:     d.envConfig.CONTAINER_RUNTIME,
+			NetworkMode: "bridge",
+		}, &network.NetworkingConfig{
+			EndpointsConfig: map[string]*network.EndpointSettings{
+				"devpi-network": {},
+			},
+		}, nil, "")
 	if err != nil {
 		return "", fmt.Errorf("error creating container: %v", err)
 	}

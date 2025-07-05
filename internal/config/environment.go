@@ -16,7 +16,7 @@ import (
 // EnvConfig represents the configuration settings for the application.
 type EnvConfig struct {
 	ENABLE_EXECUTION bool `mapstructure:"ENABLE_EXECUTION"`
-	ENABLE_SANDBOX   bool `mapstructure:"ENABLE_SANDBOX"`
+	ENABLE_SANDBOX   bool
 
 	POSTGRES_HOST            string `mapstructure:"POSTGRES_HOST"`
 	POSTGRES_PORT            uint32 `mapstructure:"POSTGRES_PORT"`
@@ -60,9 +60,9 @@ type EnvConfig struct {
 
 	JOB_PRUNE_FREQ int `mapstructure:"JOB_PRUNE_FREQ"`
 
-	USER_TOKEN     string `mapstructure:"USER_TOKEN"`
-	ADMIN_TOKEN    string `mapstructure:"ADMIN_TOKEN"`
-	ENCRYPTION_KEY string `mapstructure:"ENCRYPTION_KEY"`
+	USER_TOKEN  string `mapstructure:"USER_TOKEN"`
+	ADMIN_TOKEN string `mapstructure:"ADMIN_TOKEN"`
+	ENCKEY      string `mapstructure:"ENCKEY"`
 
 	SANDBOX_IMAGE string `mapstructure:"SANDBOX_IMAGE"`
 	BASE_DIR      string `mapstructure:"BASE_DIR"`
@@ -173,7 +173,7 @@ func GetEnvConfig() (*EnvConfig, error) {
 
 func setDefaults() {
 	viper.SetDefault("ENABLE_EXECUTION", true)
-	viper.SetDefault("ENABLE_SANDBOX", false)
+	// viper.SetDefault("ENABLE_SANDBOX", false)
 
 	viper.SetDefault("POSTGRES_HOST", "localhost")
 	viper.SetDefault("POSTGRES_PORT", 5432)
@@ -232,4 +232,5 @@ func setDefaults() {
 	}
 
 	viper.SetDefault("K8S_NAMESPACE", "default")
+	viper.SetDefault("ENCKEY", "NOTSET")
 }
