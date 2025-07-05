@@ -59,6 +59,7 @@ func (s *SQLStore) AddExecJobTx(ctx context.Context, arg AddJobTxParams) (AddJob
 					SystemSetup:          pgtype.Text{String: arg.SystemSetup, Valid: true},
 					PkgIndex:             pgtype.Text{String: arg.PkgIndex, Valid: true},
 					Extension:            pgtype.Text{String: arg.Extension, Valid: true},
+					Secrets:              arg.Secrets,
 				})
 				if err != nil {
 					return err

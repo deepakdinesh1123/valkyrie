@@ -10,13 +10,13 @@ import (
 	"io"
 )
 
-func EncodeSecrets(secrets map[string]string, encryption_key string) ([]byte, error) {
+func EncodeSecrets(secrets map[string]string, ENCKEY string) ([]byte, error) {
 	secretb, err := json.Marshal(secrets)
 	if err != nil {
 		return nil, fmt.Errorf("error marshaling secvrets: %v", err)
 	}
 
-	ekey, err := hex.DecodeString(encryption_key)
+	ekey, err := hex.DecodeString(ENCKEY)
 	if err != nil {
 		return nil, fmt.Errorf("error decoding encryption key: %v", err)
 	}
@@ -39,8 +39,8 @@ func EncodeSecrets(secrets map[string]string, encryption_key string) ([]byte, er
 	return ciphertext, nil
 }
 
-func DecodeSecrets(ciphertext []byte, encryption_key string) (map[string]string, error) {
-	ekey, err := hex.DecodeString(encryption_key)
+func DecodeSecrets(ciphertext []byte, ENCKEY string) (map[string]string, error) {
+	ekey, err := hex.DecodeString(ENCKEY)
 	if err != nil {
 		return nil, fmt.Errorf("error decoding encryption key: %v", err)
 	}
@@ -55,15 +55,20 @@ func DecodeSecrets(ciphertext []byte, encryption_key string) (map[string]string,
 		return nil, fmt.Errorf("error creating new gcm: %v", err)
 	}
 
+	if len(ciphertext) < gcm.NonceSize() {
+		return nil, fmt.Errorf("ciphertext too short")
+	}
+
 	decryptedData, err := gcm.Open(nil, ciphertext[:gcm.NonceSize()], ciphertext[gcm.NonceSize():], nil)
 	if err != nil {
 		return nil, fmt.Errorf("error decrypting data: %v", err)
 	}
 
 	var decryptedDataDict map[string]string
-	err = json.Unmarshal(decryptedData, &decryptedData)
+	err = json.Unmarshal(decryptedData, &decryptedDataDict)
 	if err != nil {
 		return nil, fmt.Errorf("error converting decrypted data to dictionary: %v", err)
 	}
+
 	return decryptedDataDict, nil
 }

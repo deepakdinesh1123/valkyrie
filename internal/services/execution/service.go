@@ -66,7 +66,7 @@ func (s *ExecutionService) prepareExecutionRequest(ctx context.Context, req *api
 	}
 
 	if req.Environment.Value.Secrets.Set {
-		encodedSecrets, err := secret.EncodeSecrets(req.Environment.Value.Secrets.Value, s.envConfig.ENCRYPTION_KEY)
+		encodedSecrets, err := secret.EncodeSecrets(req.Environment.Value.Secrets.Value, s.envConfig.ENCKEY)
 		if err != nil {
 			return nil, fmt.Errorf("failed to encode secrets: %v", err)
 		}
@@ -181,7 +181,7 @@ func (s *ExecutionService) buildJobParams(req *api.ExecutionRequest, execReq *Ex
 	}
 
 	// Calculate and set hash
-	jobParams.Hash = calculateHash(jobParams.Code, jobParams.Flake, jobParams.Files, jobParams.Input)
+	jobParams.Hash = calculateHash(jobParams.Code, jobParams.Flake, jobParams.Files, jobParams.Input, jobParams.Secrets)
 
 	return jobParams, nil
 }
@@ -224,11 +224,12 @@ func buildPythonSystemSetup(version string) string {
 	return fmt.Sprintf("export UV_PYTHON=$(which python%s)", version)
 }
 
-func calculateHash(code, flake string, files []byte, input string) string {
+func calculateHash(code, flake string, files []byte, input string, secrets []byte) string {
 	hasher := sha256.New()
 	hasher.Write([]byte(code))
 	hasher.Write([]byte(flake))
 	hasher.Write(files)
 	hasher.Write([]byte(input))
+	hasher.Write(secrets)
 	return hex.EncodeToString(hasher.Sum(nil))
 }
