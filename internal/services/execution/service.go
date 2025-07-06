@@ -5,12 +5,14 @@ import (
 	"crypto/sha256"
 	"embed"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/db"
+	"github.com/deepakdinesh1123/valkyrie/internal/db/jsonschema"
 	"github.com/deepakdinesh1123/valkyrie/internal/secret"
 	"github.com/deepakdinesh1123/valkyrie/pkg/api"
 	"github.com/rs/zerolog"
@@ -71,6 +73,14 @@ func (s *ExecutionService) prepareExecutionRequest(ctx context.Context, req *api
 			return nil, fmt.Errorf("failed to encode secrets: %v", err)
 		}
 		execReq.Secrets = encodedSecrets
+	}
+
+	if len(req.Files) > 0 {
+		var erf jsonschema.ExecReqFiles
+		for _, file := range req.Files {
+			erf.Files = append(erf.Files, jsonschema.File{Name: file.Name, Content: file.Content})
+		}
+		execReq.Files = erf
 	}
 
 	s.applyLanguageSpecificConfig(execReq, langVersion)
@@ -159,7 +169,7 @@ func (s *ExecutionService) buildJobParams(req *api.ExecutionRequest, execReq *Ex
 		SystemDependencies:   execReq.SystemDependencies,
 		CmdLineArgs:          execReq.CmdLineArgs,
 		CompilerArgs:         execReq.CompilerArgs,
-		Files:                req.Files,
+		Files:                execReq.Files,
 		Input:                execReq.Input,
 		Command:              execReq.Command,
 		LangVersion:          execReq.LangVersion,
@@ -181,7 +191,11 @@ func (s *ExecutionService) buildJobParams(req *api.ExecutionRequest, execReq *Ex
 	}
 
 	// Calculate and set hash
-	jobParams.Hash = calculateHash(jobParams.Code, jobParams.Flake, jobParams.Files, jobParams.Input, jobParams.Secrets)
+	hash, err := calculateHash(jobParams.Code, jobParams.Flake, jobParams.Files, jobParams.Input, jobParams.Secrets)
+	if err != nil {
+		return db.AddJobTxParams{}, fmt.Errorf("error calculating job hash: %v", err)
+	}
+	jobParams.Hash = hash
 
 	return jobParams, nil
 }
@@ -224,12 +238,16 @@ func buildPythonSystemSetup(version string) string {
 	return fmt.Sprintf("export UV_PYTHON=$(which python%s)", version)
 }
 
-func calculateHash(code, flake string, files []byte, input string, secrets []byte) string {
+func calculateHash(code, flake string, files jsonschema.ExecReqFiles, input string, secrets []byte) (string, error) {
 	hasher := sha256.New()
 	hasher.Write([]byte(code))
 	hasher.Write([]byte(flake))
-	hasher.Write(files)
+	erf, err := json.Marshal(files)
+	if err != nil {
+		return "", err
+	}
+	hasher.Write(erf)
 	hasher.Write([]byte(input))
 	hasher.Write(secrets)
-	return hex.EncodeToString(hasher.Sum(nil))
+	return hex.EncodeToString(hasher.Sum(nil)), nil
 }

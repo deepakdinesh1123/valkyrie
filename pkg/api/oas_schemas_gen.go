@@ -455,7 +455,7 @@ type ExecutionRequest struct {
 	CmdLineArgs  OptString                   `json:"cmdLineArgs"`
 	CompilerArgs OptString                   `json:"compilerArgs"`
 	Command      OptString                   `json:"command"`
-	Files        []byte                      `json:"files"`
+	Files        []ExecutionRequestFilesItem `json:"files"`
 	Input        OptString                   `json:"input"`
 	Extension    OptString                   `json:"extension"`
 }
@@ -506,7 +506,7 @@ func (s *ExecutionRequest) GetCommand() OptString {
 }
 
 // GetFiles returns the value of Files.
-func (s *ExecutionRequest) GetFiles() []byte {
+func (s *ExecutionRequest) GetFiles() []ExecutionRequestFilesItem {
 	return s.Files
 }
 
@@ -566,7 +566,7 @@ func (s *ExecutionRequest) SetCommand(val OptString) {
 }
 
 // SetFiles sets the value of Files.
-func (s *ExecutionRequest) SetFiles(val []byte) {
+func (s *ExecutionRequest) SetFiles(val []ExecutionRequestFilesItem) {
 	s.Files = val
 }
 
@@ -578,6 +578,31 @@ func (s *ExecutionRequest) SetInput(val OptString) {
 // SetExtension sets the value of Extension.
 func (s *ExecutionRequest) SetExtension(val OptString) {
 	s.Extension = val
+}
+
+type ExecutionRequestFilesItem struct {
+	Name    string `json:"name"`
+	Content string `json:"content"`
+}
+
+// GetName returns the value of Name.
+func (s *ExecutionRequestFilesItem) GetName() string {
+	return s.Name
+}
+
+// GetContent returns the value of Content.
+func (s *ExecutionRequestFilesItem) GetContent() string {
+	return s.Content
+}
+
+// SetName sets the value of Name.
+func (s *ExecutionRequestFilesItem) SetName(val string) {
+	s.Name = val
+}
+
+// SetContent sets the value of Content.
+func (s *ExecutionRequestFilesItem) SetContent(val string) {
+	s.Content = val
 }
 
 // Merged schema.

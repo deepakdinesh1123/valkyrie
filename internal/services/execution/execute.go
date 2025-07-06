@@ -1,5 +1,7 @@
 package execution
 
+import "github.com/deepakdinesh1123/valkyrie/internal/db/jsonschema"
+
 type ExecutionRequest struct {
 	Flake                string
 	Code                 string
@@ -20,4 +22,5 @@ type ExecutionRequest struct {
 	ScriptName           string
 	NIXPKGS_REV          string
 	Secrets              []byte
+	Files                jsonschema.ExecReqFiles
 }

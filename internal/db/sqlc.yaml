@@ -1,9 +1,9 @@
 version: "2"
 cloud:
-  project: '01J1BQY2CAXNR8DBY51C3KJG0K'
+  project: "01J1BQY2CAXNR8DBY51C3KJG0K"
 servers:
-- engine: postgresql
-  uri: ${PG_URL}
+  - engine: postgresql
+    uri: ${PG_URL}
 sql:
   - schema:
       - "migrations"
@@ -33,7 +33,7 @@ sql:
               type: "UUID"
             nullable: true
           - column: "jobs.arguments"
-            go_type: 
+            go_type:
               import: "github.com/deepakdinesh1123/valkyrie/internal/db/jsonschema"
               package: "jsonschema"
               type: "JobArguments"
@@ -47,4 +47,8 @@ sql:
               import: "github.com/deepakdinesh1123/valkyrie/internal/db/jsonschema"
               package: "jsonschema"
               type: "SandboxDetails"
-          
+          - column: "exec_request.files"
+            go_type:
+              import: "github.com/deepakdinesh1123/valkyrie/internal/db/jsonschema"
+              package: "jsonschema"
+              type: "ExecReqFiles"
