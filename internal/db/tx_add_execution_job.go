@@ -17,7 +17,7 @@ type AddJobTxParams struct {
 	SystemDependencies   []string
 	CmdLineArgs          string
 	CompilerArgs         string
-	Files                []byte
+	Files                jsonschema.ExecReqFiles
 	Input                string
 	Command              string
 	Setup                string

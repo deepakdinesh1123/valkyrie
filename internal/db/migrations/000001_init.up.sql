@@ -54,7 +54,7 @@ create table exec_request (
     system_dependencies text[],
     cmd_line_args varchar(1024),
     compile_args varchar(1024),
-    files bytea,
+    files jsonb,
     input text,
     command text,
     setup text,

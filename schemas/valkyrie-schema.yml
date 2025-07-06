@@ -794,8 +794,17 @@ components:
         command:
           type: string
         files:
-          type: string
-          format: byte
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              content:
+                type: string
+            required:
+              - name
+              - content
         input:
           type: string
         extension:

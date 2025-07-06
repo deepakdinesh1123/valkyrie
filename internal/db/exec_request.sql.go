@@ -8,6 +8,7 @@ package db
 import (
 	"context"
 
+	jsonschema "github.com/deepakdinesh1123/valkyrie/internal/db/jsonschema"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -104,22 +105,22 @@ returning id
 `
 
 type InsertExecRequestParams struct {
-	Hash                 string      `db:"hash" json:"hash"`
-	Code                 pgtype.Text `db:"code" json:"code"`
-	Flake                string      `db:"flake" json:"flake"`
-	LanguageDependencies []string    `db:"language_dependencies" json:"language_dependencies"`
-	SystemDependencies   []string    `db:"system_dependencies" json:"system_dependencies"`
-	CmdLineArgs          pgtype.Text `db:"cmd_line_args" json:"cmd_line_args"`
-	CompileArgs          pgtype.Text `db:"compile_args" json:"compile_args"`
-	Files                []byte      `db:"files" json:"files"`
-	Input                pgtype.Text `db:"input" json:"input"`
-	Command              pgtype.Text `db:"command" json:"command"`
-	Setup                pgtype.Text `db:"setup" json:"setup"`
-	LanguageVersion      int64       `db:"language_version" json:"language_version"`
-	SystemSetup          pgtype.Text `db:"system_setup" json:"system_setup"`
-	PkgIndex             pgtype.Text `db:"pkg_index" json:"pkg_index"`
-	Extension            pgtype.Text `db:"extension" json:"extension"`
-	Secrets              []byte      `db:"secrets" json:"secrets"`
+	Hash                 string                  `db:"hash" json:"hash"`
+	Code                 pgtype.Text             `db:"code" json:"code"`
+	Flake                string                  `db:"flake" json:"flake"`
+	LanguageDependencies []string                `db:"language_dependencies" json:"language_dependencies"`
+	SystemDependencies   []string                `db:"system_dependencies" json:"system_dependencies"`
+	CmdLineArgs          pgtype.Text             `db:"cmd_line_args" json:"cmd_line_args"`
+	CompileArgs          pgtype.Text             `db:"compile_args" json:"compile_args"`
+	Files                jsonschema.ExecReqFiles `db:"files" json:"files"`
+	Input                pgtype.Text             `db:"input" json:"input"`
+	Command              pgtype.Text             `db:"command" json:"command"`
+	Setup                pgtype.Text             `db:"setup" json:"setup"`
+	LanguageVersion      int64                   `db:"language_version" json:"language_version"`
+	SystemSetup          pgtype.Text             `db:"system_setup" json:"system_setup"`
+	PkgIndex             pgtype.Text             `db:"pkg_index" json:"pkg_index"`
+	Extension            pgtype.Text             `db:"extension" json:"extension"`
+	Secrets              []byte                  `db:"secrets" json:"secrets"`
 }
 
 func (q *Queries) InsertExecRequest(ctx context.Context, arg InsertExecRequestParams) (int32, error) {

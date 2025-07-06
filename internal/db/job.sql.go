@@ -112,7 +112,7 @@ type GetAllExecutionJobsRow struct {
 	SystemDependencies   []string                `db:"system_dependencies" json:"system_dependencies"`
 	CmdLineArgs          pgtype.Text             `db:"cmd_line_args" json:"cmd_line_args"`
 	CompileArgs          pgtype.Text             `db:"compile_args" json:"compile_args"`
-	Files                []byte                  `db:"files" json:"files"`
+	Files                jsonschema.ExecReqFiles `db:"files" json:"files"`
 	Input                pgtype.Text             `db:"input" json:"input"`
 	Command              pgtype.Text             `db:"command" json:"command"`
 	Setup                pgtype.Text             `db:"setup" json:"setup"`
@@ -186,33 +186,33 @@ type GetAllExecutionsParams struct {
 }
 
 type GetAllExecutionsRow struct {
-	ExecID               int64              `db:"exec_id" json:"exec_id"`
-	JobID                pgtype.Int8        `db:"job_id" json:"job_id"`
-	WorkerID             pgtype.Int4        `db:"worker_id" json:"worker_id"`
-	StartedAt            pgtype.Timestamptz `db:"started_at" json:"started_at"`
-	FinishedAt           pgtype.Timestamptz `db:"finished_at" json:"finished_at"`
-	CreatedAt            pgtype.Timestamptz `db:"created_at" json:"created_at"`
-	ExecRequestID        pgtype.Int4        `db:"exec_request_id" json:"exec_request_id"`
-	ExecLogs             string             `db:"exec_logs" json:"exec_logs"`
-	NixLogs              pgtype.Text        `db:"nix_logs" json:"nix_logs"`
-	Success              pgtype.Bool        `db:"success" json:"success"`
-	ID                   int32              `db:"id" json:"id"`
-	Hash                 string             `db:"hash" json:"hash"`
-	Code                 pgtype.Text        `db:"code" json:"code"`
-	Flake                string             `db:"flake" json:"flake"`
-	LanguageDependencies []string           `db:"language_dependencies" json:"language_dependencies"`
-	SystemDependencies   []string           `db:"system_dependencies" json:"system_dependencies"`
-	CmdLineArgs          pgtype.Text        `db:"cmd_line_args" json:"cmd_line_args"`
-	CompileArgs          pgtype.Text        `db:"compile_args" json:"compile_args"`
-	Files                []byte             `db:"files" json:"files"`
-	Input                pgtype.Text        `db:"input" json:"input"`
-	Command              pgtype.Text        `db:"command" json:"command"`
-	Setup                pgtype.Text        `db:"setup" json:"setup"`
-	SystemSetup          pgtype.Text        `db:"system_setup" json:"system_setup"`
-	PkgIndex             pgtype.Text        `db:"pkg_index" json:"pkg_index"`
-	Extension            pgtype.Text        `db:"extension" json:"extension"`
-	LanguageVersion      int64              `db:"language_version" json:"language_version"`
-	Secrets              []byte             `db:"secrets" json:"secrets"`
+	ExecID               int64                   `db:"exec_id" json:"exec_id"`
+	JobID                pgtype.Int8             `db:"job_id" json:"job_id"`
+	WorkerID             pgtype.Int4             `db:"worker_id" json:"worker_id"`
+	StartedAt            pgtype.Timestamptz      `db:"started_at" json:"started_at"`
+	FinishedAt           pgtype.Timestamptz      `db:"finished_at" json:"finished_at"`
+	CreatedAt            pgtype.Timestamptz      `db:"created_at" json:"created_at"`
+	ExecRequestID        pgtype.Int4             `db:"exec_request_id" json:"exec_request_id"`
+	ExecLogs             string                  `db:"exec_logs" json:"exec_logs"`
+	NixLogs              pgtype.Text             `db:"nix_logs" json:"nix_logs"`
+	Success              pgtype.Bool             `db:"success" json:"success"`
+	ID                   int32                   `db:"id" json:"id"`
+	Hash                 string                  `db:"hash" json:"hash"`
+	Code                 pgtype.Text             `db:"code" json:"code"`
+	Flake                string                  `db:"flake" json:"flake"`
+	LanguageDependencies []string                `db:"language_dependencies" json:"language_dependencies"`
+	SystemDependencies   []string                `db:"system_dependencies" json:"system_dependencies"`
+	CmdLineArgs          pgtype.Text             `db:"cmd_line_args" json:"cmd_line_args"`
+	CompileArgs          pgtype.Text             `db:"compile_args" json:"compile_args"`
+	Files                jsonschema.ExecReqFiles `db:"files" json:"files"`
+	Input                pgtype.Text             `db:"input" json:"input"`
+	Command              pgtype.Text             `db:"command" json:"command"`
+	Setup                pgtype.Text             `db:"setup" json:"setup"`
+	SystemSetup          pgtype.Text             `db:"system_setup" json:"system_setup"`
+	PkgIndex             pgtype.Text             `db:"pkg_index" json:"pkg_index"`
+	Extension            pgtype.Text             `db:"extension" json:"extension"`
+	LanguageVersion      int64                   `db:"language_version" json:"language_version"`
+	Secrets              []byte                  `db:"secrets" json:"secrets"`
 }
 
 func (q *Queries) GetAllExecutions(ctx context.Context, arg GetAllExecutionsParams) ([]GetAllExecutionsRow, error) {
@@ -270,33 +270,33 @@ where executions.exec_id = $1
 `
 
 type GetExecutionRow struct {
-	ExecID               int64              `db:"exec_id" json:"exec_id"`
-	JobID                pgtype.Int8        `db:"job_id" json:"job_id"`
-	WorkerID             pgtype.Int4        `db:"worker_id" json:"worker_id"`
-	StartedAt            pgtype.Timestamptz `db:"started_at" json:"started_at"`
-	FinishedAt           pgtype.Timestamptz `db:"finished_at" json:"finished_at"`
-	CreatedAt            pgtype.Timestamptz `db:"created_at" json:"created_at"`
-	ExecRequestID        pgtype.Int4        `db:"exec_request_id" json:"exec_request_id"`
-	ExecLogs             string             `db:"exec_logs" json:"exec_logs"`
-	NixLogs              pgtype.Text        `db:"nix_logs" json:"nix_logs"`
-	Success              pgtype.Bool        `db:"success" json:"success"`
-	ID                   int32              `db:"id" json:"id"`
-	Hash                 string             `db:"hash" json:"hash"`
-	Code                 pgtype.Text        `db:"code" json:"code"`
-	Flake                string             `db:"flake" json:"flake"`
-	LanguageDependencies []string           `db:"language_dependencies" json:"language_dependencies"`
-	SystemDependencies   []string           `db:"system_dependencies" json:"system_dependencies"`
-	CmdLineArgs          pgtype.Text        `db:"cmd_line_args" json:"cmd_line_args"`
-	CompileArgs          pgtype.Text        `db:"compile_args" json:"compile_args"`
-	Files                []byte             `db:"files" json:"files"`
-	Input                pgtype.Text        `db:"input" json:"input"`
-	Command              pgtype.Text        `db:"command" json:"command"`
-	Setup                pgtype.Text        `db:"setup" json:"setup"`
-	SystemSetup          pgtype.Text        `db:"system_setup" json:"system_setup"`
-	PkgIndex             pgtype.Text        `db:"pkg_index" json:"pkg_index"`
-	Extension            pgtype.Text        `db:"extension" json:"extension"`
-	LanguageVersion      int64              `db:"language_version" json:"language_version"`
-	Secrets              []byte             `db:"secrets" json:"secrets"`
+	ExecID               int64                   `db:"exec_id" json:"exec_id"`
+	JobID                pgtype.Int8             `db:"job_id" json:"job_id"`
+	WorkerID             pgtype.Int4             `db:"worker_id" json:"worker_id"`
+	StartedAt            pgtype.Timestamptz      `db:"started_at" json:"started_at"`
+	FinishedAt           pgtype.Timestamptz      `db:"finished_at" json:"finished_at"`
+	CreatedAt            pgtype.Timestamptz      `db:"created_at" json:"created_at"`
+	ExecRequestID        pgtype.Int4             `db:"exec_request_id" json:"exec_request_id"`
+	ExecLogs             string                  `db:"exec_logs" json:"exec_logs"`
+	NixLogs              pgtype.Text             `db:"nix_logs" json:"nix_logs"`
+	Success              pgtype.Bool             `db:"success" json:"success"`
+	ID                   int32                   `db:"id" json:"id"`
+	Hash                 string                  `db:"hash" json:"hash"`
+	Code                 pgtype.Text             `db:"code" json:"code"`
+	Flake                string                  `db:"flake" json:"flake"`
+	LanguageDependencies []string                `db:"language_dependencies" json:"language_dependencies"`
+	SystemDependencies   []string                `db:"system_dependencies" json:"system_dependencies"`
+	CmdLineArgs          pgtype.Text             `db:"cmd_line_args" json:"cmd_line_args"`
+	CompileArgs          pgtype.Text             `db:"compile_args" json:"compile_args"`
+	Files                jsonschema.ExecReqFiles `db:"files" json:"files"`
+	Input                pgtype.Text             `db:"input" json:"input"`
+	Command              pgtype.Text             `db:"command" json:"command"`
+	Setup                pgtype.Text             `db:"setup" json:"setup"`
+	SystemSetup          pgtype.Text             `db:"system_setup" json:"system_setup"`
+	PkgIndex             pgtype.Text             `db:"pkg_index" json:"pkg_index"`
+	Extension            pgtype.Text             `db:"extension" json:"extension"`
+	LanguageVersion      int64                   `db:"language_version" json:"language_version"`
+	Secrets              []byte                  `db:"secrets" json:"secrets"`
 }
 
 func (q *Queries) GetExecution(ctx context.Context, execID int64) (GetExecutionRow, error) {
@@ -358,7 +358,7 @@ type GetExecutionJobRow struct {
 	SystemDependencies   []string                `db:"system_dependencies" json:"system_dependencies"`
 	CmdLineArgs          pgtype.Text             `db:"cmd_line_args" json:"cmd_line_args"`
 	CompileArgs          pgtype.Text             `db:"compile_args" json:"compile_args"`
-	Files                []byte                  `db:"files" json:"files"`
+	Files                jsonschema.ExecReqFiles `db:"files" json:"files"`
 	Input                pgtype.Text             `db:"input" json:"input"`
 	Command              pgtype.Text             `db:"command" json:"command"`
 	Setup                pgtype.Text             `db:"setup" json:"setup"`
@@ -420,33 +420,33 @@ type GetExecutionsForJobParams struct {
 }
 
 type GetExecutionsForJobRow struct {
-	ExecID               int64              `db:"exec_id" json:"exec_id"`
-	JobID                pgtype.Int8        `db:"job_id" json:"job_id"`
-	WorkerID             pgtype.Int4        `db:"worker_id" json:"worker_id"`
-	StartedAt            pgtype.Timestamptz `db:"started_at" json:"started_at"`
-	FinishedAt           pgtype.Timestamptz `db:"finished_at" json:"finished_at"`
-	CreatedAt            pgtype.Timestamptz `db:"created_at" json:"created_at"`
-	ExecRequestID        pgtype.Int4        `db:"exec_request_id" json:"exec_request_id"`
-	ExecLogs             string             `db:"exec_logs" json:"exec_logs"`
-	NixLogs              pgtype.Text        `db:"nix_logs" json:"nix_logs"`
-	Success              pgtype.Bool        `db:"success" json:"success"`
-	ID                   int32              `db:"id" json:"id"`
-	Hash                 string             `db:"hash" json:"hash"`
-	Code                 pgtype.Text        `db:"code" json:"code"`
-	Flake                string             `db:"flake" json:"flake"`
-	LanguageDependencies []string           `db:"language_dependencies" json:"language_dependencies"`
-	SystemDependencies   []string           `db:"system_dependencies" json:"system_dependencies"`
-	CmdLineArgs          pgtype.Text        `db:"cmd_line_args" json:"cmd_line_args"`
-	CompileArgs          pgtype.Text        `db:"compile_args" json:"compile_args"`
-	Files                []byte             `db:"files" json:"files"`
-	Input                pgtype.Text        `db:"input" json:"input"`
-	Command              pgtype.Text        `db:"command" json:"command"`
-	Setup                pgtype.Text        `db:"setup" json:"setup"`
-	SystemSetup          pgtype.Text        `db:"system_setup" json:"system_setup"`
-	PkgIndex             pgtype.Text        `db:"pkg_index" json:"pkg_index"`
-	Extension            pgtype.Text        `db:"extension" json:"extension"`
-	LanguageVersion      int64              `db:"language_version" json:"language_version"`
-	Secrets              []byte             `db:"secrets" json:"secrets"`
+	ExecID               int64                   `db:"exec_id" json:"exec_id"`
+	JobID                pgtype.Int8             `db:"job_id" json:"job_id"`
+	WorkerID             pgtype.Int4             `db:"worker_id" json:"worker_id"`
+	StartedAt            pgtype.Timestamptz      `db:"started_at" json:"started_at"`
+	FinishedAt           pgtype.Timestamptz      `db:"finished_at" json:"finished_at"`
+	CreatedAt            pgtype.Timestamptz      `db:"created_at" json:"created_at"`
+	ExecRequestID        pgtype.Int4             `db:"exec_request_id" json:"exec_request_id"`
+	ExecLogs             string                  `db:"exec_logs" json:"exec_logs"`
+	NixLogs              pgtype.Text             `db:"nix_logs" json:"nix_logs"`
+	Success              pgtype.Bool             `db:"success" json:"success"`
+	ID                   int32                   `db:"id" json:"id"`
+	Hash                 string                  `db:"hash" json:"hash"`
+	Code                 pgtype.Text             `db:"code" json:"code"`
+	Flake                string                  `db:"flake" json:"flake"`
+	LanguageDependencies []string                `db:"language_dependencies" json:"language_dependencies"`
+	SystemDependencies   []string                `db:"system_dependencies" json:"system_dependencies"`
+	CmdLineArgs          pgtype.Text             `db:"cmd_line_args" json:"cmd_line_args"`
+	CompileArgs          pgtype.Text             `db:"compile_args" json:"compile_args"`
+	Files                jsonschema.ExecReqFiles `db:"files" json:"files"`
+	Input                pgtype.Text             `db:"input" json:"input"`
+	Command              pgtype.Text             `db:"command" json:"command"`
+	Setup                pgtype.Text             `db:"setup" json:"setup"`
+	SystemSetup          pgtype.Text             `db:"system_setup" json:"system_setup"`
+	PkgIndex             pgtype.Text             `db:"pkg_index" json:"pkg_index"`
+	Extension            pgtype.Text             `db:"extension" json:"extension"`
+	LanguageVersion      int64                   `db:"language_version" json:"language_version"`
+	Secrets              []byte                  `db:"secrets" json:"secrets"`
 }
 
 func (q *Queries) GetExecutionsForJob(ctx context.Context, arg GetExecutionsForJobParams) ([]GetExecutionsForJobRow, error) {
@@ -534,33 +534,33 @@ limit 1
 `
 
 type GetLatestExecutionRow struct {
-	ExecID               int64              `db:"exec_id" json:"exec_id"`
-	JobID                pgtype.Int8        `db:"job_id" json:"job_id"`
-	WorkerID             pgtype.Int4        `db:"worker_id" json:"worker_id"`
-	StartedAt            pgtype.Timestamptz `db:"started_at" json:"started_at"`
-	FinishedAt           pgtype.Timestamptz `db:"finished_at" json:"finished_at"`
-	CreatedAt            pgtype.Timestamptz `db:"created_at" json:"created_at"`
-	ExecRequestID        pgtype.Int4        `db:"exec_request_id" json:"exec_request_id"`
-	ExecLogs             string             `db:"exec_logs" json:"exec_logs"`
-	NixLogs              pgtype.Text        `db:"nix_logs" json:"nix_logs"`
-	Success              pgtype.Bool        `db:"success" json:"success"`
-	ID                   int32              `db:"id" json:"id"`
-	Hash                 string             `db:"hash" json:"hash"`
-	Code                 pgtype.Text        `db:"code" json:"code"`
-	Flake                string             `db:"flake" json:"flake"`
-	LanguageDependencies []string           `db:"language_dependencies" json:"language_dependencies"`
-	SystemDependencies   []string           `db:"system_dependencies" json:"system_dependencies"`
-	CmdLineArgs          pgtype.Text        `db:"cmd_line_args" json:"cmd_line_args"`
-	CompileArgs          pgtype.Text        `db:"compile_args" json:"compile_args"`
-	Files                []byte             `db:"files" json:"files"`
-	Input                pgtype.Text        `db:"input" json:"input"`
-	Command              pgtype.Text        `db:"command" json:"command"`
-	Setup                pgtype.Text        `db:"setup" json:"setup"`
-	SystemSetup          pgtype.Text        `db:"system_setup" json:"system_setup"`
-	PkgIndex             pgtype.Text        `db:"pkg_index" json:"pkg_index"`
-	Extension            pgtype.Text        `db:"extension" json:"extension"`
-	LanguageVersion      int64              `db:"language_version" json:"language_version"`
-	Secrets              []byte             `db:"secrets" json:"secrets"`
+	ExecID               int64                   `db:"exec_id" json:"exec_id"`
+	JobID                pgtype.Int8             `db:"job_id" json:"job_id"`
+	WorkerID             pgtype.Int4             `db:"worker_id" json:"worker_id"`
+	StartedAt            pgtype.Timestamptz      `db:"started_at" json:"started_at"`
+	FinishedAt           pgtype.Timestamptz      `db:"finished_at" json:"finished_at"`
+	CreatedAt            pgtype.Timestamptz      `db:"created_at" json:"created_at"`
+	ExecRequestID        pgtype.Int4             `db:"exec_request_id" json:"exec_request_id"`
+	ExecLogs             string                  `db:"exec_logs" json:"exec_logs"`
+	NixLogs              pgtype.Text             `db:"nix_logs" json:"nix_logs"`
+	Success              pgtype.Bool             `db:"success" json:"success"`
+	ID                   int32                   `db:"id" json:"id"`
+	Hash                 string                  `db:"hash" json:"hash"`
+	Code                 pgtype.Text             `db:"code" json:"code"`
+	Flake                string                  `db:"flake" json:"flake"`
+	LanguageDependencies []string                `db:"language_dependencies" json:"language_dependencies"`
+	SystemDependencies   []string                `db:"system_dependencies" json:"system_dependencies"`
+	CmdLineArgs          pgtype.Text             `db:"cmd_line_args" json:"cmd_line_args"`
+	CompileArgs          pgtype.Text             `db:"compile_args" json:"compile_args"`
+	Files                jsonschema.ExecReqFiles `db:"files" json:"files"`
+	Input                pgtype.Text             `db:"input" json:"input"`
+	Command              pgtype.Text             `db:"command" json:"command"`
+	Setup                pgtype.Text             `db:"setup" json:"setup"`
+	SystemSetup          pgtype.Text             `db:"system_setup" json:"system_setup"`
+	PkgIndex             pgtype.Text             `db:"pkg_index" json:"pkg_index"`
+	Extension            pgtype.Text             `db:"extension" json:"extension"`
+	LanguageVersion      int64                   `db:"language_version" json:"language_version"`
+	Secrets              []byte                  `db:"secrets" json:"secrets"`
 }
 
 func (q *Queries) GetLatestExecution(ctx context.Context, jobID pgtype.Int8) (GetLatestExecutionRow, error) {
