@@ -8,7 +8,6 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/executor/container"
-	"github.com/deepakdinesh1123/valkyrie/internal/executor/k8s"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
@@ -25,11 +24,6 @@ func GetExecutor(ctx context.Context, queries db.Store, workerId int32, tp trace
 	switch envConfig.RUNTIME {
 	case "docker", "podman":
 		Executor, err = container.NewContainerExecutor(ctx, envConfig, queries, workerId, tp, mp, logger)
-		if err != nil {
-			return nil, err
-		}
-	case "k8s":
-		Executor, err = k8s.NewK8sExecutor(ctx, envConfig, queries, workerId, tp, mp, logger)
 		if err != nil {
 			return nil, err
 		}

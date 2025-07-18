@@ -106,6 +106,7 @@ create table executions (
     exec_request_id int references exec_request on delete set null,
     exec_logs text not null,
     nix_logs text,
+    out_files bytea,
     success boolean
 );
 
