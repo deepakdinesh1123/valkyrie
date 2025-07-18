@@ -8,7 +8,6 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/sandbox/container"
-	"github.com/deepakdinesh1123/valkyrie/internal/sandbox/k8s"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
@@ -24,8 +23,6 @@ func GetSandboxHandler(ctx context.Context, queries db.Store, workerId int32, tp
 	switch envConfig.RUNTIME {
 	case "docker":
 		return container.NewDockerSandboxHandler(ctx, queries, workerId, tp, mp, envConfig, logger)
-	case "k8s":
-		return k8s.NewK8SandboxHandler(ctx, queries, workerId, tp, mp, envConfig, logger)
 	default:
 		return nil, fmt.Errorf("invalid sandbox handler")
 	}

@@ -39,6 +39,7 @@ type Execution struct {
 	ExecRequestID pgtype.Int4        `db:"exec_request_id" json:"exec_request_id"`
 	ExecLogs      string             `db:"exec_logs" json:"exec_logs"`
 	NixLogs       pgtype.Text        `db:"nix_logs" json:"nix_logs"`
+	OutFiles      []byte             `db:"out_files" json:"out_files"`
 	Success       pgtype.Bool        `db:"success" json:"success"`
 }
 

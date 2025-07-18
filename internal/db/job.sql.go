@@ -36,7 +36,7 @@ const fetchJob = `-- name: FetchJob :one
 with cte as (
     select job_id
     from jobs
-    where 
+    where
         current_state = 'pending'
         and job_type = $2::text
         and retries < max_retries
@@ -45,9 +45,9 @@ with cte as (
     limit 1
 )
 update jobs
-set current_state = 'scheduled', 
-    started_at = now(), 
-    worker_id = $1::int, 
+set current_state = 'scheduled',
+    started_at = now(),
+    worker_id = $1::int,
     updated_at = now()
 where job_id = (select job_id from cte)
 returning job_id, created_at, updated_at, time_out, started_at, arguments, current_state, retries, max_retries, worker_id, job_type
@@ -78,9 +78,9 @@ func (q *Queries) FetchJob(ctx context.Context, arg FetchJobParams) (Job, error)
 }
 
 const getAllExecutionJobs = `-- name: GetAllExecutionJobs :many
-SELECT job_id, created_at, updated_at, time_out, started_at, arguments, current_state, retries, max_retries, worker_id, job_type, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets 
+SELECT job_id, created_at, updated_at, time_out, started_at, arguments, current_state, retries, max_retries, worker_id, job_type, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets
 FROM jobs
-INNER JOIN exec_request 
+INNER JOIN exec_request
 ON CAST(arguments->'ExecConfig'->>'ExecReqId' AS INT) = exec_request.id
 WHERE job_id >= $1
 ORDER BY jobs.job_id
@@ -173,7 +173,7 @@ func (q *Queries) GetAllExecutionJobs(ctx context.Context, arg GetAllExecutionJo
 }
 
 const getAllExecutions = `-- name: GetAllExecutions :many
-select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, success, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets from executions
+select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, out_files, success, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets from executions
 inner join exec_request on executions.exec_request_id = exec_request.id
 where exec_id >= $1
 order by started_at desc
@@ -195,6 +195,7 @@ type GetAllExecutionsRow struct {
 	ExecRequestID        pgtype.Int4             `db:"exec_request_id" json:"exec_request_id"`
 	ExecLogs             string                  `db:"exec_logs" json:"exec_logs"`
 	NixLogs              pgtype.Text             `db:"nix_logs" json:"nix_logs"`
+	OutFiles             []byte                  `db:"out_files" json:"out_files"`
 	Success              pgtype.Bool             `db:"success" json:"success"`
 	ID                   int32                   `db:"id" json:"id"`
 	Hash                 string                  `db:"hash" json:"hash"`
@@ -234,6 +235,7 @@ func (q *Queries) GetAllExecutions(ctx context.Context, arg GetAllExecutionsPara
 			&i.ExecRequestID,
 			&i.ExecLogs,
 			&i.NixLogs,
+			&i.OutFiles,
 			&i.Success,
 			&i.ID,
 			&i.Hash,
@@ -264,7 +266,7 @@ func (q *Queries) GetAllExecutions(ctx context.Context, arg GetAllExecutionsPara
 }
 
 const getExecution = `-- name: GetExecution :one
-select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, success, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets from executions
+select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, out_files, success, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets from executions
 inner join exec_request on executions.exec_request_id = exec_request.id
 where executions.exec_id = $1
 `
@@ -279,6 +281,7 @@ type GetExecutionRow struct {
 	ExecRequestID        pgtype.Int4             `db:"exec_request_id" json:"exec_request_id"`
 	ExecLogs             string                  `db:"exec_logs" json:"exec_logs"`
 	NixLogs              pgtype.Text             `db:"nix_logs" json:"nix_logs"`
+	OutFiles             []byte                  `db:"out_files" json:"out_files"`
 	Success              pgtype.Bool             `db:"success" json:"success"`
 	ID                   int32                   `db:"id" json:"id"`
 	Hash                 string                  `db:"hash" json:"hash"`
@@ -312,6 +315,7 @@ func (q *Queries) GetExecution(ctx context.Context, execID int64) (GetExecutionR
 		&i.ExecRequestID,
 		&i.ExecLogs,
 		&i.NixLogs,
+		&i.OutFiles,
 		&i.Success,
 		&i.ID,
 		&i.Hash,
@@ -406,7 +410,7 @@ func (q *Queries) GetExecutionJob(ctx context.Context, jobID int64) (GetExecutio
 }
 
 const getExecutionsForJob = `-- name: GetExecutionsForJob :many
-select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, success, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets from executions
+select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, out_files, success, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets from executions
 inner join exec_request on executions.exec_request_id = exec_request.id
 where executions.job_id = $1 and exec_id >= $2
 order by finished_at desc
@@ -429,6 +433,7 @@ type GetExecutionsForJobRow struct {
 	ExecRequestID        pgtype.Int4             `db:"exec_request_id" json:"exec_request_id"`
 	ExecLogs             string                  `db:"exec_logs" json:"exec_logs"`
 	NixLogs              pgtype.Text             `db:"nix_logs" json:"nix_logs"`
+	OutFiles             []byte                  `db:"out_files" json:"out_files"`
 	Success              pgtype.Bool             `db:"success" json:"success"`
 	ID                   int32                   `db:"id" json:"id"`
 	Hash                 string                  `db:"hash" json:"hash"`
@@ -468,6 +473,7 @@ func (q *Queries) GetExecutionsForJob(ctx context.Context, arg GetExecutionsForJ
 			&i.ExecRequestID,
 			&i.ExecLogs,
 			&i.NixLogs,
+			&i.OutFiles,
 			&i.Success,
 			&i.ID,
 			&i.Hash,
@@ -498,11 +504,11 @@ func (q *Queries) GetExecutionsForJob(ctx context.Context, arg GetExecutionsForJ
 }
 
 const getFlake = `-- name: GetFlake :one
-SELECT flake 
-FROM exec_request 
+SELECT flake
+FROM exec_request
 WHERE id = (
-    SELECT CAST(arguments->'ExecConfig'->>'ExecReqId' AS INT) 
-    FROM jobs 
+    SELECT CAST(arguments->'ExecConfig'->>'ExecReqId' AS INT)
+    FROM jobs
     WHERE job_id = $1
 )
 `
@@ -526,7 +532,7 @@ func (q *Queries) GetJobState(ctx context.Context, jobID int64) (string, error) 
 }
 
 const getLatestExecution = `-- name: GetLatestExecution :one
-select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, success, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets from executions
+select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, out_files, success, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets from executions
 inner join exec_request on executions.exec_request_id = exec_request.id
 where executions.job_id = $1
 order by finished_at desc
@@ -543,6 +549,7 @@ type GetLatestExecutionRow struct {
 	ExecRequestID        pgtype.Int4             `db:"exec_request_id" json:"exec_request_id"`
 	ExecLogs             string                  `db:"exec_logs" json:"exec_logs"`
 	NixLogs              pgtype.Text             `db:"nix_logs" json:"nix_logs"`
+	OutFiles             []byte                  `db:"out_files" json:"out_files"`
 	Success              pgtype.Bool             `db:"success" json:"success"`
 	ID                   int32                   `db:"id" json:"id"`
 	Hash                 string                  `db:"hash" json:"hash"`
@@ -576,6 +583,7 @@ func (q *Queries) GetLatestExecution(ctx context.Context, jobID pgtype.Int8) (Ge
 		&i.ExecRequestID,
 		&i.ExecLogs,
 		&i.NixLogs,
+		&i.OutFiles,
 		&i.Success,
 		&i.ID,
 		&i.Hash,
@@ -633,10 +641,10 @@ func (q *Queries) GetTotalJobs(ctx context.Context) (int64, error) {
 
 const insertExecution = `-- name: InsertExecution :one
 insert into executions
-    (job_id, worker_id, started_at, finished_at, exec_request_id, exec_logs, nix_logs, success)
+    (job_id, worker_id, started_at, finished_at, exec_request_id, exec_logs, nix_logs, out_files, success)
 values
-    ($1, $2, $3, $4, $5, $6, $7, $8)
-returning exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, success
+    ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+returning exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, out_files, success
 `
 
 type InsertExecutionParams struct {
@@ -647,6 +655,7 @@ type InsertExecutionParams struct {
 	ExecRequestID pgtype.Int4        `db:"exec_request_id" json:"exec_request_id"`
 	ExecLogs      string             `db:"exec_logs" json:"exec_logs"`
 	NixLogs       pgtype.Text        `db:"nix_logs" json:"nix_logs"`
+	OutFiles      []byte             `db:"out_files" json:"out_files"`
 	Success       pgtype.Bool        `db:"success" json:"success"`
 }
 
@@ -659,6 +668,7 @@ func (q *Queries) InsertExecution(ctx context.Context, arg InsertExecutionParams
 		arg.ExecRequestID,
 		arg.ExecLogs,
 		arg.NixLogs,
+		arg.OutFiles,
 		arg.Success,
 	)
 	var i Execution
@@ -672,6 +682,7 @@ func (q *Queries) InsertExecution(ctx context.Context, arg InsertExecutionParams
 		&i.ExecRequestID,
 		&i.ExecLogs,
 		&i.NixLogs,
+		&i.OutFiles,
 		&i.Success,
 	)
 	return i, err
@@ -733,7 +744,7 @@ set
     started_at = null,
     worker_id = null,
     retries = retries::integer + 1
-where current_state = 'scheduled' 
+where current_state = 'scheduled'
   and started_at + time_out * INTERVAL '1 second' < now() and time_out > 0
 `
 
@@ -750,7 +761,7 @@ set
     started_at = null,
     retries = retries::integer + 1,
     updated_at = now()
-where current_state = 'scheduled' 
+where current_state = 'scheduled'
   and worker_id = $1
 `
 

@@ -89,7 +89,7 @@ func (ce *ContainerExecutor) Execute(ctx context.Context, wg *concurrency.SafeWa
 		return
 	}
 
-	success, output, err := cc.Execute(tctx, contId, []string{"sh", "nix_run.sh"})
+	success, output, out_files, err := cc.Execute(tctx, contId, []string{"sh", "nix_run.sh"})
 	if err != nil {
 		logger.Err(err).Msg(err.Error())
 		ce.checkFailed(ce.Queries.UpdateJobResultTx(context.TODO(), jobRes))
@@ -103,6 +103,7 @@ func (ce *ContainerExecutor) Execute(ctx context.Context, wg *concurrency.SafeWa
 		jobRes.Retry = false
 	}
 	jobRes.ExecLogs = output
+	jobRes.OutFiles = out_files
 	ce.Logger.Debug().Str("output", output).Msg("Exec Logs")
 	ce.checkFailed(ce.Queries.UpdateJobResultTx(context.TODO(), jobRes))
 }
