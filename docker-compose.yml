@@ -20,6 +20,7 @@ services:
       - "80:80"
       - "8888:8080"
       - "443:443"
+    restart: unless-stopped
     volumes:
       - ./configs/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
     depends_on:
@@ -34,7 +35,6 @@ services:
       - valkyrie-network
       - proxy-network
     profiles:
-      - dev
       - production
       - staging
       - test-traefik
@@ -45,11 +45,10 @@ services:
       dockerfile: builds/images/packages/valkyrie.dockerfile
     env_file:
       - .env
+    restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
-      traefik:
-        condition: service_started
     command: ["server", "start"]
     ports:
       - 8080:8080
@@ -80,13 +79,14 @@ services:
       dockerfile: builds/images/packages/valkyrie.dockerfile
     env_file:
       - .env
+    restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
       valkyrie:
         condition: service_started
-      traefik:
-        condition: service_started
+      # traefik:
+      #   condition: service_started
     deploy:
       replicas: 1
     command: ["worker", "start"]
@@ -220,6 +220,7 @@ services:
       dockerfile: builds/images/devpi.dockerfile
     ports:
       - 3141
+    restart: unless-stopped
     volumes:
       - type: bind
         source: $HOME/.valkyrie/store/devpi
@@ -237,6 +238,7 @@ services:
       - .env
     ports:
       - 5432:5432
+    restart: unless-stopped
     healthcheck:
       test:
         [
@@ -248,9 +250,9 @@ services:
       retries: 5
     networks:
       - postgres-network
-    depends_on:
-      traefik:
-        condition: service_started
+  #  depends_on:
+ #     traefik:
+#        condition: service_started
     profiles:
       - dev
       - production
@@ -287,7 +289,21 @@ services:
     profiles:
       - production
       - staging
-
+      
+#  caddy:
+#    image: caddy:builder-alpine
+#    restart: unless-stopped
+#    ports:
+#      - "80:80"
+#      - "443:443"
+#      - "443:443/udp"
+#    volumes:
+#      - ./Caddyfile:/etc/caddy/Caddyfile
+#    profiles:
+#      - dev
+#    networks:
+#      - proxy-network
+      
   valkyrie_sandbox:
     container_name: "valkyrie_sandbox_1"
     image: valkyrie_sandbox:0.0.1-ubuntu
