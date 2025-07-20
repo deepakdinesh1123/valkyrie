@@ -35,7 +35,6 @@ services:
       - valkyrie-network
       - proxy-network
     profiles:
-      - dev
       - production
       - staging
       - test-traefik
