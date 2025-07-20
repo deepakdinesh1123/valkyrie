@@ -87,8 +87,8 @@ services:
         condition: service_healthy
       valkyrie:
         condition: service_started
-      traefik:
-        condition: service_started
+      # traefik:
+      #   condition: service_started
     deploy:
       replicas: 1
     command: ["worker", "start"]
