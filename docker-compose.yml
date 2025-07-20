@@ -304,6 +304,8 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile
     profiles:
       - dev
+    networks:
+      - proxy-network
       
   valkyrie_sandbox:
     container_name: "valkyrie_sandbox_1"
