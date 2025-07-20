@@ -1,0 +1,15 @@
+meta {
+  name: Fetch Flake
+  type: http
+  seq: 18
+}
+
+get {
+  url: {{base_url}}/api/flake/:jobId
+  body: none
+  auth: none
+}
+
+params:path {
+  jobId: 
+}

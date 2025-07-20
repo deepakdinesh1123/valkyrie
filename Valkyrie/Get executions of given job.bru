@@ -1,0 +1,15 @@
+meta {
+  name: Get executions of given job
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{base_url}}/api/jobs/:JobId/executions
+  body: none
+  auth: none
+}
+
+params:path {
+  JobId: 
+}

@@ -6,7 +6,7 @@ info:
     name: MIT
     url: https://github.com/deepakdinesh1123/valkyrie/blob/main/LICENSE
 servers:
-  - url: https://backend.evnix.cloud/api
+  - url: http://localhost:8080/api
 paths:
   /health:
     get:
@@ -783,7 +783,7 @@ components:
           type: integer
           format: int4
           default: 5
-        timeout:
+        exec_timeout:
           type: integer
           format: int32
           default: 180

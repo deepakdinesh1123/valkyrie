@@ -37,6 +37,7 @@
           skaffold
           kubernetes-helm
           mkcert
+          httpie
         ] ++ lib.optionals stdenv.isLinux [
           nsjail
           gpgme

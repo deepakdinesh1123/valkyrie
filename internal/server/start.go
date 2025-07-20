@@ -36,7 +36,19 @@ func (s *ValkyrieServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 	corsOptions := handlers.AllowedOrigins([]string{"*"})
 	corsMethods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"})
-	corsHeaders := handlers.AllowedHeaders([]string{"Content-Type", "Authorization", "X-Auth-Token"})
+	// corsHeaders := handlers.AllowedHeaders([]string{"Content-Type", "Authorization", "X-Auth-Token"})
+	corsHeaders := handlers.AllowedHeaders([]string{
+		"Authorization",
+		"Content-Type",
+		"User-Agent",
+		"X-Stainless-Arch",
+		"X-Stainless-Lang",
+		"X-Stainless-Os",
+		"X-Stainless-Package-Version",
+		"X-Stainless-Retry-Count",
+		"X-Stainless-Runtime",
+		"X-Stainless-Runtime-Version",
+	})
 
 	server = &http.Server{
 		ReadHeaderTimeout: time.Second * 5,
@@ -45,7 +57,7 @@ func (s *ValkyrieServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 			middleware.Wrap(r,
 				middleware.Instrument("server", route_finder, s.tp, s.mp, s.prop),
 				middleware.Labeler(route_finder),
-				middleware.TokenAuth(),
+				// middleware.TokenAuth(),
 				middleware.RequestMiddleware(s.logger),
 			),
 		),
