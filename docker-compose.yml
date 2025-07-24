@@ -10,6 +10,8 @@ services:
       - --metrics-server=0.0.0.0:9091
     depends_on:
       - valkyrie-otel-collector
+    networks:
+      - otel-network
     profiles:
       - staging
       - production
@@ -68,6 +70,7 @@ services:
       - valkyrie-network
       - postgres-network
       - proxy-network
+      - otel-network
     profiles:
       - dev
       - production
@@ -98,6 +101,7 @@ services:
       - postgres-network
       - nixery-network
       - proxy-network
+      - otel-network
     profiles:
       - dev
       - production
@@ -266,6 +270,8 @@ services:
     ports:
       - 4317
       - 9090
+    networks:
+      - otel-network
     profiles:
       - production
       - staging
@@ -276,6 +282,8 @@ services:
       - "6831:6831/udp" # UDP port for Jaeger agent
       - "16686:16686" # Web UI
       - "14268:14268" # HTTP port for spans
+    networks:
+      - otel-network
     profiles:
       - production
       - staging
@@ -286,6 +294,8 @@ services:
       - ./configs/telemetry/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
+    networks:
+      - otel-network
     profiles:
       - production
       - staging
