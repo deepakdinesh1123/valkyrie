@@ -53,7 +53,7 @@ services:
     networks:
       - valkyrie-network
       - proxy-network
-   profiles:
+    profiles:
       - sandbox
 
   valkyrie:
@@ -95,7 +95,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-       valkyrie:
+      valkyrie:
         condition: service_started
     deploy:
       replicas: 1
@@ -294,21 +294,7 @@ services:
     profiles:
       - production
       - staging
-      
-#  caddy:
-#    image: caddy:builder-alpine
-#    restart: unless-stopped
-#    ports:
-#      - "80:80"
-#      - "443:443"
-#      - "443:443/udp"
-#    volumes:
-#      - ./Caddyfile:/etc/caddy/Caddyfile
-#    profiles:
-#      - dev
-#    networks:
-#      - proxy-network
-      
+
   valkyrie_sandbox:
     container_name: "valkyrie_sandbox_1"
     image: valkyrie_sandbox:0.0.1-ubuntu
@@ -343,7 +329,7 @@ networks:
   postgres-network:
   nixery-network:
   proxy-network:
- devpi-network:
+  devpi-network:
     driver: bridge
     external: true
   otel-network:
