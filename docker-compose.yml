@@ -28,7 +28,6 @@ services:
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
     profiles:
-      - dev
       - staging
       - production
     networks:
@@ -71,7 +70,7 @@ services:
         condition: service_healthy
     command: ["server", "start"]
     ports:
-      - 8080
+      - 8080:8080
     volumes:
       - type: bind
         source: $HOME/.valkyrie_info/

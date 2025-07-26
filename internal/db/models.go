@@ -91,6 +91,13 @@ type Sandbox struct {
 	CurrentState    string                    `db:"current_state" json:"current_state"`
 }
 
+type SystemPackageFilter struct {
+	ID            int32              `db:"id" json:"id"`
+	FilterType    string             `db:"filter_type" json:"filter_type"`
+	PackageString string             `db:"package_string" json:"package_string"`
+	CreatedAt     pgtype.Timestamptz `db:"created_at" json:"created_at"`
+}
+
 type Worker struct {
 	ID            int32              `db:"id" json:"id"`
 	Name          string             `db:"name" json:"name"`

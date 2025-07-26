@@ -339,3 +339,10 @@ languages:
       main :: proc() {
       	fmt.println("Hellope!")
       }
+
+system_packages:
+  exclude:
+    - python.*
+
+  include:
+    - python314

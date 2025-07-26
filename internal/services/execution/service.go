@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -24,18 +25,43 @@ var ExecTemplates embed.FS
 //go:embed scripts
 var ExecScripts embed.FS
 
-type ExecutionService struct {
-	queries   db.Store
-	envConfig *config.EnvConfig
-	logger    *zerolog.Logger
+type PkgFilters struct {
+	include []*regexp.Regexp
+	exclude []*regexp.Regexp
 }
 
-func NewExecutionService(queries db.Store, envConfig *config.EnvConfig, logger *zerolog.Logger) *ExecutionService {
-	return &ExecutionService{
-		queries:   queries,
-		envConfig: envConfig,
-		logger:    logger,
+type ExecutionService struct {
+	queries    db.Store
+	envConfig  *config.EnvConfig
+	logger     *zerolog.Logger
+	pkgFilters PkgFilters
+}
+
+func NewExecutionService(ctx context.Context, queries db.Store, envConfig *config.EnvConfig, logger *zerolog.Logger) (*ExecutionService, error) {
+	filters, err := queries.GetSysPkgFilters(ctx)
+	if err != nil {
+		return nil, err
 	}
+	execSvc := &ExecutionService{
+		queries:    queries,
+		envConfig:  envConfig,
+		logger:     logger,
+		pkgFilters: PkgFilters{},
+	}
+	for _, filter := range filters {
+		filterc, err := regexp.Compile(filter.PackageString)
+		if err != nil {
+			return nil, fmt.Errorf("error compiling filter %s: %v", filter.PackageString, err)
+		}
+		if filter.FilterType == "include" {
+			execSvc.pkgFilters.include = append(execSvc.pkgFilters.include, filterc)
+		} else {
+			execSvc.pkgFilters.exclude = append(execSvc.pkgFilters.exclude, filterc)
+		}
+
+	}
+
+	return execSvc, nil
 }
 
 func (s *ExecutionService) prepareExecutionRequest(ctx context.Context, req *api.ExecutionRequest) (*ExecutionRequest, error) {

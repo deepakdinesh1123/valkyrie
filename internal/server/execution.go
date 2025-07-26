@@ -31,9 +31,9 @@ func (s *ValkyrieServer) Execute(ctx context.Context, req *api.ExecutionRequest,
 			Message: "Execution is not enabled, please ask the admin to enable it",
 		}, nil
 	}
-	if supported, err := s.executionService.CheckExecRequest(ctx, req); err != nil {
+	if _, err := s.executionService.CheckExecRequest(ctx, req); err != nil {
 		return &api.ExecuteBadRequest{
-			Message: fmt.Sprintf("%s\nsupported: %v", err, supported),
+			Message: fmt.Sprintf("%s", err),
 		}, nil
 	}
 	jobId, err := s.executionService.AddJob(ctx, req)

@@ -128,3 +128,13 @@ create table sandboxes (
 
 create index sndbx_cnfg_idx ON sandboxes USING gin (config);
 create index sndbx_details_idx ON sandboxes USING gin (details);
+
+CREATE TABLE system_package_filters (
+    id SERIAL PRIMARY KEY,
+    filter_type VARCHAR(10) NOT NULL CHECK (filter_type IN ('include', 'exclude')),
+    package_string VARCHAR(255) NOT NULL,
+    created_at timestamptz not null default now()
+);
+
+-- Optional: Add an index for faster lookups on filter_type and package_string
+CREATE INDEX idx_systempackagefilters_type_string ON system_package_filters (filter_type, package_string);
