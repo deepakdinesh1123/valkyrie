@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/db"
@@ -97,6 +98,54 @@ func (d *DockerProvider) WriteFiles(ctx context.Context, containerID string, pre
 		return err
 	}
 	return nil
+}
+
+func (d *DockerProvider) CopyOutputFiles(ctx context.Context, containerId string) (io.ReadCloser, error) {
+	out_path := "/home/valnix/valkyrie/output"
+	exists, err := d.CheckPathExistsInContainer(ctx, containerId, out_path)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		rc, _, err := d.client.CopyFromContainer(ctx, containerId, out_path)
+		if err != nil {
+			return nil, err
+		}
+		return rc, nil
+	}
+	return nil, nil
+}
+
+func (d *DockerProvider) CheckPathExistsInContainer(ctx context.Context, containerId string, path string) (bool, error) {
+	execConfig := container.ExecOptions{
+		AttachStdout: true,
+		AttachStderr: true,
+		Cmd:          []string{"test", "-d", path},
+	}
+
+	// Create exec instance
+	execIDResp, err := d.client.ContainerExecCreate(ctx, containerId, execConfig)
+	if err != nil {
+		return false, fmt.Errorf("failed to create exec instance: %w", err)
+	}
+
+	// Start exec to check if path exists
+	execStartConfig := container.ExecStartOptions{
+		Detach: false,
+		Tty:    false,
+	}
+
+	err = d.client.ContainerExecStart(ctx, execIDResp.ID, execStartConfig)
+	if err != nil {
+		return false, fmt.Errorf("failed to start exec instance: %w", err)
+	}
+
+	execInspect, err := d.client.ContainerExecInspect(ctx, execIDResp.ID)
+	if err != nil {
+		return false, fmt.Errorf("failed to inspect exec instance: %w", err)
+	}
+
+	return execInspect.ExitCode == 0, nil
 }
 
 func (d *DockerProvider) GetContainer(ctx context.Context, execReq db.ExecRequest) (string, error) {
@@ -339,18 +388,19 @@ func (d *DockerProvider) BuildImage(ctx context.Context, imageName string) error
 	return nil
 }
 
-func (d *DockerProvider) Execute(ctx context.Context, containerID string, command []string) (bool, string, error) {
-	done := make(chan bool)
+func (d *DockerProvider) Execute(ctx context.Context, containerID string, command []string) (bool, string, io.ReadCloser, error) {
+	type execResult struct {
+		execID   string
+		exitCode int
+		err      error
+	}
 
-	var dexec types.IDResponse
-	var err error
+	resultChan := make(chan execResult, 1)
 
 	go func() {
-		defer func() {
-			done <- true
-		}()
+		defer close(resultChan)
 
-		dexec, err = d.client.ContainerExecCreate(
+		dexec, err := d.client.ContainerExecCreate(
 			ctx,
 			containerID,
 			container.ExecOptions{
@@ -360,24 +410,33 @@ func (d *DockerProvider) Execute(ctx context.Context, containerID string, comman
 			},
 		)
 		if err != nil {
+			resultChan <- execResult{err: err}
 			return
 		}
+
 		err = d.client.ContainerExecStart(ctx, dexec.ID, container.ExecAttachOptions{})
 		if err != nil {
+			resultChan <- execResult{execID: dexec.ID, err: err}
 			return
 		}
+
+		ticker := time.NewTicker(100 * time.Millisecond)
+		defer ticker.Stop()
+
 		for {
 			select {
 			case <-ctx.Done():
-				d.logger.Info().Msg("Timelimit exceeded")
+				resultChan <- execResult{execID: dexec.ID, err: ctx.Err()}
 				return
-			default:
+			case <-ticker.C:
 				execInfo, err := d.client.ContainerExecInspect(ctx, dexec.ID)
 				if err != nil {
+					resultChan <- execResult{execID: dexec.ID, err: err}
 					return
 				}
 				if !execInfo.Running {
 					d.logger.Info().Int("Exit Code", execInfo.ExitCode).Msg("Execution process exit")
+					resultChan <- execResult{execID: dexec.ID, exitCode: execInfo.ExitCode}
 					return
 				}
 			}
@@ -386,9 +445,10 @@ func (d *DockerProvider) Execute(ctx context.Context, containerID string, comman
 
 	select {
 	case <-ctx.Done():
-		switch ctx.Err() {
-		case context.DeadlineExceeded:
-			if dexec.ID != "" {
+		return false, "", nil, ctx.Err()
+	case result := <-resultChan:
+		if result.err != nil {
+			if result.err == context.DeadlineExceeded && result.execID != "" {
 				stopExec, err := d.client.ContainerExecCreate(
 					context.TODO(),
 					containerID,
@@ -397,29 +457,38 @@ func (d *DockerProvider) Execute(ctx context.Context, containerID string, comman
 					},
 				)
 				if err != nil {
-					return false, "", fmt.Errorf("could not create exec for nix stop: %s", err)
+					return false, "", nil, fmt.Errorf("could not create exec for nix stop: %s", err)
 				}
 				err = d.client.ContainerExecStart(context.TODO(), stopExec.ID, container.ExecStartOptions{})
 				if err != nil {
-					return false, "", fmt.Errorf("could not start the nix_stop script: %s", err)
+					return false, "", nil, fmt.Errorf("could not start the nix_stop script: %s", err)
 				}
+
+				out, err := d.ReadExecLogs(context.TODO(), containerID)
+				if err != nil {
+					return false, "", nil, fmt.Errorf("error reading output: %s", err)
+				}
+				out_files, err := d.CopyOutputFiles(context.TODO(), containerID)
+				if err != nil {
+					return false, "", nil, err
+				}
+				return true, out, out_files, nil
 			}
-			out, err := d.ReadExecLogs(context.TODO(), containerID)
-			if err != nil {
-				return false, "", fmt.Errorf("error reading output: %s", err)
-			}
-			return true, out, nil
-		case context.Canceled:
-			return false, "", fmt.Errorf("context canceled")
+			return false, "", nil, result.err
 		}
-	case <-done:
+
 		out, err := d.ReadExecLogs(context.TODO(), containerID)
 		if err != nil {
-			return false, "", fmt.Errorf("error reading output: %s", err)
+			return false, "", nil, fmt.Errorf("error reading output: %s", err)
 		}
-		return true, out, nil
+		out_files, err := d.CopyOutputFiles(context.TODO(), containerID)
+		if err != nil {
+			return false, "", nil, err
+		}
+
+		success := result.exitCode == 0
+		return success, out, out_files, nil
 	}
-	return false, "", nil
 }
 
 func (d *DockerProvider) ReadExecLogs(ctx context.Context, containerID string) (string, error) {

@@ -1,9 +1,9 @@
 -- name: GetFlake :one
-SELECT flake 
-FROM exec_request 
+SELECT flake
+FROM exec_request
 WHERE id = (
-    SELECT CAST(arguments->'ExecConfig'->>'ExecReqId' AS INT) 
-    FROM jobs 
+    SELECT CAST(arguments->'ExecConfig'->>'ExecReqId' AS INT)
+    FROM jobs
     WHERE job_id = $1
 );
 
@@ -11,7 +11,7 @@ WHERE id = (
 with cte as (
     select job_id
     from jobs
-    where 
+    where
         current_state = 'pending'
         and job_type = @JobType::text
         and retries < max_retries
@@ -20,9 +20,9 @@ with cte as (
     limit 1
 )
 update jobs
-set current_state = 'scheduled', 
-    started_at = now(), 
-    worker_id = @WorkerId::int, 
+set current_state = 'scheduled',
+    started_at = now(),
+    worker_id = @WorkerId::int,
     updated_at = now()
 where job_id = (select job_id from cte)
 returning *;
@@ -43,15 +43,15 @@ where job_id = $1 AND current_state = 'scheduled';
 
 -- name: InsertExecution :one
 insert into executions
-    (job_id, worker_id, started_at, finished_at, exec_request_id, exec_logs, nix_logs, success)
+    (job_id, worker_id, started_at, finished_at, exec_request_id, exec_logs, nix_logs, out_files, success)
 values
-    ($1, $2, $3, $4, $5, $6, $7, $8)
+    ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 returning *;
 
 -- name: GetAllExecutionJobs :many
-SELECT * 
+SELECT *
 FROM jobs
-INNER JOIN exec_request 
+INNER JOIN exec_request
 ON CAST(arguments->'ExecConfig'->>'ExecReqId' AS INT) = exec_request.id
 WHERE job_id >= $1
 ORDER BY jobs.job_id
@@ -136,7 +136,7 @@ set
     started_at = null,
     worker_id = null,
     retries = retries::integer + 1
-where current_state = 'scheduled' 
+where current_state = 'scheduled'
   and started_at + time_out * INTERVAL '1 second' < now() and time_out > 0;
 
 -- name: RequeueWorkerJobs :exec
@@ -147,5 +147,5 @@ set
     started_at = null,
     retries = retries::integer + 1,
     updated_at = now()
-where current_state = 'scheduled' 
+where current_state = 'scheduled'
   and worker_id = $1;

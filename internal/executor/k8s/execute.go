@@ -1,3 +1,5 @@
+//go:build k8s || all || darwin
+
 package k8s
 
 import (

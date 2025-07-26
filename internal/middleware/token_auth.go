@@ -21,20 +21,29 @@ func TokenAuth() Middleware {
 			ctx := r.Context()
 			envConfig, _ := config.GetEnvConfig()
 
+			// If no tokens are configured, skip authentication
 			if envConfig.USER_TOKEN == "" && envConfig.ADMIN_TOKEN == "" {
 				r = r.WithContext(context.WithValue(ctx, config.AuthKey, "noauth"))
 				h.ServeHTTP(w, r)
 				return
 			}
 
+			// Tokens are configured, so authentication is required
 			r = r.WithContext(context.WithValue(ctx, config.AuthKey, "auth"))
 			headerValue := r.Header.Get("X-Auth-Token")
-			switch headerValue {
-			case envConfig.USER_TOKEN:
+
+			// If header is empty, return unauthorized immediately
+			if headerValue == "" {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			// Check against configured tokens (only non-empty tokens)
+			if envConfig.USER_TOKEN != "" && headerValue == envConfig.USER_TOKEN {
 				r = r.WithContext(context.WithValue(ctx, config.UserKey, "user"))
-			case envConfig.ADMIN_TOKEN:
+			} else if envConfig.ADMIN_TOKEN != "" && headerValue == envConfig.ADMIN_TOKEN {
 				r = r.WithContext(context.WithValue(ctx, config.UserKey, "admin"))
-			default:
+			} else {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}

@@ -205,7 +205,7 @@ func setDefaults() {
 	viper.SetDefault("CPU_LIMIT", 75)
 
 	viper.SetDefault("ENABLE_TELEMETRY", false)
-	viper.SetDefault("OTLP_ENDPOINT", "localhost:4317")
+	viper.SetDefault("OTLP_ENDPOINT", "valkyrie-otel-collector:4317")
 	viper.SetDefault("OTEL_RESOURCE_NAME", "valkyrie")
 	viper.SetDefault("ENVIRONMENT", "dev")
 
@@ -233,4 +233,7 @@ func setDefaults() {
 
 	viper.SetDefault("K8S_NAMESPACE", "default")
 	viper.SetDefault("ENCKEY", "NOTSET")
+
+	viper.SetDefault("USER_TOKEN", "")
+	viper.SetDefault("ADMIN_TOKEN", "")
 }
