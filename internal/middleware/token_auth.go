@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"regexp"
 
@@ -12,7 +13,12 @@ var eventsPathPattern = regexp.MustCompile(`^/executions/[^/]+/events$`)
 
 func TokenAuth() Middleware {
 	return func(h http.Handler) http.Handler {
+		log.Println("Token Auth")
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodOptions {
+				w.WriteHeader(http.StatusNoContent)
+				return
+			}
 			if eventsPathPattern.MatchString(r.URL.Path) {
 				h.ServeHTTP(w, r)
 				return
@@ -24,6 +30,7 @@ func TokenAuth() Middleware {
 			// If no tokens are configured, skip authentication
 			if envConfig.USER_TOKEN == "" && envConfig.ADMIN_TOKEN == "" {
 				r = r.WithContext(context.WithValue(ctx, config.AuthKey, "noauth"))
+				log.Println(envConfig.USER_TOKEN)
 				h.ServeHTTP(w, r)
 				return
 			}

@@ -1,0 +1,20 @@
+meta {
+  name: Create a sandbox
+  type: http
+  seq: 16
+}
+
+post {
+  url: {{base_url}}/api/sandbox
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "nix_flake": "",
+    "languages": [],
+    "system_dependencies": [],
+    "services": []
+  }
+}

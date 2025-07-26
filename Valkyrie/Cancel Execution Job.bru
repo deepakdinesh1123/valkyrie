@@ -1,0 +1,15 @@
+meta {
+  name: Cancel Execution Job
+  type: http
+  seq: 8
+}
+
+put {
+  url: {{base_url}}/api/executions/jobs/:JobId
+  body: none
+  auth: none
+}
+
+params:path {
+  JobId: 
+}
