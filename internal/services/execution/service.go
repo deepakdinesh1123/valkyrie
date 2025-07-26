@@ -137,7 +137,10 @@ func (s *ExecutionService) applyLanguageSpecificConfig(execReq *ExecutionRequest
 		execReq.SystemSetup = buildPythonSystemSetup(langVersion.Version)
 		execReq.PkgIndex = s.envConfig.PY_INDEX
 		execReq.SystemDependencies = append(execReq.SystemDependencies, "uv")
+	case "rust":
+		execReq.SystemDependencies = append(execReq.SystemDependencies, "gcc")
 	}
+
 }
 
 func (s *ExecutionService) AddJob(ctx context.Context, req *api.ExecutionRequest) (int64, error) {
