@@ -16,6 +16,24 @@ services:
       - staging
       - production
 
+  caddy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    profiles:
+      - dev
+      - staging
+      - production
+    networks:
+      - proxy-network
+
   traefik:
     image: traefik:v3.3
     ports:
@@ -36,10 +54,7 @@ services:
       - valkyrie-network
       - proxy-network
     profiles:
-      - dev
-      - production
-      - staging
-      - test-traefik
+      - sandbox
 
   valkyrie:
     build:
@@ -50,17 +65,9 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      traefik:
-        condition: service_started
     command: ["server", "start"]
     ports:
-      - 8080:8080
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.valkyrie.rule=PathPrefix(`/api`) || Host(`server.valkyrie.localhost`)"
-      - "traefik.http.routers.valkyrie.entrypoints=http"
-      - "traefik.http.services.valkyrie.loadbalancer.server.port=8080"
-      - "traefik.http.routers.valkyrie.tls=true"
+      - 8080
     volumes:
       - type: bind
         source: $HOME/.valkyrie_info/
@@ -87,8 +94,6 @@ services:
       postgres:
         condition: service_healthy
       valkyrie:
-        condition: service_started
-      traefik:
         condition: service_started
     deploy:
       replicas: 1
@@ -146,12 +151,6 @@ services:
       - .env
     ports:
       - 80
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.nixery.rule=PathPrefix(`/shell`) || Host(`nixery.valkyrie.localhost`)"
-      - "traefik.http.routers.nixery.entrypoints=http"
-      - "traefik.http.services.nixery.loadbalancer.server.port=80"
-      - "traefik.http.routers.nixery.tls=true"
     networks:
       - nixery-network
       - proxy-network
@@ -159,9 +158,6 @@ services:
       - type: bind
         source: $HOME/.valkyrie/nixery
         target: /tmp/nixery/
-    depends_on:
-      traefik:
-        condition: service_started
     profiles:
       - staging
       - production
@@ -252,9 +248,6 @@ services:
       retries: 5
     networks:
       - postgres-network
-    depends_on:
-      traefik:
-        condition: service_started
     profiles:
       - dev
       - production
