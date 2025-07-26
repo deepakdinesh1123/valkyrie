@@ -35,9 +35,6 @@ func TokenAuth() Middleware {
 				return
 			}
 
-			log.Println(envConfig.USER_TOKEN)
-			log.Println(envConfig.ADMIN_TOKEN)
-
 			// Tokens are configured, so authentication is required
 			r = r.WithContext(context.WithValue(ctx, config.AuthKey, "auth"))
 			headerValue := r.Header.Get("X-Auth-Token")

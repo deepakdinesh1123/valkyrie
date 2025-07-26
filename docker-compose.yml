@@ -53,10 +53,8 @@ services:
     networks:
       - valkyrie-network
       - proxy-network
-    profiles:
-      - production
-      - staging
-      - test-traefik
+   profiles:
+      - sandbox
 
   valkyrie:
     build:
@@ -97,10 +95,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      valkyrie:
+       valkyrie:
         condition: service_started
-      # traefik:
-      #   condition: service_started
     deploy:
       replicas: 1
     command: ["worker", "start"]
@@ -256,9 +252,6 @@ services:
       retries: 5
     networks:
       - postgres-network
-  #  depends_on:
- #     traefik:
-#        condition: service_started
     profiles:
       - dev
       - production
@@ -350,6 +343,7 @@ networks:
   postgres-network:
   nixery-network:
   proxy-network:
-  devpi-network:
+ devpi-network:
     driver: bridge
     external: true
+  otel-network:
