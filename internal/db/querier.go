@@ -11,6 +11,7 @@ import (
 )
 
 type Querier interface {
+	BulkInsertSystemPackageFilters(ctx context.Context, arg []BulkInsertSystemPackageFiltersParams) (int64, error)
 	CancelJob(ctx context.Context, jobID int64) error
 	ClearSandboxes(ctx context.Context) error
 	CreateLanguage(ctx context.Context, arg CreateLanguageParams) (int64, error)
@@ -43,6 +44,7 @@ type Querier interface {
 	GetLatestExecution(ctx context.Context, jobID pgtype.Int8) (GetLatestExecutionRow, error)
 	GetSandbox(ctx context.Context, sandboxID int64) (Sandbox, error)
 	GetStaleWorkers(ctx context.Context) ([]int32, error)
+	GetSysPkgFilters(ctx context.Context) ([]SystemPackageFilter, error)
 	GetTotalExecutions(ctx context.Context) (int64, error)
 	GetTotalExecutionsForJob(ctx context.Context, jobID pgtype.Int8) (int64, error)
 	GetTotalJobs(ctx context.Context) (int64, error)
@@ -65,6 +67,7 @@ type Querier interface {
 	StopJob(ctx context.Context, jobID int64) error
 	TruncateLanguageVersions(ctx context.Context) error
 	TruncateLanguages(ctx context.Context) error
+	TruncateSysPkgFilters(ctx context.Context) error
 	UpdateHeartbeat(ctx context.Context, id int32) error
 	UpdateJobCompleted(ctx context.Context, jobID int64) error
 	UpdateLanguage(ctx context.Context, arg UpdateLanguageParams) (int64, error)

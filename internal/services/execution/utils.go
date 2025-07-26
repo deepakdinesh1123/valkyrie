@@ -145,5 +145,35 @@ func (s *ExecutionService) CheckExecRequest(ctx context.Context, req *api.Execut
 			return vers, fmt.Errorf("specified version is not supported")
 		}
 	}
+
+	for _, systemDep := range req.Environment.Value.SystemDependencies {
+		if s.checkPackageFiltered(systemDep) {
+			return nil, fmt.Errorf("system dependency %s cannot be included", systemDep)
+		}
+	}
+
 	return []string{}, nil
+}
+
+func (s *ExecutionService) checkPackageFiltered(pkg string) bool {
+	if len(s.pkgFilters.include) == 0 && len(s.pkgFilters.exclude) == 0 {
+		return false
+	}
+
+	for _, cregexp := range s.pkgFilters.include {
+		if cregexp.MatchString(pkg) {
+			return false
+		}
+	}
+
+	for _, cregexp := range s.pkgFilters.exclude {
+		if cregexp.MatchString(pkg) {
+			return true
+		}
+	}
+
+	if len(s.pkgFilters.include) == 0 {
+		return false
+	}
+	return true
 }

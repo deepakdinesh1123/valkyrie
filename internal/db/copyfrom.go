@@ -9,6 +9,39 @@ import (
 	"context"
 )
 
+// iteratorForBulkInsertSystemPackageFilters implements pgx.CopyFromSource.
+type iteratorForBulkInsertSystemPackageFilters struct {
+	rows                 []BulkInsertSystemPackageFiltersParams
+	skippedFirstNextCall bool
+}
+
+func (r *iteratorForBulkInsertSystemPackageFilters) Next() bool {
+	if len(r.rows) == 0 {
+		return false
+	}
+	if !r.skippedFirstNextCall {
+		r.skippedFirstNextCall = true
+		return true
+	}
+	r.rows = r.rows[1:]
+	return len(r.rows) > 0
+}
+
+func (r iteratorForBulkInsertSystemPackageFilters) Values() ([]interface{}, error) {
+	return []interface{}{
+		r.rows[0].FilterType,
+		r.rows[0].PackageString,
+	}, nil
+}
+
+func (r iteratorForBulkInsertSystemPackageFilters) Err() error {
+	return nil
+}
+
+func (q *Queries) BulkInsertSystemPackageFilters(ctx context.Context, arg []BulkInsertSystemPackageFiltersParams) (int64, error) {
+	return q.db.CopyFrom(ctx, []string{"system_package_filters"}, []string{"filter_type", "package_string"}, &iteratorForBulkInsertSystemPackageFilters{rows: arg})
+}
+
 // iteratorForInsertLanguageVersions implements pgx.CopyFromSource.
 type iteratorForInsertLanguageVersions struct {
 	rows                 []InsertLanguageVersionsParams

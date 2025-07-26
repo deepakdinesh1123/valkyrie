@@ -71,7 +71,10 @@ func NewServer(ctx context.Context, envConfig *config.EnvConfig, standalone bool
 				store.GeneratePackages(ctx, "", "", envConfig, logger)
 			}
 		}
-		executionService := execution.NewExecutionService(queries, envConfig, logger)
+		executionService, err := execution.NewExecutionService(ctx, queries, envConfig, logger)
+		if err != nil {
+			return nil, err
+		}
 		valkyrieServer.executionService = executionService
 	}
 

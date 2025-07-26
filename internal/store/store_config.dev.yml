@@ -126,3 +126,10 @@ languages:
           name VARCHAR(100),
           salary DECIMAL(10, 2)
       );
+
+system_packages:
+  exclude:
+    - python.*
+
+  include:
+    - python314
