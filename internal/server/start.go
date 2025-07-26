@@ -94,23 +94,23 @@ func (s *ValkyrieServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 		return err
 	})
 
-	g.Go(func() error {
-		ticker := time.NewTicker(time.Duration(s.envConfig.JOB_PRUNE_FREQ) * time.Hour)
-		defer ticker.Stop()
-		for {
-			select {
-			case <-ctx.Done():
-				return nil
-			case <-ticker.C:
-				s.logger.Info().Msg("Pruning completed jobs")
-				err := s.queries.PruneCompletedJobs(ctx)
-				if err != nil {
-					s.logger.Err(err).Msg("Failed to prune completed jobs")
-				}
-				return nil
-			}
-		}
-	})
+	// g.Go(func() error {
+	// 	ticker := time.NewTicker(time.Duration(s.envConfig.JOB_PRUNE_FREQ) * time.Hour)
+	// 	defer ticker.Stop()
+	// 	for {
+	// 		select {
+	// 		case <-ctx.Done():
+	// 			return nil
+	// 		case <-ticker.C:
+	// 			s.logger.Info().Msg("Pruning completed jobs")
+	// 			err := s.queries.PruneCompletedJobs(ctx)
+	// 			if err != nil {
+	// 				s.logger.Err(err).Msg("Failed to prune completed jobs")
+	// 			}
+	// 			return nil
+	// 		}
+	// 	}
+	// })
 
 	g.Go(func() error {
 		ticker := time.NewTicker(time.Duration(10) * time.Second)
