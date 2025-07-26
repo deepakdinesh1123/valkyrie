@@ -233,4 +233,7 @@ func setDefaults() {
 
 	viper.SetDefault("K8S_NAMESPACE", "default")
 	viper.SetDefault("ENCKEY", "NOTSET")
+
+	viper.SetDefault("USER_TOKEN", "")
+	viper.SetDefault("ADMIN_TOKEN", "")
 }
