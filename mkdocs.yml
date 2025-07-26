@@ -46,30 +46,14 @@ validation:
 
 nav:
   - Home: index.md
-  - Valkyrie: valkyrie/index.md
-  - Odin:
-      - Home: valkyrie/odin/index.md
-      - Architecture: valkyrie/odin/architecture.md
-      - Installation: valkyrie/odin/installation.md
+  - Valkyrie:
+      - Home: valkyrie/index.md
+      - Architecture: valkyrie/architecture.md
+      - Installation: valkyrie/installation.md
       - Setup:
-          - Home: valkyrie/odin/setup/index.md
-          - Standalone: valkyrie/odin/setup/standalone.md
-          - Podman: valkyrie/odin/setup/podman.md
-          - Docker: valkyrie/odin/setup/docker.md
-          - NSJail: valkyrie/odin/setup/nsjail.md
-          - Native: valkyrie/odin/setup/native.md
-      - Contributing: valkyrie/odin/contributing.md
-      - Examples: valkyrie/odin/examples.md
-      - Deployment:
-          - Home: valkyrie/odin/deployment/index.md
-          - AWS:
-              - Odin Server: valkyrie/odin/deployment/aws/server.md
-              - Shared Nix Store: valkyrie/odin/deployment/aws/shared_nix_store.md
-              - Odin Worker: valkyrie/odin/deployment/aws/worker.md
-          - GCP:
-              - Odin Server: valkyrie/odin/deployment/gcp/server.md
-              - Shared Nix Store: valkyrie/odin/deployment/gcp/shared_nix_store.md
-              - Odin Worker: valkyrie/odin/deployment/gcp/worker.md
+          - Home: valkyrie/setup/index.md
+          - Docker: valkyrie/setup/docker.md
+      - Contributing: valkyrie/contributing.md
   - Blog: blog/index.md
 
 markdown_extensions:

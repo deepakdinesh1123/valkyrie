@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "valkyrie"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = [ "valkyrie-mcp", "pyvalkyrie"]
+dependencies = [ "valkyrie-mcp", "pyvalkyrie", "docs" ]
 
 [tool.uv]
 dev-dependencies = []
@@ -12,9 +12,10 @@ dev-dependencies = []
 [tool.uv.sources]
 pyvalkyrie = { workspace = true }
 valkyrie-mcp = { workspace = true }
+docs = { workspace = true }
 
 [tool.uv.workspace]
-members = ["mcp", "sdk/pyvalkyrie"]
+members = ["mcp", "sdk/pyvalkyrie", "docs"]
 
 [tool.ruff]
 target-version = "py312"
