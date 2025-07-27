@@ -4,13 +4,13 @@ resource "google_compute_address" "static-ip" {
 }
 
 resource "google_compute_instance" "compute-engine" {
-  attached_disk {
-    device_name = var.disk_name
-    mode        = "READ_ONLY"
-    source      = var.disk_id
-  }
+  # attached_disk {
+  #   device_name = var.disk_name
+  #   mode        = "READ_ONLY"
+  #   source      = var.disk_id
+  # }
 
-  zone = "asia-south1-c"
+  zone = var.zone#"asia-south1-c"
 
   boot_disk {
     auto_delete = true

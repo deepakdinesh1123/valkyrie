@@ -8,5 +8,5 @@ multi_attach_enabled = false
 ebs_iops             = 5000
 ebs_type             = "gp3"
 
-ec2_instance_type = "t3.large"
+ec2_instance_type = "t3.small"
 rds_compute_type  = "db.t3.micro"

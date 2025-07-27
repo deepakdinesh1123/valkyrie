@@ -1,13 +1,16 @@
 variable "machine_type" {
   
 }
-variable "disk_name" {
+# variable "disk_name" {
   
-}
-variable "disk_id" {
+# }
+# variable "disk_id" {
   
-}
+# }
 variable "os_image" {
+  
+}
+variable "zone" {
   
 }
 variable "os_disk_size" {

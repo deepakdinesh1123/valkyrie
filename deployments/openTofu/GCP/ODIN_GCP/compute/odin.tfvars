@@ -1,5 +1,5 @@
-location = "asia-south1"
-availability_zone = "asia-south1-c"
+location = "us-central1"
+availability_zone = "us-central1-c"
 project_name = "valkyrie-project"
 
 worker_machine_type = "n2-custom-4-8192"
