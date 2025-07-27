@@ -60,3 +60,4 @@ odinb
 *.terraform.lock*
 .terraform/
 rippkgs*
+**keys.json
