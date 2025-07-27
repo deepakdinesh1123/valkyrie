@@ -25,6 +25,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/rs/zerolog"
@@ -541,6 +542,115 @@ func (d *DockerProvider) Cleanup(ctx context.Context) {
 	for _, container := range containers {
 		d.DestroyContainer(ctx, container.ID)
 	}
+}
+
+func (d *DockerProvider) PruneImages(ctx context.Context) {
+	// Add context timeout to prevent hanging
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	defer cancel()
+
+	filterArgs := filters.NewArgs()
+	// filterArgs.Add("label", fmt.Sprintf("%s=%s", "valkyrie", "execution"))
+
+	images, err := d.client.ImageList(ctx, image.ListOptions{
+		Filters: filterArgs,
+	})
+	if err != nil {
+		d.logger.Error().Err(err).Msg("Failed to list images")
+	}
+
+	if len(images) == 0 {
+		d.logger.Info().Msg("No images found to prune")
+	}
+
+	cutoffTime := time.Now().Add(-4 * 24 * time.Hour)
+	var imagesToRemove []string
+
+	for _, img := range images {
+		// Safely handle image creation time
+		if img.Created <= 0 {
+			d.logger.Warn().
+				Str("image_id", img.ID).
+				Msg("Image has invalid creation time, skipping")
+			continue
+		}
+
+		createdTime := time.Unix(img.Created, 0)
+		if !createdTime.Before(cutoffTime) {
+			continue
+		}
+
+		// Safely add image ID
+		if img.ID != "" {
+			imagesToRemove = append(imagesToRemove, img.ID)
+		}
+
+		// Safely handle RepoDigests
+		if len(img.RepoDigests) > 0 && img.RepoDigests[0] != "" {
+			repoDigest := img.RepoDigests[0]
+			if len(repoDigest) > 1 {
+				// Remove the leading character (assumed to be '@' or similar)
+				digestPath := repoDigest
+
+				// Validate environment config
+				if d.envConfig == nil || d.envConfig.NIXERY_URL == "" {
+					d.logger.Warn().
+						Str("image_id", img.ID).
+						Msg("NIXERY_URL not configured, skipping nixery image removal")
+				} else {
+					pathParts := strings.Split(digestPath, "/")
+					if len(pathParts) > 1 {
+						nixeryImage := fmt.Sprintf("%s/%s", d.envConfig.NIXERY_URL, strings.Join(pathParts[1:], "/"))
+						imagesToRemove = append(imagesToRemove, nixeryImage)
+
+						d.logger.Debug().
+							Str("image_id", img.ID).
+							Str("nixery_image", nixeryImage).
+							Time("created", createdTime).
+							Msg("Image marked for removal")
+					}
+				}
+			}
+		} else {
+			d.logger.Debug().
+				Str("image_id", img.ID).
+				Time("created", createdTime).
+				Msg("Image marked for removal (no repo digest)")
+		}
+	}
+
+	if len(imagesToRemove) == 0 {
+		d.logger.Info().
+			Int("total_images", len(images)).
+			Msg("No images older than 4 days found")
+	}
+
+	var removedCount int
+	for _, imageID := range imagesToRemove {
+		if imageID == "" {
+			continue
+		}
+
+		_, err := d.client.ImageRemove(ctx, imageID, image.RemoveOptions{
+			Force: false, // Set to true if you want to force removal
+		})
+		if err != nil {
+			d.logger.Error().
+				Err(err).
+				Str("image_id", imageID).
+				Msg("Failed to remove image")
+		} else {
+			removedCount++
+			d.logger.Info().
+				Str("image_id", imageID).
+				Msg("Successfully removed old image")
+		}
+	}
+
+	d.logger.Info().
+		Int("total_images", len(images)).
+		Int("marked_for_removal", len(imagesToRemove)).
+		Msg("Image pruning completed")
 }
 
 func stripCtlAndExtFromUTF8(str string) string {

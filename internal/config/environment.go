@@ -47,6 +47,7 @@ type EnvConfig struct {
 
 	MEMORY_LIMIT float64 `mapstructure:"MEMORY_LIMIT"`
 	CPU_LIMIT    float64 `mapstructure:"CPU_LIMIT"`
+	DISK_LIMIT   float64 `mapstructure:"DISK_LIMIT"`
 
 	LOG_LEVEL string `mapstructure:"LOG_LEVEL"`
 
@@ -203,6 +204,7 @@ func setDefaults() {
 
 	viper.SetDefault("MEMORY_LIMIT", 75)
 	viper.SetDefault("CPU_LIMIT", 75)
+	viper.SetDefault("DISK_LIMIT", 75)
 
 	viper.SetDefault("ENABLE_TELEMETRY", false)
 	viper.SetDefault("OTLP_ENDPOINT", "valkyrie-otel-collector:4317")

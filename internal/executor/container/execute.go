@@ -121,3 +121,11 @@ func (ce *ContainerExecutor) Cleanup(ctx context.Context) {
 	}
 	cc.Cleanup(ctx)
 }
+
+func (ce *ContainerExecutor) PruneImages(ctx context.Context) {
+	cc, err := GetContainerClient(ctx, ce)
+	if err != nil {
+
+	}
+	cc.PruneImages(ctx)
+}

@@ -16,4 +16,5 @@ type ContainerClient interface {
 	Execute(ctx context.Context, containerID string, command []string) (bool, string, io.ReadCloser, error)
 	DestroyContainer(ctx context.Context, containerId string)
 	Cleanup(ctx context.Context)
+	PruneImages(ctx context.Context)
 }

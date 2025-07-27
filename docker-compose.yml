@@ -13,8 +13,7 @@ services:
     networks:
       - otel-network
     profiles:
-      - staging
-      - production
+      - instrument
 
   caddy:
     image: caddy:2.10-alpine
@@ -161,8 +160,7 @@ services:
         source: $HOME/.valkyrie/nixery
         target: /tmp/nixery/
     profiles:
-      - staging
-      - production
+      - nixery
 
   valkyrie-store-builder:
     build:
@@ -268,8 +266,7 @@ services:
     networks:
       - otel-network
     profiles:
-      - production
-      - staging
+      - instrument
 
   jaeger:
     image: jaegertracing/all-in-one:latest
@@ -280,8 +277,7 @@ services:
     networks:
       - otel-network
     profiles:
-      - production
-      - staging
+      - instrument
 
   prometheus:
     image: prom/prometheus:latest
@@ -292,8 +288,7 @@ services:
     networks:
       - otel-network
     profiles:
-      - production
-      - staging
+      - instrument
 
   valkyrie_sandbox:
     container_name: "valkyrie_sandbox_1"

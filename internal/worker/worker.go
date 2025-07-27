@@ -40,6 +40,7 @@ type Worker struct {
 	WorkerStats struct {
 		CPUUsage float64
 		MemUsage float64
+		DiskUsed float64
 	}
 }
 
@@ -241,6 +242,13 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 			if w.WorkerStats.MemUsage > w.envConfig.MEMORY_LIMIT {
 				w.logger.Info().Float64("high memory usage", w.WorkerStats.MemUsage).Msg("Worker: ")
 				continue
+			}
+
+			if w.WorkerStats.DiskUsed > w.envConfig.DISK_LIMIT {
+				w.logger.Info().Float64("high memory usage", w.WorkerStats.MemUsage).Msg("Worker: pruning unsued images")
+				if w.envConfig.ENABLE_EXECUTION {
+					go w.exectr.PruneImages(ctx)
+				}
 			}
 
 			// Handle execution jobs
