@@ -1,21 +1,26 @@
-get:
-  summary: Get all language versions
-  description: Retrieve a list of all language versions from the database.
-  operationId: getAllLanguageVersions
+post:
+  summary: Reuqest Valkyrie token
+  description: Request Valkyrie token
+  operationId: getValkyrieToken
+  security:
+      - xAuthToken: []
+      - {}
   responses:
     '200':
-      description: OK
+      description: ok
       content:
         application/json:
           schema:
             type: object
             required:
-              - languageVersions
+              - token
+              - expires
             properties:
-              languageVersions:
-                type: array
-                items:
-                  $ref: ../components/schemas/LanguageVersionResponse.yml
+              token:
+                type: string
+              expires:
+                type: string
+                format: date-time
     '403':
       description: Forbidden
       content:

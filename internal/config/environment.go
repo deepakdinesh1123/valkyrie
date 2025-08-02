@@ -61,7 +61,6 @@ type EnvConfig struct {
 
 	JOB_PRUNE_FREQ int `mapstructure:"JOB_PRUNE_FREQ"`
 
-	USER_TOKEN  string `mapstructure:"USER_TOKEN"`
 	ADMIN_TOKEN string `mapstructure:"ADMIN_TOKEN"`
 	ENCKEY      string `mapstructure:"ENCKEY"`
 
@@ -166,6 +165,10 @@ func GetEnvConfig() (*EnvConfig, error) {
 		envConfig.SANDBOX_NIXPKGS_PATH = fmt.Sprintf("/var/cache/nixpkgs/NixOS-nixpkgs-%s", envConfig.SANDBOX_NIXPKGS_REV[:7])
 	})
 
+	if envConfig.ENCKEY == "" {
+		return nil, fmt.Errorf("ENCKEY is not set")
+	}
+
 	if envConfig != nil {
 		return envConfig, nil
 	}
@@ -234,8 +237,6 @@ func setDefaults() {
 	}
 
 	viper.SetDefault("K8S_NAMESPACE", "default")
-	viper.SetDefault("ENCKEY", "NOTSET")
-
-	viper.SetDefault("USER_TOKEN", "")
+	viper.SetDefault("ENCKEY", "")
 	viper.SetDefault("ADMIN_TOKEN", "")
 }

@@ -6,7 +6,7 @@ info:
     name: MIT
     url: https://github.com/deepakdinesh1123/valkyrie/blob/main/LICENSE
 servers:
-  - url: http://localhost:8080/api
+  - url: https://backend.evnix.cloud/api
 paths:
   /health:
     get:
@@ -29,6 +29,9 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ExecutionRequest'
+      security:
+        - xAuthToken: []
+        - bearerAuth: []
       responses:
         '200':
           description: OK
@@ -70,7 +73,8 @@ paths:
       parameters:
         - $ref: '#/components/parameters/Cursor'
         - $ref: '#/components/parameters/Limit'
-        - $ref: '#/components/parameters/AuthHeader'
+      security:
+        - xAuthToken: []
       responses:
         '200':
           description: OK
@@ -114,7 +118,8 @@ paths:
       parameters:
         - $ref: '#/components/parameters/Cursor'
         - $ref: '#/components/parameters/Limit'
-        - $ref: '#/components/parameters/AuthHeader'
+      security:
+        - xAuthToken: []
       responses:
         '200':
           description: OK
@@ -164,7 +169,8 @@ paths:
             format: int64
         - $ref: '#/components/parameters/Cursor'
         - $ref: '#/components/parameters/Limit'
-        - $ref: '#/components/parameters/AuthHeader'
+      security:
+        - xAuthToken: []
       responses:
         '200':
           description: OK
@@ -184,6 +190,12 @@ paths:
                     $ref: '#/components/schemas/PaginationResponse'
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -208,7 +220,8 @@ paths:
           schema:
             type: integer
             format: int64
-        - $ref: '#/components/parameters/AuthHeader'
+      security:
+        - xAuthToken: []
       responses:
         '200':
           description: OK
@@ -218,6 +231,12 @@ paths:
                 $ref: '#/components/schemas/ExecutionResult'
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -242,7 +261,8 @@ paths:
           schema:
             type: integer
             format: int64
-        - $ref: '#/components/parameters/AuthHeader'
+      security:
+        - xAuthToken: []
       responses:
         '200':
           description: OK
@@ -252,6 +272,12 @@ paths:
                 $ref: '#/components/schemas/Job'
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -346,8 +372,8 @@ paths:
       summary: Get version
       description: Get version
       operationId: getVersion
-      parameters:
-        - $ref: '#/components/parameters/AuthHeader'
+      security:
+        - xAuthToken: []
       responses:
         '200':
           description: OK
@@ -371,8 +397,8 @@ paths:
       summary: Get execution config
       description: Get execution config
       operationId: getExecutionConfig
-      parameters:
-        - $ref: '#/components/parameters/AuthHeader'
+      security:
+        - xAuthToken: []
       responses:
         '200':
           description: OK
@@ -406,7 +432,6 @@ paths:
             type: integer
             format: int64
             example: 1
-        - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
           description: OK
@@ -438,8 +463,6 @@ paths:
       summary: Get all languages
       description: Retrieve a list of all languages from the database.
       operationId: getAllLanguages
-      parameters:
-        - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
           description: OK
@@ -459,14 +482,12 @@ paths:
           content:
             application/json:
               schema:
-                type: object
                 $ref: '#/components/schemas/Error'
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                type: object
                 $ref: '#/components/schemas/Error'
   /languages/{id}:
     get:
@@ -482,7 +503,6 @@ paths:
             type: integer
             format: int64
             example: 1
-        - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
           description: OK
@@ -519,8 +539,6 @@ paths:
       summary: Get all language versions
       description: Retrieve a list of all language versions from the database.
       operationId: getAllLanguageVersions
-      parameters:
-        - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
           description: OK
@@ -561,7 +579,6 @@ paths:
             type: integer
             format: int64
             example: 1
-        - $ref: '#/components/parameters/AuthHeader'
       responses:
         '200':
           description: OK
@@ -598,8 +615,9 @@ paths:
       summary: Create a sandbox
       description: Create a sandbox
       operationId: createSandbox
-      parameters:
-        - $ref: '#/components/parameters/AuthHeader'
+      security:
+        - xAuthToken: []
+        - bearerAuth: []
       requestBody:
         required: false
         content:
@@ -656,7 +674,8 @@ paths:
           schema:
             type: integer
             format: int64
-        - $ref: '#/components/parameters/AuthHeader'
+      security:
+        - xAuthToken: []
       responses:
         '200':
           description: ok
@@ -685,6 +704,8 @@ paths:
             format: int64
           required: true
           description: Job ID
+      security:
+        - xAuthToken: []
       responses:
         '200':
           description: OK
@@ -711,7 +732,53 @@ paths:
               schema:
                 type: object
                 $ref: '#/components/schemas/Error'
+  /token/request:
+    post:
+      summary: Reuqest Valkyrie token
+      description: Request Valkyrie token
+      operationId: getValkyrieToken
+      security:
+        - xAuthToken: []
+        - {}
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - token
+                  - expires
+                properties:
+                  token:
+                    type: string
+                  expires:
+                    type: string
+                    format: date-time
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    xAuthToken:
+      type: apiKey
+      in: header
+      name: X-Auth-Token
+      description: Authentication token
   parameters:
     AuthHeader:
       name: X-Auth-Token
@@ -783,7 +850,7 @@ components:
           type: integer
           format: int4
           default: 5
-        exec_timeout:
+        timeout:
           type: integer
           format: int32
           default: 180

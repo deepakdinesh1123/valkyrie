@@ -10,6 +10,7 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/store"
 	"github.com/deepakdinesh1123/valkyrie/internal/telemetry"
 	"github.com/deepakdinesh1123/valkyrie/pkg/api"
+	"github.com/go-chi/jwtauth/v5"
 	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/metric"
@@ -83,8 +84,11 @@ func NewServer(ctx context.Context, envConfig *config.EnvConfig, standalone bool
 		valkyrieServer.sandboxService = sandboxService
 	}
 
+	ja := jwtauth.New("HS256", []byte(envConfig.ENCKEY), nil)
+
 	srv, err := api.NewServer(
 		valkyrieServer,
+		NewSecurityHandler(envConfig, ja),
 		api.WithTracerProvider(tp),
 		api.WithMeterProvider(mp),
 		api.WithPathPrefix("/api"),

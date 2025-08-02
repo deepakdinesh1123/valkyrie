@@ -23,6 +23,7 @@ const (
 	GetLanguageByIdOperation        OperationName = "GetLanguageById"
 	GetLanguageVersionByIdOperation OperationName = "GetLanguageVersionById"
 	GetSandboxOperation             OperationName = "GetSandbox"
+	GetValkyrieTokenOperation       OperationName = "GetValkyrieToken"
 	GetVersionOperation             OperationName = "GetVersion"
 	HealthOperation                 OperationName = "Health"
 )

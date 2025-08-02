@@ -5,7 +5,8 @@ get:
   parameters:
     - $ref: ../components/parameters/Cursor.yml
     - $ref: ../components/parameters/Limit.yml
-    - $ref: ../components/parameters/AuthHeader.yml
+  security:
+    - xAuthToken: []
   responses:
     '200':
       description: OK

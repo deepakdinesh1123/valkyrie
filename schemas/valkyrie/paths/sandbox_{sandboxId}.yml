@@ -9,7 +9,8 @@ get:
       schema:
         type: integer
         format: int64
-    - $ref: ../components/parameters/AuthHeader.yml
+  security:
+    - xAuthToken: []
   responses:
     '200':
       description: ok

@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/middleware"
+	"github.com/didip/tollbooth/v8"
+	"github.com/didip/tollbooth/v8/limiter"
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/handlers"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -26,17 +28,31 @@ func (s *ValkyrieServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 	r := chi.NewRouter()
 
-	r.Get("/executions/{jobId}/events", s.ExecuteSSE)
-	r.Get("/executions/{jobId}/ws", s.ExecuteWebSocket)
-	r.Get("/sandboxes/{sandboxId}/status/sse", s.GetSandboxSSE)
-	r.Get("/sandboxes/{sandboxId}/status/ws", s.GetSandboxWS)
-	r.Mount("/", s.server)
+	r.Group(func(r chi.Router) {
+		// r.Use(middleware.WSAuth(ja))
+
+		// r.Get("/executions/{jobId}/events", s.ExecuteSSE)
+		r.Get("/executions/{jobId}/ws/?token={token}", s.ExecuteWebSocket)
+		// r.Get("/sandboxes/{sandboxId}/status/sse", s.GetSandboxSSE)
+		// r.Get("/sandboxes/{sandboxId}/status/ws", s.GetSandboxWS)
+	})
+	r.Group(func(r chi.Router) {
+		// r.Use(middleware.TokenAuth(ja))
+
+		r.Mount("/", s.server)
+	})
 
 	route_finder := middleware.MakeRouteFinder(s.server)
+	lmt := tollbooth.NewLimiter(1, &limiter.ExpirableOptions{
+		DefaultExpirationTTL: time.Hour,
+	})
+	lmt.SetIPLookup(limiter.IPLookup{
+		Name:           "X-Real-Ip",
+		IndexFromRight: 0,
+	})
 
 	corsOptions := handlers.AllowedOrigins([]string{"*"})
 	corsMethods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"})
-	// corsHeaders := handlers.AllowedHeaders([]string{"Content-Type", "Authorization", "X-Auth-Token"})
 	corsHeaders := handlers.AllowedHeaders([]string{
 		"Authorization",
 		"Content-Type",
@@ -58,8 +74,9 @@ func (s *ValkyrieServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 			middleware.Wrap(r,
 				middleware.Instrument("server", route_finder, s.tp, s.mp, s.prop),
 				middleware.Labeler(route_finder),
-				middleware.TokenAuth(),
 				middleware.RequestMiddleware(s.logger),
+				tollbooth.HTTPMiddleware(lmt),
+				middleware.AssignRole(),
 			),
 		),
 	}

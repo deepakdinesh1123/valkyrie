@@ -528,6 +528,26 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 				}
 
+			case 't': // Prefix: "token/request"
+
+				if l := len("token/request"); len(elem) >= l && elem[0:l] == "token/request" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					// Leaf node.
+					switch r.Method {
+					case "POST":
+						s.handleGetValkyrieTokenRequest([0]string{}, elemIsEscaped, w, r)
+					default:
+						s.notAllowed(w, r, "POST")
+					}
+
+					return
+				}
+
 			case 'v': // Prefix: "version"
 
 				if l := len("version"); len(elem) >= l && elem[0:l] == "version" {
@@ -1163,6 +1183,30 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						}
 					}
 
+				}
+
+			case 't': // Prefix: "token/request"
+
+				if l := len("token/request"); len(elem) >= l && elem[0:l] == "token/request" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					// Leaf node.
+					switch method {
+					case "POST":
+						r.name = GetValkyrieTokenOperation
+						r.summary = "Reuqest Valkyrie token"
+						r.operationID = "getValkyrieToken"
+						r.pathPattern = "/token/request"
+						r.args = args
+						r.count = 0
+						return r, true
+					default:
+						return
+					}
 				}
 
 			case 'v': // Prefix: "version"

@@ -9,7 +9,8 @@ get:
       schema:
         type: integer
         format: int64
-    - $ref: ../components/parameters/AuthHeader.yml
+  security:
+    - xAuthToken: []
   responses:
     '200':
       description: OK
@@ -19,6 +20,12 @@ get:
             $ref: ../components/schemas/ExecutionResult.yml
     '400':
       description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml
+    '403':
+      description: Forbidden
       content:
         application/json:
           schema:

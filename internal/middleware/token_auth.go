@@ -1,53 +1,46 @@
 package middleware
 
 import (
-	"context"
 	"net/http"
-	"regexp"
+	"strings"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/config"
+	"github.com/go-chi/jwtauth/v5"
 )
 
-var eventsPathPattern = regexp.MustCompile(`^/executions/[^/]+/events$`)
-
-func TokenAuth() Middleware {
+func TokenAuth(ja *jwtauth.JWTAuth) Middleware {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if eventsPathPattern.MatchString(r.URL.Path) {
+
+			role := r.Context().Value(config.RoleKey)
+			if role == "admin" {
 				h.ServeHTTP(w, r)
 				return
 			}
 
-			ctx := r.Context()
-			envConfig, _ := config.GetEnvConfig()
-
-			// If no tokens are configured, skip authentication
-			if envConfig.USER_TOKEN == "" && envConfig.ADMIN_TOKEN == "" {
-				r = r.WithContext(context.WithValue(ctx, config.AuthKey, "noauth"))
-				h.ServeHTTP(w, r)
+			authHeader := r.Header.Get("Authorization")
+			if authHeader == "" {
+				http.Error(w, "Authorization header required", http.StatusUnauthorized)
 				return
 			}
 
-			// Tokens are configured, so authentication is required
-			r = r.WithContext(context.WithValue(ctx, config.AuthKey, "auth"))
-			headerValue := r.Header.Get("X-Auth-Token")
-
-			// If header is empty, return unauthorized immediately
-			if headerValue == "" {
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			parts := strings.Split(authHeader, " ")
+			if len(parts) != 2 || parts[0] != "Bearer" {
+				http.Error(w, "Invalid authorization header format", http.StatusUnauthorized)
 				return
 			}
 
-			// Check against configured tokens (only non-empty tokens)
-			if envConfig.USER_TOKEN != "" && headerValue == envConfig.USER_TOKEN {
-				r = r.WithContext(context.WithValue(ctx, config.UserKey, "user"))
-			} else if envConfig.ADMIN_TOKEN != "" && headerValue == envConfig.ADMIN_TOKEN {
-				r = r.WithContext(context.WithValue(ctx, config.UserKey, "admin"))
-			} else {
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			tokenString := parts[1]
+			token, err := ja.Decode(tokenString)
+			if err != nil {
+				http.Error(w, "Invalid token", http.StatusUnauthorized)
 				return
 			}
 
+			if token == nil {
+				http.Error(w, "Invalid token", http.StatusUnauthorized)
+				return
+			}
 			h.ServeHTTP(w, r)
 		})
 	}

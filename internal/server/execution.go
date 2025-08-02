@@ -12,8 +12,10 @@ import (
 	"github.com/coder/websocket"
 	"github.com/deepakdinesh1123/valkyrie/internal/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/db"
+	"github.com/deepakdinesh1123/valkyrie/internal/token"
 	"github.com/deepakdinesh1123/valkyrie/pkg/api"
 	"github.com/go-chi/chi/v5"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -42,7 +44,18 @@ func (s *ValkyrieServer) Execute(ctx context.Context, req *api.ExecutionRequest,
 			Message: fmt.Sprintf("Error adding execution job: %s", err),
 		}, nil
 	}
-	return &api.ExecuteOK{JobId: jobId, Events: fmt.Sprintf("/executions/%d/events", jobId), Websocket: fmt.Sprintf("/executions/%d/ws", jobId)}, nil
+
+	tkn, err := token.GenerateValkyrieToken(jwt.MapClaims{
+		"jobId": jobId,
+		"exp":   time.Now().Add(time.Minute * 10).Unix(),
+	}, s.envConfig)
+	if err != nil {
+		return &api.ExecuteInternalServerError{
+			Message: fmt.Sprintf("Failed to generate token: %v", err),
+		}, nil
+	}
+
+	return &api.ExecuteOK{JobId: jobId, Events: fmt.Sprintf("/executions/%d/events", jobId), Websocket: fmt.Sprintf("/executions/%d/ws/?token=%s", jobId, tkn)}, nil
 }
 
 func (s *ValkyrieServer) ExecuteSSE(w http.ResponseWriter, req *http.Request) {
@@ -286,14 +299,13 @@ func sendWebSocketMessage(ctx context.Context, conn *websocket.Conn, message Exe
 }
 
 func (s *ValkyrieServer) GetAllExecutions(ctx context.Context, params api.GetAllExecutionsParams) (api.GetAllExecutionsRes, error) {
-	auth := ctx.Value(config.AuthKey).(string)
-	if auth == "auth" {
-		user := ctx.Value(config.UserKey).(string)
 
-		if user != "admin" {
-			return &api.GetAllExecutionsForbidden{}, nil
-		}
+	role := ctx.Value(config.RoleKey).(string)
+
+	if role != "admin" {
+		return &api.GetAllExecutionsForbidden{}, nil
 	}
+
 	execResDB, err := s.queries.GetAllExecutions(ctx, db.GetAllExecutionsParams{
 		Limit:  params.Limit.Value,
 		ExecID: params.Cursor.Value,
@@ -337,6 +349,12 @@ func (s *ValkyrieServer) GetAllExecutions(ctx context.Context, params api.GetAll
 }
 
 func (s *ValkyrieServer) GetExecutionsForJob(ctx context.Context, params api.GetExecutionsForJobParams) (api.GetExecutionsForJobRes, error) {
+	role := ctx.Value(config.RoleKey).(string)
+
+	if role != "admin" {
+		return &api.GetExecutionsForJobForbidden{}, nil
+	}
+
 	execRes, err := s.queries.GetExecutionsForJob(ctx, db.GetExecutionsForJobParams{
 		JobID:  pgtype.Int8{Int64: params.JobId, Valid: true},
 		Limit:  params.Limit.Value,
@@ -381,14 +399,13 @@ func (s *ValkyrieServer) GetExecutionsForJob(ctx context.Context, params api.Get
 }
 
 func (s *ValkyrieServer) GetAllExecutionJobs(ctx context.Context, params api.GetAllExecutionJobsParams) (api.GetAllExecutionJobsRes, error) {
-	auth := ctx.Value(config.AuthKey).(string)
-	if auth == "auth" {
-		user := ctx.Value(config.UserKey).(string)
 
-		if user != "admin" {
-			return &api.GetAllExecutionJobsForbidden{}, nil
-		}
+	role := ctx.Value(config.RoleKey).(string)
+
+	if role != "admin" {
+		return &api.GetAllExecutionJobsForbidden{}, nil
 	}
+
 	executionsDB, err := s.queries.GetAllExecutionJobs(ctx, db.GetAllExecutionJobsParams{
 		Limit: params.Limit.Value,
 		JobID: params.Cursor.Value,
@@ -431,7 +448,7 @@ func (s *ValkyrieServer) GetAllExecutionJobs(ctx context.Context, params api.Get
 }
 
 func (s *ValkyrieServer) DeleteExecutionJob(ctx context.Context, params api.DeleteExecutionJobParams) (api.DeleteExecutionJobRes, error) {
-	user := ctx.Value(config.UserKey).(string)
+	user := ctx.Value(config.RoleKey).(string)
 
 	if user != "admin" {
 		return &api.DeleteExecutionJobForbidden{}, nil
@@ -463,6 +480,12 @@ func (s *ValkyrieServer) DeleteExecutionJob(ctx context.Context, params api.Dele
 }
 
 func (s *ValkyrieServer) CancelExecutionJob(ctx context.Context, params api.CancelExecutionJobParams) (api.CancelExecutionJobRes, error) {
+	role := ctx.Value(config.RoleKey).(string)
+
+	if role != "admin" {
+		return &api.CancelExecutionJobForbidden{}, nil
+	}
+
 	err := s.queries.CancelJob(ctx, params.JobId)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -480,6 +503,12 @@ func (s *ValkyrieServer) CancelExecutionJob(ctx context.Context, params api.Canc
 }
 
 func (s *ValkyrieServer) GetExecutionResultById(ctx context.Context, params api.GetExecutionResultByIdParams) (api.GetExecutionResultByIdRes, error) {
+	role := ctx.Value(config.RoleKey).(string)
+
+	if role != "admin" {
+		return &api.GetExecutionResultByIdForbidden{}, nil
+	}
+
 	execution, err := s.queries.GetExecution(ctx, params.ExecId)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -503,6 +532,11 @@ func (s *ValkyrieServer) GetExecutionResultById(ctx context.Context, params api.
 }
 
 func (s *ValkyrieServer) GetExecutionJobById(ctx context.Context, params api.GetExecutionJobByIdParams) (api.GetExecutionJobByIdRes, error) {
+	role := ctx.Value(config.RoleKey).(string)
+
+	if role != "admin" {
+		return &api.GetExecutionJobByIdForbidden{}, nil
+	}
 	job, err := s.queries.GetExecutionJob(ctx, params.JobId)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -522,8 +556,8 @@ func (s *ValkyrieServer) GetExecutionJobById(ctx context.Context, params api.Get
 	}, nil
 }
 
-func (s *ValkyrieServer) GetExecutionConfig(ctx context.Context, params api.GetExecutionConfigParams) (api.GetExecutionConfigRes, error) {
-	user := ctx.Value(config.UserKey).(string)
+func (s *ValkyrieServer) GetExecutionConfig(ctx context.Context) (api.GetExecutionConfigRes, error) {
+	user := ctx.Value(config.RoleKey).(string)
 
 	if user != "admin" {
 		return &api.GetExecutionConfigForbidden{}, nil
@@ -552,6 +586,11 @@ func sendExecutionMessage(w http.ResponseWriter, flusher http.Flusher, message E
 
 // FlakeJobIdGet implements api.Handler.
 func (s *ValkyrieServer) FetchFlake(ctx context.Context, params api.FetchFlakeParams) (api.FetchFlakeRes, error) {
+	role := ctx.Value(config.RoleKey).(string)
+
+	if role != "admin" {
+		return &api.FetchFlakeForbidden{}, nil
+	}
 	flake, err := s.queries.GetFlake(ctx, params.JobId)
 	if err != nil {
 		return &api.FetchFlakeInternalServerError{}, err
