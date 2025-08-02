@@ -47,7 +47,7 @@ func (s *ValkyrieServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 		DefaultExpirationTTL: time.Hour,
 	})
 	lmt.SetIPLookup(limiter.IPLookup{
-		Name:           "X-Real-Ip",
+		Name:           "X-Forwarded-For",
 		IndexFromRight: 0,
 	})
 
@@ -72,11 +72,10 @@ func (s *ValkyrieServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 		Addr:              addr,
 		Handler: handlers.CORS(corsOptions, corsMethods, corsHeaders)(
 			middleware.Wrap(r,
+				tollbooth.HTTPMiddleware(lmt),
 				middleware.Instrument("server", route_finder, s.tp, s.mp, s.prop),
 				middleware.Labeler(route_finder),
 				middleware.RequestMiddleware(s.logger),
-				tollbooth.HTTPMiddleware(lmt),
-				middleware.AssignRole(),
 			),
 		),
 	}
