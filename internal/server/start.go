@@ -72,7 +72,7 @@ func (s *ValkyrieServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 		Addr:              addr,
 		Handler: handlers.CORS(corsOptions, corsMethods, corsHeaders)(
 			middleware.Wrap(r,
-				tollbooth.HTTPMiddleware(lmt),
+				middleware.ConditionalRateLimit(lmt, map[string]string{"X-Auth-Token": ""}),
 				middleware.Instrument("server", route_finder, s.tp, s.mp, s.prop),
 				middleware.Labeler(route_finder),
 				middleware.RequestMiddleware(s.logger),
