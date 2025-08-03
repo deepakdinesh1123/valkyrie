@@ -46,7 +46,7 @@ func (s *ValkyrieServer) Execute(ctx context.Context, req *api.ExecutionRequest,
 	}
 
 	tkn, err := token.GenerateValkyrieToken(jwt.MapClaims{
-		"jobId": jobId,
+		"jobId": strconv.Itoa(int(jobId)),
 		"exp":   time.Now().Add(time.Minute * 10).Unix(),
 	}, s.envConfig)
 	if err != nil {
@@ -179,34 +179,60 @@ func (s *ValkyrieServer) ExecuteWebSocket(w http.ResponseWriter, req *http.Reque
 	}
 	defer conn.Close(websocket.StatusInternalError, "Connection closed")
 
-	// Create a context with timeout for the WebSocket connection
 	wsCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	// Handle client disconnection
+	disconnectChan := make(chan struct{})
+
 	go func() {
-		<-wsCtx.Done()
-		job, err := s.queries.GetExecutionJob(context.TODO(), jobID)
-		if err != nil {
-			s.logger.Error().Stack().Err(err).Msg("Failed to get job status")
-			return
-		}
-		if job.CurrentState == "pending" {
-			if _, err := s.queries.DeleteJob(context.TODO(), jobID); err != nil {
-				s.logger.Error().Stack().Err(err).Msg("Failed to delete pending job on disconnect")
-			} else {
-				s.logger.Info().Int64("executionId", jobID).Msg("Deleted pending job due to client disconnection")
+		defer close(disconnectChan)
+		for {
+			_, _, err := conn.Read(wsCtx)
+			if err != nil {
+				s.logger.Info().Int64("jobID", jobID).Err(err).Msg("Client disconnected")
+				cancel()
+				return
 			}
 		}
 	}()
 
+	go func() {
+		select {
+		case <-wsCtx.Done():
+		case <-disconnectChan:
+		}
+
+		job, err := s.queries.GetExecutionJob(context.Background(), jobID)
+		if err != nil {
+			s.logger.Error().Stack().Err(err).Msg("Failed to get job status for cleanup")
+			return
+		}
+
+		if job.CurrentState == "pending" || job.CurrentState == "scheduled" {
+			if _, err := s.queries.DeleteJob(context.Background(), jobID); err != nil {
+				s.logger.Error().Stack().Err(err).Msg("Failed to delete job on disconnect")
+			} else {
+				s.logger.Info().Int64("jobID", jobID).Str("state", job.CurrentState).
+					Msg("Deleted job due to client disconnection")
+			}
+		}
+	}()
+
+	ticker := time.NewTicker(3 * time.Second)
+	defer ticker.Stop()
+
 	for {
 		select {
-		case <-ctx.Done():
-			conn.Close(websocket.StatusNormalClosure, "Client disconnected")
+		case <-wsCtx.Done():
+			s.logger.Info().Int64("jobID", jobID).Msg("WebSocket context cancelled")
 			return
-		default:
-			job, err := s.queries.GetExecutionJob(ctx, jobID)
+
+		case <-disconnectChan:
+			s.logger.Info().Int64("jobID", jobID).Msg("Client disconnected via read error")
+			return
+
+		case <-ticker.C:
+			job, err := s.queries.GetExecutionJob(wsCtx, jobID)
 			if err != nil {
 				s.logger.Error().Stack().Err(err).Msg("Failed to get job")
 				msg := ExecutionMessage{
@@ -214,14 +240,17 @@ func (s *ValkyrieServer) ExecuteWebSocket(w http.ResponseWriter, req *http.Reque
 					JobID:    jobID,
 					ErrorMsg: fmt.Sprintf("Failed to get job: %s", err),
 				}
-				sendWebSocketMessage(ctx, conn, msg)
+				if sendErr := sendWebSocketMessage(wsCtx, conn, msg); sendErr != nil {
+					s.logger.Error().Err(sendErr).Msg("Failed to send error message")
+					return
+				}
 				conn.Close(websocket.StatusInternalError, "Failed to get job")
 				return
 			}
 
 			switch job.CurrentState {
 			case "completed":
-				res, err := s.queries.GetLatestExecution(ctx, pgtype.Int8{Int64: jobID, Valid: true})
+				res, err := s.queries.GetLatestExecution(wsCtx, pgtype.Int8{Int64: jobID, Valid: true})
 				if err != nil {
 					s.logger.Error().Stack().Err(err).Msg("Failed to get execution logs")
 					msg := ExecutionMessage{
@@ -229,7 +258,9 @@ func (s *ValkyrieServer) ExecuteWebSocket(w http.ResponseWriter, req *http.Reque
 						JobID:    jobID,
 						ErrorMsg: fmt.Sprintf("failed to get execution logs: %s", err),
 					}
-					sendWebSocketMessage(ctx, conn, msg)
+					if sendErr := sendWebSocketMessage(wsCtx, conn, msg); sendErr != nil {
+						s.logger.Error().Err(sendErr).Msg("Failed to send error message")
+					}
 					conn.Close(websocket.StatusInternalError, "Failed to get execution logs")
 					return
 				}
@@ -238,7 +269,9 @@ func (s *ValkyrieServer) ExecuteWebSocket(w http.ResponseWriter, req *http.Reque
 					JobID:  jobID,
 					Logs:   res.ExecLogs,
 				}
-				sendWebSocketMessage(ctx, conn, msg)
+				if sendErr := sendWebSocketMessage(wsCtx, conn, msg); sendErr != nil {
+					s.logger.Error().Err(sendErr).Msg("Failed to send completion message")
+				}
 				conn.Close(websocket.StatusNormalClosure, "Job completed")
 				return
 
@@ -247,7 +280,9 @@ func (s *ValkyrieServer) ExecuteWebSocket(w http.ResponseWriter, req *http.Reque
 					Status: "failed",
 					JobID:  jobID,
 				}
-				sendWebSocketMessage(ctx, conn, msg)
+				if sendErr := sendWebSocketMessage(wsCtx, conn, msg); sendErr != nil {
+					s.logger.Error().Err(sendErr).Msg("Failed to send failure message")
+				}
 				conn.Close(websocket.StatusNormalClosure, "Job failed")
 				return
 
@@ -256,46 +291,54 @@ func (s *ValkyrieServer) ExecuteWebSocket(w http.ResponseWriter, req *http.Reque
 					Status: "pending",
 					JobID:  jobID,
 				}
-				sendWebSocketMessage(ctx, conn, msg)
+				if sendErr := sendWebSocketMessage(wsCtx, conn, msg); sendErr != nil {
+					s.logger.Error().Err(sendErr).Msg("Failed to send pending message")
+					return
+				}
+
 			case "scheduled":
 				msg := ExecutionMessage{
 					Status: "scheduled",
 					JobID:  jobID,
 				}
-				sendWebSocketMessage(ctx, conn, msg)
+				if sendErr := sendWebSocketMessage(wsCtx, conn, msg); sendErr != nil {
+					s.logger.Error().Err(sendErr).Msg("Failed to send scheduled message")
+					return
+				}
+
 			case "cancelled":
 				msg := ExecutionMessage{
 					Status: "canceled",
 					JobID:  jobID,
 				}
-				sendWebSocketMessage(ctx, conn, msg)
+				if sendErr := sendWebSocketMessage(wsCtx, conn, msg); sendErr != nil {
+					s.logger.Error().Err(sendErr).Msg("Failed to send cancelled message")
+				}
 				conn.Close(websocket.StatusNormalClosure, "Job canceled")
 				return
-			default:
-				s.logger.Warn().Str("status", job.CurrentState).Msg("Unknown status")
-			}
 
-			time.Sleep(3 * time.Second)
+			default:
+				s.logger.Warn().Str("status", job.CurrentState).Msg("Unknown job status")
+			}
 		}
 	}
 }
 
 // sendWebSocketMessage sends a message over the WebSocket connection
-func sendWebSocketMessage(ctx context.Context, conn *websocket.Conn, message ExecutionMessage) {
-	fmt.Println("Sending websocket message", message)
+func sendWebSocketMessage(ctx context.Context, conn *websocket.Conn, message ExecutionMessage) error {
 
 	data, err := json.Marshal(message)
 	if err != nil {
-		// Just log the error, don't try to send an error over the WebSocket as that might fail too
-		log.Printf("Failed to marshal message: %v", err)
-		return
+		return err
 	}
 
 	err = conn.Write(ctx, websocket.MessageText, data)
 	if err != nil {
 		log.Printf("Failed to write WebSocket message: %v", err)
-		return
+		return err
 	}
+
+	return nil
 }
 
 func (s *ValkyrieServer) GetAllExecutions(ctx context.Context, params api.GetAllExecutionsParams) (api.GetAllExecutionsRes, error) {

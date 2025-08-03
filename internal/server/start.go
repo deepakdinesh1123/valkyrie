@@ -12,6 +12,7 @@ import (
 	"github.com/didip/tollbooth/v8"
 	"github.com/didip/tollbooth/v8/limiter"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/jwtauth/v5"
 	"github.com/gorilla/handlers"
 	"github.com/jackc/pgx/v5/pgtype"
 	"golang.org/x/sync/errgroup"
@@ -28,8 +29,10 @@ func (s *ValkyrieServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 	r := chi.NewRouter()
 
+	ja := jwtauth.New("HS256", []byte(s.envConfig.ENCKEY), nil)
+
 	r.Group(func(r chi.Router) {
-		// r.Use(middleware.WSAuth(ja))
+		r.Use(middleware.WSAuth(ja))
 
 		// r.Get("/executions/{jobId}/events", s.ExecuteSSE)
 		r.Get("/executions/{jobId}/ws/", s.ExecuteWebSocket)
