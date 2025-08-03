@@ -1,6 +1,6 @@
 # Running Valkyrie Docker Compose Setup on a VM
 
-This guide explains how to run the Valkyrie application stack using Docker Compose on a virtual machine (VM) with the `--profile dev`. This setup includes a reverse proxy with Caddy and optional instrumentation to view application traces using Jaeger.
+This guide explains how to run the Valkyrie application stack using Docker Compose on a virtual machine (VM) with the profile `staging` or `production` . This setup includes a reverse proxy with Caddy and optional instrumentation to view application traces using Jaeger.
 
 ---
 
@@ -75,6 +75,46 @@ Ensure your DNS settings point your domain to your VM's public IP.
 
 ---
 
+# Valkyrie Environment Configuration
+
+This document explains the configuration options (environment variables) required to configure your self-hosted Valkyrie environment.
+
+## Environment Variables
+
+Below is the list of environment variables along with explanations of their purposes:
+
+| Variable Name       | Default Value                             | Description                                                              |
+| ------------------- | ----------------------------------------- | ------------------------------------------------------------------------ |
+| `POSTGRES_HOST`     | `localhost`                               | Hostname or IP address of your PostgreSQL database.                      |
+| `POSTGRES_DB`       | `valkyrie`                                | Name of the PostgreSQL database to be used by Valkyrie.                  |
+| `POSTGRES_USER`     | `thors`                                   | Username for PostgreSQL database authentication.                         |
+| `POSTGRES_PASSWORD` | `thorkell`                                | Password for PostgreSQL database authentication.                         |
+| `POSTGRES_PORT`     | `5432`                                    | Port number on which your PostgreSQL database is listening.              |
+| `POSTGRES_SSL_MODE` | `disable`                                 | SSL mode for PostgreSQL connection (`disable`, `require`, etc.).         |
+| `CONTAINER_RUNTIME` | `runsc`                                   | Container runtime to use (`runsc` for gVisor or `runc` default).         |
+| `DB_MIGRATE`        | `true`                                    | Enables or disables automatic database migration on application startup. |
+| `ENABLE_EXECUTION`  | `true`                                    | Enables or disables the execution functionality within Valkyrie.         |
+| `NIXERY_URL`        | `<cloudrun-service-name>.<region>.run.app` | URL of your Nixery instance for fetching container images dynamically. Use custom URL if using private nixery instance or Default ["nixery.dev"](https://Nixery.dev)    |
+
+## Example `.env` File
+
+Here’s an example of a `.env` file for Valkyrie:
+
+```env
+POSTGRES_HOST=localhost
+POSTGRES_DB=valkyrie
+POSTGRES_USER=thors
+POSTGRES_PASSWORD=thorkell
+POSTGRES_PORT=5432
+POSTGRES_SSL_MODE=disable
+CONTAINER_RUNTIME=runsc
+DB_MIGRATE=true
+ENABLE_EXECUTION=true
+NIXERY_URL=<cloudrun-service-name>.<region>.run.app
+```
+
+---
+
 ## Change Container Runtime to gVisor (Optional but Recommended for Security)
 
 To enhance container isolation, you can change the container runtime from `runc` to `runsc` using gVisor. Follow these steps:
@@ -118,31 +158,67 @@ Restart Docker to apply the changes:
 sudo systemctl restart docker
 ```
 
-In your `docker-compose.yml`, specify the runtime for the services you wish to run with gVisor:
+In your `.env`, specify the runtime for the services you wish to run with gVisor:
 
-```yaml
-services:
-  valkyrie:
-    runtime: runsc
+```
+CONTAINER_RUNTIME=runsc
 ```
 
 ---
 ## Build and Run Valkyrie with Docker Compose
 
-### Build Docker Images
+### Valkyrie Docker Networks
 
-Build all the necessary Docker images with the `--profile dev`:
+This document explains how to create Docker networks required for your Valkyrie setup.
+
+#### Docker Network Setup
+
+Docker networks help in isolating containers and managing their internal communication effectively. Valkyrie requires the following Docker networks:
+
+##### Networks
+
+* `valkyrie-network`: Main network for Valkyrie components to communicate internally.
+* `devpi-network`: Network specifically used for Devpi components.
+
+##### Creating Docker Networks
+
+Execute the following commands to create these networks:
 
 ```bash
-docker compose --profile dev build
+docker network create valkyrie-network
+docker network create devpi-network
+```
+
+##### Verify Network Creation
+
+You can verify that the networks were successfully created by running:
+
+```bash
+docker network ls
+```
+
+You should see output similar to:
+
+```
+NETWORK ID     NAME               DRIVER    SCOPE
+abc123def456   valkyrie-network   bridge    local
+def789abc123   devpi-network      bridge    local
+```
+
+### Build Docker Images
+
+Build all the necessary Docker images with the `--profile staging` or `--profile production`:
+
+```bash
+docker compose --profile <profile> build
 ```
 
 ### Run Containers
 
-Start the containers with the dev profile:
+Start the containers with the staging or production profile:
 
 ```bash
-docker compose --profile dev up -d
+docker compose --profile <profile> up -d
 ```
 
 Check the status of running containers:

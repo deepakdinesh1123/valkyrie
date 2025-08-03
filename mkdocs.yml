@@ -53,6 +53,9 @@ nav:
       - Setup:
           - Home: valkyrie/setup/index.md
           - Docker: valkyrie/setup/docker.md
+      - Usage:
+          - Home: valkyrie/examples/index.md
+          - Examples: valkyrie/examples/examples.md
       - Deployment:
           - Home: valkyrie/deployment/index.md
           - Nixery: valkyrie/deployment/nixery.md
