@@ -46,10 +46,10 @@ cd valkyrie
 
 ## Configure Caddy
 
-Use the following configuration in your Caddyfile. Replace `backend.evnix.cloud` with your domain:
+Use the following configuration in your Caddyfile. Replace `youdomain.io` with your domain:
 
 ```caddyfile
-backend.evnix.cloud {
+youdomain.io {
     reverse_proxy valkyrie:8080 {
         health_uri /api/health
         health_interval 30s
@@ -106,7 +106,7 @@ docker compose ps
 Your application should now be accessible via HTTPS at:
 
 ```bash
-https://backend.evnix.cloud
+https://yourdomain.io
 ```
 
 ---
