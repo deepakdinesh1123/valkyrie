@@ -53,6 +53,10 @@ nav:
       - Setup:
           - Home: valkyrie/setup/index.md
           - Docker: valkyrie/setup/docker.md
+      - Deployment:
+          - Home: valkyrie/deployment/index.md
+          - Nixery: valkyrie/deployment/nixery.md
+          - GCP: valkyrie/deployment/gcp.md
       - Contributing: valkyrie/contributing.md
   - Blog: blog/index.md
 
