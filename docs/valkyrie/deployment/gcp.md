@@ -75,6 +75,58 @@ Ensure your DNS settings point your domain to your VM's public IP.
 
 ---
 
+## Change Container Runtime to gVisor (Optional but Recommended for Security)
+
+To enhance container isolation, you can change the container runtime from `runc` to `runsc` using gVisor. Follow these steps:
+
+### Install gVisor
+
+```bash
+curl -fsSL https://gvisor.dev/archive.key | sudo gpg --dearmor -o /usr/share/keyrings/gvisor-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/gvisor-archive-keyring.gpg] https://storage.googleapis.com/gvisor/releases release main" | sudo tee /etc/apt/sources.list.d/gvisor.list
+sudo apt-get update
+sudo apt-get install -y runsc
+```
+
+### Configure Docker to use gVisor
+
+Edit Docker's daemon configuration file:
+
+```bash
+sudo nano /etc/docker/daemon.json
+```
+
+Add the following content:
+
+```json
+{
+  "runtimes": {
+    "runsc": {
+      "runtimeType": "io.containerd.runsc.v1",
+      "options": {
+        "TypeUrl": "io.containerd.runsc.v1.options",
+        "ConfigPath": "/etc/containerd/runsc.toml"
+      }
+    }
+  }
+}
+```
+
+Restart Docker to apply the changes:
+
+```bash
+sudo systemctl restart docker
+```
+
+In your `docker-compose.yml`, specify the runtime for the services you wish to run with gVisor:
+
+```yaml
+services:
+  valkyrie:
+    runtime: runsc
+```
+
+---
 ## Build and Run Valkyrie with Docker Compose
 
 ### Build Docker Images
