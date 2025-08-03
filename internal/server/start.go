@@ -32,7 +32,7 @@ func (s *ValkyrieServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 		// r.Use(middleware.WSAuth(ja))
 
 		// r.Get("/executions/{jobId}/events", s.ExecuteSSE)
-		r.Get("/executions/{jobId}/ws/?token={token}", s.ExecuteWebSocket)
+		r.Get("/executions/{jobId}/ws/", s.ExecuteWebSocket)
 		// r.Get("/sandboxes/{sandboxId}/status/sse", s.GetSandboxSSE)
 		// r.Get("/sandboxes/{sandboxId}/status/ws", s.GetSandboxWS)
 	})
