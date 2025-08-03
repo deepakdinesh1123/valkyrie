@@ -142,14 +142,11 @@ Add the following content:
 {
   "runtimes": {
     "runsc": {
-      "runtimeType": "io.containerd.runsc.v1",
-      "options": {
-        "TypeUrl": "io.containerd.runsc.v1.options",
-        "ConfigPath": "/etc/containerd/runsc.toml"
-      }
+      "path": "/usr/bin/runsc"
     }
   }
 }
+
 ```
 
 Restart Docker to apply the changes:
