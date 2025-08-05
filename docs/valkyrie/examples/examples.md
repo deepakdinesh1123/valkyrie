@@ -29,14 +29,26 @@ Replace `YOUR_API_TOKEN` with your actual API token.
 
 ## API Endpoints
 
-The Valkyrie API endpoints are grouped into logical sections for ease of navigation and use:
+Explore individual endpoints in the [Valkyrie API documentation](API.md) for detailed endpoint descriptions and usage examples.
 
-* **Users**: Manage user-related operations.
-* **Payments**: Handle payment transactions and related actions.
-* **Analytics**: Retrieve analytical data and insights.
-* **Notifications**: Manage notifications sent to users.
+* [**Get all execution jobs**](API.md)
+* [**Get all executionss**](API.md)
+* [**Get all language versions**](API.md)
+* [**Get all languages**](API.md)
+* [**Get execution config**](API.md)
+* [**Get execution job**](API.md)
+* [**Get execution result by id**](API.md)
+* [**Get executions of given job**](API.md)
+* [**Get language by ID**](API.md)
+* [**Get language version by ID**](API.md)
+* [**Get version**](API.md)
+* [**Health Check**](API.md)
+* [**Fetch Flake**](API.md)
+* [**Execute a script**](API.md)
+* [**Delete execution job**](API.md)
+* [**Create a sandbox**](API.md#create-a-sandbox)
+* [**Cancel Execution Job**](API.md#cancel-execution-job)
 
-Explore individual sections in the [Valkyrie API documentation](https://docs.riza.io/api-reference/introduction) for detailed endpoint descriptions and usage examples.
 
 ## Error Handling
 
