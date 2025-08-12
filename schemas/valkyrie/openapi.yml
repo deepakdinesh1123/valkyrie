@@ -42,3 +42,16 @@ paths:
     $ref: paths/sandbox_{sandboxId}.yml
   /flake/{jobId}:
     $ref: paths/flake_{jobId}.yml
+  /token/request:
+    $ref: paths/token_request.yml
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    xAuthToken:
+      type: apiKey
+      in: header
+      name: X-Auth-Token
+      description: Authentication token

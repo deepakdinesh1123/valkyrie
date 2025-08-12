@@ -69,6 +69,10 @@ type GetSandboxRes interface {
 	getSandboxRes()
 }
 
+type GetValkyrieTokenRes interface {
+	getValkyrieTokenRes()
+}
+
 type GetVersionRes interface {
 	getVersionRes()
 }

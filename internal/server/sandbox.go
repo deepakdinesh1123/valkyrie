@@ -13,7 +13,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func (s *ValkyrieServer) CreateSandbox(ctx context.Context, req api.OptCreateSandbox, params api.CreateSandboxParams) (api.CreateSandboxRes, error) {
+func (s *ValkyrieServer) CreateSandbox(ctx context.Context, req api.OptCreateSandbox) (api.CreateSandboxRes, error) {
 	if !s.envConfig.ENABLE_SANDBOX {
 		return &api.CreateSandboxBadRequest{
 			Message: "Sandbox functionality is not enabled",

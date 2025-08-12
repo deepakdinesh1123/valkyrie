@@ -9,7 +9,10 @@ import (
 	"time"
 
 	"github.com/deepakdinesh1123/valkyrie/internal/middleware"
+	"github.com/didip/tollbooth/v8"
+	"github.com/didip/tollbooth/v8/limiter"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/jwtauth/v5"
 	"github.com/gorilla/handlers"
 	"github.com/jackc/pgx/v5/pgtype"
 	"golang.org/x/sync/errgroup"
@@ -26,17 +29,33 @@ func (s *ValkyrieServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 	r := chi.NewRouter()
 
-	r.Get("/executions/{jobId}/events", s.ExecuteSSE)
-	r.Get("/executions/{jobId}/ws", s.ExecuteWebSocket)
-	r.Get("/sandboxes/{sandboxId}/status/sse", s.GetSandboxSSE)
-	r.Get("/sandboxes/{sandboxId}/status/ws", s.GetSandboxWS)
-	r.Mount("/", s.server)
+	ja := jwtauth.New("HS256", []byte(s.envConfig.ENCKEY), nil)
+
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.WSAuth(ja))
+
+		// r.Get("/executions/{jobId}/events", s.ExecuteSSE)
+		r.Get("/executions/{jobId}/ws/", s.ExecuteWebSocket)
+		// r.Get("/sandboxes/{sandboxId}/status/sse", s.GetSandboxSSE)
+		// r.Get("/sandboxes/{sandboxId}/status/ws", s.GetSandboxWS)
+	})
+	r.Group(func(r chi.Router) {
+		// r.Use(middleware.TokenAuth(ja))
+
+		r.Mount("/", s.server)
+	})
 
 	route_finder := middleware.MakeRouteFinder(s.server)
+	lmt := tollbooth.NewLimiter(1, &limiter.ExpirableOptions{
+		DefaultExpirationTTL: time.Hour,
+	})
+	lmt.SetIPLookup(limiter.IPLookup{
+		Name:           "X-Forwarded-For",
+		IndexFromRight: 0,
+	})
 
 	corsOptions := handlers.AllowedOrigins([]string{"*"})
 	corsMethods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"})
-	// corsHeaders := handlers.AllowedHeaders([]string{"Content-Type", "Authorization", "X-Auth-Token"})
 	corsHeaders := handlers.AllowedHeaders([]string{
 		"Authorization",
 		"Content-Type",
@@ -56,9 +75,9 @@ func (s *ValkyrieServer) Start(ctx context.Context, wg *sync.WaitGroup) {
 		Addr:              addr,
 		Handler: handlers.CORS(corsOptions, corsMethods, corsHeaders)(
 			middleware.Wrap(r,
+				middleware.ConditionalRateLimit(lmt, map[string]string{"X-Auth-Token": ""}),
 				middleware.Instrument("server", route_finder, s.tp, s.mp, s.prop),
 				middleware.Labeler(route_finder),
-				middleware.TokenAuth(),
 				middleware.RequestMiddleware(s.logger),
 			),
 		),

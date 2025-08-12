@@ -2,8 +2,8 @@ get:
   summary: Get version
   description: Get version
   operationId: getVersion
-  parameters:
-    - $ref: ../components/parameters/AuthHeader.yml
+  security:
+    - xAuthToken: []
   responses:
     '200':
       description: OK

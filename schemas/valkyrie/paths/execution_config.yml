@@ -2,8 +2,8 @@ get:
   summary: Get execution config
   description: Get execution config
   operationId: getExecutionConfig
-  parameters:
-    - $ref: ../components/parameters/AuthHeader.yml
+  security:
+    - xAuthToken: []
   responses:
     '200':
       description: OK

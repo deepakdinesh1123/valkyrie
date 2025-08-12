@@ -6,6 +6,31 @@ import (
 	"time"
 )
 
+type BearerAuth struct {
+	Token string
+	Roles []string
+}
+
+// GetToken returns the value of Token.
+func (s *BearerAuth) GetToken() string {
+	return s.Token
+}
+
+// GetRoles returns the value of Roles.
+func (s *BearerAuth) GetRoles() []string {
+	return s.Roles
+}
+
+// SetToken sets the value of Token.
+func (s *BearerAuth) SetToken(val string) {
+	s.Token = val
+}
+
+// SetRoles sets the value of Roles.
+func (s *BearerAuth) SetRoles(val []string) {
+	s.Roles = val
+}
+
 type CancelExecutionJobBadRequest Error
 
 func (*CancelExecutionJobBadRequest) cancelExecutionJobRes() {}
@@ -910,6 +935,10 @@ type GetExecutionJobByIdBadRequest Error
 
 func (*GetExecutionJobByIdBadRequest) getExecutionJobByIdRes() {}
 
+type GetExecutionJobByIdForbidden Error
+
+func (*GetExecutionJobByIdForbidden) getExecutionJobByIdRes() {}
+
 type GetExecutionJobByIdInternalServerError Error
 
 func (*GetExecutionJobByIdInternalServerError) getExecutionJobByIdRes() {}
@@ -923,6 +952,10 @@ type GetExecutionResultByIdBadRequest Error
 
 func (*GetExecutionResultByIdBadRequest) getExecutionResultByIdRes() {}
 
+type GetExecutionResultByIdForbidden Error
+
+func (*GetExecutionResultByIdForbidden) getExecutionResultByIdRes() {}
+
 type GetExecutionResultByIdInternalServerError Error
 
 func (*GetExecutionResultByIdInternalServerError) getExecutionResultByIdRes() {}
@@ -935,6 +968,10 @@ func (*GetExecutionResultByIdNotFound) getExecutionResultByIdRes() {}
 type GetExecutionsForJobBadRequest Error
 
 func (*GetExecutionsForJobBadRequest) getExecutionsForJobRes() {}
+
+type GetExecutionsForJobForbidden Error
+
+func (*GetExecutionsForJobForbidden) getExecutionsForJobRes() {}
 
 type GetExecutionsForJobInternalServerError Error
 
@@ -1093,6 +1130,41 @@ func NewSandboxStateGetSandboxOK(v SandboxState) GetSandboxOK {
 }
 
 func (*GetSandboxOK) getSandboxRes() {}
+
+type GetValkyrieTokenForbidden Error
+
+func (*GetValkyrieTokenForbidden) getValkyrieTokenRes() {}
+
+type GetValkyrieTokenInternalServerError Error
+
+func (*GetValkyrieTokenInternalServerError) getValkyrieTokenRes() {}
+
+type GetValkyrieTokenOK struct {
+	Token   string    `json:"token"`
+	Expires time.Time `json:"expires"`
+}
+
+// GetToken returns the value of Token.
+func (s *GetValkyrieTokenOK) GetToken() string {
+	return s.Token
+}
+
+// GetExpires returns the value of Expires.
+func (s *GetValkyrieTokenOK) GetExpires() time.Time {
+	return s.Expires
+}
+
+// SetToken sets the value of Token.
+func (s *GetValkyrieTokenOK) SetToken(val string) {
+	s.Token = val
+}
+
+// SetExpires sets the value of Expires.
+func (s *GetValkyrieTokenOK) SetExpires(val time.Time) {
+	s.Expires = val
+}
+
+func (*GetValkyrieTokenOK) getValkyrieTokenRes() {}
 
 type GetVersionOK struct {
 	Version string `json:"version"`
@@ -1887,4 +1959,29 @@ func (s *SandboxState) SetSandboxId(val int64) {
 // SetState sets the value of State.
 func (s *SandboxState) SetState(val string) {
 	s.State = val
+}
+
+type XAuthToken struct {
+	APIKey string
+	Roles  []string
+}
+
+// GetAPIKey returns the value of APIKey.
+func (s *XAuthToken) GetAPIKey() string {
+	return s.APIKey
+}
+
+// GetRoles returns the value of Roles.
+func (s *XAuthToken) GetRoles() []string {
+	return s.Roles
+}
+
+// SetAPIKey sets the value of APIKey.
+func (s *XAuthToken) SetAPIKey(val string) {
+	s.APIKey = val
+}
+
+// SetRoles sets the value of Roles.
+func (s *XAuthToken) SetRoles(val []string) {
+	s.Roles = val
 }

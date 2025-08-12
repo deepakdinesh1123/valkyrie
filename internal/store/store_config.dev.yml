@@ -129,7 +129,39 @@ languages:
 
 system_packages:
   exclude:
-    - python.*
 
   include:
-    - python314
+    - curl
+    - wget
+    - httpie
+    - jq
+    - yq
+    - tree
+    - ripgrep
+    - zip
+    - unzip
+    - ffmpeg.*
+    - cmake
+    - bazel
+    - hdf5.*
+    - blas
+    - opencv
+    - imagemagick.*
+    - pandoc
+    - uv
+    - just
+    - filezilla
+    - automake.*
+    - autoconf
+    - libtool.*
+    - pkg-config.*
+    - ninja.*
+    - gdb
+    - valgrind
+    - strace
+    - ltrace
+    - perf-tools
+    - binutils
+    - dlib
+
+

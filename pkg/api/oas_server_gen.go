@@ -19,7 +19,7 @@ type Handler interface {
 	// Create a sandbox.
 	//
 	// POST /sandbox
-	CreateSandbox(ctx context.Context, req OptCreateSandbox, params CreateSandboxParams) (CreateSandboxRes, error)
+	CreateSandbox(ctx context.Context, req OptCreateSandbox) (CreateSandboxRes, error)
 	// DeleteExecutionJob implements deleteExecutionJob operation.
 	//
 	// Delete execution job.
@@ -55,13 +55,13 @@ type Handler interface {
 	// Retrieve a list of all language versions from the database.
 	//
 	// GET /language-versions
-	GetAllLanguageVersions(ctx context.Context, params GetAllLanguageVersionsParams) (GetAllLanguageVersionsRes, error)
+	GetAllLanguageVersions(ctx context.Context) (GetAllLanguageVersionsRes, error)
 	// GetAllLanguages implements getAllLanguages operation.
 	//
 	// Retrieve a list of all languages from the database.
 	//
 	// GET /languages
-	GetAllLanguages(ctx context.Context, params GetAllLanguagesParams) (GetAllLanguagesRes, error)
+	GetAllLanguages(ctx context.Context) (GetAllLanguagesRes, error)
 	// GetAllVersions implements getAllVersions operation.
 	//
 	// Retrieve a list of all language versions from the database.
@@ -73,7 +73,7 @@ type Handler interface {
 	// Get execution config.
 	//
 	// GET /execution/config
-	GetExecutionConfig(ctx context.Context, params GetExecutionConfigParams) (GetExecutionConfigRes, error)
+	GetExecutionConfig(ctx context.Context) (GetExecutionConfigRes, error)
 	// GetExecutionJobById implements getExecutionJobById operation.
 	//
 	// Get execution job.
@@ -110,12 +110,18 @@ type Handler interface {
 	//
 	// GET /sandbox/{sandboxId}
 	GetSandbox(ctx context.Context, params GetSandboxParams) (GetSandboxRes, error)
+	// GetValkyrieToken implements getValkyrieToken operation.
+	//
+	// Request Valkyrie token.
+	//
+	// POST /token/request
+	GetValkyrieToken(ctx context.Context) (GetValkyrieTokenRes, error)
 	// GetVersion implements getVersion operation.
 	//
 	// Get version.
 	//
 	// GET /version
-	GetVersion(ctx context.Context, params GetVersionParams) (GetVersionRes, error)
+	GetVersion(ctx context.Context) (GetVersionRes, error)
 	// Health implements health operation.
 	//
 	// Health Check.
@@ -127,18 +133,20 @@ type Handler interface {
 // Server implements http server based on OpenAPI v3 specification and
 // calls Handler to handle requests.
 type Server struct {
-	h Handler
+	h   Handler
+	sec SecurityHandler
 	baseServer
 }
 
 // NewServer creates new Server.
-func NewServer(h Handler, opts ...ServerOption) (*Server, error) {
+func NewServer(h Handler, sec SecurityHandler, opts ...ServerOption) (*Server, error) {
 	s, err := newServerConfig(opts...).baseServer()
 	if err != nil {
 		return nil, err
 	}
 	return &Server{
 		h:          h,
+		sec:        sec,
 		baseServer: s,
 	}, nil
 }
