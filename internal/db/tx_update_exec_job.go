@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"io"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -13,6 +14,7 @@ type UpdateJobResultTxParams struct {
 	WorkerId  int32
 	ExecLogs  string
 	NixLogs   string
+	OutFiles  io.ReadCloser
 	Success   bool
 	Retry     bool
 }
@@ -43,7 +45,7 @@ func (s *SQLStore) UpdateJobResultTx(ctx context.Context, arg UpdateJobResultTxP
 			}
 		}
 
-		execution, err := q.InsertExecution(ctx, InsertExecutionParams{
+		inp := InsertExecutionParams{
 			JobID:         pgtype.Int8{Int64: int64(arg.Job.JobID), Valid: true},
 			WorkerID:      pgtype.Int4{Int32: arg.WorkerId, Valid: true},
 			StartedAt:     pgtype.Timestamptz{Time: arg.StartTime, Valid: true},
@@ -52,7 +54,17 @@ func (s *SQLStore) UpdateJobResultTx(ctx context.Context, arg UpdateJobResultTxP
 			ExecLogs:      arg.ExecLogs,
 			NixLogs:       pgtype.Text{String: arg.NixLogs, Valid: true},
 			Success:       pgtype.Bool{Bool: arg.Success, Valid: true},
-		})
+		}
+
+		if arg.OutFiles != nil {
+			outFiles, err := io.ReadAll(arg.OutFiles)
+			if err != nil {
+				return err
+			}
+			inp.OutFiles = outFiles
+		}
+
+		execution, err := q.InsertExecution(ctx, inp)
 		if err != nil {
 			return err
 		}

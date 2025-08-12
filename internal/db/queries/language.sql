@@ -31,33 +31,33 @@ returning id;
 
 -- name: CreateLanguageVersion :one
 INSERT INTO language_versions (
-    language_id, version, nix_package_name, template, search_query, default_version
+    language_id, version, nix_package_name, template,  default_version
 ) 
-VALUES ($1, $2, $3, $4, $5, $6) 
+VALUES ($1, $2, $3, $4, $5) 
 RETURNING id;
 
 -- name: GetAllLanguageVersions :many
-SELECT id, language_id, version, nix_package_name, template, search_query, default_version
+SELECT id, language_id, version, nix_package_name, template,  default_version
 FROM language_versions;
 
 -- name: GetLanguageVersionByID :one
-SELECT id, language_id, version, nix_package_name, template, search_query, default_version 
+SELECT id, language_id, version, nix_package_name, template,  default_version 
 FROM language_versions 
 WHERE id = $1;
 
 -- name: GetVersionsByLanguageID :many
-SELECT id, language_id, version, nix_package_name, template, search_query, default_version 
+SELECT id, language_id, version, nix_package_name, template,  default_version 
 FROM language_versions 
 WHERE language_id = $1;
 
 -- name: GetLanguageVersion :one
-SELECT id, language_id, version, nix_package_name, template, search_query, default_version 
+SELECT *
 FROM language_versions 
 WHERE language_id = $1 AND version = $2;
 
 -- name: UpdateLanguageVersion :one
 UPDATE language_versions 
-SET language_id = $2, nix_package_name = $3, template = $4, search_query = $5, version = $6, default_version = $7
+SET language_id = $2, nix_package_name = $3, template = $4, version = $5, default_version = $6
 WHERE id = $1 
 returning id;
 
@@ -81,4 +81,4 @@ SELECT * FROM language_versions WHERE default_version = true AND language_id = $
 INSERT INTO languages (name, extension, monaco_language, default_code, template) VALUES ($1, $2, $3, $4, $5);
 
 -- name: InsertLanguageVersions :copyfrom
-INSERT INTO language_versions (language_id, version, nix_package_name, template, search_query, default_version) VALUES ($1, $2, $3, $4, $5, $6);
+INSERT INTO language_versions (language_id, version, nix_package_name, template,  default_version) VALUES ($1, $2, $3, $4, $5);

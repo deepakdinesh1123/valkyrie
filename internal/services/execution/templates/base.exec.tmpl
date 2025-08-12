@@ -1,10 +1,4 @@
-#!/usr/bin/env nix-shell
-#! nix-shell -i bash
-#! nix-shell -p {{ block "LangSetup" . }}{{.LangNixPkg}}{{ end }}
-{{ if eq (len .SystemDependencies) 0 -}}
-{{ else -}}
-#! nix-shell -p {{ range .SystemDependencies }}{{.}} {{ end }}
-{{end -}}
+#!/bin/bash
 
 {{- if .SystemSetup }}
 {{ .SystemSetup }}
@@ -15,11 +9,15 @@
 {{- end }}
 
 {{- if .Command }}
-{{ .Command }}  >>  output.txt 2>&1
-{{- else }}
-{{ block "compile" . }}{{ end }}
-{{- end }}
+{{ .Command }}
+{{- if .CmdLineArgs }} {{ .CmdLineArgs }}{{ end }}
+{{- if .Input }} < input.txt {{ end -}} >> output.txt 2>&1
 
+{{- else }}
+
+{{ block "compile" . }}{{ end }}
 {{ block "execute" . }}{{ end -}}
 {{- if .CmdLineArgs }} {{ .CmdLineArgs }}{{ end }}
 {{- if .Input }} < input.txt {{ end -}} >> output.txt 2>&1
+
+{{- end }}

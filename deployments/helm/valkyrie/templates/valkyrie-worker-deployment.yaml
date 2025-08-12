@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: valkyrie-worker
+  labels:
+    app: valkyrie
+    component: worker
+    admin: yes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: valkyrie
+      component: worker
+      admin: yes
+  template:
+    metadata:
+      labels:
+        app: valkyrie
+        component: worker
+        admin: yes
+    spec:
+      serviceAccountName: valkyrie-acc
+      initContainers:
+        - name: wait-for-server
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for server health check at http://valkyrie-service/health..."
+              TIMEOUT=120 # Total wait time in seconds
+              INTERVAL=2  # Time to sleep between attempts
+              ELAPSED=0
+              HEALTHZ_URL="http://valkyrie-service/api/health" # Define the health check URL
+
+              while [ $ELAPSED -lt $TIMEOUT ]; do
+                if wget -q --spider $HEALTHZ_URL; then
+                  echo "Server health check successful!"
+                  exit 0
+                fi
+                echo "Waiting for server health check... (Attempt $((ELAPSED/INTERVAL + 1)))"
+                sleep $INTERVAL
+                ELAPSED=$((ELAPSED + INTERVAL))
+              done
+
+              echo "Server health check failed after $((TIMEOUT/60)) minutes, exiting."
+              exit 1
+        - name: wait-for-db
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for DB at $POSTGRES_HOST:$POSTGRES_PORT..."
+              for i in $(seq 1 30); do
+                if nc -z -w1 "$POSTGRES_HOST" "$POSTGRES_PORT"; then
+                  echo "Database is available!"
+                  exit 0
+                fi
+                echo "Waiting for database... ($i)"
+                sleep 2
+              done
+              echo "Database not reachable after 60 seconds, exiting."
+              exit 1
+          env:
+            - name: POSTGRES_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: POSTGRES_HOST
+            - name: POSTGRES_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: valkyrie-env
+                  key: POSTGRES_PORT
+      containers:
+        - args:
+            - worker
+            - start
+          envFrom:
+            - configMapRef:
+                name: valkyrie-env
+          image: {{ .Values.valkyrie.image | default "valkyrie:0.0.1" | quote }}
+          name: valkyrie-worker
+      restartPolicy: Always

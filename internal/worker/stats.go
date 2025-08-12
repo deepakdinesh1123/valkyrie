@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/shirou/gopsutil/v4/cpu"
+	"github.com/shirou/gopsutil/v4/disk"
 	"github.com/shirou/gopsutil/v4/mem"
 )
 
@@ -19,6 +20,11 @@ func (w *Worker) updateStats() error {
 	}
 	w.WorkerStats.CPUUsage = cpuPercent[0]
 	w.WorkerStats.MemUsage = vmm.UsedPercent
+	diskUsage, err := disk.Usage("/")
+	if err != nil {
+		return err
+	}
+	w.WorkerStats.DiskUsed = diskUsage.UsedPercent
 
 	return nil
 }

@@ -27,6 +27,6 @@ properties:
     description: Search query string
     example: python310Packages
   default_version:
-    type: boolean 
+    type: boolean
     description: Whether this is the default version of the language
     example: true

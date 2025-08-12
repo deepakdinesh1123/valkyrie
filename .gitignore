@@ -237,3 +237,8 @@ cython_debug/
 
 letsencrypt
 .cursor
+.pem
+secrets/
+charts/
+
+certs/

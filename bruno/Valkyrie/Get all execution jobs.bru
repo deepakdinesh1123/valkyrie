@@ -1,0 +1,16 @@
+meta {
+  name: Get all execution jobs
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/api/jobs/execution
+  body: none
+  auth: none
+}
+
+params:query {
+  ~cursor: 
+  ~limit: 
+}

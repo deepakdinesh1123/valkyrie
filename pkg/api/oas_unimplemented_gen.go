@@ -27,7 +27,7 @@ func (UnimplementedHandler) CancelExecutionJob(ctx context.Context, params Cance
 // Create a sandbox.
 //
 // POST /sandbox
-func (UnimplementedHandler) CreateSandbox(ctx context.Context, req OptCreateSandbox, params CreateSandboxParams) (r CreateSandboxRes, _ error) {
+func (UnimplementedHandler) CreateSandbox(ctx context.Context, req OptCreateSandbox) (r CreateSandboxRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -58,24 +58,6 @@ func (UnimplementedHandler) FetchFlake(ctx context.Context, params FetchFlakePar
 	return r, ht.ErrNotImplemented
 }
 
-// FetchLanguagePackages implements FetchLanguagePackages operation.
-//
-// Initialize the search results content with a default set of language specific packages.
-//
-// GET /fetch/language
-func (UnimplementedHandler) FetchLanguagePackages(ctx context.Context, params FetchLanguagePackagesParams) (r FetchLanguagePackagesRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
-// FetchSystemPackages implements FetchSystemPackages operation.
-//
-// Initialize the search results content with a default set of system packages.
-//
-// GET /fetch/system
-func (UnimplementedHandler) FetchSystemPackages(ctx context.Context, params FetchSystemPackagesParams) (r FetchSystemPackagesRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
 // GetAllExecutionJobs implements getAllExecutionJobs operation.
 //
 // Get all execution jobs.
@@ -99,7 +81,7 @@ func (UnimplementedHandler) GetAllExecutions(ctx context.Context, params GetAllE
 // Retrieve a list of all language versions from the database.
 //
 // GET /language-versions
-func (UnimplementedHandler) GetAllLanguageVersions(ctx context.Context, params GetAllLanguageVersionsParams) (r GetAllLanguageVersionsRes, _ error) {
+func (UnimplementedHandler) GetAllLanguageVersions(ctx context.Context) (r GetAllLanguageVersionsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -108,7 +90,7 @@ func (UnimplementedHandler) GetAllLanguageVersions(ctx context.Context, params G
 // Retrieve a list of all languages from the database.
 //
 // GET /languages
-func (UnimplementedHandler) GetAllLanguages(ctx context.Context, params GetAllLanguagesParams) (r GetAllLanguagesRes, _ error) {
+func (UnimplementedHandler) GetAllLanguages(ctx context.Context) (r GetAllLanguagesRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -126,7 +108,7 @@ func (UnimplementedHandler) GetAllVersions(ctx context.Context, params GetAllVer
 // Get execution config.
 //
 // GET /execution/config
-func (UnimplementedHandler) GetExecutionConfig(ctx context.Context, params GetExecutionConfigParams) (r GetExecutionConfigRes, _ error) {
+func (UnimplementedHandler) GetExecutionConfig(ctx context.Context) (r GetExecutionConfigRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -184,12 +166,21 @@ func (UnimplementedHandler) GetSandbox(ctx context.Context, params GetSandboxPar
 	return r, ht.ErrNotImplemented
 }
 
+// GetValkyrieToken implements getValkyrieToken operation.
+//
+// Request Valkyrie token.
+//
+// POST /token/request
+func (UnimplementedHandler) GetValkyrieToken(ctx context.Context) (r GetValkyrieTokenRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetVersion implements getVersion operation.
 //
 // Get version.
 //
 // GET /version
-func (UnimplementedHandler) GetVersion(ctx context.Context, params GetVersionParams) (r GetVersionRes, _ error) {
+func (UnimplementedHandler) GetVersion(ctx context.Context) (r GetVersionRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -200,32 +191,4 @@ func (UnimplementedHandler) GetVersion(ctx context.Context, params GetVersionPar
 // GET /health
 func (UnimplementedHandler) Health(ctx context.Context) error {
 	return ht.ErrNotImplemented
-}
-
-// PackagesExist implements PackagesExist operation.
-//
-// Verify the package list is available for the language version while switching between language
-// versions.
-//
-// POST /packages/exist
-func (UnimplementedHandler) PackagesExist(ctx context.Context, req *PackageExistRequest, params PackagesExistParams) (r PackagesExistRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
-// SearchLanguagePackages implements SearchLanguagePackages operation.
-//
-// Search for language specific packages.
-//
-// GET /search/language
-func (UnimplementedHandler) SearchLanguagePackages(ctx context.Context, params SearchLanguagePackagesParams) (r SearchLanguagePackagesRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
-// SearchSystemPackages implements SearchSystemPackages operation.
-//
-// Search for system packages.
-//
-// GET /search/system
-func (UnimplementedHandler) SearchSystemPackages(ctx context.Context, params SearchSystemPackagesParams) (r SearchSystemPackagesRes, _ error) {
-	return r, ht.ErrNotImplemented
 }

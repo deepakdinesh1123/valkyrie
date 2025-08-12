@@ -3,7 +3,7 @@ required:
   - WORKER_PROVIDER
   - WORKER_CONCURRENCY
   - WORKER_BUFFER_SIZE
-  - WORKER_TASK_TIMEOUT
+  - WORKER_MAX_TASK_TIMEOUT
   - WORKER_POLL_FREQ
   - WORKER_RUNTIME
   - LOG_LEVEL
@@ -19,7 +19,7 @@ properties:
     type: integer
     format: int32
     description: Represents the buffer size for the worker.
-  WORKER_TASK_TIMEOUT:
+  WORKER_MAX_TASK_TIMEOUT:
     type: integer
     description: Represents the task timeout.
   WORKER_POLL_FREQ:

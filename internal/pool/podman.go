@@ -46,7 +46,7 @@ func PodConstructor(ctx context.Context) (Container, error) {
 		envConfig.EXECUTION_IMAGE,
 		false,
 	)
-	stopTimeout := uint(envConfig.WORKER_TASK_TIMEOUT)
+	stopTimeout := uint(envConfig.WORKER_MAX_TASK_TIMEOUT)
 	s.StopTimeout = &stopTimeout
 	stopSignal := syscall.SIGKILL
 	s.StopSignal = &stopSignal

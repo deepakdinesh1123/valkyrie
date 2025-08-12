@@ -1,16 +1,18 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
+    nixpkgs24.url = "github:NixOS/nixpkgs/nixos-24.11";
     flake-utils.url = "github:numtide/flake-utils";
     nix2container.url = "github:nlewo/nix2container";
   };
 
   description = "Valkyrie";
 
-  outputs = { self, nixpkgs, flake-utils, nix2container, ... }:
+  outputs = { self, nixpkgs, nixpkgs24, flake-utils, nix2container, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
+        pkgs24 = import nixpkgs24 { inherit system; };
         nix2containerPkgs = nix2container.packages.${system};
         arch = builtins.head (builtins.match "^([^-]+)-.*" system);
       in
@@ -23,17 +25,19 @@
         };
         ubuntu = nix2containerPkgs.nix2container.pullImage {
           imageName = "ubuntu";
-          imageDigest = "sha256:72297848456d5d37d1262630108ab308d3e9ec7ed1c3286a32fe09856619a782"; 
+          imageDigest = "sha256:72297848456d5d37d1262630108ab308d3e9ec7ed1c3286a32fe09856619a782";
           arch = if arch == "x86_64" then "amd64" else "arm64";
-          sha256 = "sha256-H2ddt+ZxnnzrGBoTyAVMs/qkQuUHG+HelIgcqzVcjS4="; 
+          sha256 = "sha256-H2ddt+ZxnnzrGBoTyAVMs/qkQuUHG+HelIgcqzVcjS4=";
         };
         valkyrieDependencies = with pkgs; [
-          sqlc
-          go-migrate
-          go_1_22
+          go_1_23
           caddy
-          pkg-config 
+          pkg-config
           just
+          skaffold
+          kubernetes-helm
+          mkcert
+          httpie
         ] ++ lib.optionals stdenv.isLinux [
           nsjail
           gpgme
@@ -43,6 +47,9 @@
           fuse-overlayfs
           gvisor
           crun
+        ] ++ [
+          pkgs24.go-migrate
+          pkgs24.sqlc
         ];
 
         packages = rec {
@@ -70,6 +77,7 @@
           js-sdk = import ./sdk/ts/shell.nix { inherit pkgs; };
           docs = import ./docs/shell.nix { inherit pkgs; };
           schemas = import ./schemas/shell.nix { inherit pkgs; };
+          goBuildEnv = import ./builds/go.nix { inherit pkgs; };
           agent = pkgs.mkShell {
             buildInputs = [ pkgs.go_1_22 ];
           };

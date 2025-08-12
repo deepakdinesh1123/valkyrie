@@ -1,0 +1,43 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: traefik-deployment
+  labels:
+    app: valkyrie
+    component: traefik
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: valkyrie
+      component: traefik
+  template:
+    metadata:
+      labels:
+        app: valkyrie
+        component: traefik
+    spec:
+      serviceAccountName: traefik-account
+      containers:
+        - name: traefik
+          image: traefik:v3.3
+          args:
+            - --api.insecure
+            - --providers.kubernetesingress
+          ports:
+            - name: web
+              containerPort: 80
+              hostPort: 80
+            - name: dashboard
+              containerPort: 8080
+              hostPort: 8080
+          volumeMounts:
+            - name: traefik-config
+              mountPath: /etc/traefik
+              readOnly: true
+      volumes:
+        - name: traefik-config
+          configMap:
+            name: traefik-proxy-cm0 
+      nodeSelector:
+        ingress-ready: "true"

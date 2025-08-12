@@ -16,13 +16,19 @@ properties:
     description: List of programming languages required in the sandbox
     items:
       type: string
-    example: ["python", "javascript", "go"]
+    example:
+      - python
+      - javascript
+      - go
   system_dependencies:
     type: array
     description: List of system-level dependencies needed in the sandbox
     items:
       type: string
-    example: ["gcc", "make", "git"]
+    example:
+      - gcc
+      - make
+      - git
   services:
     type: array
     description: List of services to be added to the sandbox

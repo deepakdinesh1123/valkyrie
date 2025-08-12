@@ -6,6 +6,31 @@ import (
 	"time"
 )
 
+type BearerAuth struct {
+	Token string
+	Roles []string
+}
+
+// GetToken returns the value of Token.
+func (s *BearerAuth) GetToken() string {
+	return s.Token
+}
+
+// GetRoles returns the value of Roles.
+func (s *BearerAuth) GetRoles() []string {
+	return s.Roles
+}
+
+// SetToken sets the value of Token.
+func (s *BearerAuth) SetToken(val string) {
+	s.Token = val
+}
+
+// SetRoles sets the value of Roles.
+func (s *BearerAuth) SetRoles(val []string) {
+	s.Roles = val
+}
+
 type CancelExecutionJobBadRequest Error
 
 func (*CancelExecutionJobBadRequest) cancelExecutionJobRes() {}
@@ -269,7 +294,7 @@ type ExecutionConfig struct {
 	// Represents the buffer size for the worker.
 	WORKERBUFFERSIZE int32 `json:"WORKER_BUFFER_SIZE"`
 	// Represents the task timeout.
-	WORKERTASKTIMEOUT int `json:"WORKER_TASK_TIMEOUT"`
+	WORKERMAXTASKTIMEOUT int `json:"WORKER_MAX_TASK_TIMEOUT"`
 	// Represents the polling frequency for the worker in seconds.
 	WORKERPOLLFREQ int `json:"WORKER_POLL_FREQ"`
 	// Represents the runtime for the worker in seconds.
@@ -297,9 +322,9 @@ func (s *ExecutionConfig) GetWORKERBUFFERSIZE() int32 {
 	return s.WORKERBUFFERSIZE
 }
 
-// GetWORKERTASKTIMEOUT returns the value of WORKERTASKTIMEOUT.
-func (s *ExecutionConfig) GetWORKERTASKTIMEOUT() int {
-	return s.WORKERTASKTIMEOUT
+// GetWORKERMAXTASKTIMEOUT returns the value of WORKERMAXTASKTIMEOUT.
+func (s *ExecutionConfig) GetWORKERMAXTASKTIMEOUT() int {
+	return s.WORKERMAXTASKTIMEOUT
 }
 
 // GetWORKERPOLLFREQ returns the value of WORKERPOLLFREQ.
@@ -342,9 +367,9 @@ func (s *ExecutionConfig) SetWORKERBUFFERSIZE(val int32) {
 	s.WORKERBUFFERSIZE = val
 }
 
-// SetWORKERTASKTIMEOUT sets the value of WORKERTASKTIMEOUT.
-func (s *ExecutionConfig) SetWORKERTASKTIMEOUT(val int) {
-	s.WORKERTASKTIMEOUT = val
+// SetWORKERMAXTASKTIMEOUT sets the value of WORKERMAXTASKTIMEOUT.
+func (s *ExecutionConfig) SetWORKERMAXTASKTIMEOUT(val int) {
+	s.WORKERMAXTASKTIMEOUT = val
 }
 
 // SetWORKERPOLLFREQ sets the value of WORKERPOLLFREQ.
@@ -376,10 +401,11 @@ func (*ExecutionConfig) getExecutionConfigRes() {}
 
 // Ref: #/components/schemas/ExecutionEnvironmentSpec
 type ExecutionEnvironmentSpec struct {
-	EnvironmentVariables []EnvironmentVariable `json:"environment_variables"`
-	LanguageDependencies []string              `json:"languageDependencies"`
-	SystemDependencies   []string              `json:"systemDependencies"`
-	Setup                OptString             `json:"setup"`
+	EnvironmentVariables []EnvironmentVariable              `json:"environment_variables"`
+	LanguageDependencies []string                           `json:"languageDependencies"`
+	SystemDependencies   []string                           `json:"systemDependencies"`
+	Setup                OptString                          `json:"setup"`
+	Secrets              OptExecutionEnvironmentSpecSecrets `json:"secrets"`
 }
 
 // GetEnvironmentVariables returns the value of EnvironmentVariables.
@@ -402,6 +428,11 @@ func (s *ExecutionEnvironmentSpec) GetSetup() OptString {
 	return s.Setup
 }
 
+// GetSecrets returns the value of Secrets.
+func (s *ExecutionEnvironmentSpec) GetSecrets() OptExecutionEnvironmentSpecSecrets {
+	return s.Secrets
+}
+
 // SetEnvironmentVariables sets the value of EnvironmentVariables.
 func (s *ExecutionEnvironmentSpec) SetEnvironmentVariables(val []EnvironmentVariable) {
 	s.EnvironmentVariables = val
@@ -422,6 +453,22 @@ func (s *ExecutionEnvironmentSpec) SetSetup(val OptString) {
 	s.Setup = val
 }
 
+// SetSecrets sets the value of Secrets.
+func (s *ExecutionEnvironmentSpec) SetSecrets(val OptExecutionEnvironmentSpecSecrets) {
+	s.Secrets = val
+}
+
+type ExecutionEnvironmentSpecSecrets map[string]string
+
+func (s *ExecutionEnvironmentSpecSecrets) init() ExecutionEnvironmentSpecSecrets {
+	m := *s
+	if m == nil {
+		m = map[string]string{}
+		*s = m
+	}
+	return m
+}
+
 // Ref: #/components/schemas/ExecutionRequest
 type ExecutionRequest struct {
 	Environment  OptExecutionEnvironmentSpec `json:"environment"`
@@ -433,8 +480,9 @@ type ExecutionRequest struct {
 	CmdLineArgs  OptString                   `json:"cmdLineArgs"`
 	CompilerArgs OptString                   `json:"compilerArgs"`
 	Command      OptString                   `json:"command"`
-	Files        []byte                      `json:"files"`
+	Files        []ExecutionRequestFilesItem `json:"files"`
 	Input        OptString                   `json:"input"`
+	Extension    OptString                   `json:"extension"`
 }
 
 // GetEnvironment returns the value of Environment.
@@ -483,13 +531,18 @@ func (s *ExecutionRequest) GetCommand() OptString {
 }
 
 // GetFiles returns the value of Files.
-func (s *ExecutionRequest) GetFiles() []byte {
+func (s *ExecutionRequest) GetFiles() []ExecutionRequestFilesItem {
 	return s.Files
 }
 
 // GetInput returns the value of Input.
 func (s *ExecutionRequest) GetInput() OptString {
 	return s.Input
+}
+
+// GetExtension returns the value of Extension.
+func (s *ExecutionRequest) GetExtension() OptString {
+	return s.Extension
 }
 
 // SetEnvironment sets the value of Environment.
@@ -538,13 +591,43 @@ func (s *ExecutionRequest) SetCommand(val OptString) {
 }
 
 // SetFiles sets the value of Files.
-func (s *ExecutionRequest) SetFiles(val []byte) {
+func (s *ExecutionRequest) SetFiles(val []ExecutionRequestFilesItem) {
 	s.Files = val
 }
 
 // SetInput sets the value of Input.
 func (s *ExecutionRequest) SetInput(val OptString) {
 	s.Input = val
+}
+
+// SetExtension sets the value of Extension.
+func (s *ExecutionRequest) SetExtension(val OptString) {
+	s.Extension = val
+}
+
+type ExecutionRequestFilesItem struct {
+	Name    string `json:"name"`
+	Content string `json:"content"`
+}
+
+// GetName returns the value of Name.
+func (s *ExecutionRequestFilesItem) GetName() string {
+	return s.Name
+}
+
+// GetContent returns the value of Content.
+func (s *ExecutionRequestFilesItem) GetContent() string {
+	return s.Content
+}
+
+// SetName sets the value of Name.
+func (s *ExecutionRequestFilesItem) SetName(val string) {
+	s.Name = val
+}
+
+// SetContent sets the value of Content.
+func (s *ExecutionRequestFilesItem) SetContent(val string) {
+	s.Content = val
 }
 
 // Merged schema.
@@ -689,62 +772,6 @@ func (s *FetchFlakeOK) SetFlake(val string) {
 }
 
 func (*FetchFlakeOK) fetchFlakeRes() {}
-
-type FetchLanguagePackagesBadRequest Error
-
-func (*FetchLanguagePackagesBadRequest) fetchLanguagePackagesRes() {}
-
-type FetchLanguagePackagesForbidden Error
-
-func (*FetchLanguagePackagesForbidden) fetchLanguagePackagesRes() {}
-
-type FetchLanguagePackagesInternalServerError Error
-
-func (*FetchLanguagePackagesInternalServerError) fetchLanguagePackagesRes() {}
-
-type FetchLanguagePackagesOK struct {
-	Packages []Package `json:"packages"`
-}
-
-// GetPackages returns the value of Packages.
-func (s *FetchLanguagePackagesOK) GetPackages() []Package {
-	return s.Packages
-}
-
-// SetPackages sets the value of Packages.
-func (s *FetchLanguagePackagesOK) SetPackages(val []Package) {
-	s.Packages = val
-}
-
-func (*FetchLanguagePackagesOK) fetchLanguagePackagesRes() {}
-
-type FetchSystemPackagesBadRequest Error
-
-func (*FetchSystemPackagesBadRequest) fetchSystemPackagesRes() {}
-
-type FetchSystemPackagesForbidden Error
-
-func (*FetchSystemPackagesForbidden) fetchSystemPackagesRes() {}
-
-type FetchSystemPackagesInternalServerError Error
-
-func (*FetchSystemPackagesInternalServerError) fetchSystemPackagesRes() {}
-
-type FetchSystemPackagesOK struct {
-	Packages []Package `json:"packages"`
-}
-
-// GetPackages returns the value of Packages.
-func (s *FetchSystemPackagesOK) GetPackages() []Package {
-	return s.Packages
-}
-
-// SetPackages sets the value of Packages.
-func (s *FetchSystemPackagesOK) SetPackages(val []Package) {
-	s.Packages = val
-}
-
-func (*FetchSystemPackagesOK) fetchSystemPackagesRes() {}
 
 type GetAllExecutionJobsBadRequest Error
 
@@ -908,6 +935,10 @@ type GetExecutionJobByIdBadRequest Error
 
 func (*GetExecutionJobByIdBadRequest) getExecutionJobByIdRes() {}
 
+type GetExecutionJobByIdForbidden Error
+
+func (*GetExecutionJobByIdForbidden) getExecutionJobByIdRes() {}
+
 type GetExecutionJobByIdInternalServerError Error
 
 func (*GetExecutionJobByIdInternalServerError) getExecutionJobByIdRes() {}
@@ -921,6 +952,10 @@ type GetExecutionResultByIdBadRequest Error
 
 func (*GetExecutionResultByIdBadRequest) getExecutionResultByIdRes() {}
 
+type GetExecutionResultByIdForbidden Error
+
+func (*GetExecutionResultByIdForbidden) getExecutionResultByIdRes() {}
+
 type GetExecutionResultByIdInternalServerError Error
 
 func (*GetExecutionResultByIdInternalServerError) getExecutionResultByIdRes() {}
@@ -933,6 +968,10 @@ func (*GetExecutionResultByIdNotFound) getExecutionResultByIdRes() {}
 type GetExecutionsForJobBadRequest Error
 
 func (*GetExecutionsForJobBadRequest) getExecutionsForJobRes() {}
+
+type GetExecutionsForJobForbidden Error
+
+func (*GetExecutionsForJobForbidden) getExecutionsForJobRes() {}
 
 type GetExecutionsForJobInternalServerError Error
 
@@ -1091,6 +1130,41 @@ func NewSandboxStateGetSandboxOK(v SandboxState) GetSandboxOK {
 }
 
 func (*GetSandboxOK) getSandboxRes() {}
+
+type GetValkyrieTokenForbidden Error
+
+func (*GetValkyrieTokenForbidden) getValkyrieTokenRes() {}
+
+type GetValkyrieTokenInternalServerError Error
+
+func (*GetValkyrieTokenInternalServerError) getValkyrieTokenRes() {}
+
+type GetValkyrieTokenOK struct {
+	Token   string    `json:"token"`
+	Expires time.Time `json:"expires"`
+}
+
+// GetToken returns the value of Token.
+func (s *GetValkyrieTokenOK) GetToken() string {
+	return s.Token
+}
+
+// GetExpires returns the value of Expires.
+func (s *GetValkyrieTokenOK) GetExpires() time.Time {
+	return s.Expires
+}
+
+// SetToken sets the value of Token.
+func (s *GetValkyrieTokenOK) SetToken(val string) {
+	s.Token = val
+}
+
+// SetExpires sets the value of Expires.
+func (s *GetValkyrieTokenOK) SetExpires(val time.Time) {
+	s.Expires = val
+}
+
+func (*GetValkyrieTokenOK) getValkyrieTokenRes() {}
 
 type GetVersionOK struct {
 	Version string `json:"version"`
@@ -1532,6 +1606,52 @@ func (o OptExecutionEnvironmentSpec) Or(d ExecutionEnvironmentSpec) ExecutionEnv
 	return d
 }
 
+// NewOptExecutionEnvironmentSpecSecrets returns new OptExecutionEnvironmentSpecSecrets with value set to v.
+func NewOptExecutionEnvironmentSpecSecrets(v ExecutionEnvironmentSpecSecrets) OptExecutionEnvironmentSpecSecrets {
+	return OptExecutionEnvironmentSpecSecrets{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptExecutionEnvironmentSpecSecrets is optional ExecutionEnvironmentSpecSecrets.
+type OptExecutionEnvironmentSpecSecrets struct {
+	Value ExecutionEnvironmentSpecSecrets
+	Set   bool
+}
+
+// IsSet returns true if OptExecutionEnvironmentSpecSecrets was set.
+func (o OptExecutionEnvironmentSpecSecrets) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptExecutionEnvironmentSpecSecrets) Reset() {
+	var v ExecutionEnvironmentSpecSecrets
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptExecutionEnvironmentSpecSecrets) SetTo(v ExecutionEnvironmentSpecSecrets) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptExecutionEnvironmentSpecSecrets) Get() (v ExecutionEnvironmentSpecSecrets, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptExecutionEnvironmentSpecSecrets) Or(d ExecutionEnvironmentSpecSecrets) ExecutionEnvironmentSpecSecrets {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptInt returns new OptInt with value set to v.
 func NewOptInt(v int) OptInt {
 	return OptInt{
@@ -1716,103 +1836,6 @@ func (o OptString) Or(d string) string {
 	return d
 }
 
-// Ref: #/components/schemas/Package
-type Package struct {
-	// Name of the package.
-	Name string `json:"name"`
-	// Version of the package.
-	Version string `json:"version"`
-}
-
-// GetName returns the value of Name.
-func (s *Package) GetName() string {
-	return s.Name
-}
-
-// GetVersion returns the value of Version.
-func (s *Package) GetVersion() string {
-	return s.Version
-}
-
-// SetName sets the value of Name.
-func (s *Package) SetName(val string) {
-	s.Name = val
-}
-
-// SetVersion sets the value of Version.
-func (s *Package) SetVersion(val string) {
-	s.Version = val
-}
-
-// Ref: #/components/schemas/PackageExistRequest
-type PackageExistRequest struct {
-	// The language to check the packages against.
-	Language string `json:"language"`
-	// List of packages to verify.
-	Packages []string `json:"packages"`
-}
-
-// GetLanguage returns the value of Language.
-func (s *PackageExistRequest) GetLanguage() string {
-	return s.Language
-}
-
-// GetPackages returns the value of Packages.
-func (s *PackageExistRequest) GetPackages() []string {
-	return s.Packages
-}
-
-// SetLanguage sets the value of Language.
-func (s *PackageExistRequest) SetLanguage(val string) {
-	s.Language = val
-}
-
-// SetPackages sets the value of Packages.
-func (s *PackageExistRequest) SetPackages(val []string) {
-	s.Packages = val
-}
-
-type PackagesExistBadRequest Error
-
-func (*PackagesExistBadRequest) packagesExistRes() {}
-
-type PackagesExistForbidden Error
-
-func (*PackagesExistForbidden) packagesExistRes() {}
-
-type PackagesExistInternalServerError Error
-
-func (*PackagesExistInternalServerError) packagesExistRes() {}
-
-type PackagesExistOK struct {
-	// Indicate all packages' existance for given language.
-	Exists bool `json:"exists"`
-	// List of packages that do not exist for the language.
-	NonExistingPackages []string `json:"nonExistingPackages"`
-}
-
-// GetExists returns the value of Exists.
-func (s *PackagesExistOK) GetExists() bool {
-	return s.Exists
-}
-
-// GetNonExistingPackages returns the value of NonExistingPackages.
-func (s *PackagesExistOK) GetNonExistingPackages() []string {
-	return s.NonExistingPackages
-}
-
-// SetExists sets the value of Exists.
-func (s *PackagesExistOK) SetExists(val bool) {
-	s.Exists = val
-}
-
-// SetNonExistingPackages sets the value of NonExistingPackages.
-func (s *PackagesExistOK) SetNonExistingPackages(val []string) {
-	s.NonExistingPackages = val
-}
-
-func (*PackagesExistOK) packagesExistRes() {}
-
 // Ref: #/components/schemas/PaginationResponse
 type PaginationResponse struct {
 	// Represents the total number of items.
@@ -1938,50 +1961,27 @@ func (s *SandboxState) SetState(val string) {
 	s.State = val
 }
 
-type SearchLanguagePackagesBadRequest Error
-
-func (*SearchLanguagePackagesBadRequest) searchLanguagePackagesRes() {}
-
-type SearchLanguagePackagesForbidden Error
-
-func (*SearchLanguagePackagesForbidden) searchLanguagePackagesRes() {}
-
-type SearchLanguagePackagesOK struct {
-	Packages []Package `json:"packages"`
+type XAuthToken struct {
+	APIKey string
+	Roles  []string
 }
 
-// GetPackages returns the value of Packages.
-func (s *SearchLanguagePackagesOK) GetPackages() []Package {
-	return s.Packages
+// GetAPIKey returns the value of APIKey.
+func (s *XAuthToken) GetAPIKey() string {
+	return s.APIKey
 }
 
-// SetPackages sets the value of Packages.
-func (s *SearchLanguagePackagesOK) SetPackages(val []Package) {
-	s.Packages = val
+// GetRoles returns the value of Roles.
+func (s *XAuthToken) GetRoles() []string {
+	return s.Roles
 }
 
-func (*SearchLanguagePackagesOK) searchLanguagePackagesRes() {}
-
-type SearchSystemPackagesBadRequest Error
-
-func (*SearchSystemPackagesBadRequest) searchSystemPackagesRes() {}
-
-type SearchSystemPackagesForbidden Error
-
-func (*SearchSystemPackagesForbidden) searchSystemPackagesRes() {}
-
-type SearchSystemPackagesOK struct {
-	Packages []Package `json:"packages"`
+// SetAPIKey sets the value of APIKey.
+func (s *XAuthToken) SetAPIKey(val string) {
+	s.APIKey = val
 }
 
-// GetPackages returns the value of Packages.
-func (s *SearchSystemPackagesOK) GetPackages() []Package {
-	return s.Packages
+// SetRoles sets the value of Roles.
+func (s *XAuthToken) SetRoles(val []string) {
+	s.Roles = val
 }
-
-// SetPackages sets the value of Packages.
-func (s *SearchSystemPackagesOK) SetPackages(val []Package) {
-	s.Packages = val
-}
-
-func (*SearchSystemPackagesOK) searchSystemPackagesRes() {}

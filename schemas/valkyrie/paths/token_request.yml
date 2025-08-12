@@ -1,0 +1,35 @@
+post:
+  summary: Reuqest Valkyrie token
+  description: Request Valkyrie token
+  operationId: getValkyrieToken
+  security:
+      - xAuthToken: []
+      - {}
+  responses:
+    '200':
+      description: ok
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - token
+              - expires
+            properties:
+              token:
+                type: string
+              expires:
+                type: string
+                format: date-time
+    '403':
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml
+    '500':
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml

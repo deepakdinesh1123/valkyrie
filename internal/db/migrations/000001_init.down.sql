@@ -28,7 +28,3 @@ drop sequence if exists language_versions_id_seq;
 -- Drop languages table and related sequence
 drop table if exists languages;
 drop sequence if exists languages_id_seq;
-
--- Drop packages table and related sequence
-drop table if exists packages;
-drop sequence if exists packages_id_seq;

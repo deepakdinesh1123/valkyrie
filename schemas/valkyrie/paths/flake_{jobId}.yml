@@ -10,6 +10,8 @@ get:
         format: int64
       required: true
       description: Job ID
+  security:
+    - xAuthToken: []
   responses:
     '200':
       description: OK

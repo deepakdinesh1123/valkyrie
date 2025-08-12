@@ -17,7 +17,7 @@ type AddJobTxParams struct {
 	SystemDependencies   []string
 	CmdLineArgs          string
 	CompilerArgs         string
-	Files                []byte
+	Files                jsonschema.ExecReqFiles
 	Input                string
 	Command              string
 	Setup                string
@@ -26,6 +26,8 @@ type AddJobTxParams struct {
 	LangVersion          int64
 	SystemSetup          string
 	PkgIndex             string
+	Extension            string
+	Secrets              []byte
 }
 
 type AddJobTxResult struct {
@@ -56,6 +58,8 @@ func (s *SQLStore) AddExecJobTx(ctx context.Context, arg AddJobTxParams) (AddJob
 					Input:                pgtype.Text{String: arg.Input, Valid: true},
 					SystemSetup:          pgtype.Text{String: arg.SystemSetup, Valid: true},
 					PkgIndex:             pgtype.Text{String: arg.PkgIndex, Valid: true},
+					Extension:            pgtype.Text{String: arg.Extension, Valid: true},
+					Secrets:              arg.Secrets,
 				})
 				if err != nil {
 					return err

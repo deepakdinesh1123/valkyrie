@@ -12,9 +12,9 @@
 buildGoModule rec {
   pname = "valkyrie";
   version = "0.0.1";
-  vendorHash = "sha256-W9SDtCpc4qTxgoJEvE83zhbzTGTWgyMNtb9bfNkaFh0=";
+  vendorHash = "sha256-ywthR4QTTAhLb2Yi/15fbIGauvK+V256l9gqWds0fj4=";
 
-  src = ../..;
+  src = builtins.path { path = ../..; name="source"; };
 
   doCheck = false;
 

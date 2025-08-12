@@ -62,7 +62,7 @@ func (s *Server) handleSandbox(w http.ResponseWriter, r *http.Request) {
 
 		var msg Message
 		if err := json.Unmarshal(data, &msg); err != nil {
-			s.logger.Err(err).Msg("json unmarshal error")
+			s.logger.Err(err).Msg("json unmarshal error occurred")
 			continue
 		}
 

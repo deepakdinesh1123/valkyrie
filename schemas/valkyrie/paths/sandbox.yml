@@ -2,8 +2,9 @@ post:
   summary: Create a sandbox
   description: Create a sandbox
   operationId: createSandbox
-  parameters:
-    - $ref: ../components/parameters/AuthHeader.yml
+  security:
+    - xAuthToken: []
+    - bearerAuth: []
   requestBody:
     required: false
     content:
@@ -25,17 +26,11 @@ post:
                 type: string
               sandboxId:
                 type: integer
-                format:  int64
+                format: int64
               sandboxStatusSSE:
                 type: string
               sandboxStatusWS:
                 type: string
-    '500':
-      description: Internal Server Error
-      content:
-        application/json:
-          schema:
-            $ref: ../components/schemas/Error.yml
     '400':
       description: Bad Request
       content:
@@ -47,4 +42,10 @@ post:
       content:
         application/json:
           schema:
-            $ref: '../components/schemas/Error.yml'
+            $ref: ../components/schemas/Error.yml
+    '500':
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml
