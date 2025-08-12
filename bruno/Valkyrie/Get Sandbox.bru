@@ -1,0 +1,15 @@
+meta {
+  name: Get Sandbox
+  type: http
+  seq: 17
+}
+
+get {
+  url: {{base_url}}/api/sandbox/:sandboxId
+  body: none
+  auth: none
+}
+
+params:path {
+  sandboxId: 
+}

@@ -1,7 +1,7 @@
 {
-  description = "Flake";
+  description = "Valkyrie Flake";
 
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/{{ .NIXPKGS_REV }}";
 
   outputs = { self, nixpkgs }:
     let
@@ -14,7 +14,6 @@
       devShells = forEachSupportedSystem ({ pkgs }: {
         default = pkgs.mkShell {
             packages = with pkgs; [
-              {{ block "LangSetup" . }}{{.LangNixPkg}}{{ end -}}
               {{ range .SystemDependencies }}
               {{ . -}}
               {{ end }}
@@ -30,13 +29,17 @@
 
               {{- if .Command }}
               {{ .Command }}
-              {{- else }}
-              {{ block "compile" . }}{{ end }}
-              {{- end }}
+              {{- if .CmdLineArgs }} {{ .CmdLineArgs }}{{ end }}
+              {{- if .Input }} < input.txt {{ end -}} >> output.txt 2>&1
 
+              {{- else }}
+
+              {{ block "compile" . }}{{ end }}
               {{ block "execute" . }}{{ end -}}
               {{- if .CmdLineArgs }} {{ .CmdLineArgs }}{{ end }}
-              {{- if .Input }} < input.txt {{ end -}}
+              {{- if .Input }} < input.txt {{ end -}} >> output.txt 2>&1
+
+              {{- end }}
             '';
           };
       });

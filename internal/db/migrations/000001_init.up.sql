@@ -1,42 +1,47 @@
-create sequence packages_id_seq as bigint;
-
-create table if not exists packages (
-    package_id bigint primary key default nextval('packages_id_seq'),
-    name text not null,
-    version text not null,
-    pkgType text not null,
-    language text,
-    store_path text,
-    tsv_search TSVECTOR
-);
-
 create sequence languages_id_seq as bigint;
 
 CREATE TABLE languages (
     id bigint PRIMARY KEY DEFAULT nextval('languages_id_seq'),
-    name TEXT NOT NULL UNIQUE,                  
-    extension TEXT NOT NULL,                    
+    name TEXT NOT NULL UNIQUE,
+    extension TEXT NOT NULL,
     monaco_language TEXT NOT NULL,
     template TEXT NOT NULL,
-    default_code TEXT NOT NULL                    
+    is_disabled BOOLEAN NOT NULL DEFAULT false,
+    default_code TEXT NOT NULL
 );
 
 create sequence language_versions_id_seq as bigint;
+
+INSERT INTO languages (name, extension, monaco_language, template, default_code) VALUES (
+    'generic',
+    'none',
+    'plaintext',
+    ' ',
+    ' '
+);
 
 CREATE TABLE language_versions (
     id bigint PRIMARY KEY DEFAULT nextval('language_versions_id_seq'),
     language_id BIGINT NOT NULL REFERENCES languages (id) ON DELETE CASCADE,
     version TEXT NOT NULL,
-    nix_package_name TEXT NOT NULL,             
-    template TEXT,                                                 
-    search_query TEXT NOT NULL, 
-    default_version BOOLEAN NOT NULL DEFAULT false,                          
-    UNIQUE (language_id, nix_package_name)               
+    nix_package_name TEXT,
+    template TEXT,
+    default_version BOOLEAN NOT NULL DEFAULT false,
+    is_disabled BOOLEAN NOT NULL DEFAULT false,
+    UNIQUE (language_id, nix_package_name)
 );
 
-CREATE UNIQUE INDEX unique_default_version_per_language 
-ON language_versions (language_id) 
+CREATE UNIQUE INDEX unique_default_version_per_language
+ON language_versions (language_id)
 WHERE default_version = true;
+
+INSERT INTO language_versions (language_id, version, nix_package_name, template, default_version) VALUES (
+    (SELECT id FROM languages WHERE name = 'generic'),
+    '0.0.1',
+    NULL,
+    ' ',
+    TRUE
+);
 
 create sequence exec_request_id_seq as int;
 
@@ -49,13 +54,15 @@ create table exec_request (
     system_dependencies text[],
     cmd_line_args varchar(1024),
     compile_args varchar(1024),
-    files bytea,
+    files jsonb,
     input text,
     command text,
     setup text,
     system_setup text,
     pkg_index text,
-    language_version BIGINT NOT NULL REFERENCES language_versions(id) ON DELETE SET NULL
+    extension text,
+    language_version BIGINT NOT NULL REFERENCES language_versions(id) ON DELETE SET NULL,
+    secrets bytea
 );
 
 create table workers (
@@ -99,6 +106,7 @@ create table executions (
     exec_request_id int references exec_request on delete set null,
     exec_logs text not null,
     nix_logs text,
+    out_files bytea,
     success boolean
 );
 
@@ -120,3 +128,13 @@ create table sandboxes (
 
 create index sndbx_cnfg_idx ON sandboxes USING gin (config);
 create index sndbx_details_idx ON sandboxes USING gin (details);
+
+CREATE TABLE system_package_filters (
+    id SERIAL PRIMARY KEY,
+    filter_type VARCHAR(10) NOT NULL CHECK (filter_type IN ('include', 'exclude')),
+    package_string VARCHAR(255) NOT NULL,
+    created_at timestamptz not null default now()
+);
+
+-- Optional: Add an index for faster lookups on filter_type and package_string
+CREATE INDEX idx_systempackagefilters_type_string ON system_package_filters (filter_type, package_string);

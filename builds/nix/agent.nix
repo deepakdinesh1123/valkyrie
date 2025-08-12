@@ -11,7 +11,7 @@ buildGoModule rec {
   version = "0.0.1";
   vendorHash = "sha256-5B9kZUCDIM9hXRaMZcVUDHa7H4Qn7D9iUl+J51LPoOE=";
 
-  src = ../../agent;
+  src = builtins.path { path = ../../agent; name="source"; };
 
   doCheck = false;
 

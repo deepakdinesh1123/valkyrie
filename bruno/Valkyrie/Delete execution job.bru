@@ -1,0 +1,15 @@
+meta {
+  name: Delete execution job
+  type: http
+  seq: 9
+}
+
+delete {
+  url: {{base_url}}/api/executions/jobs/:JobId
+  body: none
+  auth: none
+}
+
+params:path {
+  JobId: 
+}

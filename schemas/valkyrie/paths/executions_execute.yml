@@ -10,6 +10,9 @@ post:
       application/json:
         schema:
           $ref: ../components/schemas/ExecutionRequest.yml
+  security:
+    - xAuthToken: []
+    - bearerAuth: []
   responses:
     '200':
       description: OK

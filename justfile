@@ -89,14 +89,3 @@ skaffold-dev:
 
 download-rippkgs:
 	[ -f rippkgs-24.11.sqlite ] || curl -o rippkgs-24.11.sqlite https://valnix-stage-bucket.s3.us-east-1.amazonaws.com/rippkgs-24.11.sqlite
-
-install-cilium:
-    @helm repo add cilium https://helm.cilium.io/
-    @helm install cilium cilium/cilium --version 1.17.3 \
-        --namespace kube-system \
-        --set image.pullPolicy=IfNotPresent \
-        --set ipam.mode=kubernetes
-
-create-kind-cluster:
-    @kind create cluster --config kind.yaml
-    @just install-cilium

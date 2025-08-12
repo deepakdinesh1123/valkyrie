@@ -8,7 +8,7 @@ import (
 )
 
 // GetAllLanguages implements api.Handler.
-func (s *ValkyrieServer) GetAllLanguages(ctx context.Context, params api.GetAllLanguagesParams) (api.GetAllLanguagesRes, error) {
+func (s *ValkyrieServer) GetAllLanguages(ctx context.Context) (api.GetAllLanguagesRes, error) {
 	languages, err := s.queries.GetAllLanguages(ctx)
 	if err != nil {
 		s.logger.Printf("Error fetching languages: %v", err)
@@ -40,7 +40,7 @@ func (s *ValkyrieServer) GetAllLanguages(ctx context.Context, params api.GetAllL
 }
 
 // GetAllLanguageVersions implements api.Handler.
-func (s *ValkyrieServer) GetAllLanguageVersions(ctx context.Context, params api.GetAllLanguageVersionsParams) (api.GetAllLanguageVersionsRes, error) {
+func (s *ValkyrieServer) GetAllLanguageVersions(ctx context.Context) (api.GetAllLanguageVersionsRes, error) {
 	languageVersions, err := s.queries.GetAllLanguageVersions(ctx)
 	if err != nil {
 		s.logger.Printf("Error fetching language versions: %v", err)
@@ -62,9 +62,8 @@ func (s *ValkyrieServer) GetAllLanguageVersions(ctx context.Context, params api.
 			ID:             version.ID,
 			LanguageID:     version.LanguageID,
 			Version:        version.Version,
-			NixPackageName: version.NixPackageName,
+			NixPackageName: version.NixPackageName.String,
 			Template:       version.Template.String,
-			SearchQuery:    version.SearchQuery,
 			DefaultVersion: version.DefaultVersion,
 		})
 	}
@@ -125,9 +124,8 @@ func (s *ValkyrieServer) GetLanguageVersionById(ctx context.Context, params api.
 		ID:             version.ID,
 		LanguageID:     version.LanguageID,
 		Version:        version.Version,
-		NixPackageName: version.NixPackageName,
+		NixPackageName: version.NixPackageName.String,
 		Template:       version.Template.String,
-		SearchQuery:    version.SearchQuery,
 		DefaultVersion: version.DefaultVersion,
 	}
 
@@ -159,9 +157,8 @@ func (s *ValkyrieServer) GetAllVersions(ctx context.Context, params api.GetAllVe
 			ID:             version.ID,
 			LanguageID:     version.LanguageID,
 			Version:        version.Version,
-			NixPackageName: version.NixPackageName,
+			NixPackageName: version.NixPackageName.String,
 			Template:       version.Template.String,
-			SearchQuery:    version.SearchQuery,
 			DefaultVersion: version.DefaultVersion,
 		})
 	}

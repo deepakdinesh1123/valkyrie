@@ -2,8 +2,6 @@ get:
   summary: Get all language versions
   description: Retrieve a list of all language versions from the database.
   operationId: getAllLanguageVersions
-  parameters:
-    - $ref: ../components/parameters/AuthHeader.yml
   responses:
     '200':
       description: OK

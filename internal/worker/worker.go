@@ -20,6 +20,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -39,6 +40,7 @@ type Worker struct {
 	WorkerStats struct {
 		CPUUsage float64
 		MemUsage float64
+		DiskUsed float64
 	}
 }
 
@@ -164,12 +166,11 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 	w.queries.UpdateHeartbeat(ctx, int32(w.ID))
 	defer wg.Done()
 	if w.exectr != nil {
-		defer w.exectr.Cleanup()
+		defer w.exectr.Cleanup(ctx)
 	}
 
 	defer func() {
 		var err error
-
 		w.logger.Info().Msg("Shutting down opentelemetry")
 		err = errors.Join(err, w.otelShutdown(context.Background()))
 		if err != nil {
@@ -177,49 +178,63 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 		}
 	}()
 
-	// tracer := w.tp.Tracer("worker")
-	// tracerCtx, span := tracer.Start(ctx, "Run")
-	// defer span.End()
+	tracer := w.tp.Tracer("valkyrie worker")
 
-	// span.AddEvent("Acquiring lock on worker info")
+	// Create a root span for the entire worker run
+	workerCtx, workerSpan := tracer.Start(ctx, "worker_run")
+	defer workerSpan.End()
+
+	// Acquire lock
 	infLock := flock.New(w.envConfig.WORKER_INFO_FILE)
 	locked, err := infLock.TryLock()
 	if err != nil {
 		w.logger.Err(err).Msg("Failed to acquire lock on worker info")
+		workerSpan.RecordError(err)
 		return err
 	}
 	if !locked {
 		w.logger.Info().Msg("Worker: failed to acquire lock on worker info, another worker is running")
-		return &WorkerError{Type: "Lock", Message: "Failed to acquire lock on worker info"}
+		lockErr := &WorkerError{Type: "Lock", Message: "Failed to acquire lock on worker info"}
+		workerSpan.RecordError(lockErr)
+		return lockErr
 	}
 	defer infLock.Unlock()
+
 	var swg concurrency.SafeWaitGroup
 	fetchJobTicker := time.NewTicker(time.Duration(w.envConfig.WORKER_POLL_FREQ) * time.Millisecond)
 	heartBeatTicker := time.NewTicker(time.Duration(5) * time.Second)
+	defer fetchJobTicker.Stop()
+	defer heartBeatTicker.Stop()
+
 	for {
 		select {
-		case <-ctx.Done():
-			// w.logger.Info().Int32("Tasks in progress", swg.Count()).Msg("Worker: context done")
+		case <-workerCtx.Done():
 			swg.Wait()
-			err := ctx.Err()
-			fetchJobTicker.Stop()
+			err := workerCtx.Err()
+
 			if w.sandboxHandler != nil {
-				err = w.sandboxHandler.Cleanup(context.TODO())
-				if err != nil {
-					return fmt.Errorf("error cleaning up containers: %s", err)
+				cleanupErr := w.sandboxHandler.Cleanup(context.TODO())
+				if cleanupErr != nil {
+					workerSpan.RecordError(cleanupErr)
+					return fmt.Errorf("error cleaning up containers: %s", cleanupErr)
 				}
 			}
 			w.queries.RequeueWorkerJobs(context.TODO(), pgtype.Int4{Valid: true, Int32: int32(w.ID)})
+
 			switch err {
 			case context.Canceled:
 				w.logger.Info().Msg("Worker: context canceled")
 				return nil
 			default:
 				w.logger.Err(err).Msg("Worker: context error")
+				workerSpan.RecordError(err)
 				return fmt.Errorf("context error: %s", err)
 			}
+
 		case <-fetchJobTicker.C:
 			w.updateStats()
+
+			// Check resource limits
 			if w.WorkerStats.CPUUsage > w.envConfig.CPU_LIMIT {
 				w.logger.Info().Float64("high CPU Usage", w.WorkerStats.CPUUsage).Msg("Worker: ")
 				continue
@@ -228,61 +243,113 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
 				w.logger.Info().Float64("high memory usage", w.WorkerStats.MemUsage).Msg("Worker: ")
 				continue
 			}
+
+			if w.WorkerStats.DiskUsed > w.envConfig.DISK_LIMIT {
+				w.logger.Info().Float64("high memory usage", w.WorkerStats.MemUsage).Msg("Worker: pruning unsued images")
+				if w.envConfig.ENABLE_EXECUTION {
+					go w.exectr.PruneImages(ctx)
+				}
+			}
+
+			// Handle execution jobs
 			if w.envConfig.ENABLE_EXECUTION {
 				if swg.Count() >= w.envConfig.WORKER_CONCURRENCY {
 					w.logger.Info().Int("Tasks in progress", int(swg.Count())).Int32("Concurrency limit", w.envConfig.WORKER_CONCURRENCY).Msg("Worker: concurrency limit reached")
 					continue
 				}
-				res, err := w.queries.FetchJob(ctx, db.FetchJobParams{
+
+				// Create a new span for each fetch job operation
+				fetchCtx, fetchSpan := tracer.Start(workerCtx, "fetch_execution_job")
+
+				res, err := w.queries.FetchJob(fetchCtx, db.FetchJobParams{
 					Workerid: int32(w.ID),
 					Jobtype:  "execution",
 				})
+
 				if err != nil {
 					switch err {
 					case pgx.ErrNoRows:
+						// No jobs available, this is normal
+						fetchSpan.End()
 					case context.Canceled:
 						w.logger.Info().Msg("Worker: context canceled")
+						fetchSpan.RecordError(err)
+						fetchSpan.End()
 						swg.Wait()
 						w.cleanup()
 						return nil
 					default:
 						w.logger.Err(err).Msgf("Worker: failed to fetch job")
+						fetchSpan.RecordError(err)
+						fetchSpan.End()
 						w.cleanup()
 						return fmt.Errorf("failed to fetch job: %s", err)
 					}
-				}
-				// span.AddEvent("Executing job")
-				if err == nil {
+				} else {
+					// Job found, execute it
 					w.logger.Info().Msgf("Worker: fetched job %d", res.JobID)
+					fetchSpan.SetAttributes(
+						attribute.Int64("job.id", res.JobID),
+						attribute.String("job.type", "execution"),
+					)
+					fetchSpan.End()
+
+					// Create execution context with proper span propagation
+					execCtx, execSpan := tracer.Start(workerCtx, "execute_job")
+					execSpan.SetAttributes(attribute.Int64("job.id", res.JobID))
+
 					swg.Add(1)
-					go w.exectr.Execute(ctx, &swg, &res, w.logger.With().Int64("JOB_ID", res.JobID).Logger())
+					go func(ctx context.Context, span trace.Span) {
+						defer span.End()
+						w.exectr.Execute(ctx, &swg, &res, w.logger.With().Int64("JOB_ID", res.JobID).Logger())
+					}(execCtx, execSpan)
 				}
 			}
 
+			// Handle sandbox jobs
 			if w.envConfig.ENABLE_SANDBOX {
-				res, err := w.queries.FetchSandboxJobTx(ctx, db.FetchSandboxJobTxParams{WorkerID: int32(w.ID)})
+				sandboxCtx, sandboxSpan := tracer.Start(workerCtx, "fetch_sandbox_job")
+
+				res, err := w.queries.FetchSandboxJobTx(sandboxCtx, db.FetchSandboxJobTxParams{WorkerID: int32(w.ID)})
+
 				if err != nil {
 					switch err {
 					case pgx.ErrNoRows:
+						// No sandbox jobs available, this is normal
+						sandboxSpan.End()
 					case context.Canceled:
 						w.logger.Info().Msg("Worker: context canceled")
+						sandboxSpan.RecordError(err)
+						sandboxSpan.End()
 						w.cleanup()
 						w.logger.Info().Msg("cleanup complete")
 						return nil
 					default:
 						w.logger.Err(err).Msgf("Worker: failed to fetch sandbox job")
+						sandboxSpan.RecordError(err)
+						sandboxSpan.End()
 						w.cleanup()
 						return &WorkerError{Type: "FetchSandboxJob", Message: err.Error()}
 					}
-				}
-				if err == nil {
+				} else {
+					// Sandbox job found
 					w.logger.Info().Msgf("Worker: fetched sandbox job %d", res.Sandbox.SandboxID)
+					sandboxSpan.SetAttributes(
+						attribute.Int64("sandbox.id", res.Sandbox.SandboxID),
+						attribute.String("job.type", "sandbox"),
+					)
+					sandboxSpan.End()
+
 					swg.Add(1)
-					go w.sandboxHandler.Create(ctx, &swg, res)
+					go w.sandboxHandler.Create(workerCtx, &swg, res)
 				}
 			}
+
 		case <-heartBeatTicker.C:
-			w.queries.UpdateHeartbeat(ctx, int32(w.ID))
+			// Create a span for heartbeat updates
+			hbCtx, hbSpan := tracer.Start(workerCtx, "heartbeat_update")
+			w.queries.UpdateHeartbeat(hbCtx, int32(w.ID))
+			hbSpan.End()
 		}
 	}
 }
@@ -296,6 +363,10 @@ func (w *Worker) cleanup() error {
 				return fmt.Errorf("error clearing sandboxes %v", err)
 			}
 		}
+	}
+
+	if w.envConfig.ENABLE_EXECUTION {
+		w.exectr.Cleanup(context.Background())
 	}
 	return nil
 }

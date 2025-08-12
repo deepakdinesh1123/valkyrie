@@ -19,7 +19,6 @@ func GetContainerClient(ctx context.Context, ce *ContainerExecutor) (ContainerCl
 			ce.WorkerId,
 			ce.Tp, ce.Mp,
 			ce.Logger,
-			ce.Pool,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create docker containerClient")
@@ -32,7 +31,6 @@ func GetContainerClient(ctx context.Context, ce *ContainerExecutor) (ContainerCl
 			ce.WorkerId,
 			ce.Tp, ce.Mp,
 			ce.Logger,
-			ce.Pool,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create docker containerClient")

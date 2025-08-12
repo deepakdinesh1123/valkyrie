@@ -66,3 +66,9 @@ auth:
 
 rippkgs:
   baseUrl: "https://valnix-stage-bucket.s3.us-east-1.amazonaws.com"
+
+cilium:
+  image:
+    pullPolicy: IfNotPresent
+  ipam:
+    mode: kubernetes

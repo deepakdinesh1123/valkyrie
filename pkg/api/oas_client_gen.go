@@ -17,6 +17,7 @@ import (
 
 	"github.com/ogen-go/ogen/conv"
 	ht "github.com/ogen-go/ogen/http"
+	"github.com/ogen-go/ogen/ogenerrors"
 	"github.com/ogen-go/ogen/otelogen"
 	"github.com/ogen-go/ogen/uri"
 )
@@ -39,7 +40,7 @@ type Invoker interface {
 	// Create a sandbox.
 	//
 	// POST /sandbox
-	CreateSandbox(ctx context.Context, request OptCreateSandbox, params CreateSandboxParams) (CreateSandboxRes, error)
+	CreateSandbox(ctx context.Context, request OptCreateSandbox) (CreateSandboxRes, error)
 	// DeleteExecutionJob invokes deleteExecutionJob operation.
 	//
 	// Delete execution job.
@@ -58,18 +59,6 @@ type Invoker interface {
 	//
 	// GET /flake/{jobId}
 	FetchFlake(ctx context.Context, params FetchFlakeParams) (FetchFlakeRes, error)
-	// FetchLanguagePackages invokes FetchLanguagePackages operation.
-	//
-	// Initialize the search results content with a default set of language specific packages.
-	//
-	// GET /fetch/language
-	FetchLanguagePackages(ctx context.Context, params FetchLanguagePackagesParams) (FetchLanguagePackagesRes, error)
-	// FetchSystemPackages invokes FetchSystemPackages operation.
-	//
-	// Initialize the search results content with a default set of system packages.
-	//
-	// GET /fetch/system
-	FetchSystemPackages(ctx context.Context, params FetchSystemPackagesParams) (FetchSystemPackagesRes, error)
 	// GetAllExecutionJobs invokes getAllExecutionJobs operation.
 	//
 	// Get all execution jobs.
@@ -87,13 +76,13 @@ type Invoker interface {
 	// Retrieve a list of all language versions from the database.
 	//
 	// GET /language-versions
-	GetAllLanguageVersions(ctx context.Context, params GetAllLanguageVersionsParams) (GetAllLanguageVersionsRes, error)
+	GetAllLanguageVersions(ctx context.Context) (GetAllLanguageVersionsRes, error)
 	// GetAllLanguages invokes getAllLanguages operation.
 	//
 	// Retrieve a list of all languages from the database.
 	//
 	// GET /languages
-	GetAllLanguages(ctx context.Context, params GetAllLanguagesParams) (GetAllLanguagesRes, error)
+	GetAllLanguages(ctx context.Context) (GetAllLanguagesRes, error)
 	// GetAllVersions invokes getAllVersions operation.
 	//
 	// Retrieve a list of all language versions from the database.
@@ -105,7 +94,7 @@ type Invoker interface {
 	// Get execution config.
 	//
 	// GET /execution/config
-	GetExecutionConfig(ctx context.Context, params GetExecutionConfigParams) (GetExecutionConfigRes, error)
+	GetExecutionConfig(ctx context.Context) (GetExecutionConfigRes, error)
 	// GetExecutionJobById invokes getExecutionJobById operation.
 	//
 	// Get execution job.
@@ -142,42 +131,30 @@ type Invoker interface {
 	//
 	// GET /sandbox/{sandboxId}
 	GetSandbox(ctx context.Context, params GetSandboxParams) (GetSandboxRes, error)
+	// GetValkyrieToken invokes getValkyrieToken operation.
+	//
+	// Request Valkyrie token.
+	//
+	// POST /token/request
+	GetValkyrieToken(ctx context.Context) (GetValkyrieTokenRes, error)
 	// GetVersion invokes getVersion operation.
 	//
 	// Get version.
 	//
 	// GET /version
-	GetVersion(ctx context.Context, params GetVersionParams) (GetVersionRes, error)
+	GetVersion(ctx context.Context) (GetVersionRes, error)
 	// Health invokes health operation.
 	//
 	// Health Check.
 	//
 	// GET /health
 	Health(ctx context.Context) error
-	// PackagesExist invokes PackagesExist operation.
-	//
-	// Verify the package list is available for the language version while switching between language
-	// versions.
-	//
-	// POST /packages/exist
-	PackagesExist(ctx context.Context, request *PackageExistRequest, params PackagesExistParams) (PackagesExistRes, error)
-	// SearchLanguagePackages invokes SearchLanguagePackages operation.
-	//
-	// Search for language specific packages.
-	//
-	// GET /search/language
-	SearchLanguagePackages(ctx context.Context, params SearchLanguagePackagesParams) (SearchLanguagePackagesRes, error)
-	// SearchSystemPackages invokes SearchSystemPackages operation.
-	//
-	// Search for system packages.
-	//
-	// GET /search/system
-	SearchSystemPackages(ctx context.Context, params SearchSystemPackagesParams) (SearchSystemPackagesRes, error)
 }
 
 // Client implements OAS client.
 type Client struct {
 	serverURL *url.URL
+	sec       SecuritySource
 	baseClient
 }
 
@@ -186,7 +163,7 @@ var _ Handler = struct {
 }{}
 
 // NewClient initializes new Client defined by OAS.
-func NewClient(serverURL string, opts ...ClientOption) (*Client, error) {
+func NewClient(serverURL string, sec SecuritySource, opts ...ClientOption) (*Client, error) {
 	u, err := url.Parse(serverURL)
 	if err != nil {
 		return nil, err
@@ -199,6 +176,7 @@ func NewClient(serverURL string, opts ...ClientOption) (*Client, error) {
 	}
 	return &Client{
 		serverURL:  u,
+		sec:        sec,
 		baseClient: c,
 	}, nil
 }
@@ -330,12 +308,12 @@ func (c *Client) sendCancelExecutionJob(ctx context.Context, params CancelExecut
 // Create a sandbox.
 //
 // POST /sandbox
-func (c *Client) CreateSandbox(ctx context.Context, request OptCreateSandbox, params CreateSandboxParams) (CreateSandboxRes, error) {
-	res, err := c.sendCreateSandbox(ctx, request, params)
+func (c *Client) CreateSandbox(ctx context.Context, request OptCreateSandbox) (CreateSandboxRes, error) {
+	res, err := c.sendCreateSandbox(ctx, request)
 	return res, err
 }
 
-func (c *Client) sendCreateSandbox(ctx context.Context, request OptCreateSandbox, params CreateSandboxParams) (res CreateSandboxRes, err error) {
+func (c *Client) sendCreateSandbox(ctx context.Context, request OptCreateSandbox) (res CreateSandboxRes, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("createSandbox"),
 		semconv.HTTPRequestMethodKey.String("POST"),
@@ -384,20 +362,48 @@ func (c *Client) sendCreateSandbox(ctx context.Context, request OptCreateSandbox
 		return res, errors.Wrap(err, "encode request")
 	}
 
-	stage = "EncodeHeaderParams"
-	h := uri.NewHeaderEncoder(r.Header)
 	{
-		cfg := uri.HeaderParameterEncodingConfig{
-			Name:    "X-Auth-Token",
-			Explode: false,
-		}
-		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.XAuthToken.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:XAuthToken"
+			switch err := c.securityXAuthToken(ctx, CreateSandboxOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"XAuthToken\"")
 			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode header")
+		}
+		{
+			stage = "Security:BearerAuth"
+			switch err := c.securityBearerAuth(ctx, CreateSandboxOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 1
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"BearerAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+				{0b00000010},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
 		}
 	}
 
@@ -600,6 +606,51 @@ func (c *Client) sendExecute(ctx context.Context, request *ExecutionRequest, par
 		}
 	}
 
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:XAuthToken"
+			switch err := c.securityXAuthToken(ctx, ExecuteOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"XAuthToken\"")
+			}
+		}
+		{
+			stage = "Security:BearerAuth"
+			switch err := c.securityBearerAuth(ctx, ExecuteOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 1
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"BearerAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+				{0b00000010},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -690,6 +741,39 @@ func (c *Client) sendFetchFlake(ctx context.Context, params FetchFlakeParams) (r
 		return res, errors.Wrap(err, "create request")
 	}
 
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:XAuthToken"
+			switch err := c.securityXAuthToken(ctx, FetchFlakeOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"XAuthToken\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -699,202 +783,6 @@ func (c *Client) sendFetchFlake(ctx context.Context, params FetchFlakeParams) (r
 
 	stage = "DecodeResponse"
 	result, err := decodeFetchFlakeResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// FetchLanguagePackages invokes FetchLanguagePackages operation.
-//
-// Initialize the search results content with a default set of language specific packages.
-//
-// GET /fetch/language
-func (c *Client) FetchLanguagePackages(ctx context.Context, params FetchLanguagePackagesParams) (FetchLanguagePackagesRes, error) {
-	res, err := c.sendFetchLanguagePackages(ctx, params)
-	return res, err
-}
-
-func (c *Client) sendFetchLanguagePackages(ctx context.Context, params FetchLanguagePackagesParams) (res FetchLanguagePackagesRes, err error) {
-	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("FetchLanguagePackages"),
-		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/fetch/language"),
-	}
-
-	// Run stopwatch.
-	startTime := time.Now()
-	defer func() {
-		// Use floating point division here for higher precision (instead of Millisecond method).
-		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
-	}()
-
-	// Increment request counter.
-	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-
-	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, FetchLanguagePackagesOperation,
-		trace.WithAttributes(otelAttrs...),
-		clientSpanKind,
-	)
-	// Track stage for error reporting.
-	var stage string
-	defer func() {
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, stage)
-			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-		}
-		span.End()
-	}()
-
-	stage = "BuildURL"
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [1]string
-	pathParts[0] = "/fetch/language"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	stage = "EncodeQueryParams"
-	q := uri.NewQueryEncoder()
-	{
-		// Encode "language" parameter.
-		cfg := uri.QueryParameterEncodingConfig{
-			Name:    "language",
-			Style:   uri.QueryStyleForm,
-			Explode: true,
-		}
-
-		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			return e.EncodeValue(conv.StringToString(params.Language))
-		}); err != nil {
-			return res, errors.Wrap(err, "encode query")
-		}
-	}
-	u.RawQuery = q.Values().Encode()
-
-	stage = "EncodeRequest"
-	r, err := ht.NewRequest(ctx, "GET", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-
-	stage = "EncodeHeaderParams"
-	h := uri.NewHeaderEncoder(r.Header)
-	{
-		cfg := uri.HeaderParameterEncodingConfig{
-			Name:    "X-Auth-Token",
-			Explode: false,
-		}
-		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.XAuthToken.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode header")
-		}
-	}
-
-	stage = "SendRequest"
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	defer resp.Body.Close()
-
-	stage = "DecodeResponse"
-	result, err := decodeFetchLanguagePackagesResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// FetchSystemPackages invokes FetchSystemPackages operation.
-//
-// Initialize the search results content with a default set of system packages.
-//
-// GET /fetch/system
-func (c *Client) FetchSystemPackages(ctx context.Context, params FetchSystemPackagesParams) (FetchSystemPackagesRes, error) {
-	res, err := c.sendFetchSystemPackages(ctx, params)
-	return res, err
-}
-
-func (c *Client) sendFetchSystemPackages(ctx context.Context, params FetchSystemPackagesParams) (res FetchSystemPackagesRes, err error) {
-	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("FetchSystemPackages"),
-		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/fetch/system"),
-	}
-
-	// Run stopwatch.
-	startTime := time.Now()
-	defer func() {
-		// Use floating point division here for higher precision (instead of Millisecond method).
-		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
-	}()
-
-	// Increment request counter.
-	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-
-	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, FetchSystemPackagesOperation,
-		trace.WithAttributes(otelAttrs...),
-		clientSpanKind,
-	)
-	// Track stage for error reporting.
-	var stage string
-	defer func() {
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, stage)
-			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-		}
-		span.End()
-	}()
-
-	stage = "BuildURL"
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [1]string
-	pathParts[0] = "/fetch/system"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	stage = "EncodeRequest"
-	r, err := ht.NewRequest(ctx, "GET", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-
-	stage = "EncodeHeaderParams"
-	h := uri.NewHeaderEncoder(r.Header)
-	{
-		cfg := uri.HeaderParameterEncodingConfig{
-			Name:    "X-Auth-Token",
-			Explode: false,
-		}
-		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.XAuthToken.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode header")
-		}
-	}
-
-	stage = "SendRequest"
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	defer resp.Body.Close()
-
-	stage = "DecodeResponse"
-	result, err := decodeFetchSystemPackagesResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -996,20 +884,36 @@ func (c *Client) sendGetAllExecutionJobs(ctx context.Context, params GetAllExecu
 		return res, errors.Wrap(err, "create request")
 	}
 
-	stage = "EncodeHeaderParams"
-	h := uri.NewHeaderEncoder(r.Header)
 	{
-		cfg := uri.HeaderParameterEncodingConfig{
-			Name:    "X-Auth-Token",
-			Explode: false,
-		}
-		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.XAuthToken.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:XAuthToken"
+			switch err := c.securityXAuthToken(ctx, GetAllExecutionJobsOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"XAuthToken\"")
 			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode header")
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
 		}
 	}
 
@@ -1123,20 +1027,36 @@ func (c *Client) sendGetAllExecutions(ctx context.Context, params GetAllExecutio
 		return res, errors.Wrap(err, "create request")
 	}
 
-	stage = "EncodeHeaderParams"
-	h := uri.NewHeaderEncoder(r.Header)
 	{
-		cfg := uri.HeaderParameterEncodingConfig{
-			Name:    "X-Auth-Token",
-			Explode: false,
-		}
-		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.XAuthToken.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:XAuthToken"
+			switch err := c.securityXAuthToken(ctx, GetAllExecutionsOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"XAuthToken\"")
 			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode header")
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
 		}
 	}
 
@@ -1161,12 +1081,12 @@ func (c *Client) sendGetAllExecutions(ctx context.Context, params GetAllExecutio
 // Retrieve a list of all language versions from the database.
 //
 // GET /language-versions
-func (c *Client) GetAllLanguageVersions(ctx context.Context, params GetAllLanguageVersionsParams) (GetAllLanguageVersionsRes, error) {
-	res, err := c.sendGetAllLanguageVersions(ctx, params)
+func (c *Client) GetAllLanguageVersions(ctx context.Context) (GetAllLanguageVersionsRes, error) {
+	res, err := c.sendGetAllLanguageVersions(ctx)
 	return res, err
 }
 
-func (c *Client) sendGetAllLanguageVersions(ctx context.Context, params GetAllLanguageVersionsParams) (res GetAllLanguageVersionsRes, err error) {
+func (c *Client) sendGetAllLanguageVersions(ctx context.Context) (res GetAllLanguageVersionsRes, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getAllLanguageVersions"),
 		semconv.HTTPRequestMethodKey.String("GET"),
@@ -1212,23 +1132,6 @@ func (c *Client) sendGetAllLanguageVersions(ctx context.Context, params GetAllLa
 		return res, errors.Wrap(err, "create request")
 	}
 
-	stage = "EncodeHeaderParams"
-	h := uri.NewHeaderEncoder(r.Header)
-	{
-		cfg := uri.HeaderParameterEncodingConfig{
-			Name:    "X-Auth-Token",
-			Explode: false,
-		}
-		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.XAuthToken.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode header")
-		}
-	}
-
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -1250,12 +1153,12 @@ func (c *Client) sendGetAllLanguageVersions(ctx context.Context, params GetAllLa
 // Retrieve a list of all languages from the database.
 //
 // GET /languages
-func (c *Client) GetAllLanguages(ctx context.Context, params GetAllLanguagesParams) (GetAllLanguagesRes, error) {
-	res, err := c.sendGetAllLanguages(ctx, params)
+func (c *Client) GetAllLanguages(ctx context.Context) (GetAllLanguagesRes, error) {
+	res, err := c.sendGetAllLanguages(ctx)
 	return res, err
 }
 
-func (c *Client) sendGetAllLanguages(ctx context.Context, params GetAllLanguagesParams) (res GetAllLanguagesRes, err error) {
+func (c *Client) sendGetAllLanguages(ctx context.Context) (res GetAllLanguagesRes, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getAllLanguages"),
 		semconv.HTTPRequestMethodKey.String("GET"),
@@ -1299,23 +1202,6 @@ func (c *Client) sendGetAllLanguages(ctx context.Context, params GetAllLanguages
 	r, err := ht.NewRequest(ctx, "GET", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
-	}
-
-	stage = "EncodeHeaderParams"
-	h := uri.NewHeaderEncoder(r.Header)
-	{
-		cfg := uri.HeaderParameterEncodingConfig{
-			Name:    "X-Auth-Token",
-			Explode: false,
-		}
-		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.XAuthToken.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode header")
-		}
 	}
 
 	stage = "SendRequest"
@@ -1409,23 +1295,6 @@ func (c *Client) sendGetAllVersions(ctx context.Context, params GetAllVersionsPa
 		return res, errors.Wrap(err, "create request")
 	}
 
-	stage = "EncodeHeaderParams"
-	h := uri.NewHeaderEncoder(r.Header)
-	{
-		cfg := uri.HeaderParameterEncodingConfig{
-			Name:    "X-Auth-Token",
-			Explode: false,
-		}
-		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.XAuthToken.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode header")
-		}
-	}
-
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -1447,12 +1316,12 @@ func (c *Client) sendGetAllVersions(ctx context.Context, params GetAllVersionsPa
 // Get execution config.
 //
 // GET /execution/config
-func (c *Client) GetExecutionConfig(ctx context.Context, params GetExecutionConfigParams) (GetExecutionConfigRes, error) {
-	res, err := c.sendGetExecutionConfig(ctx, params)
+func (c *Client) GetExecutionConfig(ctx context.Context) (GetExecutionConfigRes, error) {
+	res, err := c.sendGetExecutionConfig(ctx)
 	return res, err
 }
 
-func (c *Client) sendGetExecutionConfig(ctx context.Context, params GetExecutionConfigParams) (res GetExecutionConfigRes, err error) {
+func (c *Client) sendGetExecutionConfig(ctx context.Context) (res GetExecutionConfigRes, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getExecutionConfig"),
 		semconv.HTTPRequestMethodKey.String("GET"),
@@ -1498,20 +1367,36 @@ func (c *Client) sendGetExecutionConfig(ctx context.Context, params GetExecution
 		return res, errors.Wrap(err, "create request")
 	}
 
-	stage = "EncodeHeaderParams"
-	h := uri.NewHeaderEncoder(r.Header)
 	{
-		cfg := uri.HeaderParameterEncodingConfig{
-			Name:    "X-Auth-Token",
-			Explode: false,
-		}
-		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.XAuthToken.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:XAuthToken"
+			switch err := c.securityXAuthToken(ctx, GetExecutionConfigOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"XAuthToken\"")
 			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode header")
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
 		}
 	}
 
@@ -1605,20 +1490,36 @@ func (c *Client) sendGetExecutionJobById(ctx context.Context, params GetExecutio
 		return res, errors.Wrap(err, "create request")
 	}
 
-	stage = "EncodeHeaderParams"
-	h := uri.NewHeaderEncoder(r.Header)
 	{
-		cfg := uri.HeaderParameterEncodingConfig{
-			Name:    "X-Auth-Token",
-			Explode: false,
-		}
-		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.XAuthToken.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:XAuthToken"
+			switch err := c.securityXAuthToken(ctx, GetExecutionJobByIdOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"XAuthToken\"")
 			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode header")
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
 		}
 	}
 
@@ -1712,20 +1613,36 @@ func (c *Client) sendGetExecutionResultById(ctx context.Context, params GetExecu
 		return res, errors.Wrap(err, "create request")
 	}
 
-	stage = "EncodeHeaderParams"
-	h := uri.NewHeaderEncoder(r.Header)
 	{
-		cfg := uri.HeaderParameterEncodingConfig{
-			Name:    "X-Auth-Token",
-			Explode: false,
-		}
-		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.XAuthToken.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:XAuthToken"
+			switch err := c.securityXAuthToken(ctx, GetExecutionResultByIdOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"XAuthToken\"")
 			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode header")
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
 		}
 	}
 
@@ -1858,20 +1775,36 @@ func (c *Client) sendGetExecutionsForJob(ctx context.Context, params GetExecutio
 		return res, errors.Wrap(err, "create request")
 	}
 
-	stage = "EncodeHeaderParams"
-	h := uri.NewHeaderEncoder(r.Header)
 	{
-		cfg := uri.HeaderParameterEncodingConfig{
-			Name:    "X-Auth-Token",
-			Explode: false,
-		}
-		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.XAuthToken.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:XAuthToken"
+			switch err := c.securityXAuthToken(ctx, GetExecutionsForJobOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"XAuthToken\"")
 			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode header")
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
 		}
 	}
 
@@ -1965,23 +1898,6 @@ func (c *Client) sendGetLanguageById(ctx context.Context, params GetLanguageById
 		return res, errors.Wrap(err, "create request")
 	}
 
-	stage = "EncodeHeaderParams"
-	h := uri.NewHeaderEncoder(r.Header)
-	{
-		cfg := uri.HeaderParameterEncodingConfig{
-			Name:    "X-Auth-Token",
-			Explode: false,
-		}
-		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.XAuthToken.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode header")
-		}
-	}
-
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -2070,23 +1986,6 @@ func (c *Client) sendGetLanguageVersionById(ctx context.Context, params GetLangu
 	r, err := ht.NewRequest(ctx, "GET", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
-	}
-
-	stage = "EncodeHeaderParams"
-	h := uri.NewHeaderEncoder(r.Header)
-	{
-		cfg := uri.HeaderParameterEncodingConfig{
-			Name:    "X-Auth-Token",
-			Explode: false,
-		}
-		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.XAuthToken.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode header")
-		}
 	}
 
 	stage = "SendRequest"
@@ -2179,20 +2078,36 @@ func (c *Client) sendGetSandbox(ctx context.Context, params GetSandboxParams) (r
 		return res, errors.Wrap(err, "create request")
 	}
 
-	stage = "EncodeHeaderParams"
-	h := uri.NewHeaderEncoder(r.Header)
 	{
-		cfg := uri.HeaderParameterEncodingConfig{
-			Name:    "X-Auth-Token",
-			Explode: false,
-		}
-		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.XAuthToken.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:XAuthToken"
+			switch err := c.securityXAuthToken(ctx, GetSandboxOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"XAuthToken\"")
 			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode header")
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
 		}
 	}
 
@@ -2212,17 +2127,123 @@ func (c *Client) sendGetSandbox(ctx context.Context, params GetSandboxParams) (r
 	return result, nil
 }
 
+// GetValkyrieToken invokes getValkyrieToken operation.
+//
+// Request Valkyrie token.
+//
+// POST /token/request
+func (c *Client) GetValkyrieToken(ctx context.Context) (GetValkyrieTokenRes, error) {
+	res, err := c.sendGetValkyrieToken(ctx)
+	return res, err
+}
+
+func (c *Client) sendGetValkyrieToken(ctx context.Context) (res GetValkyrieTokenRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getValkyrieToken"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/token/request"),
+	}
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, GetValkyrieTokenOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/token/request"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:XAuthToken"
+			switch err := c.securityXAuthToken(ctx, GetValkyrieTokenOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"XAuthToken\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+				{},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodeGetValkyrieTokenResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // GetVersion invokes getVersion operation.
 //
 // Get version.
 //
 // GET /version
-func (c *Client) GetVersion(ctx context.Context, params GetVersionParams) (GetVersionRes, error) {
-	res, err := c.sendGetVersion(ctx, params)
+func (c *Client) GetVersion(ctx context.Context) (GetVersionRes, error) {
+	res, err := c.sendGetVersion(ctx)
 	return res, err
 }
 
-func (c *Client) sendGetVersion(ctx context.Context, params GetVersionParams) (res GetVersionRes, err error) {
+func (c *Client) sendGetVersion(ctx context.Context) (res GetVersionRes, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getVersion"),
 		semconv.HTTPRequestMethodKey.String("GET"),
@@ -2268,20 +2289,36 @@ func (c *Client) sendGetVersion(ctx context.Context, params GetVersionParams) (r
 		return res, errors.Wrap(err, "create request")
 	}
 
-	stage = "EncodeHeaderParams"
-	h := uri.NewHeaderEncoder(r.Header)
 	{
-		cfg := uri.HeaderParameterEncodingConfig{
-			Name:    "X-Auth-Token",
-			Explode: false,
-		}
-		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.XAuthToken.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:XAuthToken"
+			switch err := c.securityXAuthToken(ctx, GetVersionOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"XAuthToken\"")
 			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode header")
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
 		}
 	}
 
@@ -2366,327 +2403,6 @@ func (c *Client) sendHealth(ctx context.Context) (res *HealthOK, err error) {
 
 	stage = "DecodeResponse"
 	result, err := decodeHealthResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// PackagesExist invokes PackagesExist operation.
-//
-// Verify the package list is available for the language version while switching between language
-// versions.
-//
-// POST /packages/exist
-func (c *Client) PackagesExist(ctx context.Context, request *PackageExistRequest, params PackagesExistParams) (PackagesExistRes, error) {
-	res, err := c.sendPackagesExist(ctx, request, params)
-	return res, err
-}
-
-func (c *Client) sendPackagesExist(ctx context.Context, request *PackageExistRequest, params PackagesExistParams) (res PackagesExistRes, err error) {
-	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("PackagesExist"),
-		semconv.HTTPRequestMethodKey.String("POST"),
-		semconv.HTTPRouteKey.String("/packages/exist"),
-	}
-
-	// Run stopwatch.
-	startTime := time.Now()
-	defer func() {
-		// Use floating point division here for higher precision (instead of Millisecond method).
-		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
-	}()
-
-	// Increment request counter.
-	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-
-	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, PackagesExistOperation,
-		trace.WithAttributes(otelAttrs...),
-		clientSpanKind,
-	)
-	// Track stage for error reporting.
-	var stage string
-	defer func() {
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, stage)
-			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-		}
-		span.End()
-	}()
-
-	stage = "BuildURL"
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [1]string
-	pathParts[0] = "/packages/exist"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	stage = "EncodeRequest"
-	r, err := ht.NewRequest(ctx, "POST", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-	if err := encodePackagesExistRequest(request, r); err != nil {
-		return res, errors.Wrap(err, "encode request")
-	}
-
-	stage = "EncodeHeaderParams"
-	h := uri.NewHeaderEncoder(r.Header)
-	{
-		cfg := uri.HeaderParameterEncodingConfig{
-			Name:    "X-Auth-Token",
-			Explode: false,
-		}
-		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.XAuthToken.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode header")
-		}
-	}
-
-	stage = "SendRequest"
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	defer resp.Body.Close()
-
-	stage = "DecodeResponse"
-	result, err := decodePackagesExistResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// SearchLanguagePackages invokes SearchLanguagePackages operation.
-//
-// Search for language specific packages.
-//
-// GET /search/language
-func (c *Client) SearchLanguagePackages(ctx context.Context, params SearchLanguagePackagesParams) (SearchLanguagePackagesRes, error) {
-	res, err := c.sendSearchLanguagePackages(ctx, params)
-	return res, err
-}
-
-func (c *Client) sendSearchLanguagePackages(ctx context.Context, params SearchLanguagePackagesParams) (res SearchLanguagePackagesRes, err error) {
-	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("SearchLanguagePackages"),
-		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/search/language"),
-	}
-
-	// Run stopwatch.
-	startTime := time.Now()
-	defer func() {
-		// Use floating point division here for higher precision (instead of Millisecond method).
-		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
-	}()
-
-	// Increment request counter.
-	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-
-	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, SearchLanguagePackagesOperation,
-		trace.WithAttributes(otelAttrs...),
-		clientSpanKind,
-	)
-	// Track stage for error reporting.
-	var stage string
-	defer func() {
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, stage)
-			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-		}
-		span.End()
-	}()
-
-	stage = "BuildURL"
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [1]string
-	pathParts[0] = "/search/language"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	stage = "EncodeQueryParams"
-	q := uri.NewQueryEncoder()
-	{
-		// Encode "language" parameter.
-		cfg := uri.QueryParameterEncodingConfig{
-			Name:    "language",
-			Style:   uri.QueryStyleForm,
-			Explode: true,
-		}
-
-		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			return e.EncodeValue(conv.StringToString(params.Language))
-		}); err != nil {
-			return res, errors.Wrap(err, "encode query")
-		}
-	}
-	{
-		// Encode "searchString" parameter.
-		cfg := uri.QueryParameterEncodingConfig{
-			Name:    "searchString",
-			Style:   uri.QueryStyleForm,
-			Explode: true,
-		}
-
-		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			return e.EncodeValue(conv.StringToString(params.SearchString))
-		}); err != nil {
-			return res, errors.Wrap(err, "encode query")
-		}
-	}
-	u.RawQuery = q.Values().Encode()
-
-	stage = "EncodeRequest"
-	r, err := ht.NewRequest(ctx, "GET", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-
-	stage = "EncodeHeaderParams"
-	h := uri.NewHeaderEncoder(r.Header)
-	{
-		cfg := uri.HeaderParameterEncodingConfig{
-			Name:    "X-Auth-Token",
-			Explode: false,
-		}
-		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.XAuthToken.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode header")
-		}
-	}
-
-	stage = "SendRequest"
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	defer resp.Body.Close()
-
-	stage = "DecodeResponse"
-	result, err := decodeSearchLanguagePackagesResponse(resp)
-	if err != nil {
-		return res, errors.Wrap(err, "decode response")
-	}
-
-	return result, nil
-}
-
-// SearchSystemPackages invokes SearchSystemPackages operation.
-//
-// Search for system packages.
-//
-// GET /search/system
-func (c *Client) SearchSystemPackages(ctx context.Context, params SearchSystemPackagesParams) (SearchSystemPackagesRes, error) {
-	res, err := c.sendSearchSystemPackages(ctx, params)
-	return res, err
-}
-
-func (c *Client) sendSearchSystemPackages(ctx context.Context, params SearchSystemPackagesParams) (res SearchSystemPackagesRes, err error) {
-	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("SearchSystemPackages"),
-		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/search/system"),
-	}
-
-	// Run stopwatch.
-	startTime := time.Now()
-	defer func() {
-		// Use floating point division here for higher precision (instead of Millisecond method).
-		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
-	}()
-
-	// Increment request counter.
-	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-
-	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, SearchSystemPackagesOperation,
-		trace.WithAttributes(otelAttrs...),
-		clientSpanKind,
-	)
-	// Track stage for error reporting.
-	var stage string
-	defer func() {
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, stage)
-			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
-		}
-		span.End()
-	}()
-
-	stage = "BuildURL"
-	u := uri.Clone(c.requestURL(ctx))
-	var pathParts [1]string
-	pathParts[0] = "/search/system"
-	uri.AddPathParts(u, pathParts[:]...)
-
-	stage = "EncodeQueryParams"
-	q := uri.NewQueryEncoder()
-	{
-		// Encode "searchString" parameter.
-		cfg := uri.QueryParameterEncodingConfig{
-			Name:    "searchString",
-			Style:   uri.QueryStyleForm,
-			Explode: true,
-		}
-
-		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			return e.EncodeValue(conv.StringToString(params.SearchString))
-		}); err != nil {
-			return res, errors.Wrap(err, "encode query")
-		}
-	}
-	u.RawQuery = q.Values().Encode()
-
-	stage = "EncodeRequest"
-	r, err := ht.NewRequest(ctx, "GET", u)
-	if err != nil {
-		return res, errors.Wrap(err, "create request")
-	}
-
-	stage = "EncodeHeaderParams"
-	h := uri.NewHeaderEncoder(r.Header)
-	{
-		cfg := uri.HeaderParameterEncodingConfig{
-			Name:    "X-Auth-Token",
-			Explode: false,
-		}
-		if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.XAuthToken.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode header")
-		}
-	}
-
-	stage = "SendRequest"
-	resp, err := c.cfg.Client.Do(r)
-	if err != nil {
-		return res, errors.Wrap(err, "do request")
-	}
-	defer resp.Body.Close()
-
-	stage = "DecodeResponse"
-	result, err := decodeSearchSystemPackagesResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

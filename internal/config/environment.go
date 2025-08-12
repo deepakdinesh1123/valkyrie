@@ -16,7 +16,7 @@ import (
 // EnvConfig represents the configuration settings for the application.
 type EnvConfig struct {
 	ENABLE_EXECUTION bool `mapstructure:"ENABLE_EXECUTION"`
-	ENABLE_SANDBOX   bool `mapstructure:"ENABLE_SANDBOX"`
+	ENABLE_SANDBOX   bool
 
 	POSTGRES_HOST            string `mapstructure:"POSTGRES_HOST"`
 	POSTGRES_PORT            uint32 `mapstructure:"POSTGRES_PORT"`
@@ -31,24 +31,23 @@ type EnvConfig struct {
 	SANDBOX_HOSTNAME string `mapstructure:"SANDBOX_HOSTNAME"`
 
 	STORE_URL            string `mapstructure:"STORE_URL"`
-	STORE_IMAGE          string `mapstructure:"STORE_IMAGE"`
-	STORE_CONTAINER      string
 	SANDBOX_NIXPKGS_PATH string
 	SANDBOX_NIXPKGS_REV  string `mapstructure:"SANDBOX_NIXPKGS_REV"`
 
-	RUNTIME             string `mapstructure:"RUNTIME"`
-	CONTAINER_RUNTIME   string `mapstructure:"CONTAINER_RUNTIME"`
-	WORKER_CONCURRENCY  int32  `mapstructure:"WORKER_CONCURRENCY"`
-	HOT_CONTAINER       int    `mapstructure:"HOT_CONTAINER"`
-	WORKER_TASK_TIMEOUT int    `mapstructure:"WORKER_TASK_TIMEOUT"`
-	WORKER_POLL_FREQ    int    `mapstructure:"WORKER_POLL_FREQ"`
-	EXECUTION_IMAGE     string `mapstructure:"EXECUTION_IMAGE"`
-	MAX_RETRIES         int    `mapstructure:"MAX_RETRIES"`
+	RUNTIME                 string `mapstructure:"RUNTIME"`
+	CONTAINER_RUNTIME       string `mapstructure:"CONTAINER_RUNTIME"`
+	WORKER_CONCURRENCY      int32  `mapstructure:"WORKER_CONCURRENCY"`
+	HOT_CONTAINER           int    `mapstructure:"HOT_CONTAINER"`
+	WORKER_MAX_TASK_TIMEOUT int    `mapstructure:"WORKER_MAX_TASK_TIMEOUT"`
+	WORKER_POLL_FREQ        int    `mapstructure:"WORKER_POLL_FREQ"`
+	EXECUTION_IMAGE         string `mapstructure:"EXECUTION_IMAGE"`
+	MAX_RETRIES             int    `mapstructure:"MAX_RETRIES"`
 
 	WORKER_CONTAINER_MEMORY_LIMIT int64 `mapstructure:"WORKER_CONTAINER_MEMORY_LIMIT"`
 
 	MEMORY_LIMIT float64 `mapstructure:"MEMORY_LIMIT"`
 	CPU_LIMIT    float64 `mapstructure:"CPU_LIMIT"`
+	DISK_LIMIT   float64 `mapstructure:"DISK_LIMIT"`
 
 	LOG_LEVEL string `mapstructure:"LOG_LEVEL"`
 
@@ -62,10 +61,8 @@ type EnvConfig struct {
 
 	JOB_PRUNE_FREQ int `mapstructure:"JOB_PRUNE_FREQ"`
 
-	USER_TOKEN  string `mapstructure:"USER_TOKEN"`
 	ADMIN_TOKEN string `mapstructure:"ADMIN_TOKEN"`
-
-	RIPPKGS_BASE_URL string `mapstructure:"RIPPKGS_BASE_URL"`
+	ENCKEY      string `mapstructure:"ENCKEY"`
 
 	SANDBOX_IMAGE string `mapstructure:"SANDBOX_IMAGE"`
 	BASE_DIR      string `mapstructure:"BASE_DIR"`
@@ -73,6 +70,9 @@ type EnvConfig struct {
 	PY_INDEX string `mapstructure:"PY_INDEX"`
 
 	K8S_NAMESPACE string `mapstructure:"K8S_NAMESPACE"`
+
+	NIXERY_NIXPKGS_REV string `mapstructure:"NIXERY_NIXPKGS_REV"`
+	NIXERY_URL         string `mapstructure:"NIXERY_URL"`
 }
 
 var (
@@ -165,6 +165,10 @@ func GetEnvConfig() (*EnvConfig, error) {
 		envConfig.SANDBOX_NIXPKGS_PATH = fmt.Sprintf("/var/cache/nixpkgs/NixOS-nixpkgs-%s", envConfig.SANDBOX_NIXPKGS_REV[:7])
 	})
 
+	if envConfig.ENCKEY == "" {
+		return nil, fmt.Errorf("ENCKEY is not set")
+	}
+
 	if envConfig != nil {
 		return envConfig, nil
 	}
@@ -173,7 +177,7 @@ func GetEnvConfig() (*EnvConfig, error) {
 
 func setDefaults() {
 	viper.SetDefault("ENABLE_EXECUTION", true)
-	viper.SetDefault("ENABLE_SANDBOX", true)
+	// viper.SetDefault("ENABLE_SANDBOX", false)
 
 	viper.SetDefault("POSTGRES_HOST", "localhost")
 	viper.SetDefault("POSTGRES_PORT", 5432)
@@ -194,36 +198,32 @@ func setDefaults() {
 	viper.SetDefault("RUNTIME", "docker")
 	viper.SetDefault("WORKER_CONCURRENCY", 10)
 	viper.SetDefault("HOT_CONTAINER", 1)
-	viper.SetDefault("WORKER_TASK_TIMEOUT", 120)
+	viper.SetDefault("WORKER_MAX_TASK_TIMEOUT", 180)
 	viper.SetDefault("WORKER_POLL_FREQ", 30)
-	viper.SetDefault("EXECUTION_IMAGE", "valkyrie-execution:0.0.1")
+	viper.SetDefault("EXECUTION_IMAGE", "alpine:3.22.0")
 	viper.SetDefault("MAX_RETRIES", 5)
 
 	viper.SetDefault("WORKER_CONTAINER_MEMORY_LIMIT", 500)
 
 	viper.SetDefault("MEMORY_LIMIT", 75)
 	viper.SetDefault("CPU_LIMIT", 75)
+	viper.SetDefault("DISK_LIMIT", 75)
 
 	viper.SetDefault("ENABLE_TELEMETRY", false)
-	viper.SetDefault("OTLP_ENDPOINT", "localhost:4317")
+	viper.SetDefault("OTLP_ENDPOINT", "valkyrie-otel-collector:4317")
 	viper.SetDefault("OTEL_RESOURCE_NAME", "valkyrie")
 	viper.SetDefault("ENVIRONMENT", "dev")
 
 	viper.SetDefault("EXPORT_LOGS", "console")
 	viper.SetDefault("JOB_PRUNE_FREQ", 1)
 	viper.SetDefault("LOG_LEVEL", "info")
-	viper.SetDefault("RIPPKGS_BASE_URL", "https://valnix-stage-bucket.s3.us-east-1.amazonaws.com")
 
 	viper.SetDefault("SANDBOX_IMAGE", "valkyrie-sandbox:0.0.1")
 	viper.SetDefault("PY_INDEX", "http://valkyrie-devpi:3141")
 
-	// containerRuntime := ""
-	// switch runtime.GOOS {
-	// case "darwin":
-	// 	containerRuntime = "runc"
-	// case "linux":
-	// 	containerRuntime = "runsc"
-	// }
+	viper.SetDefault("NIXERY_NIXPKGS_REV", "0ecd8222665efd7a9800ed278284849cf02363dd") // pragma: allowlist secret
+	viper.SetDefault("NIXERY_URL", "nixery.dev")
+
 	viper.SetDefault("CONTAINER_RUNTIME", "runc")
 
 	homeDir, err := os.UserHomeDir()
@@ -237,4 +237,6 @@ func setDefaults() {
 	}
 
 	viper.SetDefault("K8S_NAMESPACE", "default")
+	viper.SetDefault("ENCKEY", "")
+	viper.SetDefault("ADMIN_TOKEN", "")
 }

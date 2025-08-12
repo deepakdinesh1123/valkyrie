@@ -11,7 +11,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func ConvertExecSpecToNixScript(ctx context.Context, execReq *db.ExecRequest, queries db.Store) (string, *ExecutionRequest, error) {
+func ConvertExecSpecToScript(ctx context.Context, execReq *db.ExecRequest, queries db.Store) (string, *ExecutionRequest, error) {
 	execSpec := ExecutionRequest{}
 	execSpec.LanguageDependencies = execReq.LanguageDependencies
 	execSpec.SystemDependencies = execReq.SystemDependencies
@@ -23,8 +23,6 @@ func ConvertExecSpecToNixScript(ctx context.Context, execReq *db.ExecRequest, qu
 	execSpec.SystemSetup = execReq.SystemSetup.String
 	execSpec.PkgIndex = execReq.PkgIndex.String
 
-	fmt.Println(execReq.LanguageDependencies, execReq.SystemDependencies, execReq.Setup.String, execReq.Command.String)
-
 	langVersion, err := queries.GetLanguageVersionByID(ctx, execReq.LanguageVersion)
 	if err != nil {
 		return "", nil, err
@@ -35,9 +33,11 @@ func ConvertExecSpecToNixScript(ctx context.Context, execReq *db.ExecRequest, qu
 		return "", nil, err
 	}
 
-	execSpec.LangNixPkg = langVersion.NixPackageName
-	scriptName := fmt.Sprintf("main.%s", language.Extension)
-	execSpec.ScriptName = scriptName
+	if execReq.Extension.String != "" {
+		execSpec.ScriptName = fmt.Sprintf("main.%s", execReq.Extension.String)
+	} else {
+		execSpec.ScriptName = fmt.Sprintf("main.%s", language.Extension)
+	}
 
 	execSpec.IsFlake = false
 
@@ -103,6 +103,15 @@ func (s *ExecutionService) convertExecSpecToFlake(execSpec ExecutionRequest) (st
 }
 
 func (s *ExecutionService) CheckExecRequest(ctx context.Context, req *api.ExecutionRequest) ([]string, error) {
+	if req.Language.Value == "generic" {
+		if !req.Extension.Set {
+			return []string{}, fmt.Errorf("file extension not specified")
+		}
+		if !req.Command.Set {
+			return []string{}, fmt.Errorf("execution command not specified")
+		}
+	}
+
 	language, err := s.queries.GetLanguageByName(ctx, req.Language.Value)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -137,27 +146,34 @@ func (s *ExecutionService) CheckExecRequest(ctx context.Context, req *api.Execut
 		}
 	}
 
-	// if req.Environment.Set {
-	// 	var packages []string
-	// 	if len(req.Environment.Value.LanguageDependencies) != 0 {
-	// 		packages = append(packages, req.Environment.Value.LanguageDependencies...)
-	// 	}
-	// 	if len(req.Environment.Value.SystemDependencies) != 0 {
-	// 		packages = append(packages, req.Environment.Value.SystemDependencies...)
-	// 	}
+	for _, systemDep := range req.Environment.Value.SystemDependencies {
+		if s.checkPackageFiltered(systemDep) {
+			return nil, fmt.Errorf("system dependency %s cannot be included", systemDep)
+		}
+	}
 
-	// 	if len(packages) > 0 {
-	// 		res, err := s.queries.PackagesExist(ctx, db.PackagesExistParams{
-	// 			Packages: packages,
-	// 			Language: req.Language.Value,
-	// 		})
-	// 		if err != nil {
-	// 			return fmt.Errorf("error checking if packages exist: %s", err)
-	// 		}
-	// 		if !res.Exists {
-	// 			return fmt.Errorf("following packages does not exist: %s", res.NonexistingPackages)
-	// 		}
-	// 	}
-	// }
 	return []string{}, nil
+}
+
+func (s *ExecutionService) checkPackageFiltered(pkg string) bool {
+	if len(s.pkgFilters.include) == 0 && len(s.pkgFilters.exclude) == 0 {
+		return false
+	}
+
+	for _, cregexp := range s.pkgFilters.include {
+		if cregexp.MatchString(pkg) {
+			return false
+		}
+	}
+
+	for _, cregexp := range s.pkgFilters.exclude {
+		if cregexp.MatchString(pkg) {
+			return true
+		}
+	}
+
+	if len(s.pkgFilters.include) == 0 {
+		return false
+	}
+	return true
 }

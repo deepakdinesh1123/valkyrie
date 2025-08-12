@@ -10,21 +10,23 @@ import (
 )
 
 type ExecRequest struct {
-	ID                   int32       `db:"id" json:"id"`
-	Hash                 string      `db:"hash" json:"hash"`
-	Code                 pgtype.Text `db:"code" json:"code"`
-	Flake                string      `db:"flake" json:"flake"`
-	LanguageDependencies []string    `db:"language_dependencies" json:"language_dependencies"`
-	SystemDependencies   []string    `db:"system_dependencies" json:"system_dependencies"`
-	CmdLineArgs          pgtype.Text `db:"cmd_line_args" json:"cmd_line_args"`
-	CompileArgs          pgtype.Text `db:"compile_args" json:"compile_args"`
-	Files                []byte      `db:"files" json:"files"`
-	Input                pgtype.Text `db:"input" json:"input"`
-	Command              pgtype.Text `db:"command" json:"command"`
-	Setup                pgtype.Text `db:"setup" json:"setup"`
-	SystemSetup          pgtype.Text `db:"system_setup" json:"system_setup"`
-	PkgIndex             pgtype.Text `db:"pkg_index" json:"pkg_index"`
-	LanguageVersion      int64       `db:"language_version" json:"language_version"`
+	ID                   int32                   `db:"id" json:"id"`
+	Hash                 string                  `db:"hash" json:"hash"`
+	Code                 pgtype.Text             `db:"code" json:"code"`
+	Flake                string                  `db:"flake" json:"flake"`
+	LanguageDependencies []string                `db:"language_dependencies" json:"language_dependencies"`
+	SystemDependencies   []string                `db:"system_dependencies" json:"system_dependencies"`
+	CmdLineArgs          pgtype.Text             `db:"cmd_line_args" json:"cmd_line_args"`
+	CompileArgs          pgtype.Text             `db:"compile_args" json:"compile_args"`
+	Files                jsonschema.ExecReqFiles `db:"files" json:"files"`
+	Input                pgtype.Text             `db:"input" json:"input"`
+	Command              pgtype.Text             `db:"command" json:"command"`
+	Setup                pgtype.Text             `db:"setup" json:"setup"`
+	SystemSetup          pgtype.Text             `db:"system_setup" json:"system_setup"`
+	PkgIndex             pgtype.Text             `db:"pkg_index" json:"pkg_index"`
+	Extension            pgtype.Text             `db:"extension" json:"extension"`
+	LanguageVersion      int64                   `db:"language_version" json:"language_version"`
+	Secrets              []byte                  `db:"secrets" json:"secrets"`
 }
 
 type Execution struct {
@@ -37,6 +39,7 @@ type Execution struct {
 	ExecRequestID pgtype.Int4        `db:"exec_request_id" json:"exec_request_id"`
 	ExecLogs      string             `db:"exec_logs" json:"exec_logs"`
 	NixLogs       pgtype.Text        `db:"nix_logs" json:"nix_logs"`
+	OutFiles      []byte             `db:"out_files" json:"out_files"`
 	Success       pgtype.Bool        `db:"success" json:"success"`
 }
 
@@ -60,6 +63,7 @@ type Language struct {
 	Extension      string `db:"extension" json:"extension"`
 	MonacoLanguage string `db:"monaco_language" json:"monaco_language"`
 	Template       string `db:"template" json:"template"`
+	IsDisabled     bool   `db:"is_disabled" json:"is_disabled"`
 	DefaultCode    string `db:"default_code" json:"default_code"`
 }
 
@@ -67,20 +71,10 @@ type LanguageVersion struct {
 	ID             int64       `db:"id" json:"id"`
 	LanguageID     int64       `db:"language_id" json:"language_id"`
 	Version        string      `db:"version" json:"version"`
-	NixPackageName string      `db:"nix_package_name" json:"nix_package_name"`
+	NixPackageName pgtype.Text `db:"nix_package_name" json:"nix_package_name"`
 	Template       pgtype.Text `db:"template" json:"template"`
-	SearchQuery    string      `db:"search_query" json:"search_query"`
 	DefaultVersion bool        `db:"default_version" json:"default_version"`
-}
-
-type Package struct {
-	PackageID int64       `db:"package_id" json:"package_id"`
-	Name      string      `db:"name" json:"name"`
-	Version   string      `db:"version" json:"version"`
-	Pkgtype   string      `db:"pkgtype" json:"pkgtype"`
-	Language  pgtype.Text `db:"language" json:"language"`
-	StorePath pgtype.Text `db:"store_path" json:"store_path"`
-	TsvSearch interface{} `db:"tsv_search" json:"tsv_search"`
+	IsDisabled     bool        `db:"is_disabled" json:"is_disabled"`
 }
 
 type Sandbox struct {
@@ -95,6 +89,13 @@ type Sandbox struct {
 	Config          jsonschema.SandboxConfig  `db:"config" json:"config"`
 	Details         jsonschema.SandboxDetails `db:"details" json:"details"`
 	CurrentState    string                    `db:"current_state" json:"current_state"`
+}
+
+type SystemPackageFilter struct {
+	ID            int32              `db:"id" json:"id"`
+	FilterType    string             `db:"filter_type" json:"filter_type"`
+	PackageString string             `db:"package_string" json:"package_string"`
+	CreatedAt     pgtype.Timestamptz `db:"created_at" json:"created_at"`
 }
 
 type Worker struct {

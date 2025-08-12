@@ -1,9 +1,0 @@
-{
-  "version": "1",
-  "name": "Valkyrie",
-  "type": "collection",
-  "ignore": [
-    "node_modules",
-    ".git"
-  ]
-}

@@ -1,5 +1,4 @@
 services:
-
   tetragon:
     image: quay.io/cilium/tetragon:v1.4.0
     container_name: tetragon
@@ -11,15 +10,35 @@ services:
       - --metrics-server=0.0.0.0:9091
     depends_on:
       - valkyrie-otel-collector
+    networks:
+      - otel-network
+    profiles:
+      - instrument
+
+  caddy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
     profiles:
       - staging
       - production
+    networks:
+      - proxy-network
 
-  traefik-proxy:
+  traefik:
     image: traefik:v3.3
     ports:
       - "80:80"
       - "8888:8080"
+      - "443:443"
+    restart: unless-stopped
     volumes:
       - ./configs/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
     depends_on:
@@ -32,41 +51,34 @@ services:
       - TRAEFIK_API_DASHBOARD=true
     networks:
       - valkyrie-network
+      - proxy-network
     profiles:
-      - dev
-      - production
-      - staging
-      - test-traefik
+      - sandbox
 
   valkyrie:
     build:
       context: .
       dockerfile: builds/images/packages/valkyrie.dockerfile
-    # image: valkyrie:0.0.1
     env_file:
       - .env
+    restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
-      valkyrie-store:
-        condition: service_started
-      traefik-proxy:
-        condition: service_started
     command: ["server", "start"]
     ports:
-      - 8080
-    labels:
-      traefik.http.routers.valkyrie.rule: "Host(`valkyrie.localhost`)"
-      traefik.enable: "true"
+      - 8080:8080
     volumes:
       - type: bind
         source: $HOME/.valkyrie_info/
         target: /home/valnix/.valkyrie_info
     environment:
       - POSTGRES_HOST=postgres
-    # runtime: "runsc"
     networks:
       - valkyrie-network
+      - postgres-network
+      - proxy-network
+      - otel-network
     profiles:
       - dev
       - production
@@ -76,17 +88,13 @@ services:
     build:
       context: .
       dockerfile: builds/images/packages/valkyrie.dockerfile
-    # image: valkyrie:0.0.1
     env_file:
       - .env
+    restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
       valkyrie:
-        condition: service_started
-      valkyrie-store:
-        condition: service_started
-      traefik-proxy:
         condition: service_started
     deploy:
       replicas: 1
@@ -96,12 +104,15 @@ services:
       - POSTGRES_HOST=postgres
     networks:
       - valkyrie-network
-    # runtime: "runsc"
+      - postgres-network
+      - nixery-network
+      - proxy-network
+      - otel-network
     profiles:
       - dev
       - production
       - staging
-  
+
   docker-proxy:
     image: tecnativa/docker-socket-proxy
     environment:
@@ -110,7 +121,9 @@ services:
       - EXEC=1
       - CONTAINERS=1
       - POST=1
-    user: 'root'
+      - IMAGES=1
+      - BUILD=1
+    user: "root"
     volumes:
       - type: bind
         source: /var/run/docker.sock
@@ -123,13 +136,32 @@ services:
       retries: 3
       start_period: "21s"
     networks:
-      - valkyrie-network
+      - proxy-network
+      - nixery-network
     profiles:
       - dev
       - production
       - staging
       - test-traefik
-  
+
+  nixery:
+    build:
+      context: .
+      dockerfile: builds/images/nixery.dockerfile
+    env_file:
+      - .env
+    ports:
+      - 80
+    networks:
+      - nixery-network
+      - proxy-network
+    volumes:
+      - type: bind
+        source: $HOME/.valkyrie/nixery
+        target: /tmp/nixery/
+    profiles:
+      - nixery
+
   valkyrie-store-builder:
     build:
       context: .
@@ -142,8 +174,8 @@ services:
         source: $HOME/.valkyrie/store/setup
         target: /tmp/setup
     profiles:
-      - setup
-  
+      - sandbox-setup
+
   valkyrie-store:
     build:
       context: .
@@ -152,10 +184,14 @@ services:
     ports:
       - 5000
     labels:
-      traefik.http.routers.valkyrie-store.rule: "Host(`valkyrie-store.localhost`)"
+      traefik.http.routers.valkyrie-store.rule: "Host(`store.valkyrie.localhost`)"
       traefik.enable: "true"
     healthcheck:
-      test: ["CMD-SHELL", '[ "$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000)" = "404" ] && exit 0 || exit 1'] 
+      test:
+        [
+          "CMD-SHELL",
+          '[ "$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000)" = "404" ] && exit 0 || exit 1',
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -166,7 +202,7 @@ services:
     env_file:
       - $HOME/.valkyrie/store/setup/.env
     depends_on:
-      traefik-proxy:
+      traefik:
         condition: service_started
     volumes:
       - type: bind
@@ -176,9 +212,7 @@ services:
         source: $HOME/.valkyrie/store/setup
         target: /home/valnix/.config/
     profiles:
-      - dev
-      - production
-      - staging
+      - sandbox
 
   valkyrie-devpi:
     build:
@@ -186,14 +220,17 @@ services:
       dockerfile: builds/images/devpi.dockerfile
     ports:
       - 3141
+    restart: unless-stopped
     volumes:
       - type: bind
         source: $HOME/.valkyrie/store/devpi
         target: /devpi
     networks:
-      - valkyrie-network
+      - devpi-network
     profiles:
-      - python
+      - dev
+      - staging
+      - production
 
   postgres:
     image: postgres:15.3
@@ -201,9 +238,7 @@ services:
       - .env
     ports:
       - 5432:5432
-    labels:
-      traefik.http.routers.postgres.rule: "Host(`postgres.localhost`)"
-      traefik.enable: "true"
+    restart: unless-stopped
     healthcheck:
       test:
         [
@@ -214,10 +249,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - valkyrie-network
-    depends_on:
-      traefik-proxy:
-        condition: service_started
+      - postgres-network
     profiles:
       - dev
       - production
@@ -231,9 +263,10 @@ services:
     ports:
       - 4317
       - 9090
+    networks:
+      - otel-network
     profiles:
-      - production
-      - staging
+      - instrument
 
   jaeger:
     image: jaegertracing/all-in-one:latest
@@ -241,9 +274,10 @@ services:
       - "6831:6831/udp" # UDP port for Jaeger agent
       - "16686:16686" # Web UI
       - "14268:14268" # HTTP port for spans
+    networks:
+      - otel-network
     profiles:
-      - production
-      - staging
+      - instrument
 
   prometheus:
     image: prom/prometheus:latest
@@ -251,9 +285,10 @@ services:
       - ./configs/telemetry/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
+    networks:
+      - otel-network
     profiles:
-      - production
-      - staging
+      - instrument
 
   valkyrie_sandbox:
     container_name: "valkyrie_sandbox_1"
@@ -268,14 +303,14 @@ services:
       - "traefik.http.routers.valkyrie_sandbox_1-cs.entrypoints=http"
       - "traefik.http.routers.valkyrie_sandbox_1-cs.service=valkyrie_sandbox_1-cs"
       - "traefik.http.services.valkyrie_sandbox_1-cs.loadbalancer.server.port=9090"
-      
+
       # Agent
       - "traefik.http.routers.valkyrie_sandbox_1-ag.rule=Host(`valkyrie_sandbox_1-ag.localhost`)"
       - "traefik.http.routers.valkyrie_sandbox_1-ag.entrypoints=http"
       - "traefik.http.routers.valkyrie_sandbox_1-ag.service=valkyrie_sandbox_1-ag"
       - "traefik.http.services.valkyrie_sandbox_1-ag.loadbalancer.server.port=1618"
     depends_on:
-      traefik-proxy:
+      traefik:
         condition: service_started
     networks:
       - valkyrie-network
@@ -286,3 +321,10 @@ networks:
   valkyrie-network:
     driver: bridge
     external: true
+  postgres-network:
+  nixery-network:
+  proxy-network:
+  devpi-network:
+    driver: bridge
+    external: true
+  otel-network:

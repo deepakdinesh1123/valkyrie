@@ -1,0 +1,27 @@
+meta {
+  name: Execute a script
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url}}/api/executions/execute
+  body: json
+  auth: none
+}
+
+headers {
+  ~X-Auth-Token: 
+}
+
+body:json {
+  {
+    "environment": {
+      "languageDependencies": ["requests"],
+      "systemDependencies": []
+    },
+    "code": "import requests",
+    "language": "python"
+  
+  }
+}

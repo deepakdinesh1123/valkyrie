@@ -28,7 +28,7 @@ data:
   SANDBOX_NIXPKGS_REV: {{ .Values.sandbox.nixpkgsRev | default "b27ba4eb322d9d2bf2dc9ada9fd59442f50c8d7c" | quote }} # pragma: allowlist secret
   WORKER_CONCURRENCY: {{ .Values.worker.concurrency | default 10 | toString | quote }}
   HOT_CONTAINER: {{ .Values.worker.hotContainer | default 1 | toString | quote }}
-  WORKER_TASK_TIMEOUT: {{ .Values.worker.taskTimeout | default 120 | toString | quote }}
+  WORKER_MAX_TASK_TIMEOUT: {{ .Values.worker.taskTimeout | default 120 | toString | quote }}
   WORKER_POLL_FREQ: {{ .Values.worker.pollFreq | default 30 | toString | quote }}
   EXECUTION_IMAGE: {{ .Values.execution.image | default "valkyrie-execution:0.0.1" | quote }}
   MAX_RETRIES: {{ .Values.execution.maxRetries | default 5 | toString | quote }}
