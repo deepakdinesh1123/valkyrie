@@ -15,7 +15,7 @@ type BulkInsertSystemPackageFiltersParams struct {
 }
 
 const getSysPkgFilters = `-- name: GetSysPkgFilters :many
-SELECT id, filter_type, package_string, created_at from system_package_filters
+SELECT created_at, created_by, modified_at, modified_by, id, filter_type, package_string from system_package_filters
 `
 
 func (q *Queries) GetSysPkgFilters(ctx context.Context) ([]SystemPackageFilter, error) {
@@ -28,10 +28,13 @@ func (q *Queries) GetSysPkgFilters(ctx context.Context) ([]SystemPackageFilter, 
 	for rows.Next() {
 		var i SystemPackageFilter
 		if err := rows.Scan(
+			&i.CreatedAt,
+			&i.CreatedBy,
+			&i.ModifiedAt,
+			&i.ModifiedBy,
 			&i.ID,
 			&i.FilterType,
 			&i.PackageString,
-			&i.CreatedAt,
 		); err != nil {
 			return nil, err
 		}

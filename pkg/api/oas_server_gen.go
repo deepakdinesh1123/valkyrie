@@ -104,6 +104,12 @@ type Handler interface {
 	//
 	// GET /language-versions/{id}
 	GetLanguageVersionById(ctx context.Context, params GetLanguageVersionByIdParams) (GetLanguageVersionByIdRes, error)
+	// GetLoginConfig implements getLoginConfig operation.
+	//
+	// Get login config.
+	//
+	// GET /login/config
+	GetLoginConfig(ctx context.Context) (GetLoginConfigRes, error)
 	// GetSandbox implements getSandbox operation.
 	//
 	// Retrieve Sandbox details.
@@ -128,6 +134,12 @@ type Handler interface {
 	//
 	// GET /health
 	Health(ctx context.Context) error
+	// OauthCallback implements oauthCallback operation.
+	//
+	// The endpoint that receives the authorization code and state from the OAuth provider.
+	//
+	// GET /login/oauth/callback
+	OauthCallback(ctx context.Context, params OauthCallbackParams) (OauthCallbackRes, error)
 }
 
 // Server implements http server based on OpenAPI v3 specification and

@@ -44,6 +44,10 @@ paths:
     $ref: paths/flake_{jobId}.yml
   /token/request:
     $ref: paths/token_request.yml
+  /login/config:
+    $ref: paths/login_config.yml
+  /login/oauth/callback:
+    $ref: paths/oauth_callback.yml
 components:
   securitySchemes:
     bearerAuth:

@@ -16,16 +16,19 @@ insert into workers
     (name)
 values
     ($1)
-returning id, name, created_at, last_heartbeat, current_state
+returning created_at, created_by, modified_at, modified_by, id, name, last_heartbeat, current_state
 `
 
 func (q *Queries) CreateWorker(ctx context.Context, name string) (Worker, error) {
 	row := q.db.QueryRow(ctx, createWorker, name)
 	var i Worker
 	err := row.Scan(
+		&i.CreatedAt,
+		&i.CreatedBy,
+		&i.ModifiedAt,
+		&i.ModifiedBy,
 		&i.ID,
 		&i.Name,
-		&i.CreatedAt,
 		&i.LastHeartbeat,
 		&i.CurrentState,
 	)
@@ -42,7 +45,7 @@ func (q *Queries) DeleteWorker(ctx context.Context, id int32) error {
 }
 
 const getAllWorkers = `-- name: GetAllWorkers :many
-select id, name, created_at, last_heartbeat, current_state from workers
+select created_at, created_by, modified_at, modified_by, id, name, last_heartbeat, current_state from workers
 `
 
 func (q *Queries) GetAllWorkers(ctx context.Context) ([]Worker, error) {
@@ -55,9 +58,12 @@ func (q *Queries) GetAllWorkers(ctx context.Context) ([]Worker, error) {
 	for rows.Next() {
 		var i Worker
 		if err := rows.Scan(
+			&i.CreatedAt,
+			&i.CreatedBy,
+			&i.ModifiedAt,
+			&i.ModifiedBy,
 			&i.ID,
 			&i.Name,
-			&i.CreatedAt,
 			&i.LastHeartbeat,
 			&i.CurrentState,
 		); err != nil {
@@ -113,16 +119,19 @@ const getWorker = `-- name: GetWorker :one
 update workers
     set current_state = 'active'
 where name = $1
-returning id, name, created_at, last_heartbeat, current_state
+returning created_at, created_by, modified_at, modified_by, id, name, last_heartbeat, current_state
 `
 
 func (q *Queries) GetWorker(ctx context.Context, name string) (Worker, error) {
 	row := q.db.QueryRow(ctx, getWorker, name)
 	var i Worker
 	err := row.Scan(
+		&i.CreatedAt,
+		&i.CreatedBy,
+		&i.ModifiedAt,
+		&i.ModifiedBy,
 		&i.ID,
 		&i.Name,
-		&i.CreatedAt,
 		&i.LastHeartbeat,
 		&i.CurrentState,
 	)
@@ -134,7 +143,7 @@ insert into workers
     (id, name)
 values
     ($1, $2)
-returning id, name, created_at, last_heartbeat, current_state
+returning created_at, created_by, modified_at, modified_by, id, name, last_heartbeat, current_state
 `
 
 type InsertWorkerParams struct {
@@ -146,9 +155,12 @@ func (q *Queries) InsertWorker(ctx context.Context, arg InsertWorkerParams) (Wor
 	row := q.db.QueryRow(ctx, insertWorker, arg.ID, arg.Name)
 	var i Worker
 	err := row.Scan(
+		&i.CreatedAt,
+		&i.CreatedBy,
+		&i.ModifiedAt,
+		&i.ModifiedBy,
 		&i.ID,
 		&i.Name,
-		&i.CreatedAt,
 		&i.LastHeartbeat,
 		&i.CurrentState,
 	)

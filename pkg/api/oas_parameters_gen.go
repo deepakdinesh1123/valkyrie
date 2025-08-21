@@ -1202,3 +1202,112 @@ func decodeGetSandboxParams(args [1]string, argsEscaped bool, r *http.Request) (
 	}
 	return params, nil
 }
+
+// OauthCallbackParams is parameters of oauthCallback operation.
+type OauthCallbackParams struct {
+	// The authorization code provided by the OAuth provider.
+	Code  string
+	State OptString
+}
+
+func unpackOauthCallbackParams(packed middleware.Parameters) (params OauthCallbackParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "code",
+			In:   "query",
+		}
+		params.Code = packed[key].(string)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "state",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.State = v.(OptString)
+		}
+	}
+	return params
+}
+
+func decodeOauthCallbackParams(args [0]string, argsEscaped bool, r *http.Request) (params OauthCallbackParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
+	// Decode query: code.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "code",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToString(val)
+				if err != nil {
+					return err
+				}
+
+				params.Code = c
+				return nil
+			}); err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "code",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: state.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "state",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotStateVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotStateVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.State.SetTo(paramsDotStateVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "state",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	return params, nil
+}

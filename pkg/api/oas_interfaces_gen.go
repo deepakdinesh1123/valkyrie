@@ -65,6 +65,10 @@ type GetLanguageVersionByIdRes interface {
 	getLanguageVersionByIdRes()
 }
 
+type GetLoginConfigRes interface {
+	getLoginConfigRes()
+}
+
 type GetSandboxRes interface {
 	getSandboxRes()
 }
@@ -75,4 +79,8 @@ type GetValkyrieTokenRes interface {
 
 type GetVersionRes interface {
 	getVersionRes()
+}
+
+type OauthCallbackRes interface {
+	oauthCallbackRes()
 }

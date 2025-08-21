@@ -73,6 +73,14 @@ type EnvConfig struct {
 
 	NIXERY_NIXPKGS_REV string `mapstructure:"NIXERY_NIXPKGS_REV"`
 	NIXERY_URL         string `mapstructure:"NIXERY_URL"`
+
+	ENABLE_GITHUB_OAUTH  bool   `mapstructure:"ENABLE_GITHUB_OAUTH"`
+	GITHUB_CLIENT_ID     string `mapstructure:"GITHUB_CLIENT_ID"`
+	GITHUB_CLIENT_SECRET string `mapstructure:"GITHUB_CLIENT_SECRET"`
+
+	ENABLE_GOOGLE_OAUTH  bool   `mapstructure:"ENABLE_GOOGLE_OAUTH"`
+	GOOGLE_CLIENT_ID     string `mapstructure:"GOOGLE_CLIENT_ID"`
+	GOOGLE_CLIENT_SECRET string `mapstructure:"GOOGLE_CLIENT_SECRET"`
 }
 
 var (
@@ -186,7 +194,7 @@ func setDefaults() {
 	viper.SetDefault("POSTGRES_DB", "valkyrie")
 	viper.SetDefault("POSTGRES_SSL_MODE", "disable")
 
-	viper.SetDefault("SERVER_HOST", "0.0.0.0")
+	viper.SetDefault("SERVER_HOST", "localhost")
 	viper.SetDefault("SERVER_PORT", "8080")
 	viper.SetDefault("SANDBOX_HOSTNAME", "localhost")
 

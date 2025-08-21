@@ -157,6 +157,15 @@ func (UnimplementedHandler) GetLanguageVersionById(ctx context.Context, params G
 	return r, ht.ErrNotImplemented
 }
 
+// GetLoginConfig implements getLoginConfig operation.
+//
+// Get login config.
+//
+// GET /login/config
+func (UnimplementedHandler) GetLoginConfig(ctx context.Context) (r GetLoginConfigRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetSandbox implements getSandbox operation.
 //
 // Retrieve Sandbox details.
@@ -191,4 +200,13 @@ func (UnimplementedHandler) GetVersion(ctx context.Context) (r GetVersionRes, _ 
 // GET /health
 func (UnimplementedHandler) Health(ctx context.Context) error {
 	return ht.ErrNotImplemented
+}
+
+// OauthCallback implements oauthCallback operation.
+//
+// The endpoint that receives the authorization code and state from the OAuth provider.
+//
+// GET /login/oauth/callback
+func (UnimplementedHandler) OauthCallback(ctx context.Context, params OauthCallbackParams) (r OauthCallbackRes, _ error) {
+	return r, ht.ErrNotImplemented
 }

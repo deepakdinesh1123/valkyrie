@@ -22,7 +22,7 @@ func (q *Queries) ClearSandboxes(ctx context.Context) error {
 }
 
 const getSandbox = `-- name: GetSandbox :one
-select sandbox_id, worker_id, started_at, created_at, updated_at, sandbox_url, sandbox_agent_url, password, config, details, current_state
+select created_at, created_by, modified_at, modified_by, sandbox_id, worker_id, started_at, updated_at, sandbox_url, sandbox_agent_url, password, config, details, current_state
 from sandboxes
 where  sandbox_id = $1
 `
@@ -31,10 +31,13 @@ func (q *Queries) GetSandbox(ctx context.Context, sandboxID int64) (Sandbox, err
 	row := q.db.QueryRow(ctx, getSandbox, sandboxID)
 	var i Sandbox
 	err := row.Scan(
+		&i.CreatedAt,
+		&i.CreatedBy,
+		&i.ModifiedAt,
+		&i.ModifiedBy,
 		&i.SandboxID,
 		&i.WorkerID,
 		&i.StartedAt,
-		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.SandboxUrl,
 		&i.SandboxAgentUrl,
@@ -49,7 +52,7 @@ func (q *Queries) GetSandbox(ctx context.Context, sandboxID int64) (Sandbox, err
 const insertSandbox = `-- name: InsertSandbox :one
 insert into sandboxes (config, details)
 values ($1, $2)
-returning sandbox_id, worker_id, started_at, created_at, updated_at, sandbox_url, sandbox_agent_url, password, config, details, current_state
+returning created_at, created_by, modified_at, modified_by, sandbox_id, worker_id, started_at, updated_at, sandbox_url, sandbox_agent_url, password, config, details, current_state
 `
 
 type InsertSandboxParams struct {
@@ -61,10 +64,13 @@ func (q *Queries) InsertSandbox(ctx context.Context, arg InsertSandboxParams) (S
 	row := q.db.QueryRow(ctx, insertSandbox, arg.Config, arg.Details)
 	var i Sandbox
 	err := row.Scan(
+		&i.CreatedAt,
+		&i.CreatedBy,
+		&i.ModifiedAt,
+		&i.ModifiedBy,
 		&i.SandboxID,
 		&i.WorkerID,
 		&i.StartedAt,
-		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.SandboxUrl,
 		&i.SandboxAgentUrl,

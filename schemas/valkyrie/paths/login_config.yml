@@ -1,0 +1,23 @@
+get:
+  summary: Get login config
+  description: Get login config
+  operationId: getLoginConfig
+  responses:
+    "200":
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/LoginConfig.yml
+    "400":
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml
+    "500":
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml

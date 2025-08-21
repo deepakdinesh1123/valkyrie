@@ -1,0 +1,39 @@
+get:
+  summary: OAuth Callback
+  operationId: oauthCallback
+  description: |
+    The endpoint that receives the authorization code and state from the OAuth provider.
+  parameters:
+    - name: code
+      in: query
+      description: The authorization code provided by the OAuth provider.
+      required: true
+      schema:
+        type: string
+    - name: state
+      in: query
+      required: false
+      schema:
+        type: string
+  responses:
+    "200":
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    "400":
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml
+    "500":
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/Error.yml

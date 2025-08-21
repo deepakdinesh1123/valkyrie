@@ -22,13 +22,17 @@ func (q *Queries) DeleteExecRequest(ctx context.Context, id int32) error {
 }
 
 const getExecRequest = `-- name: GetExecRequest :one
-select id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets from exec_request where id = $1
+select created_at, created_by, modified_at, modified_by, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets from exec_request where id = $1
 `
 
 func (q *Queries) GetExecRequest(ctx context.Context, id int32) (ExecRequest, error) {
 	row := q.db.QueryRow(ctx, getExecRequest, id)
 	var i ExecRequest
 	err := row.Scan(
+		&i.CreatedAt,
+		&i.CreatedBy,
+		&i.ModifiedAt,
+		&i.ModifiedBy,
 		&i.ID,
 		&i.Hash,
 		&i.Code,
@@ -51,13 +55,17 @@ func (q *Queries) GetExecRequest(ctx context.Context, id int32) (ExecRequest, er
 }
 
 const getExecRequestByHash = `-- name: GetExecRequestByHash :one
-select id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets from exec_request where hash = $1
+select created_at, created_by, modified_at, modified_by, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets from exec_request where hash = $1
 `
 
 func (q *Queries) GetExecRequestByHash(ctx context.Context, hash string) (ExecRequest, error) {
 	row := q.db.QueryRow(ctx, getExecRequestByHash, hash)
 	var i ExecRequest
 	err := row.Scan(
+		&i.CreatedAt,
+		&i.CreatedBy,
+		&i.ModifiedAt,
+		&i.ModifiedBy,
 		&i.ID,
 		&i.Hash,
 		&i.Code,
@@ -148,7 +156,7 @@ func (q *Queries) InsertExecRequest(ctx context.Context, arg InsertExecRequestPa
 }
 
 const listExecRequests = `-- name: ListExecRequests :many
-select id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets from exec_request
+select created_at, created_by, modified_at, modified_by, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets from exec_request
 where id >= $1
 limit $2
 `
@@ -168,6 +176,10 @@ func (q *Queries) ListExecRequests(ctx context.Context, arg ListExecRequestsPara
 	for rows.Next() {
 		var i ExecRequest
 		if err := rows.Scan(
+			&i.CreatedAt,
+			&i.CreatedBy,
+			&i.ModifiedAt,
+			&i.ModifiedBy,
 			&i.ID,
 			&i.Hash,
 			&i.Code,

@@ -335,9 +335,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 				}
 
-			case 'l': // Prefix: "language"
+			case 'l': // Prefix: "l"
 
-				if l := len("language"); len(elem) >= l && elem[0:l] == "language" {
+				if l := len("l"); len(elem) >= l && elem[0:l] == "l" {
 					elem = elem[l:]
 				} else {
 					break
@@ -347,100 +347,30 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					break
 				}
 				switch elem[0] {
-				case '-': // Prefix: "-versions"
+				case 'a': // Prefix: "anguage"
 
-					if l := len("-versions"); len(elem) >= l && elem[0:l] == "-versions" {
+					if l := len("anguage"); len(elem) >= l && elem[0:l] == "anguage" {
 						elem = elem[l:]
 					} else {
 						break
 					}
 
 					if len(elem) == 0 {
-						switch r.Method {
-						case "GET":
-							s.handleGetAllLanguageVersionsRequest([0]string{}, elemIsEscaped, w, r)
-						default:
-							s.notAllowed(w, r, "GET")
-						}
-
-						return
-					}
-					switch elem[0] {
-					case '/': // Prefix: "/"
-
-						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
-							elem = elem[l:]
-						} else {
-							break
-						}
-
-						// Param: "id"
-						// Leaf parameter, slashes are prohibited
-						idx := strings.IndexByte(elem, '/')
-						if idx >= 0 {
-							break
-						}
-						args[0] = elem
-						elem = ""
-
-						if len(elem) == 0 {
-							// Leaf node.
-							switch r.Method {
-							case "GET":
-								s.handleGetLanguageVersionByIdRequest([1]string{
-									args[0],
-								}, elemIsEscaped, w, r)
-							default:
-								s.notAllowed(w, r, "GET")
-							}
-
-							return
-						}
-
-					}
-
-				case 's': // Prefix: "s"
-
-					if l := len("s"); len(elem) >= l && elem[0:l] == "s" {
-						elem = elem[l:]
-					} else {
 						break
 					}
-
-					if len(elem) == 0 {
-						switch r.Method {
-						case "GET":
-							s.handleGetAllLanguagesRequest([0]string{}, elemIsEscaped, w, r)
-						default:
-							s.notAllowed(w, r, "GET")
-						}
-
-						return
-					}
 					switch elem[0] {
-					case '/': // Prefix: "/"
+					case '-': // Prefix: "-versions"
 
-						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+						if l := len("-versions"); len(elem) >= l && elem[0:l] == "-versions" {
 							elem = elem[l:]
 						} else {
 							break
 						}
 
-						// Param: "id"
-						// Match until "/"
-						idx := strings.IndexByte(elem, '/')
-						if idx < 0 {
-							idx = len(elem)
-						}
-						args[0] = elem[:idx]
-						elem = elem[idx:]
-
 						if len(elem) == 0 {
 							switch r.Method {
 							case "GET":
-								s.handleGetLanguageByIdRequest([1]string{
-									args[0],
-								}, elemIsEscaped, w, r)
+								s.handleGetAllLanguageVersionsRequest([0]string{}, elemIsEscaped, w, r)
 							default:
 								s.notAllowed(w, r, "GET")
 							}
@@ -448,19 +378,28 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 							return
 						}
 						switch elem[0] {
-						case '/': // Prefix: "/versions"
+						case '/': // Prefix: "/"
 
-							if l := len("/versions"); len(elem) >= l && elem[0:l] == "/versions" {
+							if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
 								elem = elem[l:]
 							} else {
 								break
 							}
 
+							// Param: "id"
+							// Leaf parameter, slashes are prohibited
+							idx := strings.IndexByte(elem, '/')
+							if idx >= 0 {
+								break
+							}
+							args[0] = elem
+							elem = ""
+
 							if len(elem) == 0 {
 								// Leaf node.
 								switch r.Method {
 								case "GET":
-									s.handleGetAllVersionsRequest([1]string{
+									s.handleGetLanguageVersionByIdRequest([1]string{
 										args[0],
 									}, elemIsEscaped, w, r)
 								default:
@@ -470,6 +409,135 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 								return
 							}
 
+						}
+
+					case 's': // Prefix: "s"
+
+						if l := len("s"); len(elem) >= l && elem[0:l] == "s" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							switch r.Method {
+							case "GET":
+								s.handleGetAllLanguagesRequest([0]string{}, elemIsEscaped, w, r)
+							default:
+								s.notAllowed(w, r, "GET")
+							}
+
+							return
+						}
+						switch elem[0] {
+						case '/': // Prefix: "/"
+
+							if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+								elem = elem[l:]
+							} else {
+								break
+							}
+
+							// Param: "id"
+							// Match until "/"
+							idx := strings.IndexByte(elem, '/')
+							if idx < 0 {
+								idx = len(elem)
+							}
+							args[0] = elem[:idx]
+							elem = elem[idx:]
+
+							if len(elem) == 0 {
+								switch r.Method {
+								case "GET":
+									s.handleGetLanguageByIdRequest([1]string{
+										args[0],
+									}, elemIsEscaped, w, r)
+								default:
+									s.notAllowed(w, r, "GET")
+								}
+
+								return
+							}
+							switch elem[0] {
+							case '/': // Prefix: "/versions"
+
+								if l := len("/versions"); len(elem) >= l && elem[0:l] == "/versions" {
+									elem = elem[l:]
+								} else {
+									break
+								}
+
+								if len(elem) == 0 {
+									// Leaf node.
+									switch r.Method {
+									case "GET":
+										s.handleGetAllVersionsRequest([1]string{
+											args[0],
+										}, elemIsEscaped, w, r)
+									default:
+										s.notAllowed(w, r, "GET")
+									}
+
+									return
+								}
+
+							}
+
+						}
+
+					}
+
+				case 'o': // Prefix: "ogin/"
+
+					if l := len("ogin/"); len(elem) >= l && elem[0:l] == "ogin/" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						break
+					}
+					switch elem[0] {
+					case 'c': // Prefix: "config"
+
+						if l := len("config"); len(elem) >= l && elem[0:l] == "config" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch r.Method {
+							case "GET":
+								s.handleGetLoginConfigRequest([0]string{}, elemIsEscaped, w, r)
+							default:
+								s.notAllowed(w, r, "GET")
+							}
+
+							return
+						}
+
+					case 'o': // Prefix: "oauth/callback"
+
+						if l := len("oauth/callback"); len(elem) >= l && elem[0:l] == "oauth/callback" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch r.Method {
+							case "GET":
+								s.handleOauthCallbackRequest([0]string{}, elemIsEscaped, w, r)
+							default:
+								s.notAllowed(w, r, "GET")
+							}
+
+							return
 						}
 
 					}
@@ -972,9 +1040,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 
 				}
 
-			case 'l': // Prefix: "language"
+			case 'l': // Prefix: "l"
 
-				if l := len("language"); len(elem) >= l && elem[0:l] == "language" {
+				if l := len("l"); len(elem) >= l && elem[0:l] == "l" {
 					elem = elem[l:]
 				} else {
 					break
@@ -984,135 +1052,66 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					break
 				}
 				switch elem[0] {
-				case '-': // Prefix: "-versions"
+				case 'a': // Prefix: "anguage"
 
-					if l := len("-versions"); len(elem) >= l && elem[0:l] == "-versions" {
+					if l := len("anguage"); len(elem) >= l && elem[0:l] == "anguage" {
 						elem = elem[l:]
 					} else {
 						break
 					}
 
 					if len(elem) == 0 {
-						switch method {
-						case "GET":
-							r.name = GetAllLanguageVersionsOperation
-							r.summary = "Get all language versions"
-							r.operationID = "getAllLanguageVersions"
-							r.pathPattern = "/language-versions"
-							r.args = args
-							r.count = 0
-							return r, true
-						default:
-							return
-						}
-					}
-					switch elem[0] {
-					case '/': // Prefix: "/"
-
-						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
-							elem = elem[l:]
-						} else {
-							break
-						}
-
-						// Param: "id"
-						// Leaf parameter, slashes are prohibited
-						idx := strings.IndexByte(elem, '/')
-						if idx >= 0 {
-							break
-						}
-						args[0] = elem
-						elem = ""
-
-						if len(elem) == 0 {
-							// Leaf node.
-							switch method {
-							case "GET":
-								r.name = GetLanguageVersionByIdOperation
-								r.summary = "Get language version by ID"
-								r.operationID = "getLanguageVersionById"
-								r.pathPattern = "/language-versions/{id}"
-								r.args = args
-								r.count = 1
-								return r, true
-							default:
-								return
-							}
-						}
-
-					}
-
-				case 's': // Prefix: "s"
-
-					if l := len("s"); len(elem) >= l && elem[0:l] == "s" {
-						elem = elem[l:]
-					} else {
 						break
 					}
-
-					if len(elem) == 0 {
-						switch method {
-						case "GET":
-							r.name = GetAllLanguagesOperation
-							r.summary = "Get all languages"
-							r.operationID = "getAllLanguages"
-							r.pathPattern = "/languages"
-							r.args = args
-							r.count = 0
-							return r, true
-						default:
-							return
-						}
-					}
 					switch elem[0] {
-					case '/': // Prefix: "/"
+					case '-': // Prefix: "-versions"
 
-						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+						if l := len("-versions"); len(elem) >= l && elem[0:l] == "-versions" {
 							elem = elem[l:]
 						} else {
 							break
 						}
 
-						// Param: "id"
-						// Match until "/"
-						idx := strings.IndexByte(elem, '/')
-						if idx < 0 {
-							idx = len(elem)
-						}
-						args[0] = elem[:idx]
-						elem = elem[idx:]
-
 						if len(elem) == 0 {
 							switch method {
 							case "GET":
-								r.name = GetLanguageByIdOperation
-								r.summary = "Get language by ID"
-								r.operationID = "getLanguageById"
-								r.pathPattern = "/languages/{id}"
+								r.name = GetAllLanguageVersionsOperation
+								r.summary = "Get all language versions"
+								r.operationID = "getAllLanguageVersions"
+								r.pathPattern = "/language-versions"
 								r.args = args
-								r.count = 1
+								r.count = 0
 								return r, true
 							default:
 								return
 							}
 						}
 						switch elem[0] {
-						case '/': // Prefix: "/versions"
+						case '/': // Prefix: "/"
 
-							if l := len("/versions"); len(elem) >= l && elem[0:l] == "/versions" {
+							if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
 								elem = elem[l:]
 							} else {
 								break
 							}
 
+							// Param: "id"
+							// Leaf parameter, slashes are prohibited
+							idx := strings.IndexByte(elem, '/')
+							if idx >= 0 {
+								break
+							}
+							args[0] = elem
+							elem = ""
+
 							if len(elem) == 0 {
 								// Leaf node.
 								switch method {
 								case "GET":
-									r.name = GetAllVersionsOperation
-									r.summary = "Get all language versions"
-									r.operationID = "getAllVersions"
-									r.pathPattern = "/languages/{id}/versions"
+									r.name = GetLanguageVersionByIdOperation
+									r.summary = "Get language version by ID"
+									r.operationID = "getLanguageVersionById"
+									r.pathPattern = "/language-versions/{id}"
 									r.args = args
 									r.count = 1
 									return r, true
@@ -1121,6 +1120,151 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								}
 							}
 
+						}
+
+					case 's': // Prefix: "s"
+
+						if l := len("s"); len(elem) >= l && elem[0:l] == "s" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							switch method {
+							case "GET":
+								r.name = GetAllLanguagesOperation
+								r.summary = "Get all languages"
+								r.operationID = "getAllLanguages"
+								r.pathPattern = "/languages"
+								r.args = args
+								r.count = 0
+								return r, true
+							default:
+								return
+							}
+						}
+						switch elem[0] {
+						case '/': // Prefix: "/"
+
+							if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+								elem = elem[l:]
+							} else {
+								break
+							}
+
+							// Param: "id"
+							// Match until "/"
+							idx := strings.IndexByte(elem, '/')
+							if idx < 0 {
+								idx = len(elem)
+							}
+							args[0] = elem[:idx]
+							elem = elem[idx:]
+
+							if len(elem) == 0 {
+								switch method {
+								case "GET":
+									r.name = GetLanguageByIdOperation
+									r.summary = "Get language by ID"
+									r.operationID = "getLanguageById"
+									r.pathPattern = "/languages/{id}"
+									r.args = args
+									r.count = 1
+									return r, true
+								default:
+									return
+								}
+							}
+							switch elem[0] {
+							case '/': // Prefix: "/versions"
+
+								if l := len("/versions"); len(elem) >= l && elem[0:l] == "/versions" {
+									elem = elem[l:]
+								} else {
+									break
+								}
+
+								if len(elem) == 0 {
+									// Leaf node.
+									switch method {
+									case "GET":
+										r.name = GetAllVersionsOperation
+										r.summary = "Get all language versions"
+										r.operationID = "getAllVersions"
+										r.pathPattern = "/languages/{id}/versions"
+										r.args = args
+										r.count = 1
+										return r, true
+									default:
+										return
+									}
+								}
+
+							}
+
+						}
+
+					}
+
+				case 'o': // Prefix: "ogin/"
+
+					if l := len("ogin/"); len(elem) >= l && elem[0:l] == "ogin/" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						break
+					}
+					switch elem[0] {
+					case 'c': // Prefix: "config"
+
+						if l := len("config"); len(elem) >= l && elem[0:l] == "config" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch method {
+							case "GET":
+								r.name = GetLoginConfigOperation
+								r.summary = "Get login config"
+								r.operationID = "getLoginConfig"
+								r.pathPattern = "/login/config"
+								r.args = args
+								r.count = 0
+								return r, true
+							default:
+								return
+							}
+						}
+
+					case 'o': // Prefix: "oauth/callback"
+
+						if l := len("oauth/callback"); len(elem) >= l && elem[0:l] == "oauth/callback" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch method {
+							case "GET":
+								r.name = OauthCallbackOperation
+								r.summary = "OAuth Callback"
+								r.operationID = "oauthCallback"
+								r.pathPattern = "/login/oauth/callback"
+								r.args = args
+								r.count = 0
+								return r, true
+							default:
+								return
+							}
 						}
 
 					}

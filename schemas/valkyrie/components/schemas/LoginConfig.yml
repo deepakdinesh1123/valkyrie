@@ -1,0 +1,25 @@
+type: object
+description: |
+  Represents the list of all enabled third-party OAuth providers, including
+  their unique redirection URLs.
+properties:
+  providers:
+    type: array
+    description: A list of enabled OAuth provider objects.
+    items:
+      type: object
+      description: An individual OAuth provider with its redirection URL.
+      properties:
+        name:
+          type: string
+          description: The identifier for the enabled provider.
+          enum:
+            - google
+            - github
+        redirect_url:
+          type: string
+          description: The redirection URL for this specific provider.
+          format: uri
+      required:
+        - name
+        - redirect_url

@@ -49,6 +49,7 @@ type Querier interface {
 	GetTotalExecutionsForJob(ctx context.Context, jobID pgtype.Int8) (int64, error)
 	GetTotalJobs(ctx context.Context) (int64, error)
 	GetTotalWorkers(ctx context.Context) (int64, error)
+	GetUser(ctx context.Context, arg GetUserParams) (GetUserRow, error)
 	GetVersionsByLanguageID(ctx context.Context, languageID int64) ([]GetVersionsByLanguageIDRow, error)
 	GetWorker(ctx context.Context, name string) (Worker, error)
 	InsertExecRequest(ctx context.Context, arg InsertExecRequestParams) (int32, error)
@@ -75,6 +76,7 @@ type Querier interface {
 	UpdateSandboxPassword(ctx context.Context, arg UpdateSandboxPasswordParams) error
 	UpdateSandboxStartTime(ctx context.Context, arg UpdateSandboxStartTimeParams) error
 	UpdateSandboxState(ctx context.Context, arg UpdateSandboxStateParams) error
+	UpsertUser(ctx context.Context, arg UpsertUserParams) (UpsertUserRow, error)
 	WorkerTaskCount(ctx context.Context, workerID pgtype.Int4) (int64, error)
 	updateJobFailed(ctx context.Context, jobID int64) error
 }

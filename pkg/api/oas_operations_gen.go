@@ -22,8 +22,10 @@ const (
 	GetExecutionsForJobOperation    OperationName = "GetExecutionsForJob"
 	GetLanguageByIdOperation        OperationName = "GetLanguageById"
 	GetLanguageVersionByIdOperation OperationName = "GetLanguageVersionById"
+	GetLoginConfigOperation         OperationName = "GetLoginConfig"
 	GetSandboxOperation             OperationName = "GetSandbox"
 	GetValkyrieTokenOperation       OperationName = "GetValkyrieToken"
 	GetVersionOperation             OperationName = "GetVersion"
 	HealthOperation                 OperationName = "Health"
+	OauthCallbackOperation          OperationName = "OauthCallback"
 )

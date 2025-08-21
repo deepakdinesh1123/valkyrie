@@ -6,6 +6,7 @@ import (
 	"github.com/deepakdinesh1123/valkyrie/internal/config"
 	"github.com/deepakdinesh1123/valkyrie/internal/db"
 	"github.com/deepakdinesh1123/valkyrie/internal/services/execution"
+	"github.com/deepakdinesh1123/valkyrie/internal/services/login"
 	"github.com/deepakdinesh1123/valkyrie/internal/services/sandbox"
 	"github.com/deepakdinesh1123/valkyrie/internal/store"
 	"github.com/deepakdinesh1123/valkyrie/internal/telemetry"
@@ -23,6 +24,7 @@ type ValkyrieServer struct {
 	envConfig        *config.EnvConfig
 	executionService *execution.ExecutionService
 	sandboxService   *sandbox.SandboxService
+	loginService     *login.LoginService
 	logger           *zerolog.Logger
 	server           *api.Server
 	tp               trace.TracerProvider
@@ -83,6 +85,8 @@ func NewServer(ctx context.Context, envConfig *config.EnvConfig, standalone bool
 		sandboxService := sandbox.NewSandboxService(queries, envConfig, logger)
 		valkyrieServer.sandboxService = sandboxService
 	}
+
+	valkyrieServer.loginService = login.NewLoginService(queries, envConfig, logger)
 
 	ja := jwtauth.New("HS256", []byte(envConfig.ENCKEY), nil)
 

@@ -3,7 +3,10 @@
 package api
 
 import (
+	"net/url"
 	"time"
+
+	"github.com/go-faster/errors"
 )
 
 type BearerAuth struct {
@@ -1065,6 +1068,14 @@ func (s *GetLanguageVersionByIdOK) SetLanguage(val LanguageVersionResponse) {
 
 func (*GetLanguageVersionByIdOK) getLanguageVersionByIdRes() {}
 
+type GetLoginConfigBadRequest Error
+
+func (*GetLoginConfigBadRequest) getLoginConfigRes() {}
+
+type GetLoginConfigInternalServerError Error
+
+func (*GetLoginConfigInternalServerError) getLoginConfigRes() {}
+
 // GetSandboxOK represents sum type.
 type GetSandboxOK struct {
 	Type         GetSandboxOKType // switch on this field
@@ -1421,6 +1432,120 @@ func (s *LanguageVersionResponse) SetDefaultVersion(val bool) {
 func (s *LanguageVersionResponse) SetID(val int64) {
 	s.ID = val
 }
+
+// Represents the list of all enabled third-party OAuth providers, including
+// their unique redirection URLs.
+// Ref: #/components/schemas/LoginConfig
+type LoginConfig struct {
+	// A list of enabled OAuth provider objects.
+	Providers []LoginConfigProvidersItem `json:"providers"`
+}
+
+// GetProviders returns the value of Providers.
+func (s *LoginConfig) GetProviders() []LoginConfigProvidersItem {
+	return s.Providers
+}
+
+// SetProviders sets the value of Providers.
+func (s *LoginConfig) SetProviders(val []LoginConfigProvidersItem) {
+	s.Providers = val
+}
+
+func (*LoginConfig) getLoginConfigRes() {}
+
+// An individual OAuth provider with its redirection URL.
+type LoginConfigProvidersItem struct {
+	// The identifier for the enabled provider.
+	Name LoginConfigProvidersItemName `json:"name"`
+	// The redirection URL for this specific provider.
+	RedirectURL url.URL `json:"redirect_url"`
+}
+
+// GetName returns the value of Name.
+func (s *LoginConfigProvidersItem) GetName() LoginConfigProvidersItemName {
+	return s.Name
+}
+
+// GetRedirectURL returns the value of RedirectURL.
+func (s *LoginConfigProvidersItem) GetRedirectURL() url.URL {
+	return s.RedirectURL
+}
+
+// SetName sets the value of Name.
+func (s *LoginConfigProvidersItem) SetName(val LoginConfigProvidersItemName) {
+	s.Name = val
+}
+
+// SetRedirectURL sets the value of RedirectURL.
+func (s *LoginConfigProvidersItem) SetRedirectURL(val url.URL) {
+	s.RedirectURL = val
+}
+
+// The identifier for the enabled provider.
+type LoginConfigProvidersItemName string
+
+const (
+	LoginConfigProvidersItemNameGoogle LoginConfigProvidersItemName = "google"
+	LoginConfigProvidersItemNameGithub LoginConfigProvidersItemName = "github"
+)
+
+// AllValues returns all LoginConfigProvidersItemName values.
+func (LoginConfigProvidersItemName) AllValues() []LoginConfigProvidersItemName {
+	return []LoginConfigProvidersItemName{
+		LoginConfigProvidersItemNameGoogle,
+		LoginConfigProvidersItemNameGithub,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LoginConfigProvidersItemName) MarshalText() ([]byte, error) {
+	switch s {
+	case LoginConfigProvidersItemNameGoogle:
+		return []byte(s), nil
+	case LoginConfigProvidersItemNameGithub:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LoginConfigProvidersItemName) UnmarshalText(data []byte) error {
+	switch LoginConfigProvidersItemName(data) {
+	case LoginConfigProvidersItemNameGoogle:
+		*s = LoginConfigProvidersItemNameGoogle
+		return nil
+	case LoginConfigProvidersItemNameGithub:
+		*s = LoginConfigProvidersItemNameGithub
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type OauthCallbackBadRequest Error
+
+func (*OauthCallbackBadRequest) oauthCallbackRes() {}
+
+type OauthCallbackInternalServerError Error
+
+func (*OauthCallbackInternalServerError) oauthCallbackRes() {}
+
+type OauthCallbackOK struct {
+	Message OptString `json:"message"`
+}
+
+// GetMessage returns the value of Message.
+func (s *OauthCallbackOK) GetMessage() OptString {
+	return s.Message
+}
+
+// SetMessage sets the value of Message.
+func (s *OauthCallbackOK) SetMessage(val OptString) {
+	s.Message = val
+}
+
+func (*OauthCallbackOK) oauthCallbackRes() {}
 
 // NewOptBool returns new OptBool with value set to v.
 func NewOptBool(v bool) OptBool {

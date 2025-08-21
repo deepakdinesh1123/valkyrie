@@ -10,6 +10,10 @@ import (
 )
 
 type ExecRequest struct {
+	CreatedAt            pgtype.Timestamptz      `db:"created_at" json:"created_at"`
+	CreatedBy            pgtype.Text             `db:"created_by" json:"created_by"`
+	ModifiedAt           pgtype.Timestamptz      `db:"modified_at" json:"modified_at"`
+	ModifiedBy           pgtype.Text             `db:"modified_by" json:"modified_by"`
 	ID                   int32                   `db:"id" json:"id"`
 	Hash                 string                  `db:"hash" json:"hash"`
 	Code                 pgtype.Text             `db:"code" json:"code"`
@@ -30,12 +34,15 @@ type ExecRequest struct {
 }
 
 type Execution struct {
+	CreatedAt     pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	CreatedBy     pgtype.Text        `db:"created_by" json:"created_by"`
+	ModifiedAt    pgtype.Timestamptz `db:"modified_at" json:"modified_at"`
+	ModifiedBy    pgtype.Text        `db:"modified_by" json:"modified_by"`
 	ExecID        int64              `db:"exec_id" json:"exec_id"`
 	JobID         pgtype.Int8        `db:"job_id" json:"job_id"`
 	WorkerID      pgtype.Int4        `db:"worker_id" json:"worker_id"`
 	StartedAt     pgtype.Timestamptz `db:"started_at" json:"started_at"`
 	FinishedAt    pgtype.Timestamptz `db:"finished_at" json:"finished_at"`
-	CreatedAt     pgtype.Timestamptz `db:"created_at" json:"created_at"`
 	ExecRequestID pgtype.Int4        `db:"exec_request_id" json:"exec_request_id"`
 	ExecLogs      string             `db:"exec_logs" json:"exec_logs"`
 	NixLogs       pgtype.Text        `db:"nix_logs" json:"nix_logs"`
@@ -43,9 +50,19 @@ type Execution struct {
 	Success       pgtype.Bool        `db:"success" json:"success"`
 }
 
+type Fullauditmixin struct {
+	CreatedAt  pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	CreatedBy  pgtype.Text        `db:"created_by" json:"created_by"`
+	ModifiedAt pgtype.Timestamptz `db:"modified_at" json:"modified_at"`
+	ModifiedBy pgtype.Text        `db:"modified_by" json:"modified_by"`
+}
+
 type Job struct {
-	JobID        int64                   `db:"job_id" json:"job_id"`
 	CreatedAt    pgtype.Timestamptz      `db:"created_at" json:"created_at"`
+	CreatedBy    pgtype.Text             `db:"created_by" json:"created_by"`
+	ModifiedAt   pgtype.Timestamptz      `db:"modified_at" json:"modified_at"`
+	ModifiedBy   pgtype.Text             `db:"modified_by" json:"modified_by"`
+	JobID        int64                   `db:"job_id" json:"job_id"`
 	UpdatedAt    pgtype.Timestamptz      `db:"updated_at" json:"updated_at"`
 	TimeOut      pgtype.Int4             `db:"time_out" json:"time_out"`
 	StartedAt    pgtype.Timestamptz      `db:"started_at" json:"started_at"`
@@ -58,30 +75,41 @@ type Job struct {
 }
 
 type Language struct {
-	ID             int64  `db:"id" json:"id"`
-	Name           string `db:"name" json:"name"`
-	Extension      string `db:"extension" json:"extension"`
-	MonacoLanguage string `db:"monaco_language" json:"monaco_language"`
-	Template       string `db:"template" json:"template"`
-	IsDisabled     bool   `db:"is_disabled" json:"is_disabled"`
-	DefaultCode    string `db:"default_code" json:"default_code"`
+	CreatedAt      pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	CreatedBy      pgtype.Text        `db:"created_by" json:"created_by"`
+	ModifiedAt     pgtype.Timestamptz `db:"modified_at" json:"modified_at"`
+	ModifiedBy     pgtype.Text        `db:"modified_by" json:"modified_by"`
+	ID             int64              `db:"id" json:"id"`
+	Name           string             `db:"name" json:"name"`
+	Extension      string             `db:"extension" json:"extension"`
+	MonacoLanguage string             `db:"monaco_language" json:"monaco_language"`
+	Template       string             `db:"template" json:"template"`
+	IsDisabled     bool               `db:"is_disabled" json:"is_disabled"`
+	DefaultCode    string             `db:"default_code" json:"default_code"`
 }
 
 type LanguageVersion struct {
-	ID             int64       `db:"id" json:"id"`
-	LanguageID     int64       `db:"language_id" json:"language_id"`
-	Version        string      `db:"version" json:"version"`
-	NixPackageName pgtype.Text `db:"nix_package_name" json:"nix_package_name"`
-	Template       pgtype.Text `db:"template" json:"template"`
-	DefaultVersion bool        `db:"default_version" json:"default_version"`
-	IsDisabled     bool        `db:"is_disabled" json:"is_disabled"`
+	CreatedAt      pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	CreatedBy      pgtype.Text        `db:"created_by" json:"created_by"`
+	ModifiedAt     pgtype.Timestamptz `db:"modified_at" json:"modified_at"`
+	ModifiedBy     pgtype.Text        `db:"modified_by" json:"modified_by"`
+	ID             int64              `db:"id" json:"id"`
+	LanguageID     int64              `db:"language_id" json:"language_id"`
+	Version        string             `db:"version" json:"version"`
+	NixPackageName pgtype.Text        `db:"nix_package_name" json:"nix_package_name"`
+	Template       pgtype.Text        `db:"template" json:"template"`
+	DefaultVersion bool               `db:"default_version" json:"default_version"`
+	IsDisabled     bool               `db:"is_disabled" json:"is_disabled"`
 }
 
 type Sandbox struct {
+	CreatedAt       pgtype.Timestamptz        `db:"created_at" json:"created_at"`
+	CreatedBy       pgtype.Text               `db:"created_by" json:"created_by"`
+	ModifiedAt      pgtype.Timestamptz        `db:"modified_at" json:"modified_at"`
+	ModifiedBy      pgtype.Text               `db:"modified_by" json:"modified_by"`
 	SandboxID       int64                     `db:"sandbox_id" json:"sandbox_id"`
 	WorkerID        pgtype.Int4               `db:"worker_id" json:"worker_id"`
 	StartedAt       pgtype.Timestamptz        `db:"started_at" json:"started_at"`
-	CreatedAt       pgtype.Timestamptz        `db:"created_at" json:"created_at"`
 	UpdatedAt       pgtype.Timestamptz        `db:"updated_at" json:"updated_at"`
 	SandboxUrl      pgtype.Text               `db:"sandbox_url" json:"sandbox_url"`
 	SandboxAgentUrl pgtype.Text               `db:"sandbox_agent_url" json:"sandbox_agent_url"`
@@ -92,16 +120,32 @@ type Sandbox struct {
 }
 
 type SystemPackageFilter struct {
+	CreatedAt     pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	CreatedBy     pgtype.Text        `db:"created_by" json:"created_by"`
+	ModifiedAt    pgtype.Timestamptz `db:"modified_at" json:"modified_at"`
+	ModifiedBy    pgtype.Text        `db:"modified_by" json:"modified_by"`
 	ID            int32              `db:"id" json:"id"`
 	FilterType    string             `db:"filter_type" json:"filter_type"`
 	PackageString string             `db:"package_string" json:"package_string"`
-	CreatedAt     pgtype.Timestamptz `db:"created_at" json:"created_at"`
+}
+
+type User struct {
+	CreatedAt  pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	CreatedBy  pgtype.Text        `db:"created_by" json:"created_by"`
+	ModifiedAt pgtype.Timestamptz `db:"modified_at" json:"modified_at"`
+	ModifiedBy pgtype.Text        `db:"modified_by" json:"modified_by"`
+	ID         int32              `db:"id" json:"id"`
+	Username   pgtype.Text        `db:"username" json:"username"`
+	Email      pgtype.Text        `db:"email" json:"email"`
 }
 
 type Worker struct {
+	CreatedAt     pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	CreatedBy     pgtype.Text        `db:"created_by" json:"created_by"`
+	ModifiedAt    pgtype.Timestamptz `db:"modified_at" json:"modified_at"`
+	ModifiedBy    pgtype.Text        `db:"modified_by" json:"modified_by"`
 	ID            int32              `db:"id" json:"id"`
 	Name          string             `db:"name" json:"name"`
-	CreatedAt     pgtype.Timestamptz `db:"created_at" json:"created_at"`
 	LastHeartbeat pgtype.Timestamptz `db:"last_heartbeat" json:"last_heartbeat"`
 	CurrentState  string             `db:"current_state" json:"current_state"`
 }

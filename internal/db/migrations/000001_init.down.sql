@@ -1,30 +1,29 @@
--- Drop executions table and related sequence
-drop table if exists executions;
-drop sequence if exists executions_id_seq;
+-- Drop all triggers first
+DROP TRIGGER IF EXISTS update_users_modified_at ON users;
+DROP TRIGGER IF EXISTS update_system_package_filters_modified_at ON system_package_filters;
+DROP TRIGGER IF EXISTS update_sandboxes_modified_at ON sandboxes;
+DROP TRIGGER IF EXISTS update_executions_modified_at ON executions;
+DROP TRIGGER IF EXISTS update_jobs_modified_at ON jobs;
+DROP TRIGGER IF EXISTS update_workers_modified_at ON workers;
+DROP TRIGGER IF EXISTS update_exec_request_modified_at ON exec_request;
+DROP TRIGGER IF EXISTS update_language_versions_modified_at ON language_versions;
+DROP TRIGGER IF EXISTS update_languages_modified_at ON languages;
 
--- Drop jobs table and related sequence
-drop table if exists jobs;
-drop sequence if exists jobs_id_seq;
+-- Drop the trigger function
+DROP FUNCTION IF EXISTS update_modified_at_column();
 
--- Drop workers table and related sequence
-drop table if exists workers;
-drop sequence if exists workers_id_seq;
+-- Recreate all tables without inheritance to restore original structure
 
--- Drop job_types table
-drop table if exists job_types;
+-- Drop existing tables (in reverse dependency order)
+DROP TABLE IF EXISTS system_package_filters CASCADE;
+DROP TABLE IF EXISTS sandboxes CASCADE;
+DROP TABLE IF EXISTS executions CASCADE;
+DROP TABLE IF EXISTS jobs CASCADE;
+DROP TABLE IF EXISTS workers CASCADE;
+DROP TABLE IF EXISTS exec_request CASCADE;
+DROP TABLE IF EXISTS language_versions CASCADE;
+DROP TABLE IF EXISTS languages CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
 
--- Drop job_groups table
-drop table if exists job_groups;
-
--- Drop exec_request table and related sequence
-drop table if exists exec_request;
-drop sequence if exists exec_request_id_seq;
-
--- Drop language_versions table and related index and sequence
-drop index if exists unique_default_version_per_language;
-drop table if exists language_versions;
-drop sequence if exists language_versions_id_seq;
-
--- Drop languages table and related sequence
-drop table if exists languages;
-drop sequence if exists languages_id_seq;
+-- Drop the base audit mixin table
+DROP TABLE IF EXISTS fullauditmixin CASCADE;

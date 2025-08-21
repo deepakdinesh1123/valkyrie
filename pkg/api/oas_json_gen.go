@@ -4359,6 +4359,82 @@ func (s *GetLanguageVersionByIdOK) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
+// Encode encodes GetLoginConfigBadRequest as json.
+func (s *GetLoginConfigBadRequest) Encode(e *jx.Encoder) {
+	unwrapped := (*Error)(s)
+
+	unwrapped.Encode(e)
+}
+
+// Decode decodes GetLoginConfigBadRequest from json.
+func (s *GetLoginConfigBadRequest) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode GetLoginConfigBadRequest to nil")
+	}
+	var unwrapped Error
+	if err := func() error {
+		if err := unwrapped.Decode(d); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		return errors.Wrap(err, "alias")
+	}
+	*s = GetLoginConfigBadRequest(unwrapped)
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *GetLoginConfigBadRequest) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *GetLoginConfigBadRequest) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes GetLoginConfigInternalServerError as json.
+func (s *GetLoginConfigInternalServerError) Encode(e *jx.Encoder) {
+	unwrapped := (*Error)(s)
+
+	unwrapped.Encode(e)
+}
+
+// Decode decodes GetLoginConfigInternalServerError from json.
+func (s *GetLoginConfigInternalServerError) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode GetLoginConfigInternalServerError to nil")
+	}
+	var unwrapped Error
+	if err := func() error {
+		if err := unwrapped.Decode(d); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		return errors.Wrap(err, "alias")
+	}
+	*s = GetLoginConfigInternalServerError(unwrapped)
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *GetLoginConfigInternalServerError) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *GetLoginConfigInternalServerError) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
 // Encode encodes GetSandboxOK as json.
 func (s GetSandboxOK) Encode(e *jx.Encoder) {
 	switch s.Type {
@@ -5294,6 +5370,370 @@ func (s *LanguageVersionResponse) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *LanguageVersionResponse) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s *LoginConfig) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *LoginConfig) encodeFields(e *jx.Encoder) {
+	{
+		if s.Providers != nil {
+			e.FieldStart("providers")
+			e.ArrStart()
+			for _, elem := range s.Providers {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
+		}
+	}
+}
+
+var jsonFieldsNameOfLoginConfig = [1]string{
+	0: "providers",
+}
+
+// Decode decodes LoginConfig from json.
+func (s *LoginConfig) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode LoginConfig to nil")
+	}
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "providers":
+			if err := func() error {
+				s.Providers = make([]LoginConfigProvidersItem, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem LoginConfigProvidersItem
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.Providers = append(s.Providers, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"providers\"")
+			}
+		default:
+			return d.Skip()
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode LoginConfig")
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *LoginConfig) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *LoginConfig) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s *LoginConfigProvidersItem) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *LoginConfigProvidersItem) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("name")
+		s.Name.Encode(e)
+	}
+	{
+		e.FieldStart("redirect_url")
+		json.EncodeURI(e, s.RedirectURL)
+	}
+}
+
+var jsonFieldsNameOfLoginConfigProvidersItem = [2]string{
+	0: "name",
+	1: "redirect_url",
+}
+
+// Decode decodes LoginConfigProvidersItem from json.
+func (s *LoginConfigProvidersItem) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode LoginConfigProvidersItem to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "name":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				if err := s.Name.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"name\"")
+			}
+		case "redirect_url":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := json.DecodeURI(d)
+				s.RedirectURL = v
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"redirect_url\"")
+			}
+		default:
+			return d.Skip()
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode LoginConfigProvidersItem")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00000011,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfLoginConfigProvidersItem) {
+					name = jsonFieldsNameOfLoginConfigProvidersItem[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *LoginConfigProvidersItem) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *LoginConfigProvidersItem) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes LoginConfigProvidersItemName as json.
+func (s LoginConfigProvidersItemName) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes LoginConfigProvidersItemName from json.
+func (s *LoginConfigProvidersItemName) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode LoginConfigProvidersItemName to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch LoginConfigProvidersItemName(v) {
+	case LoginConfigProvidersItemNameGoogle:
+		*s = LoginConfigProvidersItemNameGoogle
+	case LoginConfigProvidersItemNameGithub:
+		*s = LoginConfigProvidersItemNameGithub
+	default:
+		*s = LoginConfigProvidersItemName(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s LoginConfigProvidersItemName) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *LoginConfigProvidersItemName) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes OauthCallbackBadRequest as json.
+func (s *OauthCallbackBadRequest) Encode(e *jx.Encoder) {
+	unwrapped := (*Error)(s)
+
+	unwrapped.Encode(e)
+}
+
+// Decode decodes OauthCallbackBadRequest from json.
+func (s *OauthCallbackBadRequest) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode OauthCallbackBadRequest to nil")
+	}
+	var unwrapped Error
+	if err := func() error {
+		if err := unwrapped.Decode(d); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		return errors.Wrap(err, "alias")
+	}
+	*s = OauthCallbackBadRequest(unwrapped)
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *OauthCallbackBadRequest) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OauthCallbackBadRequest) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes OauthCallbackInternalServerError as json.
+func (s *OauthCallbackInternalServerError) Encode(e *jx.Encoder) {
+	unwrapped := (*Error)(s)
+
+	unwrapped.Encode(e)
+}
+
+// Decode decodes OauthCallbackInternalServerError from json.
+func (s *OauthCallbackInternalServerError) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode OauthCallbackInternalServerError to nil")
+	}
+	var unwrapped Error
+	if err := func() error {
+		if err := unwrapped.Decode(d); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		return errors.Wrap(err, "alias")
+	}
+	*s = OauthCallbackInternalServerError(unwrapped)
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *OauthCallbackInternalServerError) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OauthCallbackInternalServerError) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s *OauthCallbackOK) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *OauthCallbackOK) encodeFields(e *jx.Encoder) {
+	{
+		if s.Message.Set {
+			e.FieldStart("message")
+			s.Message.Encode(e)
+		}
+	}
+}
+
+var jsonFieldsNameOfOauthCallbackOK = [1]string{
+	0: "message",
+}
+
+// Decode decodes OauthCallbackOK from json.
+func (s *OauthCallbackOK) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode OauthCallbackOK to nil")
+	}
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "message":
+			if err := func() error {
+				s.Message.Reset()
+				if err := s.Message.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"message\"")
+			}
+		default:
+			return d.Skip()
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode OauthCallbackOK")
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *OauthCallbackOK) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OauthCallbackOK) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }

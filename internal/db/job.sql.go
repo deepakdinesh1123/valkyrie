@@ -50,7 +50,7 @@ set current_state = 'scheduled',
     worker_id = $1::int,
     updated_at = now()
 where job_id = (select job_id from cte)
-returning job_id, created_at, updated_at, time_out, started_at, arguments, current_state, retries, max_retries, worker_id, job_type
+returning created_at, created_by, modified_at, modified_by, job_id, updated_at, time_out, started_at, arguments, current_state, retries, max_retries, worker_id, job_type
 `
 
 type FetchJobParams struct {
@@ -62,8 +62,11 @@ func (q *Queries) FetchJob(ctx context.Context, arg FetchJobParams) (Job, error)
 	row := q.db.QueryRow(ctx, fetchJob, arg.Workerid, arg.Jobtype)
 	var i Job
 	err := row.Scan(
-		&i.JobID,
 		&i.CreatedAt,
+		&i.CreatedBy,
+		&i.ModifiedAt,
+		&i.ModifiedBy,
+		&i.JobID,
 		&i.UpdatedAt,
 		&i.TimeOut,
 		&i.StartedAt,
@@ -78,7 +81,7 @@ func (q *Queries) FetchJob(ctx context.Context, arg FetchJobParams) (Job, error)
 }
 
 const getAllExecutionJobs = `-- name: GetAllExecutionJobs :many
-SELECT job_id, created_at, updated_at, time_out, started_at, arguments, current_state, retries, max_retries, worker_id, job_type, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets
+SELECT jobs.created_at, jobs.created_by, jobs.modified_at, jobs.modified_by, job_id, updated_at, time_out, started_at, arguments, current_state, retries, max_retries, worker_id, job_type, exec_request.created_at, exec_request.created_by, exec_request.modified_at, exec_request.modified_by, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets
 FROM jobs
 INNER JOIN exec_request
 ON CAST(arguments->'ExecConfig'->>'ExecReqId' AS INT) = exec_request.id
@@ -93,8 +96,11 @@ type GetAllExecutionJobsParams struct {
 }
 
 type GetAllExecutionJobsRow struct {
-	JobID                int64                   `db:"job_id" json:"job_id"`
 	CreatedAt            pgtype.Timestamptz      `db:"created_at" json:"created_at"`
+	CreatedBy            pgtype.Text             `db:"created_by" json:"created_by"`
+	ModifiedAt           pgtype.Timestamptz      `db:"modified_at" json:"modified_at"`
+	ModifiedBy           pgtype.Text             `db:"modified_by" json:"modified_by"`
+	JobID                int64                   `db:"job_id" json:"job_id"`
 	UpdatedAt            pgtype.Timestamptz      `db:"updated_at" json:"updated_at"`
 	TimeOut              pgtype.Int4             `db:"time_out" json:"time_out"`
 	StartedAt            pgtype.Timestamptz      `db:"started_at" json:"started_at"`
@@ -104,6 +110,10 @@ type GetAllExecutionJobsRow struct {
 	MaxRetries           pgtype.Int4             `db:"max_retries" json:"max_retries"`
 	WorkerID             pgtype.Int4             `db:"worker_id" json:"worker_id"`
 	JobType              string                  `db:"job_type" json:"job_type"`
+	CreatedAt_2          pgtype.Timestamptz      `db:"created_at_2" json:"created_at_2"`
+	CreatedBy_2          pgtype.Text             `db:"created_by_2" json:"created_by_2"`
+	ModifiedAt_2         pgtype.Timestamptz      `db:"modified_at_2" json:"modified_at_2"`
+	ModifiedBy_2         pgtype.Text             `db:"modified_by_2" json:"modified_by_2"`
 	ID                   int32                   `db:"id" json:"id"`
 	Hash                 string                  `db:"hash" json:"hash"`
 	Code                 pgtype.Text             `db:"code" json:"code"`
@@ -133,8 +143,11 @@ func (q *Queries) GetAllExecutionJobs(ctx context.Context, arg GetAllExecutionJo
 	for rows.Next() {
 		var i GetAllExecutionJobsRow
 		if err := rows.Scan(
-			&i.JobID,
 			&i.CreatedAt,
+			&i.CreatedBy,
+			&i.ModifiedAt,
+			&i.ModifiedBy,
+			&i.JobID,
 			&i.UpdatedAt,
 			&i.TimeOut,
 			&i.StartedAt,
@@ -144,6 +157,10 @@ func (q *Queries) GetAllExecutionJobs(ctx context.Context, arg GetAllExecutionJo
 			&i.MaxRetries,
 			&i.WorkerID,
 			&i.JobType,
+			&i.CreatedAt_2,
+			&i.CreatedBy_2,
+			&i.ModifiedAt_2,
+			&i.ModifiedBy_2,
 			&i.ID,
 			&i.Hash,
 			&i.Code,
@@ -173,7 +190,7 @@ func (q *Queries) GetAllExecutionJobs(ctx context.Context, arg GetAllExecutionJo
 }
 
 const getAllExecutions = `-- name: GetAllExecutions :many
-select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, out_files, success, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets from executions
+select executions.created_at, executions.created_by, executions.modified_at, executions.modified_by, exec_id, job_id, worker_id, started_at, finished_at, exec_request_id, exec_logs, nix_logs, out_files, success, exec_request.created_at, exec_request.created_by, exec_request.modified_at, exec_request.modified_by, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets from executions
 inner join exec_request on executions.exec_request_id = exec_request.id
 where exec_id >= $1
 order by started_at desc
@@ -186,17 +203,24 @@ type GetAllExecutionsParams struct {
 }
 
 type GetAllExecutionsRow struct {
+	CreatedAt            pgtype.Timestamptz      `db:"created_at" json:"created_at"`
+	CreatedBy            pgtype.Text             `db:"created_by" json:"created_by"`
+	ModifiedAt           pgtype.Timestamptz      `db:"modified_at" json:"modified_at"`
+	ModifiedBy           pgtype.Text             `db:"modified_by" json:"modified_by"`
 	ExecID               int64                   `db:"exec_id" json:"exec_id"`
 	JobID                pgtype.Int8             `db:"job_id" json:"job_id"`
 	WorkerID             pgtype.Int4             `db:"worker_id" json:"worker_id"`
 	StartedAt            pgtype.Timestamptz      `db:"started_at" json:"started_at"`
 	FinishedAt           pgtype.Timestamptz      `db:"finished_at" json:"finished_at"`
-	CreatedAt            pgtype.Timestamptz      `db:"created_at" json:"created_at"`
 	ExecRequestID        pgtype.Int4             `db:"exec_request_id" json:"exec_request_id"`
 	ExecLogs             string                  `db:"exec_logs" json:"exec_logs"`
 	NixLogs              pgtype.Text             `db:"nix_logs" json:"nix_logs"`
 	OutFiles             []byte                  `db:"out_files" json:"out_files"`
 	Success              pgtype.Bool             `db:"success" json:"success"`
+	CreatedAt_2          pgtype.Timestamptz      `db:"created_at_2" json:"created_at_2"`
+	CreatedBy_2          pgtype.Text             `db:"created_by_2" json:"created_by_2"`
+	ModifiedAt_2         pgtype.Timestamptz      `db:"modified_at_2" json:"modified_at_2"`
+	ModifiedBy_2         pgtype.Text             `db:"modified_by_2" json:"modified_by_2"`
 	ID                   int32                   `db:"id" json:"id"`
 	Hash                 string                  `db:"hash" json:"hash"`
 	Code                 pgtype.Text             `db:"code" json:"code"`
@@ -226,17 +250,24 @@ func (q *Queries) GetAllExecutions(ctx context.Context, arg GetAllExecutionsPara
 	for rows.Next() {
 		var i GetAllExecutionsRow
 		if err := rows.Scan(
+			&i.CreatedAt,
+			&i.CreatedBy,
+			&i.ModifiedAt,
+			&i.ModifiedBy,
 			&i.ExecID,
 			&i.JobID,
 			&i.WorkerID,
 			&i.StartedAt,
 			&i.FinishedAt,
-			&i.CreatedAt,
 			&i.ExecRequestID,
 			&i.ExecLogs,
 			&i.NixLogs,
 			&i.OutFiles,
 			&i.Success,
+			&i.CreatedAt_2,
+			&i.CreatedBy_2,
+			&i.ModifiedAt_2,
+			&i.ModifiedBy_2,
 			&i.ID,
 			&i.Hash,
 			&i.Code,
@@ -266,23 +297,30 @@ func (q *Queries) GetAllExecutions(ctx context.Context, arg GetAllExecutionsPara
 }
 
 const getExecution = `-- name: GetExecution :one
-select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, out_files, success, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets from executions
+select executions.created_at, executions.created_by, executions.modified_at, executions.modified_by, exec_id, job_id, worker_id, started_at, finished_at, exec_request_id, exec_logs, nix_logs, out_files, success, exec_request.created_at, exec_request.created_by, exec_request.modified_at, exec_request.modified_by, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets from executions
 inner join exec_request on executions.exec_request_id = exec_request.id
 where executions.exec_id = $1
 `
 
 type GetExecutionRow struct {
+	CreatedAt            pgtype.Timestamptz      `db:"created_at" json:"created_at"`
+	CreatedBy            pgtype.Text             `db:"created_by" json:"created_by"`
+	ModifiedAt           pgtype.Timestamptz      `db:"modified_at" json:"modified_at"`
+	ModifiedBy           pgtype.Text             `db:"modified_by" json:"modified_by"`
 	ExecID               int64                   `db:"exec_id" json:"exec_id"`
 	JobID                pgtype.Int8             `db:"job_id" json:"job_id"`
 	WorkerID             pgtype.Int4             `db:"worker_id" json:"worker_id"`
 	StartedAt            pgtype.Timestamptz      `db:"started_at" json:"started_at"`
 	FinishedAt           pgtype.Timestamptz      `db:"finished_at" json:"finished_at"`
-	CreatedAt            pgtype.Timestamptz      `db:"created_at" json:"created_at"`
 	ExecRequestID        pgtype.Int4             `db:"exec_request_id" json:"exec_request_id"`
 	ExecLogs             string                  `db:"exec_logs" json:"exec_logs"`
 	NixLogs              pgtype.Text             `db:"nix_logs" json:"nix_logs"`
 	OutFiles             []byte                  `db:"out_files" json:"out_files"`
 	Success              pgtype.Bool             `db:"success" json:"success"`
+	CreatedAt_2          pgtype.Timestamptz      `db:"created_at_2" json:"created_at_2"`
+	CreatedBy_2          pgtype.Text             `db:"created_by_2" json:"created_by_2"`
+	ModifiedAt_2         pgtype.Timestamptz      `db:"modified_at_2" json:"modified_at_2"`
+	ModifiedBy_2         pgtype.Text             `db:"modified_by_2" json:"modified_by_2"`
 	ID                   int32                   `db:"id" json:"id"`
 	Hash                 string                  `db:"hash" json:"hash"`
 	Code                 pgtype.Text             `db:"code" json:"code"`
@@ -306,17 +344,24 @@ func (q *Queries) GetExecution(ctx context.Context, execID int64) (GetExecutionR
 	row := q.db.QueryRow(ctx, getExecution, execID)
 	var i GetExecutionRow
 	err := row.Scan(
+		&i.CreatedAt,
+		&i.CreatedBy,
+		&i.ModifiedAt,
+		&i.ModifiedBy,
 		&i.ExecID,
 		&i.JobID,
 		&i.WorkerID,
 		&i.StartedAt,
 		&i.FinishedAt,
-		&i.CreatedAt,
 		&i.ExecRequestID,
 		&i.ExecLogs,
 		&i.NixLogs,
 		&i.OutFiles,
 		&i.Success,
+		&i.CreatedAt_2,
+		&i.CreatedBy_2,
+		&i.ModifiedAt_2,
+		&i.ModifiedBy_2,
 		&i.ID,
 		&i.Hash,
 		&i.Code,
@@ -339,12 +384,15 @@ func (q *Queries) GetExecution(ctx context.Context, execID int64) (GetExecutionR
 }
 
 const getExecutionJob = `-- name: GetExecutionJob :one
-select job_id, created_at, updated_at, time_out, started_at, arguments, current_state, retries, max_retries, worker_id, job_type, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets from jobs inner join exec_request on CAST(arguments->'ExecConfig'->>'ExecReqId' AS INT) = exec_request.id where jobs.job_id = $1
+select jobs.created_at, jobs.created_by, jobs.modified_at, jobs.modified_by, job_id, updated_at, time_out, started_at, arguments, current_state, retries, max_retries, worker_id, job_type, exec_request.created_at, exec_request.created_by, exec_request.modified_at, exec_request.modified_by, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets from jobs inner join exec_request on CAST(arguments->'ExecConfig'->>'ExecReqId' AS INT) = exec_request.id where jobs.job_id = $1
 `
 
 type GetExecutionJobRow struct {
-	JobID                int64                   `db:"job_id" json:"job_id"`
 	CreatedAt            pgtype.Timestamptz      `db:"created_at" json:"created_at"`
+	CreatedBy            pgtype.Text             `db:"created_by" json:"created_by"`
+	ModifiedAt           pgtype.Timestamptz      `db:"modified_at" json:"modified_at"`
+	ModifiedBy           pgtype.Text             `db:"modified_by" json:"modified_by"`
+	JobID                int64                   `db:"job_id" json:"job_id"`
 	UpdatedAt            pgtype.Timestamptz      `db:"updated_at" json:"updated_at"`
 	TimeOut              pgtype.Int4             `db:"time_out" json:"time_out"`
 	StartedAt            pgtype.Timestamptz      `db:"started_at" json:"started_at"`
@@ -354,6 +402,10 @@ type GetExecutionJobRow struct {
 	MaxRetries           pgtype.Int4             `db:"max_retries" json:"max_retries"`
 	WorkerID             pgtype.Int4             `db:"worker_id" json:"worker_id"`
 	JobType              string                  `db:"job_type" json:"job_type"`
+	CreatedAt_2          pgtype.Timestamptz      `db:"created_at_2" json:"created_at_2"`
+	CreatedBy_2          pgtype.Text             `db:"created_by_2" json:"created_by_2"`
+	ModifiedAt_2         pgtype.Timestamptz      `db:"modified_at_2" json:"modified_at_2"`
+	ModifiedBy_2         pgtype.Text             `db:"modified_by_2" json:"modified_by_2"`
 	ID                   int32                   `db:"id" json:"id"`
 	Hash                 string                  `db:"hash" json:"hash"`
 	Code                 pgtype.Text             `db:"code" json:"code"`
@@ -377,8 +429,11 @@ func (q *Queries) GetExecutionJob(ctx context.Context, jobID int64) (GetExecutio
 	row := q.db.QueryRow(ctx, getExecutionJob, jobID)
 	var i GetExecutionJobRow
 	err := row.Scan(
-		&i.JobID,
 		&i.CreatedAt,
+		&i.CreatedBy,
+		&i.ModifiedAt,
+		&i.ModifiedBy,
+		&i.JobID,
 		&i.UpdatedAt,
 		&i.TimeOut,
 		&i.StartedAt,
@@ -388,6 +443,10 @@ func (q *Queries) GetExecutionJob(ctx context.Context, jobID int64) (GetExecutio
 		&i.MaxRetries,
 		&i.WorkerID,
 		&i.JobType,
+		&i.CreatedAt_2,
+		&i.CreatedBy_2,
+		&i.ModifiedAt_2,
+		&i.ModifiedBy_2,
 		&i.ID,
 		&i.Hash,
 		&i.Code,
@@ -410,7 +469,7 @@ func (q *Queries) GetExecutionJob(ctx context.Context, jobID int64) (GetExecutio
 }
 
 const getExecutionsForJob = `-- name: GetExecutionsForJob :many
-select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, out_files, success, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets from executions
+select executions.created_at, executions.created_by, executions.modified_at, executions.modified_by, exec_id, job_id, worker_id, started_at, finished_at, exec_request_id, exec_logs, nix_logs, out_files, success, exec_request.created_at, exec_request.created_by, exec_request.modified_at, exec_request.modified_by, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets from executions
 inner join exec_request on executions.exec_request_id = exec_request.id
 where executions.job_id = $1 and exec_id >= $2
 order by finished_at desc
@@ -424,17 +483,24 @@ type GetExecutionsForJobParams struct {
 }
 
 type GetExecutionsForJobRow struct {
+	CreatedAt            pgtype.Timestamptz      `db:"created_at" json:"created_at"`
+	CreatedBy            pgtype.Text             `db:"created_by" json:"created_by"`
+	ModifiedAt           pgtype.Timestamptz      `db:"modified_at" json:"modified_at"`
+	ModifiedBy           pgtype.Text             `db:"modified_by" json:"modified_by"`
 	ExecID               int64                   `db:"exec_id" json:"exec_id"`
 	JobID                pgtype.Int8             `db:"job_id" json:"job_id"`
 	WorkerID             pgtype.Int4             `db:"worker_id" json:"worker_id"`
 	StartedAt            pgtype.Timestamptz      `db:"started_at" json:"started_at"`
 	FinishedAt           pgtype.Timestamptz      `db:"finished_at" json:"finished_at"`
-	CreatedAt            pgtype.Timestamptz      `db:"created_at" json:"created_at"`
 	ExecRequestID        pgtype.Int4             `db:"exec_request_id" json:"exec_request_id"`
 	ExecLogs             string                  `db:"exec_logs" json:"exec_logs"`
 	NixLogs              pgtype.Text             `db:"nix_logs" json:"nix_logs"`
 	OutFiles             []byte                  `db:"out_files" json:"out_files"`
 	Success              pgtype.Bool             `db:"success" json:"success"`
+	CreatedAt_2          pgtype.Timestamptz      `db:"created_at_2" json:"created_at_2"`
+	CreatedBy_2          pgtype.Text             `db:"created_by_2" json:"created_by_2"`
+	ModifiedAt_2         pgtype.Timestamptz      `db:"modified_at_2" json:"modified_at_2"`
+	ModifiedBy_2         pgtype.Text             `db:"modified_by_2" json:"modified_by_2"`
 	ID                   int32                   `db:"id" json:"id"`
 	Hash                 string                  `db:"hash" json:"hash"`
 	Code                 pgtype.Text             `db:"code" json:"code"`
@@ -464,17 +530,24 @@ func (q *Queries) GetExecutionsForJob(ctx context.Context, arg GetExecutionsForJ
 	for rows.Next() {
 		var i GetExecutionsForJobRow
 		if err := rows.Scan(
+			&i.CreatedAt,
+			&i.CreatedBy,
+			&i.ModifiedAt,
+			&i.ModifiedBy,
 			&i.ExecID,
 			&i.JobID,
 			&i.WorkerID,
 			&i.StartedAt,
 			&i.FinishedAt,
-			&i.CreatedAt,
 			&i.ExecRequestID,
 			&i.ExecLogs,
 			&i.NixLogs,
 			&i.OutFiles,
 			&i.Success,
+			&i.CreatedAt_2,
+			&i.CreatedBy_2,
+			&i.ModifiedAt_2,
+			&i.ModifiedBy_2,
 			&i.ID,
 			&i.Hash,
 			&i.Code,
@@ -532,7 +605,7 @@ func (q *Queries) GetJobState(ctx context.Context, jobID int64) (string, error) 
 }
 
 const getLatestExecution = `-- name: GetLatestExecution :one
-select exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, out_files, success, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets from executions
+select executions.created_at, executions.created_by, executions.modified_at, executions.modified_by, exec_id, job_id, worker_id, started_at, finished_at, exec_request_id, exec_logs, nix_logs, out_files, success, exec_request.created_at, exec_request.created_by, exec_request.modified_at, exec_request.modified_by, id, hash, code, flake, language_dependencies, system_dependencies, cmd_line_args, compile_args, files, input, command, setup, system_setup, pkg_index, extension, language_version, secrets from executions
 inner join exec_request on executions.exec_request_id = exec_request.id
 where executions.job_id = $1
 order by finished_at desc
@@ -540,17 +613,24 @@ limit 1
 `
 
 type GetLatestExecutionRow struct {
+	CreatedAt            pgtype.Timestamptz      `db:"created_at" json:"created_at"`
+	CreatedBy            pgtype.Text             `db:"created_by" json:"created_by"`
+	ModifiedAt           pgtype.Timestamptz      `db:"modified_at" json:"modified_at"`
+	ModifiedBy           pgtype.Text             `db:"modified_by" json:"modified_by"`
 	ExecID               int64                   `db:"exec_id" json:"exec_id"`
 	JobID                pgtype.Int8             `db:"job_id" json:"job_id"`
 	WorkerID             pgtype.Int4             `db:"worker_id" json:"worker_id"`
 	StartedAt            pgtype.Timestamptz      `db:"started_at" json:"started_at"`
 	FinishedAt           pgtype.Timestamptz      `db:"finished_at" json:"finished_at"`
-	CreatedAt            pgtype.Timestamptz      `db:"created_at" json:"created_at"`
 	ExecRequestID        pgtype.Int4             `db:"exec_request_id" json:"exec_request_id"`
 	ExecLogs             string                  `db:"exec_logs" json:"exec_logs"`
 	NixLogs              pgtype.Text             `db:"nix_logs" json:"nix_logs"`
 	OutFiles             []byte                  `db:"out_files" json:"out_files"`
 	Success              pgtype.Bool             `db:"success" json:"success"`
+	CreatedAt_2          pgtype.Timestamptz      `db:"created_at_2" json:"created_at_2"`
+	CreatedBy_2          pgtype.Text             `db:"created_by_2" json:"created_by_2"`
+	ModifiedAt_2         pgtype.Timestamptz      `db:"modified_at_2" json:"modified_at_2"`
+	ModifiedBy_2         pgtype.Text             `db:"modified_by_2" json:"modified_by_2"`
 	ID                   int32                   `db:"id" json:"id"`
 	Hash                 string                  `db:"hash" json:"hash"`
 	Code                 pgtype.Text             `db:"code" json:"code"`
@@ -574,17 +654,24 @@ func (q *Queries) GetLatestExecution(ctx context.Context, jobID pgtype.Int8) (Ge
 	row := q.db.QueryRow(ctx, getLatestExecution, jobID)
 	var i GetLatestExecutionRow
 	err := row.Scan(
+		&i.CreatedAt,
+		&i.CreatedBy,
+		&i.ModifiedAt,
+		&i.ModifiedBy,
 		&i.ExecID,
 		&i.JobID,
 		&i.WorkerID,
 		&i.StartedAt,
 		&i.FinishedAt,
-		&i.CreatedAt,
 		&i.ExecRequestID,
 		&i.ExecLogs,
 		&i.NixLogs,
 		&i.OutFiles,
 		&i.Success,
+		&i.CreatedAt_2,
+		&i.CreatedBy_2,
+		&i.ModifiedAt_2,
+		&i.ModifiedBy_2,
 		&i.ID,
 		&i.Hash,
 		&i.Code,
@@ -644,7 +731,7 @@ insert into executions
     (job_id, worker_id, started_at, finished_at, exec_request_id, exec_logs, nix_logs, out_files, success)
 values
     ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-returning exec_id, job_id, worker_id, started_at, finished_at, created_at, exec_request_id, exec_logs, nix_logs, out_files, success
+returning created_at, created_by, modified_at, modified_by, exec_id, job_id, worker_id, started_at, finished_at, exec_request_id, exec_logs, nix_logs, out_files, success
 `
 
 type InsertExecutionParams struct {
@@ -673,12 +760,15 @@ func (q *Queries) InsertExecution(ctx context.Context, arg InsertExecutionParams
 	)
 	var i Execution
 	err := row.Scan(
+		&i.CreatedAt,
+		&i.CreatedBy,
+		&i.ModifiedAt,
+		&i.ModifiedBy,
 		&i.ExecID,
 		&i.JobID,
 		&i.WorkerID,
 		&i.StartedAt,
 		&i.FinishedAt,
-		&i.CreatedAt,
 		&i.ExecRequestID,
 		&i.ExecLogs,
 		&i.NixLogs,
@@ -693,7 +783,7 @@ insert into jobs
     (arguments, max_retries, time_out, job_type)
 values
     ($1, $2, $3, $4)
-returning job_id, created_at, updated_at, time_out, started_at, arguments, current_state, retries, max_retries, worker_id, job_type
+returning created_at, created_by, modified_at, modified_by, job_id, updated_at, time_out, started_at, arguments, current_state, retries, max_retries, worker_id, job_type
 `
 
 type InsertJobParams struct {
@@ -712,8 +802,11 @@ func (q *Queries) InsertJob(ctx context.Context, arg InsertJobParams) (Job, erro
 	)
 	var i Job
 	err := row.Scan(
-		&i.JobID,
 		&i.CreatedAt,
+		&i.CreatedBy,
+		&i.ModifiedAt,
+		&i.ModifiedBy,
+		&i.JobID,
 		&i.UpdatedAt,
 		&i.TimeOut,
 		&i.StartedAt,

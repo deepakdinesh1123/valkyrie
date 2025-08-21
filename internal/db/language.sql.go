@@ -145,7 +145,7 @@ func (q *Queries) GetAllLanguageVersions(ctx context.Context) ([]GetAllLanguageV
 }
 
 const getAllLanguages = `-- name: GetAllLanguages :many
-SELECT id, name, extension, monaco_language, template, is_disabled, default_code
+SELECT created_at, created_by, modified_at, modified_by, id, name, extension, monaco_language, template, is_disabled, default_code
 FROM languages
 `
 
@@ -159,6 +159,10 @@ func (q *Queries) GetAllLanguages(ctx context.Context) ([]Language, error) {
 	for rows.Next() {
 		var i Language
 		if err := rows.Scan(
+			&i.CreatedAt,
+			&i.CreatedBy,
+			&i.ModifiedAt,
+			&i.ModifiedBy,
 			&i.ID,
 			&i.Name,
 			&i.Extension,
@@ -178,13 +182,17 @@ func (q *Queries) GetAllLanguages(ctx context.Context) ([]Language, error) {
 }
 
 const getDefaultVersion = `-- name: GetDefaultVersion :one
-SELECT id, language_id, version, nix_package_name, template, default_version, is_disabled FROM language_versions WHERE default_version = true AND language_id = $1
+SELECT created_at, created_by, modified_at, modified_by, id, language_id, version, nix_package_name, template, default_version, is_disabled FROM language_versions WHERE default_version = true AND language_id = $1
 `
 
 func (q *Queries) GetDefaultVersion(ctx context.Context, languageID int64) (LanguageVersion, error) {
 	row := q.db.QueryRow(ctx, getDefaultVersion, languageID)
 	var i LanguageVersion
 	err := row.Scan(
+		&i.CreatedAt,
+		&i.CreatedBy,
+		&i.ModifiedAt,
+		&i.ModifiedBy,
 		&i.ID,
 		&i.LanguageID,
 		&i.Version,
@@ -197,7 +205,7 @@ func (q *Queries) GetDefaultVersion(ctx context.Context, languageID int64) (Lang
 }
 
 const getLanguageByID = `-- name: GetLanguageByID :one
-SELECT id, name, extension, monaco_language, template, is_disabled, default_code
+SELECT created_at, created_by, modified_at, modified_by, id, name, extension, monaco_language, template, is_disabled, default_code
 FROM languages 
 WHERE id = $1
 `
@@ -206,6 +214,10 @@ func (q *Queries) GetLanguageByID(ctx context.Context, id int64) (Language, erro
 	row := q.db.QueryRow(ctx, getLanguageByID, id)
 	var i Language
 	err := row.Scan(
+		&i.CreatedAt,
+		&i.CreatedBy,
+		&i.ModifiedAt,
+		&i.ModifiedBy,
 		&i.ID,
 		&i.Name,
 		&i.Extension,
@@ -218,13 +230,17 @@ func (q *Queries) GetLanguageByID(ctx context.Context, id int64) (Language, erro
 }
 
 const getLanguageByName = `-- name: GetLanguageByName :one
-SELECT id, name, extension, monaco_language, template, is_disabled, default_code from languages WHERE name = $1
+SELECT created_at, created_by, modified_at, modified_by, id, name, extension, monaco_language, template, is_disabled, default_code from languages WHERE name = $1
 `
 
 func (q *Queries) GetLanguageByName(ctx context.Context, name string) (Language, error) {
 	row := q.db.QueryRow(ctx, getLanguageByName, name)
 	var i Language
 	err := row.Scan(
+		&i.CreatedAt,
+		&i.CreatedBy,
+		&i.ModifiedAt,
+		&i.ModifiedBy,
 		&i.ID,
 		&i.Name,
 		&i.Extension,
@@ -237,7 +253,7 @@ func (q *Queries) GetLanguageByName(ctx context.Context, name string) (Language,
 }
 
 const getLanguageVersion = `-- name: GetLanguageVersion :one
-SELECT id, language_id, version, nix_package_name, template, default_version, is_disabled
+SELECT created_at, created_by, modified_at, modified_by, id, language_id, version, nix_package_name, template, default_version, is_disabled
 FROM language_versions 
 WHERE language_id = $1 AND version = $2
 `
@@ -251,6 +267,10 @@ func (q *Queries) GetLanguageVersion(ctx context.Context, arg GetLanguageVersion
 	row := q.db.QueryRow(ctx, getLanguageVersion, arg.LanguageID, arg.Version)
 	var i LanguageVersion
 	err := row.Scan(
+		&i.CreatedAt,
+		&i.CreatedBy,
+		&i.ModifiedAt,
+		&i.ModifiedBy,
 		&i.ID,
 		&i.LanguageID,
 		&i.Version,
